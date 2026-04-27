@@ -1,0 +1,732 @@
+{
+  "exam_id": "telc_b1_20260418_212300",
+  "name": "TELC Deutsch B1 / Zertifikat Deutsch",
+  "slug": "telc_b1",
+  "provider": "telc",
+  "cefr_code": "B1",
+  "version": "generated",
+  "generated_at": "20260418_212300",
+  "scoring_model": "per_module_weighted",
+  "pass_threshold": 60,
+  "scoring_details": {
+    "written_total": 225,
+    "oral_total": 75,
+    "grand_total": 300,
+    "written_pass": 135,
+    "oral_pass": 45,
+    "modules": {
+      "Leseverstehen": "75 pts (25%)",
+      "Sprachbausteine": "30 pts (10%)",
+      "Hoerverstehen": "75 pts (25%)",
+      "Schriftlicher Ausdruck": "45 pts (15%)",
+      "Muendlicher Ausdruck": "75 pts (25%)"
+    }
+  },
+  "modules": [
+    {
+      "slug": "lesen",
+      "name": "Leseverstehen",
+      "time_limit_minutes": 90,
+      "max_score": 75,
+      "raw_items": 20,
+      "note": "Inclut aussi Sprachbausteine dans le même bloc de 90 min",
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Globalverstehen",
+          "format_type": "zuordnung_titre",
+          "instructions": "Lesen Sie die Überschriften a–j und die Texte 1–5. Finden Sie für jeden Text die passende Überschrift. Sie können jede Überschrift nur einmal benutzen. Markieren Sie Ihre Lösungen für die Aufgaben 1–5 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 25,
+          "titres": {
+            "a": "Eine Bestellung kommt nicht an",
+            "b": "Neue Sportarten ausprobieren",
+            "c": "Erfolgreich eine neue Stelle finden",
+            "d": "Wettervorhersage für das Wochenende",
+            "e": "Tipps für eine gesunde Ernährung",
+            "f": "Probleme mit öffentlichen Verkehrsmitteln",
+            "g": "Renovierung der Wohnung",
+            "h": "Kurzurlaub in den Bergen",
+            "i": "Günstige Flüge buchen",
+            "j": "Die Geschichte des Internets"
+          },
+          "questions": [
+            {
+              "number": 1,
+              "stimulus_text": "Heute Morgen war der Weg zur Arbeit wieder einmal eine Katastrophe. Die U-Bahn hatte eine technische Störung, und wir standen fast 20 Minuten im Tunnel. Als sie endlich weiterfuhr, war der Zug so voll, dass man kaum atmen konnte. Ich kam natürlich zu spät ins Büro und musste mich bei meinem Chef entschuldigen. Es ist wirklich frustrierend, wenn man sich nicht auf den Fahrplan verlassen kann. Ich überlege ernsthaft, ob ich nicht doch lieber das Fahrrad nehmen sollte, auch wenn es regnet.",
+              "answer": "f"
+            },
+            {
+              "number": 2,
+              "stimulus_text": "Ich habe letzte Woche ein neues Buch online bestellt. Die Website versprach eine Lieferung innerhalb von drei Werktagen. Doch bis heute ist nichts angekommen. Auf der Sendungsverfolgung steht nur 'in Bearbeitung'. Ich habe schon eine E-Mail an den Kundenservice geschrieben, aber bisher keine Antwort erhalten. Ich bin wirklich enttäuscht, denn ich wollte das Buch am Wochenende lesen. Vielleicht sollte ich das nächste Mal doch wieder in eine Buchhandlung gehen.",
+              "answer": "a"
+            },
+            {
+              "number": 3,
+              "stimulus_text": "Viele Menschen möchten sich gesünder ernähren, wissen aber nicht, wie sie anfangen sollen. Ein erster Schritt ist oft, mehr frisches Obst und Gemüse in den täglichen Speiseplan zu integrieren. Statt Fertigprodukten lohnt es sich, selbst zu kochen. Das spart nicht nur Geld, sondern man weiß auch genau, welche Zutaten im Essen sind. Kleine Veränderungen, wie z.B. Vollkornprodukte statt Weißbrot, können schon einen großen Unterschied machen und das Wohlbefinden steigern.",
+              "answer": "e"
+            },
+            {
+              "number": 4,
+              "stimulus_text": "Letztes Wochenende war ich mit Freunden in den Alpen. Wir hatten ein kleines Ferienhaus gemietet und sind viel gewandert. Die Natur war wunderschön, und die frische Bergluft war herrlich. Abends haben wir gemütlich zusammen gekocht und Spiele gespielt. Es war eine tolle Abwechslung vom Stadtleben und hat uns allen sehr gutgetan. Nächstes Mal wollen wir vielleicht einen anderen Teil der Alpen erkunden oder sogar ein anderes Land besuchen.",
+              "answer": "h"
+            },
+            {
+              "number": 5,
+              "stimulus_text": "Nach meinem Studium war es nicht einfach, einen passenden Job zu finden. Ich habe viele Bewerbungen geschrieben und war auf zahlreichen Jobmessen. Am Ende hat mir ein guter Freund geholfen, der mir von einer offenen Stelle in seiner Firma erzählte. Das Vorstellungsgespräch lief sehr gut, und ich habe die Zusage bekommen! Ich bin überglücklich und freue mich auf die neuen Herausforderungen. Es zeigt, wie wichtig Netzwerke sein können.",
+              "answer": "c"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Detailverstehen",
+          "format_type": "qcm_abc",
+          "instructions": "Lesen Sie den Text und die Aufgaben 6–10. Welche Lösung (a, b oder c) ist jeweils richtig? Markieren Sie Ihre Lösungen für die Aufgaben 6–10 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 25,
+          "stimulus_text": "Reparatur-Cafés: Eine Initiative gegen die Wegwerfgesellschaft\n\nIn unserer modernen Konsumgesellschaft werden Produkte oft schnell ersetzt, sobald sie kaputtgehen. Vom Toaster über das Fahrrad bis zum Lieblingspullover – vieles landet viel zu schnell im Müll, obwohl es mit etwas Geschick, dem richtigen Werkzeug oder einem kleinen Ersatzteil noch repariert werden könnte. Genau hier setzen die sogenannten Reparatur-Cafés an: Sie sind eine wunderbare Antwort auf die Wegwerfmentalität und fördern nicht nur Nachhaltigkeit, sondern auch den Gemeinschaftssinn und den Austausch von Wissen.\n\nEin Reparatur-Café ist ein offener Treffpunkt, an dem Menschen ihre kaputten Gegenstände mitbringen und gemeinsam mit ehrenamtlichen Experten versuchen, diese zu reparieren. Die Bandbreite der Gegenstände ist groß: Ob kleine Elektrogeräte wie Lampen und Radios, Textilien wie Kleidung und Taschen, kleinere Möbelstücke, Fahrräder oder Spielzeug – die Helferinnen und Helfer verfügen über vielfältiges technisches Wissen und die notwendigen Werkzeuge, um bei der Instandsetzung zu unterstützen. Es geht dabei nicht darum, dass die Experten alles alleine machen. Vielmehr ist es das Ziel, Hilfe zur Selbsthilfe zu leisten und den Besuchern zu zeigen, wie sie selbst kleinere Defekte beheben können. So wird nicht nur das Problem gelöst, sondern auch Wissen weitergegeben.\n\nDie Atmosphäre in einem Reparatur-Café ist meist sehr entspannt und kommunikativ. Bei einer Tasse Kaffee oder Tee kommen Menschen leicht ins Gespräch, tauschen Erfahrungen aus und helfen sich gegenseitig. Dieser Ansatz spart nicht nur Geld, weil man keine neuen Dinge kaufen muss, sondern schont auch die Umwelt erheblich, da weniger Müll produziert wird und wertvolle Ressourcen erhalten bleiben. Zudem ist es ein Ort, an dem die Wertschätzung für Dinge wieder steigt und die Lebensdauer von Produkten sinnvoll verlängert wird, anstatt sie voreilig wegzuwerfen.\n\nMittlerweile gibt es Reparatur-Cafés in vielen Städten und Gemeinden weltweit. Sie sind oft in Gemeindehäusern, Kulturzentren oder alten Werkstätten untergebracht und meist kostenlos zugänglich. Viele bitten jedoch um eine kleine Spende, um Materialkosten zu decken oder die Organisation zu unterstützen. Wer mitmachen möchte, sei es als Helfer oder als Besucher, findet Termine und Adressen oft auf den Websites der jeweiligen Städte oder in lokalen Veranstaltungskalendern. Diese Projekte zeigen eindrucksvoll, wie einfach und effektiv jeder Einzelne einen positiven Beitrag zu einer nachhaltigeren Zukunft leisten kann.",
+          "source": "aus einem deutschen Online-Magazin",
+          "questions": [
+            {
+              "number": 6,
+              "stem": "In diesem Text geht es darum, dass ...",
+              "options": {
+                "a": "alte Gegenstände nur von Fachleuten repariert werden sollten.",
+                "b": "Reparatur-Cafés eine nachhaltige Alternative zum Neukauf bieten.",
+                "c": "man im Reparatur-Café immer kostenlos neue Ersatzteile bekommt."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 7,
+              "stem": "Die Helfer in einem Reparatur-Café sind ...",
+              "options": {
+                "a": "ehrenamtliche Personen mit verschiedenen Fachkenntnissen.",
+                "b": "fest angestellte Mitarbeiter, die dafür bezahlt werden.",
+                "c": "meistens Studenten, die praktische Erfahrungen sammeln wollen."
+              },
+              "answer": "a"
+            },
+            {
+              "number": 8,
+              "stem": "Was ist KEIN Ziel der Reparatur-Cafés?",
+              "options": {
+                "a": "Die Lebensdauer von Produkten zu verlängern.",
+                "b": "Menschen zum Austausch zusammenzubringen.",
+                "c": "Durch den Verkauf von reparierten Waren Geld zu verdienen."
+              },
+              "answer": "c"
+            },
+            {
+              "number": 9,
+              "stem": "Wenn man ein Reparatur-Café besucht, sollte man ...",
+              "options": {
+                "a": "unbedingt alle benötigten Ersatzteile selbst mitbringen.",
+                "b": "seinen kaputten Gegenstand dabeihaben.",
+                "c": "nur neue Geräte zum Reparieren vorbeibringen."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 10,
+              "stem": "Was kann man über die Verbreitung von Reparatur-Cafés sagen?",
+              "options": {
+                "a": "Sie sind weltweit in vielen Orten zu finden.",
+                "b": "Es gibt sie nur in größeren deutschen Städten.",
+                "c": "Ihre Beliebtheit nimmt langsam wieder ab."
+              },
+              "answer": "a"
+            }
+          ]
+        },
+        {
+          "teil_number": 3,
+          "name": "Selektives Verstehen",
+          "format_type": "selektives_matching",
+          "instructions": "Lesen Sie die Situationen 11–20 und die Anzeigen a–l. Finden Sie für jede Situation die passende Anzeige. Sie können jede Anzeige nur einmal benutzen. Wenn Sie zu einer Situation keine Anzeige finden, markieren Sie ein x. Markieren Sie Ihre Lösungen für die Aufgaben 11–20 auf dem Antwortbogen.",
+          "time_minutes": 20,
+          "max_score": 25,
+          "context": "Touristen suchen passende Angebote in einer deutschsprachigen Stadt.",
+          "anzeigen": {
+            "a": "Stadtrundfahrten & mehr! Entdecken Sie unsere Stadt bequem im Doppeldeckerbus oder vom Fluss aus. Täglich 9-18 Uhr. Tickets online oder am Hauptbahnhof.",
+            "b": "\"Alte Meister\" Ausstellung. Besuchen Sie unsere neue Kunstausstellung im Stadtmuseum. Täglich außer montags, 10-17 Uhr. Audioguides verfügbar.",
+            "c": "Gasthaus \"Zum Grünen Baum\". Genießen Sie echte regionale Küche und gemütliche Atmosphäre. Frische Zutaten, lokale Spezialitäten. Reservierung empfohlen.",
+            "d": "Fahrradverleih \"Rad & Tour\". Mieten Sie Ihr Wunschrad für einen Tag oder länger. Citybikes, E-Bikes, Mountainbikes. Inkl. Helm und Schloss. Nähe Marktplatz.",
+            "e": "Deutsch für Anfänger: Intensivkurs. Sie möchten schnell die Grundlagen lernen? Unser Kompaktkurs (Mo-Fr, 9-12 Uhr) ist ideal für Ihren Start. Jetzt anmelden!",
+            "f": "Geführte Naturwanderungen. Erleben Sie die wunderschöne Landschaft rund um die Stadt mit erfahrenen Guides. Verschiedene Routen, auch für Familien.",
+            "g": "Abendkonzert im Barocksaal. Genießen Sie klassische Musik in historischem Ambiente. Nächster Termin: Samstag, 20 Uhr. Tickets an der Abendkasse.",
+            "h": "Hotel \"Am Park\": Zentral & Günstig. Komfortable Zimmer in bester Lage, nahe allen Attraktionen. Kostenloses WLAN, Frühstücksoption. Buchen Sie jetzt!",
+            "i": "Souvenirladen \"Heimatliebe\". Finden Sie das perfekte Andenken an Ihren Besuch: Postkarten, T-Shirts, lokale Handwerkskunst. Montag-Samstag 10-18 Uhr.",
+            "j": "Wellness-Oase \"Aqua Relax\". Entspannen Sie in unseren Thermalbädern und Saunen. Verschiedene Pakete, auch Massagen. Täglich 9-22 Uhr.",
+            "k": "City-Ticket: Ihre Mobilität. Unbegrenzt Bus und Bahn nutzen für 24 oder 48 Stunden. Ideal für Touristen. Erhältlich an allen Automaten und Verkaufsstellen.",
+            "l": "Kochkurs \"Gaumenfreuden\". Lernen Sie, wie man typische deutsche Gerichte zubereitet. Kleingruppen, professionelle Anleitung. Inkl. Essen und Getränke."
+          },
+          "questions": [
+            {
+              "number": 11,
+              "situation": "Ein Tourist möchte die bekanntesten Sehenswürdigkeiten der Stadt entspannt von einem Fahrzeug aus besichtigen.",
+              "answer": "a"
+            },
+            {
+              "number": 12,
+              "situation": "Eine Familie sucht ein gemütliches Restaurant, das typische regionale Gerichte anbietet.",
+              "answer": "c"
+            },
+            {
+              "number": 13,
+              "situation": "Zwei Freunde möchten die Natur außerhalb der Stadt erkunden und suchen eine geführte Tour.",
+              "answer": "f"
+            },
+            {
+              "number": 14,
+              "situation": "Eine junge Frau möchte für eine Woche Deutsch lernen, um sich im Urlaub besser verständigen zu können.",
+              "answer": "e"
+            },
+            {
+              "number": 15,
+              "situation": "Ein Reisender sucht eine günstige Unterkunft, die zentral gelegen ist und guten Zugang zu den Attraktionen bietet.",
+              "answer": "h"
+            },
+            {
+              "number": 16,
+              "situation": "Ein Tourist möchte ein kleines Geschenk oder eine Erinnerung an seinen Aufenthalt in der Stadt kaufen.",
+              "answer": "i"
+            },
+            {
+              "number": 17,
+              "situation": "Jemand möchte den ganzen Tag öffentliche Verkehrsmittel nutzen und sucht ein passendes Ticket.",
+              "answer": "k"
+            },
+            {
+              "number": 18,
+              "situation": "Eine Person möchte selbst lernen, wie man traditionelle deutsche Gerichte zubereitet.",
+              "answer": "l"
+            },
+            {
+              "number": 19,
+              "situation": "Ein Tourist sucht eine Möglichkeit, ein Fahrrad für einen Tagesausflug zu mieten.",
+              "answer": "x"
+            },
+            {
+              "number": 20,
+              "situation": "Eine Familie möchte am Abend ein entspanntes Konzert besuchen.",
+              "answer": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "sprachbausteine",
+      "name": "Sprachbausteine",
+      "time_limit_minutes": 0,
+      "max_score": 30,
+      "raw_items": 20,
+      "note": "Intégré dans le bloc Leseverstehen (90 min partagées)",
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Grammatik",
+          "format_type": "qcm_gap_fill",
+          "instructions": "Lesen Sie den Text und schließen Sie die Lücken 21–30. Welche Lösung (a, b oder c) ist jeweils richtig? Markieren Sie Ihre Lösungen für die Aufgaben 21–30 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 15,
+          "text_with_gaps": "Liebe Maria,\n\nich hoffe, es geht dir gut! Ich wollte dir endlich mal ausführlich _21_ meiner neuen Wohnung erzählen. Ich bin jetzt schon _22_ drei Wochen hier und fühle mich wirklich sehr wohl. Die Wohnung _23_ im dritten Stock und ist super hell und modern eingerichtet. _24_ habe ich sogar einen kleinen Balkon, _25_ man abends schön sitzen kann.\n\nDie Lage ist auch perfekt. Es ist ganz in der Nähe _26_ meinem Büro, sodass ich jetzt jeden Tag zu Fuß zur Arbeit gehen kann. Das spart nicht nur Geld für die U-Bahn, sondern ist auch gut für meine Fitness. Ich habe auch schon ein paar nette Nachbarn kennengelernt. Letzte Woche haben wir zusammen einen Kaffee getrunken und uns _27_ ein bisschen über die Gegend unterhalten. Sie haben mir auch gleich ein paar gute Tipps für Restaurants und Cafés gegeben.\n\nAm Wochenende möchte ich endlich _28_ restlichen Kartons auspacken. Ich habe immer noch so viele Bücher, _29_ noch einen Platz finden müssen. Danach will ich mich noch um _30_ Anmeldung meines Internetanschlusses kümmern. Es ist ein bisschen stressig, aber ich freue mich auf mein neues Leben hier.\n\nBald besuche ich dich mal wieder!\n\nLiebe Grüße\nThomas",
+          "questions": [
+            {
+              "number": 21,
+              "options": {
+                "a": "aus",
+                "b": "von",
+                "c": "bei"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 22,
+              "options": {
+                "a": "seit",
+                "b": "vor",
+                "c": "nach"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 23,
+              "options": {
+                "a": "bin",
+                "b": "hat",
+                "c": "ist"
+              },
+              "answer": "c"
+            },
+            {
+              "number": 24,
+              "options": {
+                "a": "Außerdem",
+                "b": "Trotzdem",
+                "c": "Deshalb"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 25,
+              "options": {
+                "a": "weil",
+                "b": "dass",
+                "c": "wo"
+              },
+              "answer": "c"
+            },
+            {
+              "number": 26,
+              "options": {
+                "a": "in",
+                "b": "von",
+                "c": "an"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 27,
+              "options": {
+                "a": "unterhielten",
+                "b": "unterhalten",
+                "c": "unterhaltend"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 28,
+              "options": {
+                "a": "den",
+                "b": "das",
+                "c": "die"
+              },
+              "answer": "c"
+            },
+            {
+              "number": 29,
+              "options": {
+                "a": "denen",
+                "b": "die",
+                "c": "das"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 30,
+              "options": {
+                "a": "dem",
+                "b": "der",
+                "c": "die"
+              },
+              "answer": "c"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Lexik",
+          "format_type": "word_bank_gap_fill",
+          "instructions": "Lesen Sie den Text und schließen Sie die Lücken 31–40. Benutzen Sie die Wörter a–o. Jedes Wort passt nur einmal. Markieren Sie Ihre Lösungen für die Aufgaben 31–40 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 15,
+          "text_with_gaps": "Sehr geehrte Damen und Herren,\n\nich interessiere mich _31_ Ihr Sprachkursangebot für Deutsch als Fremdsprache und hätte _32_ noch einige Fragen dazu.\n\nIch plane, ab Herbst dieses Jahres für etwa sechs Monate in Deutschland zu leben und möchte diese Zeit nutzen, um meine Deutschkenntnisse zu verbessern. Ich habe bereits einen B1-Kurs in meinem Heimatland abgeschlossen und suche nun einen Intensivkurs, der mich auf die B2-Prüfung vorbereitet.\n\n_33_ ist mir wichtig, dass der Kurs eine gute Mischung aus Grammatik, Konversation und Hörverständnis bietet. Ich möchte meine Sprachfähigkeiten in allen Bereichen vertiefen. _34_ ich tagsüber arbeiten werde, wäre ein Abendkurs oder ein Kurs am Wochenende ideal. Tagsüber bin ich leider zeitlich sehr eingeschränkt. _35_ es möglich ist, würde ich auch gerne an kulturellen Aktivitäten teilnehmen, die von Ihrer Schule angeboten werden. Das wäre eine tolle Ergänzung zum Unterricht.\n\n_36_ Sie mir bitte auch Informationen zu den Kurszeiten, den Preisen und den Startterminen für Kurse ab September zusenden? Ich _37_ vor meiner Ankunft in Deutschland eine Unterkunft organisieren. _38_ wäre es auch hilfreich, wenn Sie Empfehlungen für Wohnmöglichkeiten in der Nähe Ihrer Schule hätten.\n\nIch würde gerne wissen, ob es eine Möglichkeit gibt, einen Einstufungstest online zu machen, _39_ ich genau weiß, welcher Kurs für mich der richtige ist. Ich bin Ihnen _40_ für jede Hilfe und Information.\n\nMit freundlichen Grüßen\nAnna Müller",
+          "word_bank": {
+            "a": "BEVOR",
+            "b": "DA",
+            "c": "DABEI",
+            "d": "DAFÜR",
+            "e": "DAMIT",
+            "f": "DANKBAR",
+            "g": "DENN",
+            "h": "FÜR",
+            "i": "GERNE",
+            "j": "KÖNNTEN",
+            "k": "MÜSSTE",
+            "l": "SCHLIESSLICH",
+            "m": "UM",
+            "n": "WANN",
+            "o": "WENN"
+          },
+          "questions": [
+            {
+              "number": 31,
+              "answer": "h"
+            },
+            {
+              "number": 32,
+              "answer": "i"
+            },
+            {
+              "number": 33,
+              "answer": "c"
+            },
+            {
+              "number": 34,
+              "answer": "b"
+            },
+            {
+              "number": 35,
+              "answer": "o"
+            },
+            {
+              "number": 36,
+              "answer": "j"
+            },
+            {
+              "number": 37,
+              "answer": "k"
+            },
+            {
+              "number": 38,
+              "answer": "l"
+            },
+            {
+              "number": 39,
+              "answer": "e"
+            },
+            {
+              "number": 40,
+              "answer": "f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "horen",
+      "name": "Hörverstehen",
+      "time_limit_minutes": 30,
+      "max_score": 75,
+      "raw_items": 20,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Globalverstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun fünf kurze Texte. Dazu sollen Sie fünf Aufgaben lösen. Sie hören diese Texte nur einmal. Entscheiden Sie beim Hören, ob die Aussagen 41-45 richtig oder falsch sind.",
+          "time_minutes": 8,
+          "max_score": 25,
+          "max_plays": 1,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Gespräch",
+              "transcription": "Mann: \"Hallo Julia, hast du am Samstag schon etwas vor?\"\nFrau: \"Hallo Thomas! Ja, ich wollte eigentlich ins Kino gehen. Warum?\"\nMann: \"Ich dachte, wir könnten zusammen den neuen Film im Park-Kino sehen. Er soll super sein.\"\nFrau: \"Oh, das klingt gut! Wann startet der Film denn?\"\nMann: \"Um 19 Uhr. Danach könnten wir noch etwas essen gehen.\"\nFrau: \"Perfekt! Treffen wir uns um 18:45 Uhr vor dem Kino?\"\nMann: \"Einverstanden! Bis Samstag!\"",
+              "questions": [
+                {
+                  "number": 41,
+                  "statement": "Julia und Thomas wollen am Samstagabend ins Kino gehen.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil1_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Ansage",
+              "transcription": "Achtung, eine wichtige Information für alle Reisenden. Der Intercity 789 von München nach Berlin, planmäßige Abfahrt um 14:30 Uhr, hat leider eine Verspätung von etwa 45 Minuten. Grund hierfür ist eine technische Störung am Zug. Wir bitten um Ihr Verständnis und informieren Sie über weitere Änderungen auf Gleis 5. Vielen Dank.",
+              "questions": [
+                {
+                  "number": 42,
+                  "statement": "Der Zug nach Berlin fährt pünktlich ab.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil1_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Gespräch",
+              "transcription": "Frau: \"Guten Tag, Herr Müller. Ich habe gehört, Sie machen einen neuen Sprachkurs?\"\nMann: \"Ja, genau, Frau Schmidt. Ich lerne jetzt Spanisch. Das ist gar nicht so einfach, aber ich finde es sehr interessant.\"\nFrau: \"Spanisch? Toll! Wie oft haben Sie denn Unterricht?\"\nMann: \"Zweimal pro Woche, am Dienstagabend und am Donnerstagnachmittag. Der Kurs dauert drei Monate.\"\nFrau: \"Das ist ja eine gute Investition. Viel Erfolg dabei!\"\nMann: \"Danke schön!\"",
+              "questions": [
+                {
+                  "number": 43,
+                  "statement": "Herr Müller besucht einen Spanischkurs.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil1_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Nachricht",
+              "transcription": "Hallo Lena, hier ist Max. Entschuldige bitte, aber ich muss unser Treffen morgen leider absagen. Ich habe plötzlich einen wichtigen Termin bekommen, den ich nicht verschieben kann. Könnten wir uns stattdessen nächste Woche am Mittwoch treffen? Ruf mich bitte zurück, damit wir einen neuen Termin vereinbaren können. Es tut mir leid! Bis bald!",
+              "questions": [
+                {
+                  "number": 44,
+                  "statement": "Max kann morgen nicht kommen und schlägt vor, sich am Dienstag zu treffen.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil1_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Gespräch",
+              "transcription": "Kundin: \"Entschuldigen Sie, ich möchte diesen Pullover zurückgeben.\"\nVerkäufer: \"Guten Tag. Haben Sie den Kassenbon dabei?\"\nKundin: \"Ja, hier ist er. Ich habe den Pullover letzte Woche gekauft, aber er ist leider zu klein.\"\nVerkäufer: \"Kein Problem. Möchten Sie einen größeren Pullover oder Ihr Geld zurück?\"\nKundin: \"Ich hätte gerne mein Geld zurück, bitte.\"\nVerkäufer: \"In Ordnung. Das mache ich sofort für Sie.\"",
+              "questions": [
+                {
+                  "number": 45,
+                  "statement": "Die Kundin ist mit der Größe des Pullovers nicht zufrieden.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil1_audio5.mp3"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Detailverstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun ein Gespräch. Dazu sollen Sie zehn Aufgaben lösen. Sie hören das Gespräch zweimal. Entscheiden Sie beim Hören, ob die Aussagen 46-55 richtig oder falsch sind. Lesen Sie jetzt die Aufgaben 46-55. Sie haben dazu eine Minute Zeit.",
+          "time_minutes": 12,
+          "max_score": 25,
+          "max_plays": 2,
+          "context": "Ein Journalist spricht mit einer Vereinsvertreterin über das 100-jährige Jubiläum des Sportvereins.",
+          "transcription": "J: Guten Tag, Frau Schmidt. Vielen Dank, dass Sie sich heute die Zeit nehmen. Mein Name ist Müller, vom Stadtkurier. Wir möchten über das bevorstehende 100-jährige Jubiläum Ihres Sportvereins, des SV Eintracht, berichten.\nV: Guten Tag, Herr Müller. Sehr gerne. Es ist eine aufregende Zeit für uns alle. 100 Jahre, das ist wirklich etwas Besonderes!\nJ: Absolut. Wann genau findet denn die Hauptfeier statt und wo wird sie ausgerichtet?\nV: Die Hauptfeier ist am Samstag, den 15. Juni. Wir haben uns entschieden, sie auf dem Sportplatz des Vereinsgeländes abzuhalten, nicht in der Stadthalle, wie ursprünglich überlegt. Wir möchten, dass die Atmosphäre sportlich und familiär ist.\nJ: Das klingt gut. Und was ist für diesen Tag geplant? Gibt es ein spezielles Programm?\nV: Ja, natürlich! Am Vormittag gibt es verschiedene Sportvorführungen unserer Jugendmannschaften – Fußball, Handball, Leichtathletik. Am Nachmittag haben wir ein großes Freundschaftsspiel zwischen ehemaligen Spielern und unserer aktuellen ersten Mannschaft. Das wird sicher lustig.\nJ: Das ist eine tolle Idee. Und für die Besucher, die nicht direkt am Sport teilnehmen möchten?\nV: Für die Kinder gibt es eine Hüpfburg und Kinderschminken. Außerdem wird es viele Essens- und Getränkestände geben, mit regionalen Spezialitäten und natürlich Kuchen. Am Abend gibt es dann noch eine Live-Band, die Tanzmusik spielt.\nJ: Sehr umfangreich! Wer ist denn alles eingeladen? Nur Vereinsmitglieder?\nV: Nein, auf keinen Fall! Die Feier ist für alle offen – Mitglieder, ehemalige Mitglieder, Familien, Freunde und alle Interessierten aus der Stadt. Wir möchten ein großes Fest für die ganze Gemeinschaft sein. Der Eintritt ist übrigens frei.\nJ: Das ist ja wunderbar. Und gibt es auch eine Art Rückblick auf die Geschichte des Vereins? Vielleicht eine Ausstellung?\nV: Ja, das ist uns sehr wichtig. Im Vereinsheim haben wir eine kleine Ausstellung mit Fotos und alten Pokalen vorbereitet, die die Geschichte des SV Eintracht dokumentiert. Man kann dort auch alte Zeitungsartikel lesen. Sie ist bereits seit letzter Woche geöffnet und kann bis Ende Juni besucht werden.\nJ: Und wie viele Mitglieder hat der Verein im Moment?\nV: Aktuell haben wir über 800 Mitglieder, von den Kleinsten in der Ballschule bis zu unseren Senioren. Die Mitgliederzahl ist in den letzten Jahren sogar leicht gestiegen, besonders im Jugendbereich.\nJ: Frau Schmidt, vielen Dank für diese interessanten Einblicke. Wir werden auf jeden Fall darüber berichten.\nV: Sehr gerne, Herr Müller. Wir freuen uns auf viele Besucher!",
+          "questions": [
+            {
+              "number": 46,
+              "statement": "Der Journalist, Herr Müller, arbeitet für eine lokale Zeitung.",
+              "answer": "richtig"
+            },
+            {
+              "number": 47,
+              "statement": "Die Hauptfeier findet am Samstag, dem 15. Juni, auf dem Vereinsgelände statt.",
+              "answer": "richtig"
+            },
+            {
+              "number": 48,
+              "statement": "Die ursprünglich geplante Location für die Feier war die Stadthalle.",
+              "answer": "richtig"
+            },
+            {
+              "number": 49,
+              "statement": "Am Nachmittag findet ein Fußballspiel zwischen der ersten Mannschaft und einem Gastverein statt.",
+              "answer": "falsch"
+            },
+            {
+              "number": 50,
+              "statement": "Für Kinder gibt es neben einer Hüpfburg auch Kinderschminken.",
+              "answer": "richtig"
+            },
+            {
+              "number": 51,
+              "statement": "Besucher können auf der Feier regionale Spezialitäten essen und trinken.",
+              "answer": "richtig"
+            },
+            {
+              "number": 52,
+              "statement": "Nur Vereinsmitglieder und deren Familien sind zur Feier eingeladen.",
+              "answer": "falsch"
+            },
+            {
+              "number": 53,
+              "statement": "Der Eintritt zum Jubiläumsfest ist kostenlos.",
+              "answer": "richtig"
+            },
+            {
+              "number": 54,
+              "statement": "Die Ausstellung über die Vereinsgeschichte ist nur am Jubiläumstag geöffnet.",
+              "answer": "falsch"
+            },
+            {
+              "number": 55,
+              "statement": "Die Mitgliederzahl des Vereins ist in den letzten Jahren gesunken.",
+              "answer": "falsch"
+            }
+          ],
+          "audio_file": "output\\audio_telc_20260418_212300\\horen_teil2.mp3"
+        },
+        {
+          "teil_number": 3,
+          "name": "Selektives Verstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun fünf kurze Texte. Dazu sollen Sie fünf Aufgaben lösen. Sie hören jeden Text zweimal. Entscheiden Sie beim Hören, ob die Aussagen 56-60 richtig oder falsch sind.",
+          "time_minutes": 10,
+          "max_score": 25,
+          "max_plays": 2,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Wegbeschreibung",
+              "transcription": "Achtung, bitte beachten Sie: Die Ausstellung 'Moderne Kunst' findet heute ausnahmsweise nicht im Erdgeschoss statt. Bitte begeben Sie sich stattdessen in den dritten Stock, Raum 305. Nehmen Sie dafür den Aufzug B auf der rechten Seite. Die Ausstellung beginnt wie geplant um 14 Uhr.",
+              "questions": [
+                {
+                  "number": 56,
+                  "statement": "Die Kunstausstellung findet heute im Erdgeschoss statt.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil3_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Kinoprogramm",
+              "transcription": "Liebe Kinobesucher, eine wichtige Information zum heutigen Abendprogramm: Der Film 'Abenteuer im Dschungel', der um 20 Uhr im Saal 2 gezeigt werden sollte, muss leider entfallen. Stattdessen zeigen wir um 20:15 Uhr im Saal 1 den Klassiker 'Die Reise zum Mond'. Wir bitten um Ihr Verständnis.",
+              "questions": [
+                {
+                  "number": 57,
+                  "statement": "Der Film 'Abenteuer im Dschungel' wird heute Abend in einem anderen Saal gezeigt.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil3_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Wetterbericht",
+              "transcription": "Guten Morgen aus der Wetterzentrale. Für heute Nachmittag erwarten wir in Süddeutschland weiterhin sonniges Wetter mit Temperaturen um die 25 Grad. Im Norden ziehen am Abend leichte Wolken auf, es bleibt aber trocken. Die Nacht wird mit 12 Grad kühl. Morgen früh dann wieder überall Sonnenschein.",
+              "questions": [
+                {
+                  "number": 58,
+                  "statement": "In Süddeutschland ist es heute Nachmittag sonnig und warm.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil3_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Zugdurchsage",
+              "transcription": "Achtung Reisende, der Intercity 104 nach Berlin Hauptbahnhof, planmäßige Abfahrt 10:30 Uhr von Gleis 7, fährt heute mit einer Verspätung von etwa 20 Minuten. Bitte begeben Sie sich nicht zu Gleis 7, sondern zu Gleis 9. Wir bitten um Entschuldigung für die Unannehmlichkeiten.",
+              "questions": [
+                {
+                  "number": 59,
+                  "statement": "Der Zug nach Berlin fährt pünktlich von Gleis 7 ab.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil3_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Werbung",
+              "transcription": "Suchen Sie eine neue Herausforderung? Das Sprachinstitut 'Global Talk' bietet ab sofort intensive Deutschkurse für Anfänger und Fortgeschrittene an. Melden Sie sich bis Ende des Monats an und erhalten Sie 10% Rabatt auf den ersten Kurs. Besuchen Sie uns online unter globaltalk.de oder rufen Sie an!",
+              "questions": [
+                {
+                  "number": 60,
+                  "statement": "Man erhält einen Rabatt, wenn man sich bis Monatsende für einen Kurs anmeldet.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260418_212300\\horen_teil3_audio5.mp3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "schreiben",
+      "name": "Schriftlicher Ausdruck",
+      "time_limit_minutes": 30,
+      "max_score": 45,
+      "raw_items": 1,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "E-Mail schreiben",
+          "format_type": "free_text",
+          "instructions": "Sie haben von Ihrer Freundin Marianne folgende E-Mail erhalten. Antworten Sie auf die E-Mail. Schreiben Sie etwas zu allen vier Punkten:\n*   Sagen Sie, ob Sie mitwandern möchten.\n*   Schreiben Sie, welches Wochenende Ihnen am besten passt.\n*   Antworten Sie auf die Frage mit den Wanderschuhen.\n*   Machen Sie einen Vorschlag für das Picknick.",
+          "time_minutes": 30,
+          "max_score": 45,
+          "text_type": "E-Mail",
+          "word_count_target": 80,
+          "stimulus_email": {
+            "sender": "Marianne",
+            "subject": "Wanderung im nächsten Monat?",
+            "body": "Hallo [Name des Freundes/der Freundin],\n\nwie geht es dir? Ich habe eine tolle Idee für den nächsten Monat! Ich möchte gern eine Wanderung in den Bergen machen und habe schon eine schöne Route gefunden. Sie ist nicht zu schwer und dauert etwa 4 Stunden. Ich dachte, wir könnten das zusammen machen. Hast du Lust?\n\nWelches Wochenende im nächsten Monat passt dir am besten? Und ganz wichtig: Hast du gute Wanderschuhe? Ich habe auch überlegt, ob wir ein kleines Picknick machen könnten. Was möchtest du dafür mitbringen?\n\nIch freue mich auf deine Antwort!\nViele Grüße\nMarianne"
+          },
+          "scenario": "Antworten Sie auf die E-Mail Ihrer Freundin/Ihres Freundes.",
+          "prompts": [
+            "Sagen Sie, ob Sie mitwandern möchten.",
+            "Schreiben Sie, welches Wochenende Ihnen am besten passt.",
+            "Antworten Sie auf die Frage mit den Wanderschuhen.",
+            "Machen Sie einen Vorschlag für das Picknick."
+          ],
+          "register": "informell",
+          "scoring_criteria": {
+            "Aufgabenbewältigung": {
+              "A": "Alle vier Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "B": "Drei Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "C": "Zwei Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "D": "Nur ein oder kein Leitpunkt wird inhaltlich angemessen bearbeitet."
+            },
+            "Kommunikative_Gestaltung": {
+              "description": "Wortschatz, Kohäsion, Register, Textlogik"
+            },
+            "Formale_Richtigkeit": {
+              "description": "Grammatik, Morphologie, Syntax, Orthografie"
+            }
+          },
+          "musterlösung": "Liebe Marianne,\n\nvielen Dank für deine E-Mail! Ja, ich habe super Lust, mit dir wandern zu gehen. Das ist eine tolle Idee! Ich bin sehr gerne in den Bergen.\n\nFür mich wäre das zweite Wochenende im Monat, also der 9. oder 10., am besten. Da habe ich noch keine Pläne. Wanderschuhe habe ich zum Glück sehr gute, die sind bequem und wasserdicht.\n\nFür das Picknick könnte ich belegte Brote und etwas Obst mitbringen. Oder möchtest du lieber Kuchen? Sag einfach Bescheid.\n\nIch freue mich schon sehr! Bis bald,\n[Dein Name]"
+        }
+      ]
+    },
+    {
+      "slug": "sprechen",
+      "name": "Mündlicher Ausdruck",
+      "time_limit_minutes": 15,
+      "max_score": 75,
+      "preparation_minutes": 20,
+      "raw_items": 3,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Einander kennenlernen",
+          "format_type": "oral_kennenlernen",
+          "instructions": "Unterhalten Sie sich mit Ihrer Partnerin bzw. Ihrem Partner über folgende Themen:",
+          "time_minutes": 3,
+          "max_score": 15,
+          "topics": [
+            "Name",
+            "Woher sie oder er kommt",
+            "Wie sie oder er wohnt",
+            "Familie",
+            "Wo sie oder er Deutsch gelernt hat",
+            "Was sie oder er macht (Schule, Studium, Beruf)",
+            "Hobbys und Freizeit"
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Über ein Thema sprechen",
+          "format_type": "oral_thema",
+          "instructions": "Sie haben in einer Zeitschrift etwas zum Thema gelesen. Berichten Sie Ihrer Gesprächspartnerin/Ihrem Gesprächspartner darüber. Unterhalten Sie sich dann über das Thema.",
+          "time_minutes": 6,
+          "max_score": 30,
+          "topic": "Online-Shopping",
+          "opinion_a": {
+            "person": "Lena, 28, Studentin",
+            "text": "Ich finde Online-Shopping super praktisch. Man kann bequem von zu Hause aus einkaufen, hat eine riesige Auswahl und oft sind die Preise online günstiger. Außerdem kann ich Produkte vergleichen und Bewertungen lesen, bevor ich etwas kaufe. Das spart Zeit und Stress, besonders wenn man wenig Zeit hat."
+          },
+          "opinion_b": {
+            "person": "Max, 55, Verkäufer",
+            "text": "Online-Shopping ist nicht gut für unsere Innenstädte und kleine Geschäfte. Man kann die Produkte nicht anfassen oder anprobieren, und die Rücksendungen sind oft kompliziert. Außerdem vermisse ich die persönliche Beratung und den direkten Kontakt mit Verkäufern. Es ist auch nicht sehr nachhaltig wegen des ganzen Verpackungsmülls."
+          }
+        },
+        {
+          "teil_number": 3,
+          "name": "Gemeinsam etwas planen",
+          "format_type": "oral_interaction",
+          "instructions": "Sie haben zwei Wochen Urlaub gemacht und möchten vor dem Ende eine Abschiedsfeier organisieren. Planen Sie gemeinsam mit Ihrem Partner.",
+          "time_minutes": 6,
+          "max_score": 30,
+          "scenario": "Sie haben zwei Wochen Urlaub gemacht und möchten vor dem Ende eine Abschiedsfeier für Ihre neuen Freunde organisieren. Planen Sie gemeinsam mit Ihrem Partner.",
+          "prompts": [
+            "Wann?",
+            "Wo?",
+            "Essen und Getränke",
+            "Wer bezahlt wofür?",
+            "Musik / Unterhaltung?"
+          ]
+        }
+      ]
+    }
+  ]
+}

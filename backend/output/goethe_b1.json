@@ -1,0 +1,807 @@
+{
+  "exam_id": "goethe_osd_b1_20260328_192723",
+  "name": "Goethe-ÖSD Zertifikat B1",
+  "slug": "goethe_osd_b1",
+  "cefr_code": "B1",
+  "version": "generated",
+  "generated_at": "20260328_192723",
+  "scoring_model": "per_module_100",
+  "pass_threshold": 60,
+  "modules": [
+    {
+      "slug": "lesen",
+      "name": "Lesen",
+      "time_limit_minutes": 65,
+      "max_score": 100,
+      "raw_items": 30,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Lesen Teil 1",
+          "format_type": "richtig_falsch",
+          "instructions": "Lesen Sie den Blogeintrag. Sind die Aussagen 1-6 richtig oder falsch?",
+          "time_minutes": 10,
+          "max_score": 6,
+          "stimulus_text": "Hallo liebe Leserinnen und Leser,\nich hoffe, es geht euch allen gut! Bei mir gibt es spannende Neuigkeiten: Ich habe vor drei Wochen ein Praktikum bei einer Werbeagentur in Berlin angefangen. Es ist total aufregend! Der erste Tag war natürlich ein bisschen chaotisch. Ich musste viele neue Gesichter kennenlernen und mir die Namen merken, was gar nicht so einfach war. Aber alle waren sehr nett und hilfsbereit.\nMeine Hauptaufgabe ist es, bei der Recherche für neue Kampagnen zu helfen und kleine Texte für Social Media zu schreiben. Das macht mir wirklich Spaß, weil ich kreativ sein kann. Manchmal muss ich auch Kaffee kochen oder Kopien machen, aber das gehört dazu, oder?\nDas Büro ist ziemlich modern und hat sogar eine kleine Dachterrasse, wo wir in den Pausen sitzen können, wenn das Wetter gut ist. Letzte Woche hatten wir ein Team-Event: Wir waren zusammen in einem Escape Room. Das war super lustig und hat geholfen, die Kollegen besser kennenzulernen.\nAm Wochenende habe ich versucht, Berlin ein bisschen zu erkunden. Ich war im Mauerpark und habe den Flohmarkt besucht. Nächste Woche will ich unbedingt das Brandenburger Tor sehen und vielleicht eine Bootsfahrt auf der Spree machen.\nIch bin gespannt, was die nächsten Wochen bringen werden! Habt ihr Tipps für Berlin? Schreibt mir gerne in die Kommentare!\nLiebe Grüße,\nLena",
+          "questions": [
+            {
+              "number": 1,
+              "statement": "Lena arbeitet seit drei Wochen in einer Werbeagentur.",
+              "answer": "richtig"
+            },
+            {
+              "number": 2,
+              "statement": "Lena muss bei ihrer Arbeit nur Kaffee kochen und Kopien machen.",
+              "answer": "falsch"
+            },
+            {
+              "number": 3,
+              "statement": "Die Kollegen von Lena waren am ersten Tag nicht sehr freundlich.",
+              "answer": "falsch"
+            },
+            {
+              "number": 4,
+              "statement": "Das Büro, in dem Lena arbeitet, hat eine Dachterrasse.",
+              "answer": "richtig"
+            },
+            {
+              "number": 5,
+              "statement": "Lena hat mit ihrem Team ein Escape Room gespielt, um sich besser kennenzulernen.",
+              "answer": "richtig"
+            },
+            {
+              "number": 6,
+              "statement": "Lena hat am Wochenende das Brandenburger Tor besucht.",
+              "answer": "falsch"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "format_type": "qcm_abc",
+          "instructions": "Lesen Sie die Texte 1 und 2. Wählen Sie bei jeder Aufgabe die richtige Lösung a, b oder c.",
+          "time_minutes": 20,
+          "max_score": 6,
+          "texts": [
+            {
+              "stimulus_text": "Ein neues Leben für alte Bücher in Leipzig\n\nIn Leipzig gibt es seit Kurzem eine besondere Initiative für Bücherliebhaber: die „Bücherbox“. Diese öffentlichen Bücherschränke stehen an verschiedenen Plätzen in der Stadt und laden dazu ein, gelesene Bücher abzugeben und neue zu entdecken. Die Idee ist einfach: Man nimmt ein Buch, das man lesen möchte, und stellt ein anderes, das man nicht mehr braucht, dafür hinein. So bekommen Bücher ein zweites Leben, anstatt im Müll zu landen.\n\nDie „Bücherbox“ wird von Freiwilligen betreut, die regelmäßig nach dem Rechten sehen und dafür sorgen, dass die Schränke sauber und geordnet bleiben. Sie sortieren auch Bücher aus, die nicht mehr lesbar sind. Die Resonanz der Leipziger Bürger ist sehr positiv. Viele freuen sich über die Möglichkeit, kostenlos neue Lektüre zu finden und gleichzeitig etwas Gutes für die Umwelt zu tun. Es ist ein schönes Beispiel dafür, wie man im Alltag Nachhaltigkeit leben kann und gleichzeitig die Freude am Lesen teilt.",
+              "questions": [
+                {
+                  "number": 7,
+                  "stem": "Worum geht es in dem Text hauptsächlich?",
+                  "options": {
+                    "a": "Um eine neue Bibliothek in Leipzig.",
+                    "b": "Um öffentliche Bücherschränke, wo man Bücher tauschen kann.",
+                    "c": "Um eine Sammelstelle für alte Bücher."
+                  },
+                  "answer": "b"
+                },
+                {
+                  "number": 8,
+                  "stem": "Wer kümmert sich um die „Bücherboxen“?",
+                  "options": {
+                    "a": "Mitarbeiter der Stadtverwaltung.",
+                    "b": "Ehrenamtliche Helfer.",
+                    "c": "Die Bürger, die Bücher tauschen."
+                  },
+                  "answer": "b"
+                },
+                {
+                  "number": 9,
+                  "stem": "Was ist ein Vorteil der „Bücherbox“?",
+                  "options": {
+                    "a": "Man kann dort alte Bücher verkaufen.",
+                    "b": "Man muss keine Bücher mehr kaufen.",
+                    "c": "Man kann kostenlos lesen und schont die Umwelt."
+                  },
+                  "answer": "c"
+                }
+              ]
+            },
+            {
+              "stimulus_text": "Digital Detox: Eine Woche ohne Smartphone\n\nImmer mehr Menschen spüren, wie sehr sie von ihren Smartphones abhängig sind. Ständiges Überprüfen von Nachrichten, sozialen Medien und E-Mails kann stressig sein und die Konzentration beeinträchtigen. Eine mögliche Lösung ist der „Digital Detox“, also eine bewusste Auszeit von digitalen Geräten. Frau Müller aus Berlin hat es eine Woche lang ausprobiert.\n\nSie erzählte, dass die ersten Tage sehr schwierig waren. Sie fühlte sich isoliert und hatte das Gefühl, etwas Wichtiges zu verpassen. Doch nach ein paar Tagen änderte sich das. Sie begann, mehr Bücher zu lesen, traf sich persönlich mit Freunden und verbrachte Zeit in der Natur. Sie bemerkte, wie viel freie Zeit sie plötzlich hatte und wie viel ruhiger ihr Kopf wurde. Am Ende der Woche war sie überrascht, wie gut es ihr ohne Smartphone ging. Sie plant nun, auch in Zukunft regelmäßig digitale Pausen einzulegen, um ihre Lebensqualität zu verbessern.",
+              "questions": [
+                {
+                  "number": 10,
+                  "stem": "Was ist das Hauptproblem, das im Text beschrieben wird?",
+                  "options": {
+                    "a": "Zu viele Bücher zu lesen.",
+                    "b": "Die Abhängigkeit von Smartphones.",
+                    "c": "Zu wenig Kontakt zu Freunden."
+                  },
+                  "answer": "b"
+                },
+                {
+                  "number": 11,
+                  "stem": "Wie fühlte sich Frau Müller am Anfang ihres „Digital Detox“?",
+                  "options": {
+                    "a": "Sie war entspannt und glücklich.",
+                    "b": "Sie fühlte sich einsam und vermisste ihr Smartphone.",
+                    "c": "Sie hatte viel mehr Zeit für ihre Hobbys."
+                  },
+                  "answer": "b"
+                },
+                {
+                  "number": 12,
+                  "stem": "Was hat Frau Müller durch den „Digital Detox“ gelernt?",
+                  "options": {
+                    "a": "Dass sie ohne Smartphone nicht leben kann.",
+                    "b": "Dass digitale Geräte nicht wichtig sind.",
+                    "c": "Dass digitale Pausen die Lebensqualität verbessern können."
+                  },
+                  "answer": "c"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "teil_number": 3,
+          "format_type": "matching",
+          "instructions": "Lesen Sie zuerst die zehn Anzeigen (a-j). Lesen Sie dann die Aufgaben (13-19) und finden Sie für jede Situation die passende Anzeige. Es gibt nur eine richtige Lösung. Wenn Sie keine passende Anzeige finden, schreiben Sie 0. Die Anzeige aus dem Beispiel können Sie nicht mehr verwenden.",
+          "time_minutes": 10,
+          "max_score": 7,
+          "anzeigen": {
+            "a": "Fahrrad-Reparatur & Verkauf\nHat Ihr Fahrrad einen Platten oder brauchen Sie ein neues? Wir reparieren schnell und günstig und bieten eine große Auswahl an gebrauchten Rädern. Kommen Sie vorbei! Mo-Fr 10-18 Uhr.",
+            "b": "Italienischer Kochkurs für Anfänger\nTräumen Sie davon, Pasta wie in Italien zu kochen? Lernen Sie in unserem Wochenendkurs die Geheimnisse der italienischen Küche kennen. Keine Vorkenntnisse nötig. Jetzt anmelden!",
+            "c": "Deutschkurse am Abend\nMöchten Sie Ihr Deutsch verbessern? Wir bieten Abendkurse für alle Niveaus, von A1 bis B2. Kleine Gruppen, erfahrene Lehrer. Start: 1. Oktober.",
+            "d": "Umzugs-Flohmarkt: Möbel & mehr\nWir ziehen um und verkaufen gut erhaltene Möbel (Schrank, Sofa, Tisch), Haushaltsgeräte und Dekoartikel zu kleinen Preisen. Nur Selbstabholung. Samstag, 10-16 Uhr.",
+            "e": "Zuverlässiger Babysitter gesucht\nJunge Familie sucht erfahrene und liebevolle Person, die ab und zu abends auf unsere 3-jährige Tochter aufpasst. Referenzen erwünscht. Gute Bezahlung.",
+            "f": "Wandergruppe \"Naturfreunde\"\nLieben Sie die Natur und Bewegung? Schließen Sie sich unserer Gruppe an! Jede Woche eine neue Tour in der Region. Gute Kondition von Vorteil. Infos unter naturfreunde.de.",
+            "g": "Nachhilfe für Schüler\nProbleme in Mathematik, Deutsch oder Englisch? Erfahrene Studenten geben Nachhilfe für alle Schulstufen. Einzelunterricht oder kleine Gruppen. Erste Stunde gratis!",
+            "h": "Großer Bücher- und Kleiderflohmarkt\nFinden Sie tolle Schnäppchen! Bücher, CDs, Kleidung für Erwachsene und Kinder, Spielzeug. Jeden ersten Samstag im Monat, Gemeindehalle. Kaffee und Kuchen!",
+            "i": "Tennisverein \"Aufschlag\"\nLust auf Sport und Spaß? Werden Sie Mitglied in unserem Tennisverein! Wir bieten Kurse für Anfänger und Fortgeschrittene. Schnuppertraining jederzeit möglich.",
+            "j": "Neueröffnung Tierarztpraxis Dr. Klein\nModerne Praxis für Hunde, Katzen und Kleintiere. Vorsorge, Impfungen, Chirurgie. Hausbesuche nach Vereinbarung. Termine online oder telefonisch."
+          },
+          "questions": [
+            {
+              "number": 13,
+              "situation": "Sie ziehen in eine neue Wohnung und brauchen noch einen Schrank und ein Sofa, möchten aber nicht viel Geld ausgeben.",
+              "answer": "d"
+            },
+            {
+              "number": 14,
+              "situation": "Ihre Freundin hat Schwierigkeiten in der Schule, besonders in Mathe, und sucht Unterstützung.",
+              "answer": "g"
+            },
+            {
+              "number": 15,
+              "situation": "Sie möchten Ihre Deutschkenntnisse verbessern, haben aber tagsüber keine Zeit für einen Kurs.",
+              "answer": "c"
+            },
+            {
+              "number": 16,
+              "situation": "Sie suchen eine Person, die gelegentlich auf Ihr kleines Kind aufpassen kann, wenn Sie abends ausgehen möchten.",
+              "answer": "e"
+            },
+            {
+              "number": 17,
+              "situation": "Ihr Fahrrad ist kaputt und Sie brauchen dringend eine Reparatur, oder Sie möchten ein günstiges gebrauchtes Rad kaufen.",
+              "answer": "a"
+            },
+            {
+              "number": 18,
+              "situation": "Sie möchten lernen, wie man typische italienische Gerichte zubereitet und suchen einen Kurs für Anfänger.",
+              "answer": "b"
+            },
+            {
+              "number": 19,
+              "situation": "Sie suchen eine neue Stelle als Verkäufer/in in einem Supermarkt und möchten sich bewerben.",
+              "answer": "0"
+            }
+          ]
+        },
+        {
+          "teil_number": 4,
+          "format_type": "ja_nein",
+          "instructions": "Lesen Sie die Kommentare (20–26) und die Aufgaben dazu. Haben Sie die Kommentare richtig verstanden? Kreuzen Sie an: ja oder nein.",
+          "time_minutes": 15,
+          "max_score": 7,
+          "topic": "Homeoffice – Fluch oder Segen?",
+          "questions": [
+            {
+              "number": 20,
+              "author": "Lena M.",
+              "text": "Für mich war das Homeoffice eine große Umstellung, aber jetzt möchte ich es nicht mehr missen. Ich spare viel Zeit für den Arbeitsweg und kann meine Arbeitszeiten flexibler gestalten. So bleibt mehr Zeit für Sport und Familie. Die Produktivität hat sich für mich sogar verbessert, weil ich mich zu Hause besser konzentrieren kann.",
+              "answer": "ja"
+            },
+            {
+              "number": 21,
+              "author": "Thomas K.",
+              "text": "Das Homeoffice klingt toll, aber in der Realität ist es oft schwierig. Die Grenze zwischen Arbeit und Freizeit verschwimmt. Ich finde es schwer, nach Feierabend abzuschalten, wenn mein Arbeitslaptop direkt neben mir liegt. Außerdem vermisse ich den persönlichen Austausch mit den Kollegen sehr. Die Kommunikation ist online einfach nicht dasselbe.",
+              "answer": "ja"
+            },
+            {
+              "number": 22,
+              "author": "Sabine P.",
+              "text": "Ich arbeite seit zwei Jahren hauptsächlich von zu Hause aus. Am Anfang war es eine Herausforderung, aber mit der richtigen Struktur funktioniert es super. Wichtig ist ein fester Arbeitsplatz und klare Regeln, wann man arbeitet und wann man Pause macht. Mein Chef ist flexibel und das Team trifft sich regelmäßig virtuell. Das hilft sehr.",
+              "answer": "nein"
+            },
+            {
+              "number": 23,
+              "author": "Max R.",
+              "text": "Für mich ist das Homeoffice keine Option. Ich brauche die Trennung zwischen Arbeitsplatz und Privatleben. Außerdem ist meine Wohnung zu klein, um einen richtigen Arbeitsplatz einzurichten. Ich lenke mich zu Hause zu leicht ab und brauche die Dynamik im Büro. Ich bin froh, dass ich jeden Tag ins Büro gehen kann.",
+              "answer": "ja"
+            },
+            {
+              "number": 24,
+              "author": "Julia S.",
+              "text": "Ich finde die Möglichkeit, ab und zu von zu Hause zu arbeiten, super. Es ist eine gute Balance. Man kann wichtige Termine wahrnehmen oder konzentriert an einem Projekt arbeiten, ohne ständig unterbrochen zu werden. Aber ich möchte nicht jeden Tag zu Hause sein. Der Austausch im Büro ist mir wichtig und gehört für mich zum Arbeitsalltag.",
+              "answer": "nein"
+            },
+            {
+              "number": 25,
+              "author": "David L.",
+              "text": "Seit der Pandemie ist Homeoffice bei uns Standard. Viele Kollegen klagen über Rückenschmerzen oder Augenprobleme, weil die ergonomische Ausstattung zu Hause oft fehlt. Die Firma sollte hier mehr Unterstützung anbieten, zum Beispiel Zuschüsse für Büromöbel. Manchmal fühle ich mich auch isoliert, aber die Flexibilität ist unschlagbar.",
+              "answer": "ja"
+            },
+            {
+              "number": 26,
+              "author": "Clara H.",
+              "text": "Ich finde, Homeoffice ist eine tolle Chance für Unternehmen, die Mitarbeiterzufriedenheit zu erhöhen. Es zeigt Vertrauen und ermöglicht den Mitarbeitern mehr Freiheit. Das motiviert. Natürlich muss die Technik stimmen und es braucht gute Absprachen im Team. Aber insgesamt überwiegen die Vorteile für mich klar.",
+              "answer": "ja"
+            }
+          ]
+        },
+        {
+          "teil_number": 5,
+          "format_type": "qcm_abc",
+          "instructions": "Lesen Sie den Text und die Aufgaben 27–30. Wählen Sie bei jeder Aufgabe die richtige Lösung a, b oder c.",
+          "time_minutes": 10,
+          "max_score": 4,
+          "stimulus_text": "**Benutzungsordnung der Stadtbibliothek**\n\n1.  **Öffnungszeiten:** Die Bibliothek ist montags bis freitags von 10:00 bis 18:00 Uhr geöffnet. Samstags von 10:00 bis 14:00 Uhr. Sonntags und an Feiertagen bleibt die Bibliothek geschlossen.\n2.  **Ausleihe:** Für die Ausleihe von Medien ist ein gültiger Bibliotheksausweis erforderlich. Die Ausleihfrist beträgt für Bücher vier Wochen, für Zeitschriften und CDs zwei Wochen. Eine Verlängerung ist online oder persönlich möglich, sofern die Medien nicht von anderen Nutzern vorbestellt sind.\n3.  **Gebühren:** Die Jahresgebühr für Erwachsene beträgt 15 Euro. Für Kinder und Jugendliche unter 18 Jahren ist die Nutzung kostenlos. Bei Überschreitung der Ausleihfrist fallen Mahngebühren an, die pro Medium und Woche berechnet werden.\n4.  **Verhalten in der Bibliothek:** In allen Bereichen der Bibliothek ist Ruhe zu bewahren. Mobiltelefone müssen stummgeschaltet oder ausgeschaltet sein. Essen und Trinken sind in den Lesebereichen nicht gestattet. Beschädigungen an Medien oder Einrichtungsgegenständen sind unverzüglich dem Personal zu melden und können zu Ersatzforderungen führen.",
+          "questions": [
+            {
+              "number": 27,
+              "stem": "Wann ist die Stadtbibliothek am Wochenende geöffnet?",
+              "options": {
+                "a": "Nur sonntags.",
+                "b": "Am Samstag und Sonntag.",
+                "c": "Nur samstags."
+              },
+              "answer": "c"
+            },
+            {
+              "number": 28,
+              "stem": "Wie lange können Sie Bücher ausleihen?",
+              "options": {
+                "a": "Vier Wochen.",
+                "b": "Zwei Wochen.",
+                "c": "Eine Woche."
+              },
+              "answer": "a"
+            },
+            {
+              "number": 29,
+              "stem": "Müssen Jugendliche für die Bibliotheksnutzung bezahlen?",
+              "options": {
+                "a": "Ja, wenn sie über 16 sind.",
+                "b": "Nein, die Nutzung ist kostenlos.",
+                "c": "Ja, aber weniger als Erwachsene."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 30,
+              "stem": "Was ist in den Lesebereichen der Bibliothek erlaubt?",
+              "options": {
+                "a": "Leise telefonieren.",
+                "b": "Nur Wasser trinken.",
+                "c": "Nichts essen oder trinken."
+              },
+              "answer": "c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "horen",
+      "name": "Hören",
+      "time_limit_minutes": 40,
+      "max_score": 100,
+      "raw_items": 30,
+      "teile": [
+        {
+          "teil_number": 1,
+          "format_type": "mixed_richtig_falsch_qcm",
+          "instructions": "Sie hören fünf kurze Texte. Jeden Text hören Sie zweimal.",
+          "time_minutes": 10,
+          "max_score": 10,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Anrufbeantworter",
+              "transcription": "Hallo Max, hier ist Lena. Ich wollte dich kurz erreichen. Unser Treffen am Freitagabend müssen wir leider verschieben. Ich habe unerwartet eine wichtige Familienfeier. Passt es dir vielleicht am Samstagabend um 19 Uhr? Oder sollen wir es nächste Woche versuchen? Ruf mich bitte zurück und sag mir Bescheid. Ich freue mich auf dich!",
+              "questions": [
+                {
+                  "number": 1,
+                  "type": "richtig_falsch",
+                  "statement": "Lena kann am Freitag nicht, weil sie eine Familienfeier hat.",
+                  "answer": "richtig"
+                },
+                {
+                  "number": 2,
+                  "type": "qcm_abc",
+                  "stem": "Wann schlägt Lena als Alternative vor?",
+                  "options": {
+                    "a": "Nächste Woche",
+                    "b": "Samstagabend",
+                    "c": "Freitagabend"
+                  },
+                  "answer": "b"
+                }
+              ],
+              "audio_file": "output\\audio_20260328_192723\\horen_teil1_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Anrufbeantworter",
+              "transcription": "Guten Tag, hier ist die Zahnarztpraxis Dr. Schmidt. Wir wollten Sie daran erinnern, dass Ihr Termin zur Kontrolle am Mittwoch, dem 15. Mai, um 14:30 Uhr stattfindet. Bitte kommen Sie pünktlich. Falls Sie den Termin nicht wahrnehmen können, bitten wir Sie, uns mindestens 24 Stunden vorher Bescheid zu geben. Vielen Dank und bis bald!",
+              "questions": [
+                {
+                  "number": 3,
+                  "type": "richtig_falsch",
+                  "statement": "Der Termin ist für Donnerstag.",
+                  "answer": "falsch"
+                },
+                {
+                  "number": 4,
+                  "type": "qcm_abc",
+                  "stem": "Was soll man tun, wenn man den Termin nicht einhalten kann?",
+                  "options": {
+                    "a": "Mindestens 24 Stunden vorher anrufen",
+                    "b": "Einfach nicht erscheinen",
+                    "c": "Eine E-Mail schreiben"
+                  },
+                  "answer": "a"
+                }
+              ],
+              "audio_file": "output\\audio_20260328_192723\\horen_teil1_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Radio Durchsage",
+              "transcription": "Achtung, liebe Hörerinnen und Hörer! Für alle, die das Wochenende sportlich beginnen möchten: Am Samstag findet der jährliche Stadtlauf statt. Start ist um 9 Uhr am Marktplatz. Die Strecke führt durch die Altstadt und entlang des Flusses. Anmeldungen sind noch bis Freitagabend online möglich. Kommen Sie vorbei und unterstützen Sie die Läufer!",
+              "questions": [
+                {
+                  "number": 5,
+                  "type": "richtig_falsch",
+                  "statement": "Der Stadtlauf beginnt am Fluss.",
+                  "answer": "falsch"
+                },
+                {
+                  "number": 6,
+                  "type": "qcm_abc",
+                  "stem": "Wann kann man sich noch für den Lauf anmelden?",
+                  "options": {
+                    "a": "Am Samstagmorgen",
+                    "b": "Nur am Freitag",
+                    "c": "Bis Freitagabend online"
+                  },
+                  "answer": "c"
+                }
+              ],
+              "audio_file": "output\\audio_20260328_192723\\horen_teil1_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Bahnhof Durchsage",
+              "transcription": "Achtung, eine wichtige Durchsage. Der Intercity 2043 nach München, planmäßige Abfahrt um 14:15 Uhr von Gleis 5, fällt heute leider komplett aus. Grund ist eine technische Störung. Reisende nach München werden gebeten, den nächsten Zug um 14:45 Uhr von Gleis 7 zu nehmen. Wir bitten um Ihr Verständnis und entschuldigen die Unannehmlichkeiten.",
+              "questions": [
+                {
+                  "number": 7,
+                  "type": "richtig_falsch",
+                  "statement": "Der Zug nach München fährt heute von einem anderen Gleis ab.",
+                  "answer": "falsch"
+                },
+                {
+                  "number": 8,
+                  "type": "qcm_abc",
+                  "stem": "Warum fällt der Zug aus?",
+                  "options": {
+                    "a": "Wegen eines Streiks.",
+                    "b": "Aufgrund eines technischen Problems.",
+                    "c": "Wegen zu vieler Passagiere."
+                  },
+                  "answer": "b"
+                }
+              ],
+              "audio_file": "output\\audio_20260328_192723\\horen_teil1_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Wetterbericht",
+              "transcription": "Guten Morgen, hier ist der Wetterbericht für Süddeutschland. Heute Vormittag erwarten wir im Süden noch viele Wolken und vereinzelt leichte Regenschauer. Die Temperaturen erreichen angenehme 18 bis 20 Grad. Am Nachmittag lockert es dann langsam auf, die Sonne zeigt sich immer häufiger. Für morgen, Donnerstag, wird strahlender Sonnenschein mit bis zu 25 Grad vorhergesagt. Ein perfekter Tag für Outdoor-Aktivitäten!",
+              "questions": [
+                {
+                  "number": 9,
+                  "type": "richtig_falsch",
+                  "statement": "Am Nachmittag wird das Wetter besser.",
+                  "answer": "richtig"
+                },
+                {
+                  "number": 10,
+                  "type": "qcm_abc",
+                  "stem": "Wie wird das Wetter am Donnerstag?",
+                  "options": {
+                    "a": "Sehr sonnig und warm.",
+                    "b": "Regnerisch und kühl.",
+                    "c": "Bewölkt mit wenig Sonne."
+                  },
+                  "answer": "a"
+                }
+              ],
+              "audio_file": "output\\audio_20260328_192723\\horen_teil1_audio5.mp3"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "format_type": "qcm_abc",
+          "instructions": "Sie hören nun einen Text. Sie hören den Text zweimal. Wählen Sie bei den Aufgaben 11-15 die richtige Lösung a, b oder c. Markieren Sie Ihre Lösungen auf dem Antwortbogen.",
+          "time_minutes": 8,
+          "max_score": 5,
+          "context": "Führung durch ein Museum",
+          "transcription": "Guten Tag und herzlich willkommen im Stadtmuseum! Mein Name ist Lena Schmidt, und ich bin heute Ihre Museumsführerin. Wir stehen hier im Erdgeschoss, wo unsere aktuelle Sonderausstellung zum Thema 'Leben in den 50er Jahren' zu sehen ist. Viele Besucher erinnern sich noch an diese Zeit oder hören Geschichten von ihren Großeltern. Wir zeigen hier originale Möbel, Kleidung und Alltagsgegenstände aus dieser Epoche. Besonders beliebt sind die alten Radios und Plattenspieler, die noch funktionieren. Man kann sogar Musik von damals hören, was oft für nostalgische Gefühle sorgt. Die Ausstellung läuft noch bis Ende November.\n\nBevor wir in den ersten Stock gehen, möchte ich Sie noch kurz auf unser Museumscafé hinweisen. Es befindet sich im Untergeschoss und bietet leckeren Kaffee, Kuchen und kleine Snacks an. Ideal für eine kleine Pause nach dem Rundgang oder auch schon davor, um sich zu stärken. Im Museumsshop, direkt neben dem Eingang, finden Sie außerdem eine große Auswahl an Büchern, Postkarten und kleinen Geschenken rund um die Stadtgeschichte und unsere Ausstellungen. Hier gibt es auch besondere Artikel zur aktuellen 50er-Jahre-Ausstellung.\n\nDas Stadtmuseum selbst ist in einem wunderschönen historischen Gebäude aus dem 18. Jahrhundert untergebracht, das ursprünglich ein Wohnhaus für eine wohlhabende Kaufmannsfamilie war. Es wurde 1923 in ein Museum umgewandelt und seither mehrmals renoviert. Nächsten Monat, ab dem 1. Dezember, eröffnen wir eine neue Ausstellung über die Entwicklung des Sports in unserer Region. Diese wird dann im zweiten Stock zu finden sein und verspricht, sehr interessant zu werden.\n\nBitte beachten Sie, dass Fotografieren ohne Blitzlicht erlaubt ist, um die Exponate zu schützen. Und falls Sie Fragen haben oder weitere Informationen wünschen, stehe ich Ihnen jederzeit gerne zur Verfügung. Genießen Sie Ihren Besuch!",
+          "questions": [
+            {
+              "number": 11,
+              "stem": "Worum geht es in der aktuellen Sonderausstellung?",
+              "options": {
+                "a": "Um die Geschichte des Stadtmuseums.",
+                "b": "Um berühmte Persönlichkeiten der Stadt.",
+                "c": "Um das Leben in den 50er Jahren."
+              },
+              "answer": "c"
+            },
+            {
+              "number": 12,
+              "stem": "Wo befindet sich das Museumscafé?",
+              "options": {
+                "a": "Im Untergeschoss.",
+                "b": "Im Erdgeschoss, neben dem Eingang.",
+                "c": "Im ersten Stock."
+              },
+              "answer": "a"
+            },
+            {
+              "number": 13,
+              "stem": "Was war das Museumsgebäude ursprünglich?",
+              "options": {
+                "a": "Eine alte Schule.",
+                "b": "Ein Wohnhaus für eine Kaufmannsfamilie.",
+                "c": "Ein Rathaus."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 14,
+              "stem": "Wann beginnt die neue Ausstellung über Sport?",
+              "options": {
+                "a": "Ende November.",
+                "b": "Nächste Woche.",
+                "c": "Am 1. Dezember."
+              },
+              "answer": "c"
+            },
+            {
+              "number": 15,
+              "stem": "Was ist im Museum bezüglich des Fotografierens erlaubt?",
+              "options": {
+                "a": "Fotografieren ohne Blitzlicht.",
+                "b": "Fotografieren ist generell verboten.",
+                "c": "Fotografieren mit Blitzlicht ist erlaubt."
+              },
+              "answer": "a"
+            }
+          ],
+          "audio_file": "output\\audio_20260328_192723\\horen_teil2.mp3"
+        },
+        {
+          "teil_number": 3,
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören jetzt ein Gespräch. Sie hören den Text zweimal. Bearbeiten Sie die Aufgaben 16 bis 22. Kreuzen Sie an: richtig oder falsch.",
+          "time_minutes": 8,
+          "max_score": 7,
+          "context": "Gespräch an einer Bushaltestelle",
+          "transcription": "Herr Schmidt: Guten Morgen, Frau Müller! Warten Sie auch schon lange?\nFrau Müller: Ach, Herr Schmidt! Guten Morgen. Ja, der Bus ist heute mal wieder spät. Ich warte schon seit fast fünfzehn Minuten. Das ist wirklich ärgerlich.\nHerr Schmidt: Das stimmt. Ich muss zum Bahnhof, um meine Tochter abzuholen. Ihr Zug kommt in einer halben Stunde an, und ich muss noch ein Geschenk kaufen.\nFrau Müller: Oh je, dann wird es knapp! Ich habe um halb neun einen wichtigen Termin beim Arzt. Ich hoffe, wir kommen pünktlich an. Es geht um eine Routineuntersuchung, aber ich möchte nicht zu spät kommen.\nHerr Schmidt: Wissen Sie, was los ist? Ich habe gehört, dass es heute Morgen einen Unfall auf der Hauptstraße gab. Vielleicht ist das der Grund.\nFrau Müller: Ach, wirklich? Das habe ich gar nicht mitbekommen. Das würde aber einiges erklären. Neulich war ja auch die Brücke gesperrt wegen Bauarbeiten, da war das Chaos perfekt.\nHerr Schmidt: Ja, ich erinnere mich. Da musste ich auch einen großen Umweg fahren, um zur Arbeit zu kommen. Das war echt nervig. Manchmal wünschte ich, ich hätte ein Auto, aber dann denke ich an den Stau und die Parkplatzsuche...\nFrau Müller: Ja, da haben Sie recht. Und es ist so kalt heute Morgen. Ich habe meinen Schal vergessen und friere schon.\nHerr Schmidt: Stimmt, der Wind pfeift ganz schön. Aber wenigstens scheint die Sonne ein bisschen. Das macht die Wartezeit etwas angenehmer, finde ich. Haben Sie am Wochenende etwas Besonderes vor?\nFrau Müller: Nicht wirklich. Ich wollte nur ein bisschen im Garten arbeiten, wenn das Wetter mitspielt. Und Sie?\nHerr Schmidt: Ich fahre mit meiner Tochter aufs Land zu meinen Eltern. Sie freut sich schon sehr darauf, die Großeltern zu besuchen. Und die frische Luft tut uns beiden gut.\nFrau Müller: Das klingt schön! Eine gute Idee, dem Stadtleben mal zu entfliehen.\nHerr Schmidt: Schauen Sie mal! Da vorne kommt er ja! Endlich!\nFrau Müller: Oh, super! Das wird aber auch Zeit. Dann wünsche ich Ihnen viel Glück mit Ihrer Tochter und ein schönes Wochenende.\nHerr Schmidt: Danke, Frau Müller! Ihnen auch alles Gute beim Arzttermin und ein erholsames Wochenende. Hoffentlich ist es nichts Ernstes.\nFrau Müller: Danke. Auf Wiedersehen!\nHerr Schmidt: Auf Wiedersehen!",
+          "questions": [
+            {
+              "number": 16,
+              "statement": "Frau Müller wartet schon seit fast fünfzehn Minuten auf den Bus.",
+              "answer": "richtig"
+            },
+            {
+              "number": 17,
+              "statement": "Herr Schmidt muss zum Bahnhof, um seine Frau abzuholen.",
+              "answer": "falsch"
+            },
+            {
+              "number": 18,
+              "statement": "Frau Müller hat heute Vormittag einen Arzttermin.",
+              "answer": "richtig"
+            },
+            {
+              "number": 19,
+              "statement": "Herr Schmidt hat gehört, dass ein Unfall auf der Hauptstraße der Grund für die Verspätung sein könnte.",
+              "answer": "richtig"
+            },
+            {
+              "number": 20,
+              "statement": "Frau Müller friert, weil sie ihren Schal zu Hause vergessen hat.",
+              "answer": "richtig"
+            },
+            {
+              "number": 21,
+              "statement": "Herr Schmidt fährt am Wochenende allein zu seinen Eltern aufs Land.",
+              "answer": "falsch"
+            },
+            {
+              "number": 22,
+              "statement": "Am Ende des Gesprächs verabschieden sich Herr Schmidt und Frau Müller voneinander.",
+              "answer": "richtig"
+            }
+          ],
+          "audio_file": "output\\audio_20260328_192723\\horen_teil3.mp3"
+        },
+        {
+          "teil_number": 4,
+          "format_type": "zuordnung_speaker",
+          "instructions": "Sie hören nun eine Diskussionsrunde. Sie hören die Diskussion zweimal. Entscheiden Sie, welche Aussage (23-30) von welcher Person stammt. Markieren Sie die richtige Antwort A, B oder C auf dem Antwortbogen.",
+          "time_minutes": 10,
+          "max_score": 8,
+          "speakers": {
+            "a": "Moderator",
+            "b": "Dr. Lena Richter",
+            "c": "Herr Markus Keller"
+          },
+          "transcription": "[Moderator]: Herzlich willkommen zu unserer Sendung 'Zukunft der Arbeit'. Heute sprechen wir darüber, wie sich unsere Arbeitswelt verändert und welche Rolle Technologie dabei spielt. Ich begrüße dazu unsere Gäste: Dr. Lena Richter, Expertin für Arbeitspsychologie, und Herrn Markus Keller, einen erfolgreichen Unternehmer im Technologiebereich. Schön, dass Sie beide da sind.\n\n[Dr. Lena Richter]: Guten Tag. Es ist ein sehr spannendes Thema, denn die Veränderungen sind rasant. Aus psychologischer Sicht sehe ich große Chancen, aber auch Herausforderungen. Die Flexibilität, die uns neue Technologien bieten, kann das Gleichgewicht zwischen Arbeit und Privatleben verbessern, aber sie kann auch dazu führen, dass wir ständig erreichbar sind und uns schwerer von der Arbeit lösen können.\n\n[Herr Markus Keller]: Guten Tag. Aus Unternehmersicht ist Technologie der Motor dieser Entwicklung. Künstliche Intelligenz und Automatisierung werden viele Routineaufgaben übernehmen, was die Effizienz steigert und neue, kreativere Arbeitsplätze schafft. Wir müssen uns aber auch darauf einstellen, dass bestimmte Berufsbilder verschwinden und neue Kompetenzen gefragt sind.\n\n[Moderator]: Das ist ein wichtiger Punkt, Herr Keller. Frau Dr. Richter, wie bereiten wir die Menschen auf diese neuen Kompetenzen vor? Geht es nur um technische Fähigkeiten?\n\n[Dr. Lena Richter]: Absolut nicht. Neben digitalen Kompetenzen werden soziale und emotionale Fähigkeiten immer wichtiger. Empathie, kritisches Denken, Problemlösungskompetenz und Kreativität sind Fähigkeiten, die eine Maschine nicht ersetzen kann. Lebenslanges Lernen wird zur Norm, und Unternehmen müssen hier mehr Verantwortung übernehmen.\n\n[Herr Markus Keller]: Ich stimme Frau Dr. Richter zu, dass Soft Skills entscheidend sind. Aber wir dürfen die Investition in technische Bildung nicht vernachlässigen. Wir brauchen mehr Spezialisten in Bereichen wie Datenanalyse oder Softwareentwicklung. Gleichzeitig müssen wir flexible Arbeitsmodelle fördern, die es den Mitarbeitern ermöglichen, sich weiterzubilden.\n\n[Moderator]: Einige Kritiker befürchten, dass durch die Automatisierung viele Jobs verloren gehen. Wie sehen Sie das?\n\n[Herr Markus Keller]: Ich sehe das eher als eine Umschichtung. Es werden zwar Routinejobs wegfallen, aber es entstehen auch viele neue. Denken Sie an die Wartung von Robotern oder die Entwicklung neuer KI-Anwendungen. Das ist keine Bedrohung, sondern eine Evolution, die uns produktiver macht.\n\n[Dr. Lena Richter]: Ich bin da etwas vorsichtiger. Es stimmt, dass neue Jobs entstehen, aber der Übergang kann für viele Menschen schwierig sein. Es braucht massive Investitionen in Umschulung und soziale Sicherungssysteme, um sicherzustellen, dass niemand zurückgelassen wird. Und wir müssen auch über die Qualität der neuen Arbeitsplätze sprechen, nicht nur über die Quantität.\n\n[Moderator]: Also, zusammenfassend kann man sagen, dass die Zukunft der Arbeit sowohl Chancen als auch Risiken birgt, und es liegt an uns, wie wir sie gestalten. Vielen Dank an Dr. Lena Richter und Herrn Markus Keller für diese aufschlussreiche Diskussion.",
+          "questions": [
+            {
+              "number": 23,
+              "statement": "Wer ist der Meinung, dass die ständige Erreichbarkeit durch neue Technologien das Abschalten von der Arbeit erschweren kann?",
+              "answer": "b"
+            },
+            {
+              "number": 24,
+              "statement": "Wer glaubt, dass Künstliche Intelligenz und Automatisierung die Effizienz erhöhen und neue, kreative Arbeitsplätze schaffen werden?",
+              "answer": "c"
+            },
+            {
+              "number": 25,
+              "statement": "Wer leitet die Diskussion ein und begrüßt die Gäste zum Thema 'Zukunft der Arbeit'?",
+              "answer": "a"
+            },
+            {
+              "number": 26,
+              "statement": "Wer betont, dass neben digitalen Kompetenzen auch soziale und emotionale Fähigkeiten in der zukünftigen Arbeitswelt immer wichtiger werden?",
+              "answer": "b"
+            },
+            {
+              "number": 27,
+              "statement": "Wer ist der Ansicht, dass mehr Spezialisten in technischen Bereichen wie Datenanalyse oder Softwareentwicklung benötigt werden?",
+              "answer": "c"
+            },
+            {
+              "number": 28,
+              "statement": "Wer fordert, dass Unternehmen mehr Verantwortung für das lebenslange Lernen der Mitarbeiter übernehmen sollten?",
+              "answer": "b"
+            },
+            {
+              "number": 29,
+              "statement": "Wer fragt kritisch nach den möglichen Jobverlusten durch Automatisierung?",
+              "answer": "a"
+            },
+            {
+              "number": 30,
+              "statement": "Wer sieht den Verlust von Routinejobs durch Automatisierung als eine Umschichtung und Evolution, die uns produktiver macht?",
+              "answer": "c"
+            }
+          ],
+          "audio_file": "output\\audio_20260328_192723\\horen_teil4.mp3"
+        }
+      ]
+    },
+    {
+      "slug": "schreiben",
+      "name": "Schreiben",
+      "time_limit_minutes": 60,
+      "max_score": 100,
+      "raw_items": 3,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Persönliche E-Mail",
+          "format_type": "free_text",
+          "instructions": "Sie schreiben eine E-Mail an einen Freund/eine Freundin. Beachten Sie die folgenden Punkte und schreiben Sie circa 80 Wörter.",
+          "time_minutes": 20,
+          "max_score": 40,
+          "text_type": "E-Mail",
+          "word_count_target": 80,
+          "scenario": "Ihr Freund/Ihre Freundin, Max/Lisa, hat Sie zu seiner/ihrer Geburtstagsfeier eingeladen. Leider können Sie an diesem Tag nicht kommen.",
+          "prompts": [
+            "Schreiben Sie, warum Sie nicht kommen können.",
+            "Entschuldigen Sie sich.",
+            "Schlagen Sie ein anderes Treffen vor."
+          ],
+          "scoring_criteria": {
+            "Erfüllung": {
+              "max": 10,
+              "description": "Alle drei Inhaltspunkte wurden angemessen behandelt."
+            },
+            "Kohärenz": {
+              "max": 10,
+              "description": "Der Text ist gut strukturiert und verständlich."
+            },
+            "Wortschatz": {
+              "max": 10,
+              "description": "Der Wortschatz ist angemessen und variantenreich genug für B1."
+            },
+            "Strukturen": {
+              "max": 10,
+              "description": "Die grammatischen Strukturen sind überwiegend korrekt und B1-tauglich."
+            }
+          },
+          "musterlösung": "Liebe Lisa,\n\nvielen Dank für die Einladung zu deiner Geburtstagsfeier! Ich freue mich sehr, dass du an mich gedacht hast. Leider kann ich am Samstag nicht kommen, weil ich an diesem Wochenende meine Familie besuche, die ich lange nicht gesehen habe. Das tut mir wirklich leid! Ich hätte gerne mit dir gefeiert. Vielleicht können wir uns nächste Woche auf einen Kaffee treffen? Oder wir gehen zusammen ins Kino? Sag einfach Bescheid, wann es dir passt. Ich wünsche dir eine tolle Party und einen schönen Geburtstag!\n\nViele Grüße,\n[Dein Name]"
+        },
+        {
+          "teil_number": 2,
+          "name": "Meinungsäußerung",
+          "format_type": "free_text",
+          "instructions": "Sie lesen in einem Online-Forum einen Beitrag zum Thema 'Arbeit von zu Hause'. Schreiben Sie Ihre Meinung dazu. Äußern Sie sich zu dem Beitrag und schreiben Sie circa 80 Wörter.",
+          "time_minutes": 25,
+          "max_score": 40,
+          "text_type": "Diskussionsbeitrag",
+          "word_count_target": 80,
+          "stimulus": "Ich finde, Homeoffice ist super! Man spart Zeit für den Arbeitsweg und kann flexibler sein. Man ist produktiver und hat mehr Freiheit. Außerdem ist es gut für die Umwelt, weil weniger Menschen Auto fahren müssen.",
+          "stimulus_author": "Anna Meier",
+          "task": "Reagieren Sie auf Annas Beitrag und schreiben Sie Ihre eigene Meinung zum Thema Homeoffice.",
+          "scoring_criteria": {
+            "Erfüllung": {
+              "max": 10,
+              "description": "Der Beitrag ist eine angemessene Reaktion auf den Stimulus und enthält eine klare Meinungsäußerung."
+            },
+            "Kohärenz": {
+              "max": 10,
+              "description": "Der Text ist gut strukturiert und verständlich."
+            },
+            "Wortschatz": {
+              "max": 10,
+              "description": "Der Wortschatz ist angemessen und variantenreich genug für B1."
+            },
+            "Strukturen": {
+              "max": 10,
+              "description": "Die grammatischen Strukturen sind überwiegend korrekt und B1-tauglich."
+            }
+          },
+          "musterlösung": "Liebe Anna,\n\nich stimme dir teilweise zu. Homeoffice hat viele Vorteile, besonders die Flexibilität und die eingesparte Pendelzeit sind toll. Auch der Umweltaspekt ist wichtig. Aber ich sehe auch Nachteile. Manchmal fehlt mir der persönliche Kontakt zu den Kollegen und die Trennung zwischen Arbeit und Privatleben ist schwieriger. Für mich ist eine Mischung aus Büro und Homeoffice ideal. So hat man die Vorteile von beidem. Was denkst du darüber?\n\nViele Grüße,\n[Dein Name]"
+        },
+        {
+          "teil_number": 3,
+          "name": "Formelle E-Mail",
+          "format_type": "free_text",
+          "instructions": "Sie schreiben eine kurze formelle E-Mail. Beachten Sie die Situation und schreiben Sie circa 40 Wörter.",
+          "time_minutes": 15,
+          "max_score": 20,
+          "text_type": "E-Mail",
+          "register": "formell",
+          "word_count_target": 40,
+          "scenario": "Sie haben sich für einen Deutschkurs an der Volkshochschule angemeldet, können aber am ersten Kurstag wegen eines Arzttermins nicht kommen. Schreiben Sie eine E-Mail an die Kursleitung, um sich zu entschuldigen.",
+          "scoring_criteria": {
+            "Erfüllung": {
+              "max": 4,
+              "description": "Der Inhaltspunkt wurde angemessen behandelt."
+            },
+            "Kohärenz": {
+              "max": 4,
+              "description": "Der Text ist verständlich und angemessen strukturiert."
+            },
+            "Wortschatz": {
+              "max": 6,
+              "description": "Der Wortschatz ist angemessen und korrekt."
+            },
+            "Strukturen": {
+              "max": 6,
+              "description": "Die grammatischen Strukturen sind überwiegend korrekt."
+            }
+          },
+          "musterlösung": "Sehr geehrte Damen und Herren,\n\nich habe mich für den Deutschkurs B1 angemeldet. Leider kann ich am ersten Kurstag, dem [Datum], wegen eines Arzttermins nicht kommen. Ich bitte um Ihr Verständnis. Ab dem zweiten Termin bin ich pünktlich dabei.\n\nMit freundlichen Grüßen,\n[Ihr Name]"
+        }
+      ]
+    },
+    {
+      "slug": "sprechen",
+      "name": "Sprechen",
+      "time_limit_minutes": 15,
+      "max_score": 100,
+      "raw_items": 3,
+      "preparation_minutes": 15,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Gemeinsam etwas planen",
+          "format_type": "oral_interaction",
+          "instructions": "Sie planen gemeinsam etwas. Sie haben 3 Minuten Zeit, um über das Thema zu sprechen. Vergessen Sie nicht, auf alle Punkte einzugehen und sich am Ende zu einigen.",
+          "time_minutes": 3,
+          "max_score": 32,
+          "scenario": "Ihre Freundin/Ihr Freund Lena/Leon hat bald Geburtstag und Sie möchten eine Überraschungsparty für sie/ihn organisieren. Sie sprechen mit Ihrem Partner/Ihrer Partnerin über die Planung.",
+          "prompts": [
+            "Termin und Uhrzeit",
+            "Ort der Party (z.B. zu Hause, in einem Café)",
+            "Gästeliste und Einladungen",
+            "Essen und Getränke",
+            "Geschenkidee"
+          ],
+          "scoring_criteria": {
+            "Erfüllung": {
+              "Sprachfunktionen": 8,
+              "Inhalt": 8
+            },
+            "Wortschatz": 8,
+            "Strukturen": 8
+          }
+        },
+        {
+          "teil_number": 2,
+          "name": "Ein Thema präsentieren",
+          "format_type": "oral_monologue",
+          "instructions": "Wählen Sie ein Thema aus und präsentieren Sie es. Ihre Präsentation sollte ungefähr 3 Minuten dauern. Sprechen Sie über die fünf Punkte, die auf den Folien stehen.",
+          "time_minutes": 3,
+          "max_score": 36,
+          "themes": {
+            "thema1": {
+              "title": "Sport und Gesundheit",
+              "slides": [
+                "Folie 1: Einleitung – Was bedeutet Sport und Gesundheit für mich?",
+                "Folie 2: Persönliche Erfahrung – Treibe ich Sport? Welchen? Warum?",
+                "Folie 3: Situation im Heimatland – Welche Rolle spielt Sport in meinem Heimatland?",
+                "Folie 4: Vor- und Nachteile – Was sind die Vorteile von Sport? Gibt es auch Nachteile?",
+                "Folie 5: Abschluss – Meine Meinung und ein Ausblick."
+              ]
+            },
+            "thema2": {
+              "title": "Online-Shopping",
+              "slides": [
+                "Folie 1: Einleitung – Was ist Online-Shopping und warum ist es wichtig?",
+                "Folie 2: Persönliche Erfahrung – Kaufe ich oft online ein? Was kaufe ich gerne?",
+                "Folie 3: Situation im Heimatland – Wie populär ist Online-Shopping in meinem Heimatland?",
+                "Folie 4: Vor- und Nachteile – Was sind die Vorteile und Nachteile des Online-Shoppings?",
+                "Folie 5: Abschluss – Meine Meinung und eine Zusammenfassung."
+              ]
+            }
+          },
+          "scoring_criteria": {
+            "Erfüllung": {
+              "Vollständigkeit": 12
+            },
+            "Kohärenz": 12,
+            "Wortschatz": 6,
+            "Strukturen": 6
+          }
+        },
+        {
+          "teil_number": 3,
+          "name": "Über ein Thema sprechen",
+          "format_type": "oral_feedback",
+          "instructions": "Reagieren Sie auf die Präsentation Ihres Partners/Ihrer Partnerin. Sagen Sie Ihre Meinung dazu und stellen Sie eine Frage. Antworten Sie dann auf die Fragen des Prüfers/der Prüferin und Ihres Partners/Ihrer Partnerin.",
+          "time_minutes": 2,
+          "max_score": 32,
+          "tasks": [
+            "Reagieren Sie auf die Präsentation Ihres Partners/Ihrer Partnerin.",
+            "Sagen Sie Ihre Meinung zu dem Thema der Präsentation.",
+            "Stellen Sie eine Frage zur Präsentation Ihres Partners/Ihrer Partnerin.",
+            "Antworten Sie auf die Fragen des Prüfers/der Prüferin und Ihres Partners/Ihrer Partnerin."
+          ],
+          "scoring_criteria": {
+            "Erfüllung": {
+              "Sprachfunktionen": 8,
+              "Inhalt": 8
+            },
+            "Aussprache": 16
+          }
+        }
+      ]
+    }
+  ]
+}

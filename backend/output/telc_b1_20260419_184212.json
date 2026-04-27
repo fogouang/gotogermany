@@ -1,0 +1,735 @@
+{
+  "exam_id": "telc_b1_20260419_184212",
+  "name": "TELC Deutsch B1 / Zertifikat Deutsch",
+  "slug": "telc_b1",
+  "provider": "telc",
+  "cefr_code": "B1",
+  "version": "generated",
+  "generated_at": "20260419_184212",
+  "scoring_model": "per_module_weighted",
+  "pass_threshold": 60,
+  "scoring_details": {
+    "written_total": 225,
+    "oral_total": 75,
+    "grand_total": 300,
+    "written_pass": 135,
+    "oral_pass": 45,
+    "modules": {
+      "Leseverstehen": "75 pts (25%)",
+      "Sprachbausteine": "30 pts (10%)",
+      "Hoerverstehen": "75 pts (25%)",
+      "Schriftlicher Ausdruck": "45 pts (15%)",
+      "Muendlicher Ausdruck": "75 pts (25%)"
+    }
+  },
+  "modules": [
+    {
+      "slug": "lesen",
+      "name": "Leseverstehen",
+      "time_limit_minutes": 90,
+      "max_score": 75,
+      "raw_items": 20,
+      "note": "Inclut aussi Sprachbausteine dans le même bloc de 90 min",
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Globalverstehen",
+          "format_type": "zuordnung_titre",
+          "instructions": "Lesen Sie die Überschriften a–j und die Texte 1–5. Finden Sie für jeden Text die passende Überschrift. Sie können jede Überschrift nur einmal benutzen. Markieren Sie Ihre Lösungen für die Aufgaben 1–5 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 25,
+          "titres": {
+            "a": "Neues Hobby für den Winter",
+            "b": "Tipps für gesunde Ernährung",
+            "c": "Änderungen im Busfahrplan",
+            "d": "Hilfe bei der Jobsuche",
+            "e": "Eine neue Sportart entdecken",
+            "f": "Kulturelles Fest in der Stadt",
+            "g": "Wichtige Informationen für Touristen",
+            "h": "Günstige Angebote im Supermarkt",
+            "i": "Probleme mit dem Internetanschluss",
+            "j": "Das Wetter am Wochenende"
+          },
+          "questions": [
+            {
+              "number": 1,
+              "stimulus_text": "Ab dem 1. November gibt es wichtige Änderungen im öffentlichen Nahverkehr. Besonders betroffen ist die Buslinie 103, die von der Stadtmitte zum Bahnhof fährt. Wegen Bauarbeiten an der Hauptstraße wird die Route dieser Linie für voraussichtlich drei Monate umgeleitet. Die Haltestellen „Marktplatz“ und „Schule“ werden in dieser Zeit nicht bedient. Eine Ersatzhaltestelle wird in der Schillerstraße eingerichtet. Bitte informieren Sie sich vor Ihrer Fahrt über die neuen Fahrzeiten und Haltestellen auf unserer Webseite oder an den Aushängen.",
+              "answer": "c"
+            },
+            {
+              "number": 2,
+              "stimulus_text": "Am kommenden Samstag feiert unsere Stadt das jährliche „Kulturfest am Fluss“. Ab 14 Uhr gibt es auf dem Rathausplatz und entlang des Flusses ein vielfältiges Programm für Jung und Alt. Musiker aus verschiedenen Ländern präsentieren traditionelle Klänge, während lokale Künstler ihre Werke ausstellen. Für das leibliche Wohl sorgen zahlreiche Stände mit internationalen Spezialitäten. Der Eintritt ist frei. Kommen Sie vorbei und erleben Sie einen Tag voller Musik, Kunst und guter Laune!",
+              "answer": "f"
+            },
+            {
+              "number": 3,
+              "stimulus_text": "Sind Sie auf der Suche nach einer interessanten Freizeitbeschäftigung für die kalte Jahreszeit? Die Volkshochschule bietet ab November neue Kurse im Bereich Keramik und Töpfern an. Egal ob Anfänger oder Fortgeschrittener, hier können Sie Ihre Kreativität ausleben und einzigartige Kunstwerke schaffen. Alle Materialien sind im Kurspreis enthalten. Die Kurse finden einmal pro Woche abends statt. Melden Sie sich schnell an, die Plätze sind begrenzt!",
+              "answer": "a"
+            },
+            {
+              "number": 4,
+              "stimulus_text": "Diese Woche lohnt sich ein Besuch bei „Frisch & Günstig“! Wir haben wieder viele Produkte für Sie reduziert. Zum Beispiel gibt es frisches Obst und Gemüse zum halben Preis. Auch unsere Tiefkühlpizzen sind im Angebot: Kaufen Sie zwei und erhalten Sie die dritte gratis dazu. Für alle Backfreunde gibt es Mehl und Zucker besonders günstig. Die Angebote gelten von Montag bis Samstag, solange der Vorrat reicht. Greifen Sie zu und sparen Sie bares Geld!",
+              "answer": "h"
+            },
+            {
+              "number": 5,
+              "stimulus_text": "Sie suchen eine neue berufliche Herausforderung oder möchten sich beruflich neu orientieren? Das Arbeitsamt bietet jeden Dienstag von 9 bis 12 Uhr eine kostenlose Sprechstunde an. Erfahrene Berater helfen Ihnen bei der Erstellung Ihrer Bewerbungsunterlagen, geben Tipps für Vorstellungsgespräche und informieren über aktuelle Stellenangebote in der Region. Eine Anmeldung ist nicht erforderlich. Kommen Sie einfach vorbei und nutzen Sie die Chance für Ihre Karriere!",
+              "answer": "d"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Detailverstehen",
+          "format_type": "qcm_abc",
+          "instructions": "Lesen Sie den Text und die Aufgaben 6–10. Welche Lösung (a, b oder c) ist jeweils richtig? Markieren Sie Ihre Lösungen für die Aufgaben 6–10 auf dem Antwortbogen.",
+          "time_minutes": 20,
+          "max_score": 25,
+          "stimulus_text": "Repair Café „Flickwerk“: Gemeinsam gegen die Wegwerfgesellschaft\n\nIn unserer heutigen Konsumgesellschaft landen viele Dinge schnell im Müll, sobald sie einen kleinen Defekt haben. Dabei wäre es oft möglich, sie mit etwas Wissen und Werkzeug zu reparieren. Genau hier setzt das Konzept der Repair Cafés an, und eines der erfolgreichsten in unserer Region ist das „Flickwerk“.\n\nDas „Flickwerk“ wurde vor drei Jahren von einer Gruppe engagierter Bürger gegründet, die sich für Nachhaltigkeit und Ressourcenschonung einsetzen. Jeden ersten Samstag im Monat öffnen sie ihre Türen in einem Gemeindezentrum. Besucher können ihre kaputten Gegenstände mitbringen – von alten Toastern und Radios über gerissene Hosen bis hin zu wackeligen Stühlen. Vor Ort warten ehrenamtliche Helferinnen und Helfer, die sich in verschiedenen Bereichen auskennen: Elektriker, Schneiderinnen, Schreiner und Allrounder.\n\nDas Ziel ist nicht, dass die Freiwilligen die Reparatur komplett übernehmen, sondern die Besucher aktiv miteinbeziehen. „Wir wollen den Leuten zeigen, wie einfach es manchmal ist, etwas zu reparieren, und ihnen so Mut machen, es beim nächsten Mal selbst zu versuchen“, erklärt Anna Müller, eine der Initiatorinnen. Werkzeuge und Materialien sind vorhanden, und oft entstehen beim gemeinsamen Reparieren interessante Gespräche und neue Kontakte.\n\nDie Vorteile des „Flickwerks“ sind vielfältig: Es spart Geld, da man keine neuen Dinge kaufen muss. Es schont die Umwelt, weil weniger Müll produziert wird. Und es fördert den Gemeinschaftssinn, indem Menschen zusammenkommen und voneinander lernen. Nicht alles kann repariert werden, besonders wenn spezielle Ersatzteile fehlen oder der Schaden zu groß ist. Aber die Erfolgsquote ist hoch, und viele Besucher verlassen das Café mit einem funktionierenden Gerät und einem Lächeln.\n\nDas Projekt ist so beliebt, dass die Räumlichkeiten oft voll sind. „Wir könnten noch mehr Freiwillige gebrauchen, besonders für Elektronik und Fahrradreparaturen“, sagt Anna Müller. Das „Flickwerk“ zeigt, wie kleine Initiativen einen großen Unterschied machen können.",
+          "source": "aus einem deutschen Online-Magazin",
+          "questions": [
+            {
+              "number": 6,
+              "stem": "In diesem Text geht es darum, dass das Repair Café „Flickwerk“...",
+              "options": {
+                "a": "...hauptsächlich Fahrräder und elektronische Geräte repariert.",
+                "b": "...Menschen hilft, kaputte Dinge zu reparieren und gleichzeitig die Gemeinschaft stärkt.",
+                "c": "...von der Gemeinde finanziert wird, um Arbeitsplätze zu schaffen."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 7,
+              "stem": "Was ist eine wichtige Aufgabe der ehrenamtlichen Helfer im „Flickwerk“?",
+              "options": {
+                "a": "Sie leiten die Besucher an und zeigen ihnen, wie sie selbst reparieren können.",
+                "b": "Sie reparieren alle mitgebrachten Gegenstände vollständig allein.",
+                "c": "Sie verkaufen Ersatzteile und neue Werkzeuge an die Besucher."
+              },
+              "answer": "a"
+            },
+            {
+              "number": 8,
+              "stem": "Welche der folgenden Aussagen über die Vorteile des „Flickwerks“ ist richtig?",
+              "options": {
+                "a": "Es ermöglicht den Besuchern, kostenlos neue Geräte zu bekommen.",
+                "b": "Es konzentriert sich ausschließlich darauf, Müll zu vermeiden.",
+                "c": "Es hilft, Geld zu sparen und fördert den Zusammenhalt in der Gesellschaft."
+              },
+              "answer": "c"
+            },
+            {
+              "number": 9,
+              "stem": "Warum können nicht alle Gegenstände im Repair Café „Flickwerk“ repariert werden?",
+              "options": {
+                "a": "Weil die Helfer nur sehr einfache Reparaturen durchführen können.",
+                "b": "Weil manchmal spezielle Ersatzteile fehlen oder der Schaden zu groß ist.",
+                "c": "Weil das Café nur bestimmte Arten von Gegenständen annimmt, z.B. keine Kleidung."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 10,
+              "stem": "Was ist laut Anna Müller eine aktuelle Herausforderung für das „Flickwerk“?",
+              "options": {
+                "a": "Sie benötigen mehr Freiwillige, um die Nachfrage zu decken.",
+                "b": "Die Besucher bringen zu viele große Möbelstücke zur Reparatur mit.",
+                "c": "Die Räumlichkeiten im Gemeindezentrum sind zu teuer geworden."
+              },
+              "answer": "a"
+            }
+          ]
+        },
+        {
+          "teil_number": 3,
+          "name": "Selektives Verstehen",
+          "format_type": "selektives_matching",
+          "instructions": "Lesen Sie die Situationen 11–20 und die Anzeigen a–l. Finden Sie für jede Situation die passende Anzeige. Sie können jede Anzeige nur einmal benutzen. Wenn Sie zu einer Situation keine Anzeige finden, markieren Sie ein x. Markieren Sie Ihre Lösungen für die Aufgaben 11–20 auf dem Antwortbogen.",
+          "time_minutes": 20,
+          "max_score": 25,
+          "context": "Touristen suchen passende Angebote in einer deutschsprachigen Stadt.",
+          "anzeigen": {
+            "a": "Fahrradverleih 'Rad-Tour': Entdecken Sie die Stadt auf zwei Rädern! Täglich von 9-18 Uhr. Günstige Tarife, auch für Gruppen. Reservierung empfohlen.",
+            "b": "Restaurant 'Familientreff': Bei uns sind Kinder herzlich willkommen! Großer Spielbereich, spezielle Kindermenüs und Hochstühle. Täglich ab 11:30 Uhr.",
+            "c": "Historische Stadtführungen: Erfahren Sie alles über die spannende Vergangenheit unserer Stadt. Jeden Samstag und Sonntag um 10 Uhr. Treffpunkt: Marktplatz. Kosten: 12 €.",
+            "d": "Fundbüro der Stadt: Haben Sie etwas verloren oder gefunden? Wir helfen Ihnen gerne! Öffnungszeiten: Mo-Fr 9-16 Uhr. Rathaus, Zimmer 101.",
+            "e": "Café 'Nachtklang': Jeden Freitag und Samstag Live-Musik ab 20 Uhr. Von Jazz bis Pop, immer freier Eintritt! Leckere Getränke und Snacks.",
+            "f": "Schifffahrt 'Blaue Donau': Genießen Sie eine entspannte Panoramafahrt auf dem Fluss. Abfahrt stündlich vom Hafen. Dauer: 1,5 Stunden. Tickets an Bord.",
+            "g": "Geschenkeladen 'Stadtgeheimnisse': Einzigartige Souvenirs, handgemachte Produkte und typische Spezialitäten. Finden Sie das perfekte Andenken! Täglich geöffnet.",
+            "h": "Kunstgalerie 'Modern Art': Neue Ausstellung 'Farben der Stadt'. Eintritt frei! Täglich außer montags, 11-18 Uhr. Besuchen Sie uns!",
+            "i": "Hostel 'Stadtnest': Günstige Betten im Mehrbettzimmer oder kleine Einzelzimmer. Ideal für Rucksacktouristen. Zentral gelegen, WLAN inklusive. Ab 20 € pro Nacht.",
+            "j": "Stadttheater: 'Der Kuss der Fee' – Ein romantisches Ballett. Vorstellungen Di-So. Tickets online oder an der Abendkasse.",
+            "k": "Kochstudio 'Gaumenfreuden': Entdecken Sie die lokale Küche! Kochkurse für Anfänger und Fortgeschrittene. Nächster Kurs: 'Schwäbische Spezialitäten' am Samstag.",
+            "l": "Wanderverein 'Grüne Wege': Geführte Wanderungen in die Umgebung. Nächste Tour: Sonntag, 9 Uhr, Treffpunkt Bahnhof. Anmeldung erforderlich."
+          },
+          "questions": [
+            {
+              "number": 11,
+              "situation": "Ein Tourist möchte die Stadt auf eigene Faust erkunden und braucht dafür ein Fahrrad.",
+              "answer": "a"
+            },
+            {
+              "number": 12,
+              "situation": "Eine Familie mit kleinen Kindern sucht ein kinderfreundliches Restaurant für das Mittagessen.",
+              "answer": "b"
+            },
+            {
+              "number": 13,
+              "situation": "Zwei Freunde interessieren sich für die Geschichte der Stadt und möchten mehr darüber erfahren, am besten mit einem Führer.",
+              "answer": "c"
+            },
+            {
+              "number": 14,
+              "situation": "Ein Besucher hat seinen Geldbeutel verloren und sucht eine Stelle, wo er Hilfe bekommen kann.",
+              "answer": "d"
+            },
+            {
+              "number": 15,
+              "situation": "Eine Studentin möchte am Abend Live-Musik hören, aber nicht zu viel Geld ausgeben.",
+              "answer": "e"
+            },
+            {
+              "number": 16,
+              "situation": "Ein älteres Ehepaar möchte eine entspannte Fahrt auf dem Fluss machen, um die Stadt vom Wasser aus zu sehen.",
+              "answer": "f"
+            },
+            {
+              "number": 17,
+              "situation": "Ein junger Mann sucht ein Geschäft, wo er originelle Geschenke und Souvenirs kaufen kann.",
+              "answer": "g"
+            },
+            {
+              "number": 18,
+              "situation": "Eine Touristin möchte eine Ausstellung besuchen, die nichts kostet.",
+              "answer": "h"
+            },
+            {
+              "number": 19,
+              "situation": "Jemand sucht einen ruhigen Ort, um am Nachmittag in einem Café ein Buch zu lesen und Kaffee zu trinken.",
+              "answer": "x"
+            },
+            {
+              "number": 20,
+              "situation": "Ein Rucksacktourist braucht eine günstige Übernachtungsmöglichkeit für eine Nacht.",
+              "answer": "i"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "sprachbausteine",
+      "name": "Sprachbausteine",
+      "time_limit_minutes": 0,
+      "max_score": 30,
+      "raw_items": 20,
+      "note": "Intégré dans le bloc Leseverstehen (90 min partagées)",
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Grammatik",
+          "format_type": "qcm_gap_fill",
+          "instructions": "Lesen Sie den Text und schließen Sie die Lücken 21–30. Welche Lösung (a, b oder c) ist jeweils richtig? Markieren Sie Ihre Lösungen für die Aufgaben 21–30 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 15,
+          "text_with_gaps": "Liebe Anna,\n\nwie geht es dir? Ich hoffe, alles ist gut bei dir. Ich wollte dir endlich mal wieder schreiben und _21_ meiner neuen Situation erzählen. Ich bin jetzt _22_ einem Monat in Hamburg und habe mich schon gut eingelebt. Es war ziemlich anstrengend, _23_ der Umzug, aber jetzt bin ich endlich angekommen.\n\nMeine neue Wohnung _24_ super! Sie ist viel größer als die alte und hat sogar einen kleinen Balkon. Von dort _25_ man direkt auf einen Park, das ist wirklich schön. Ich habe auch schon ein paar neue Leute kennengelernt. Meine Nachbarn sind sehr nett und wir haben schon zusammen Kaffee getrunken.\n\nDie Arbeit im neuen Büro gefällt _26_ auch sehr gut. Meine Kollegen sind hilfsbereit und das Arbeitsklima ist entspannt. Ich muss noch viel lernen, _27_ das ist normal am Anfang. Gestern hatte ich meine erste große Präsentation, und ich war _28_ nervös, aber es lief alles gut.\n\nAm Wochenende möchte ich endlich mal die Stadt erkunden. Ich habe gehört, _29_ der Hafen sehr beeindruckend sein soll. Vielleicht besuche ich auch ein Museum oder gehe in ein Konzert. Ich freue mich schon darauf, _30_ neue Stadt zu entdecken.\n\nSchreib mir bald, wenn du Zeit hast! Ich vermisse unsere Gespräche.\n\nLiebe Grüße\nLena",
+          "questions": [
+            {
+              "number": 21,
+              "options": {
+                "a": "aus",
+                "b": "von",
+                "c": "über"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 22,
+              "options": {
+                "a": "seit",
+                "b": "vor",
+                "c": "nach"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 23,
+              "options": {
+                "a": "durch",
+                "b": "wegen",
+                "c": "mit"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 24,
+              "options": {
+                "a": "bin",
+                "b": "hat",
+                "c": "ist"
+              },
+              "answer": "c"
+            },
+            {
+              "number": 25,
+              "options": {
+                "a": "sieht",
+                "b": "sehe",
+                "c": "sehen"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 26,
+              "options": {
+                "a": "mich",
+                "b": "mir",
+                "c": "ich"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 27,
+              "options": {
+                "a": "weil",
+                "b": "aber",
+                "c": "obwohl"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 28,
+              "options": {
+                "a": "sehr",
+                "b": "zu",
+                "c": "viel"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 29,
+              "options": {
+                "a": "dass",
+                "b": "ob",
+                "c": "wann"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 30,
+              "options": {
+                "a": "mein",
+                "b": "meine",
+                "c": "meinen"
+              },
+              "answer": "b"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Lexik",
+          "format_type": "word_bank_gap_fill",
+          "instructions": "Lesen Sie den Text und schließen Sie die Lücken 31–40. Benutzen Sie die Wörter a–o. Jedes Wort passt nur einmal. Markieren Sie Ihre Lösungen für die Aufgaben 31–40 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 15,
+          "text_with_gaps": "Sehr geehrte Damen und Herren,\n\nich interessiere mich _31_ Ihr Angebot an Deutschkursen und hätte _32_ noch einige Fragen dazu. Ich plane, im nächsten Jahr für mehrere Monate nach Deutschland zu kommen, um meine Deutschkenntnisse zu verbessern.\n\nIch habe bereits einen B1-Kurs in meinem Heimatland abgeschlossen und suche nun einen Kurs, der _33_ auf Konversation und Alltagskommunikation ausgerichtet ist. Ist es möglich, einen Einstufungstest zu machen, _34_ ich nicht sicher bin, ob mein Niveau noch B1 oder schon B2 ist?\n\n_35_ ich mich für einen Kurs bei Ihnen entscheide, _36_ ich auch wissen, ob Sie Unterstützung bei der Wohnungssuche anbieten. Ich benötige ein Zimmer für etwa drei Monate. _37_ ist es mir wichtig, dass die Schule gut mit öffentlichen Verkehrsmitteln erreichbar ist.\n\nKönnten Sie mir bitte auch Informationen zu den Kurszeiten und den Kosten für einen Intensivkurs (ca. 20 Stunden pro Woche) zukommen lassen? _38_ wäre es hilfreich zu wissen, ob es spezielle Angebote für Studenten gibt. Ich bin Studentin und _39_ ich mein Studium finanzieren kann, bin ich auf günstige Optionen angewiesen.\n\nIch wäre Ihnen _40_ für eine baldige Antwort.\n\nMit freundlichen Grüßen\nAnna Müller",
+          "word_bank": {
+            "a": "BESONDERS",
+            "b": "DA",
+            "c": "DAFÜR",
+            "d": "DAMALS",
+            "e": "DAMIT",
+            "f": "DANKBAR",
+            "g": "DESHALB",
+            "h": "FÜR",
+            "i": "GERNE",
+            "j": "KÖNNTEN",
+            "k": "MIT",
+            "l": "MÜSSTEN",
+            "m": "SCHLIESSLICH",
+            "n": "WANN",
+            "o": "WENN"
+          },
+          "questions": [
+            {
+              "number": 31,
+              "answer": "h"
+            },
+            {
+              "number": 32,
+              "answer": "i"
+            },
+            {
+              "number": 33,
+              "answer": "a"
+            },
+            {
+              "number": 34,
+              "answer": "b"
+            },
+            {
+              "number": 35,
+              "answer": "o"
+            },
+            {
+              "number": 36,
+              "answer": "l"
+            },
+            {
+              "number": 37,
+              "answer": "m"
+            },
+            {
+              "number": 38,
+              "answer": "g"
+            },
+            {
+              "number": 39,
+              "answer": "e"
+            },
+            {
+              "number": 40,
+              "answer": "f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "horen",
+      "name": "Hörverstehen",
+      "time_limit_minutes": 30,
+      "max_score": 75,
+      "raw_items": 20,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Globalverstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun fünf kurze Texte. Dazu sollen Sie fünf Aufgaben lösen. Sie hören diese Texte nur einmal. Entscheiden Sie beim Hören, ob die Aussagen 41-45 richtig oder falsch sind.",
+          "time_minutes": 8,
+          "max_score": 25,
+          "max_plays": 1,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Gespräch",
+              "transcription": "Hallo Anna, wie geht's? Ich wollte dich fragen, ob wir uns am Samstag treffen können. Ich muss noch ein Geschenk für meine Mutter kaufen und brauche deine Hilfe bei der Auswahl. Danach könnten wir in meinem Lieblingscafé einen Kaffee trinken gehen und ein bisschen quatschen. Was sagst du?",
+              "questions": [
+                {
+                  "number": 41,
+                  "statement": "Die Person möchte Anna um Hilfe bitten, um ein Geschenk zu finden.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil1_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Ansage",
+              "transcription": "Achtung, eine wichtige Durchsage für alle Passagiere des Fluges LH 247 nach Rom. Wegen eines technischen Problems am Flugzeug wird der Abflug um zwei Stunden verschoben. Bitte begeben Sie sich nicht zum Gate, sondern warten Sie in der Wartehalle. Weitere Informationen folgen in Kürze. Wir bitten um Ihr Verständnis.",
+              "questions": [
+                {
+                  "number": 42,
+                  "statement": "Der Flug nach Rom startet planmäßig.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil1_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Gespräch",
+              "transcription": "Guten Tag, ich suche ein gutes Buch für meinen Urlaub. Etwas Spannendes vielleicht, einen Krimi oder so. Haben Sie da eine Empfehlung? Es sollte nicht zu dick sein, damit es gut in den Koffer passt. Ich fliege nächste Woche in den Süden.",
+              "questions": [
+                {
+                  "number": 43,
+                  "statement": "Der Kunde möchte einen Krimi für seine Reise kaufen.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil1_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Nachricht",
+              "transcription": "Hallo Herr Müller, hier ist Frau Schmidt von der Zahnarztpraxis. Ich wollte Sie an Ihren Termin morgen um 10 Uhr erinnern. Leider müssen wir diesen verschieben, da unser Arzt kurzfristig erkrankt ist. Bitte rufen Sie uns an, um einen neuen Termin zu vereinbaren. Vielen Dank.",
+              "questions": [
+                {
+                  "number": 44,
+                  "statement": "Herr Müller hat seinen Zahnarzttermin morgen wie geplant.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil1_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Gespräch",
+              "transcription": "Entschuldigung, ich habe meine Geldbörse verloren. Ich war vorhin im Café 'Sonnenschein' und danach im Supermarkt. Ich habe schon überall gesucht, aber sie ist weg. Können Sie mir sagen, was ich jetzt tun soll? Ich brauche meinen Ausweis.",
+              "questions": [
+                {
+                  "number": 45,
+                  "statement": "Die Person hat ihre Brieftasche verloren.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil1_audio5.mp3"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Detailverstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun ein Gespräch. Dazu sollen Sie zehn Aufgaben lösen. Sie hören das Gespräch zweimal. Entscheiden Sie beim Hören, ob die Aussagen 46-55 richtig oder falsch sind. Lesen Sie jetzt die Aufgaben 46-55. Sie haben dazu eine Minute Zeit.",
+          "time_minutes": 12,
+          "max_score": 25,
+          "max_plays": 2,
+          "context": "Ein Journalist spricht mit einer Vereinsvertreterin über das 100-jährige Jubiläum des Sportvereins.",
+          "transcription": {
+            "Herr Meier": "Das klingt nach einer vielversprechenden Zukunft. Vielen Dank für das Gespräch, Frau Schmidt.",
+            "Frau Schmidt": "Ich danke Ihnen, Herr Meier."
+          },
+          "questions": [
+            {
+              "number": 46,
+              "statement": "Der Journalist möchte einen Artikel über das 100-jährige Jubiläum des Vereins schreiben.",
+              "answer": "richtig"
+            },
+            {
+              "number": 47,
+              "statement": "Der Sportverein wurde im Jahr 1924 gegründet.",
+              "answer": "richtig"
+            },
+            {
+              "number": 48,
+              "statement": "Am Anfang bot der Verein bereits viele verschiedene Sportarten an.",
+              "answer": "falsch"
+            },
+            {
+              "number": 49,
+              "statement": "Die Mehrheit der Mitglieder des Vereins sind Erwachsene.",
+              "answer": "falsch"
+            },
+            {
+              "number": 50,
+              "statement": "Die Jubiläumsfeier beginnt am Abend mit einem Frühschoppen.",
+              "answer": "falsch"
+            },
+            {
+              "number": 51,
+              "statement": "Bei der Feier wird es auch Mitmachaktionen für Kinder geben.",
+              "answer": "richtig"
+            },
+            {
+              "number": 52,
+              "statement": "Der Bürgermeister ist einer der geladenen Gäste der Festveranstaltung.",
+              "answer": "richtig"
+            },
+            {
+              "number": 53,
+              "statement": "Es wird eine neue Sporthalle anlässlich des Jubiläums eröffnet.",
+              "answer": "falsch"
+            },
+            {
+              "number": 54,
+              "statement": "Der Verein hat keine Probleme, genügend Ehrenamtliche zu finden.",
+              "answer": "falsch"
+            },
+            {
+              "number": 55,
+              "statement": "Der Verein plant, nächstes Jahr ein neues Beachvolleyballfeld zu bauen.",
+              "answer": "richtig"
+            }
+          ],
+          "audio_file": null
+        },
+        {
+          "teil_number": 3,
+          "name": "Selektives Verstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun fünf kurze Texte. Dazu sollen Sie fünf Aufgaben lösen. Sie hören jeden Text zweimal. Entscheiden Sie beim Hören, ob die Aussagen 56-60 richtig oder falsch sind.",
+          "time_minutes": 10,
+          "max_score": 25,
+          "max_plays": 2,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Wegbeschreibung",
+              "transcription": "Guten Tag, liebe Besucher! Um zum Eingang des Museums zu gelangen, folgen Sie bitte dem Weg geradeaus bis zur großen Eiche. Dort biegen Sie links ab und gehen etwa fünfzig Meter weiter. Sie sehen dann das historische Gebäude mit der roten Tür auf der rechten Seite. Parkplätze finden Sie direkt vor dem Eingang.",
+              "questions": [
+                {
+                  "number": 56,
+                  "statement": "Der Eingang des Museums befindet sich auf der linken Seite, nachdem man an der Eiche links abgebogen ist.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil3_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Kinoprogramm",
+              "transcription": "Liebe Kinobesucher, heute Abend um 20:15 Uhr zeigen wir in Saal 3 den Abenteuerfilm 'Die verlorene Stadt'. Tickets sind noch an der Abendkasse erhältlich. Am Sonntag um 15:00 Uhr gibt es eine Sondervorstellung für Familien mit ermäßigten Preisen für Kinder unter 12 Jahren. Wir freuen uns auf Ihren Besuch!",
+              "questions": [
+                {
+                  "number": 57,
+                  "statement": "Der Film 'Die verlorene Stadt' wird heute Abend in Saal 2 gezeigt.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil3_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Wetterbericht",
+              "transcription": "Hier ist der Wetterbericht für morgen, Mittwoch. Es wird im Norden Deutschlands sonnig und trocken bei Temperaturen bis 22 Grad. Im Süden hingegen ist mit bewölktem Himmel und vereinzelten Schauern zu rechnen, besonders am Nachmittag. Die Temperaturen erreichen dort maximal 18 Grad. Bitte denken Sie an einen Regenschirm!",
+              "questions": [
+                {
+                  "number": 58,
+                  "statement": "Im Norden Deutschlands wird es morgen sonnig und wärmer als im Süden.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil3_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Zugdurchsage",
+              "transcription": "Achtung, Durchsage für den ICE 789 nach München über Stuttgart. Der Zug fährt heute ausnahmsweise von Gleis 5 ab. Die Abfahrt verzögert sich um voraussichtlich 15 Minuten. Wir bitten alle Fahrgäste, sich zu Gleis 5 zu begeben und entschuldigen uns für die Unannehmlichkeiten. Nächste Information in Kürze.",
+              "questions": [
+                {
+                  "number": 59,
+                  "statement": "Der ICE 789 nach München fährt heute pünktlich von Gleis 5 ab.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil3_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Werbung",
+              "transcription": "Entdecken Sie unsere neue Herbstkollektion im Modehaus 'Stilvoll'! Vom 15. bis 30. September erhalten Sie 20% Rabatt auf alle Jacken und Mäntel. Perfekt für die kühleren Tage! Besuchen Sie uns in der Hauptstraße 12 oder stöbern Sie online auf stilvoll-mode.de. Gültig nur solange der Vorrat reicht.",
+              "questions": [
+                {
+                  "number": 60,
+                  "statement": "Kunden erhalten bis Ende September einen Rabatt auf Jacken und Mäntel.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260419_184212\\horen_teil3_audio5.mp3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "schreiben",
+      "name": "Schriftlicher Ausdruck",
+      "time_limit_minutes": 30,
+      "max_score": 45,
+      "raw_items": 1,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "E-Mail schreiben",
+          "format_type": "free_text",
+          "instructions": "Sie haben von Ihrem Freund Max folgende E-Mail erhalten. Antworten Sie auf die E-Mail. Schreiben Sie etwas zu allen vier Punkten:",
+          "time_minutes": 30,
+          "max_score": 45,
+          "text_type": "E-Mail",
+          "word_count_target": 80,
+          "stimulus_email": {
+            "sender": "Max",
+            "subject": "Wochenende in Berlin?",
+            "body": "Hallo [Ihr Name],\nwie geht es dir? Ich hoffe, alles ist gut!\nIch habe eine Idee: Ich möchte nächsten Monat für ein Wochenende nach Berlin kommen. Ich war noch nie dort und freue mich schon sehr! Hast du vielleicht Zeit, dass wir uns treffen? Ich würde mich riesig freuen, dich mal wiederzusehen. Kennst du vielleicht ein günstiges Hotel oder Hostel in der Nähe des Zentrums? Und was sollte ich unbedingt sehen oder machen? Hast du einen Geheimtipp für mich?\nLiebe Grüße,\nMax"
+          },
+          "scenario": "Antworten Sie auf die E-Mail Ihres Freundes Max.",
+          "prompts": [
+            "Sagen Sie, ob Sie Zeit haben, sich mit Max zu treffen.",
+            "Schlagen Sie einen Termin oder eine Aktivität für ein Treffen vor.",
+            "Empfehlen Sie ein günstiges Hotel oder Hostel in Berlin.",
+            "Geben Sie Max einen Tipp für eine Sehenswürdigkeit oder Aktivität in Berlin."
+          ],
+          "register": "informell",
+          "scoring_criteria": {
+            "Aufgabenbewältigung": {
+              "A": "Alle vier Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "B": "Drei Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "C": "Zwei Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "D": "Nur ein oder kein Leitpunkt wird inhaltlich angemessen bearbeitet."
+            },
+            "Kommunikative_Gestaltung": {
+              "description": "Wortschatz, Kohäsion, Register, Textlogik"
+            },
+            "Formale_Richtigkeit": {
+              "description": "Grammatik, Morphologie, Syntax, Orthografie"
+            }
+          },
+          "musterlösung": "Lieber Max,\ndas ist eine super Idee! Ja, nächsten Monat habe ich bestimmt Zeit. Lass uns doch am Samstagabend zusammen essen gehen, zum Beispiel in einem netten Restaurant in Kreuzberg. Ich kenne ein gutes italienisches Restaurant dort.\nFür ein günstiges Hotel kann ich dir das „Hostel One Berlin“ empfehlen, es ist zentral und nicht teuer. Du musst unbedingt das Brandenburger Tor sehen und einen Spaziergang durch den Tiergarten machen. Das ist wirklich toll!\nIch freue mich schon auf dich!\nLiebe Grüße,\n[Ihr Name]"
+        }
+      ]
+    },
+    {
+      "slug": "sprechen",
+      "name": "Mündlicher Ausdruck",
+      "time_limit_minutes": 15,
+      "max_score": 75,
+      "preparation_minutes": 20,
+      "raw_items": 3,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Einander kennenlernen",
+          "format_type": "oral_kennenlernen",
+          "instructions": "Unterhalten Sie sich mit Ihrer Partnerin bzw. Ihrem Partner über folgende Themen:",
+          "time_minutes": 3,
+          "max_score": 15,
+          "topics": [
+            "Name",
+            "Woher sie oder er kommt",
+            "Wie sie oder er wohnt",
+            "Familie",
+            "Wo sie oder er Deutsch gelernt hat",
+            "Was sie oder er macht (Schule, Studium, Beruf)",
+            "Hobbys und Freizeit"
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Über ein Thema sprechen",
+          "format_type": "oral_thema",
+          "instructions": "Sie haben in einer Zeitschrift etwas zum Thema gelesen. Berichten Sie Ihrer Gesprächspartnerin/Ihrem Gesprächspartner darüber. Unterhalten Sie sich dann über das Thema.",
+          "time_minutes": 6,
+          "max_score": 30,
+          "topic": "Homeoffice – Arbeiten von zu Hause aus",
+          "opinion_a": {
+            "person": "Lena, 28, Grafikerin",
+            "text": "Ich liebe das Homeoffice! Ich spare viel Zeit, weil ich nicht pendeln muss. So habe ich mehr Zeit für meine Hobbys und meine Familie. Außerdem kann ich meine Arbeitszeiten flexibler gestalten und mich besser konzentrieren. Das ist super für meine Kreativität. Ich fühle mich produktiver und entspannter, wenn ich von zu Hause aus arbeite."
+          },
+          "opinion_b": {
+            "person": "Markus, 45, Bürokaufmann",
+            "text": "Homeoffice ist nichts für mich. Mir fehlt der direkte Kontakt zu meinen Kollegen sehr. Die Trennung zwischen Arbeit und Freizeit ist auch schwierig, wenn alles zu Hause stattfindet. Manchmal gibt es technische Probleme. Ich finde es besser, einen festen Arbeitsplatz im Büro zu haben. Dort kann ich mich besser konzentrieren und soziale Kontakte pflegen."
+          }
+        },
+        {
+          "teil_number": 3,
+          "name": "Gemeinsam etwas planen",
+          "format_type": "oral_interaction",
+          "instructions": "Sie haben zwei Wochen Urlaub gemacht und möchten vor dem Ende eine Abschiedsfeier organisieren. Planen Sie gemeinsam mit Ihrem Partner.",
+          "time_minutes": 6,
+          "max_score": 30,
+          "scenario": "Sie haben gemeinsam einen zweiwöchigen Deutschkurs in einer deutschen Stadt besucht. Der Kurs ist bald zu Ende und Sie möchten eine kleine Abschiedsfeier für die anderen Kursteilnehmer und den Lehrer organisieren. Planen Sie gemeinsam, wie diese Feier aussehen soll.",
+          "prompts": [
+            "Wann?",
+            "Wo?",
+            "Essen und Getränke",
+            "Wer bezahlt wofür?",
+            "Musik / Unterhaltung?"
+          ]
+        }
+      ]
+    }
+  ]
+}

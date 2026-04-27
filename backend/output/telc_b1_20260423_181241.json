@@ -1,0 +1,732 @@
+{
+  "exam_id": "telc_b1_20260423_181241",
+  "name": "TELC Deutsch B1 / Zertifikat Deutsch",
+  "slug": "telc_b1",
+  "provider": "telc",
+  "cefr_code": "B1",
+  "version": "generated",
+  "generated_at": "20260423_181241",
+  "scoring_model": "per_module_weighted",
+  "pass_threshold": 60,
+  "scoring_details": {
+    "written_total": 225,
+    "oral_total": 75,
+    "grand_total": 300,
+    "written_pass": 135,
+    "oral_pass": 45,
+    "modules": {
+      "Leseverstehen": "75 pts (25%)",
+      "Sprachbausteine": "30 pts (10%)",
+      "Hoerverstehen": "75 pts (25%)",
+      "Schriftlicher Ausdruck": "45 pts (15%)",
+      "Muendlicher Ausdruck": "75 pts (25%)"
+    }
+  },
+  "modules": [
+    {
+      "slug": "lesen",
+      "name": "Leseverstehen",
+      "time_limit_minutes": 90,
+      "max_score": 75,
+      "raw_items": 20,
+      "note": "Inclut aussi Sprachbausteine dans le même bloc de 90 min",
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Globalverstehen",
+          "format_type": "zuordnung_titre",
+          "instructions": "Lesen Sie die Überschriften a–j und die Texte 1–5. Finden Sie für jeden Text die passende Überschrift. Sie können jede Überschrift nur einmal benutzen. Markieren Sie Ihre Lösungen für die Aufgaben 1–5 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 25,
+          "titres": {
+            "a": "Einladung zum Stadtfest",
+            "b": "Tipps für eine gesunde Ernährung",
+            "c": "Verlorene Brille im Park",
+            "d": "Neuer Yogakurs für Einsteiger",
+            "e": "Wichtige Informationen für Autofahrer",
+            "f": "So sparen Sie Strom und Geld",
+            "g": "Flohmarkt im Viertel",
+            "h": "Zugverkehr wegen Bauarbeiten eingeschränkt",
+            "i": "Gefunden: eine alte Münze",
+            "j": "Reiseangebote für den Sommer"
+          },
+          "questions": [
+            {
+              "number": 1,
+              "stimulus_text": "Letzte Woche habe ich im Stadtpark meine Brille verloren. Es ist eine schwarze Lesebrille mit einem dünnen Rahmen. Ich habe sie wahrscheinlich auf einer Bank in der Nähe des Spielplatzes liegen lassen. Wenn jemand sie gefunden hat, bitte melden Sie sich bei mir. Meine Telefonnummer ist 0176-1234567. Ich brauche die Brille dringend für meine Arbeit und zum Lesen. Ich würde mich über jede Hilfe freuen.",
+              "answer": "c"
+            },
+            {
+              "number": 2,
+              "stimulus_text": "Hallo Nachbarn! Am Samstag, den 15. Mai, findet unser jährliches Straßenfest statt. Ab 14 Uhr gibt es Musik, Essen und Spiele für Kinder auf dem Marktplatz. Jeder ist herzlich eingeladen, etwas zum Buffet beizutragen oder bei den Vorbereitungen zu helfen. Wir freuen uns auf einen schönen Nachmittag mit Ihnen allen! Bei Fragen melden Sie sich bitte bei Frau Meier im Gemeindehaus.",
+              "answer": "a"
+            },
+            {
+              "number": 3,
+              "stimulus_text": "Möchten Sie Ihre Stromrechnung senken? Dann achten Sie auf kleine Details! Schalten Sie zum Beispiel Geräte wie Fernseher und Computer nicht nur mit der Fernbedienung aus, sondern ziehen Sie den Stecker oder nutzen Sie eine Steckdosenleiste mit Schalter. Auch Standby-Modi verbrauchen unnötig Strom. Mit diesen einfachen Tricks können Sie jährlich viel Geld sparen und die Umwelt schonen.",
+              "answer": "f"
+            },
+            {
+              "number": 4,
+              "stimulus_text": "Wegen Bauarbeiten an den Gleisen kommt es am kommenden Wochenende zu Einschränkungen im Zugverkehr. Die Strecke zwischen Köln und Düsseldorf wird von Samstagmorgen bis Sonntagabend gesperrt. Reisende müssen mit Verspätungen und Ausfällen rechnen. Es werden Ersatzbusse eingesetzt, die jedoch längere Fahrzeiten haben. Bitte informieren Sie sich vor Reiseantritt über alternative Verbindungen.",
+              "answer": "h"
+            },
+            {
+              "number": 5,
+              "stimulus_text": "Suchen Sie eine neue Herausforderung? Unser Fitnessstudio bietet ab nächstem Monat einen neuen Yogakurs für Anfänger an. Lernen Sie die Grundlagen des Yoga und verbessern Sie Ihre Flexibilität und Entspannung. Der Kurs findet jeden Dienstagabend von 18:00 bis 19:30 Uhr statt. Eine Probestunde ist kostenlos. Melden Sie sich jetzt an und tun Sie etwas Gutes für Ihren Körper und Geist!",
+              "answer": "d"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Detailverstehen",
+          "format_type": "qcm_abc",
+          "instructions": "Lesen Sie den Text und die Aufgaben 6–10. Welche Lösung (a, b oder c) ist jeweils richtig? Markieren Sie Ihre Lösungen für die Aufgaben 6–10 auf dem Antwortbogen.",
+          "time_minutes": 20,
+          "max_score": 25,
+          "stimulus_text": "Grüner Kiez: Wenn Nachbarn gemeinsam Gärten schaffen\n\nIn vielen Städten gibt es ungenutzte Flächen, die oft grau und trist aussehen. Doch in Berlin-Kreuzberg hat sich etwas Besonderes entwickelt: das Projekt „Grüner Kiez“. Hier verwandeln engagierte Anwohner seit fünf Jahren brachliegende Grundstücke in blühende Gemeinschaftsgärten. Die Idee ist einfach: Statt auf die Stadtverwaltung zu warten, nehmen die Bürger die Sache selbst in die Hand.\n\nDas Projekt startete klein mit einer Gruppe von zehn Nachbarn, die einen alten Parkplatz in einen Gemüsegarten umwandeln wollten. Heute sind über hundert Menschen aktiv dabei und pflegen nicht nur Gemüsebeete, sondern auch Kräuterspiralen und Blühwiesen für Insekten. „Es geht nicht nur ums Gärtnern“, erklärt Anna Müller, eine der Initiatorinnen. „Wir schaffen hier einen Treffpunkt, wo sich Menschen unterschiedlichen Alters und Herkunft kennenlernen und austauschen können.“ Regelmäßig finden gemeinsame Grillabende, Kinderfeste und Workshops statt, zum Beispiel zum Thema Kompostieren oder Saatgutgewinnung.\n\nFinanziert wird „Grüner Kiez“ hauptsächlich durch Spenden und kleinere Fördergelder von Umweltorganisationen. Auch die Ernte wird geteilt oder auf einem kleinen Wochenmarkt verkauft, um die Kosten für Erde, Samen und Werkzeuge zu decken. Einige Schulen und Kindergärten in der Umgebung nutzen die Gärten für Umweltbildungsprojekte. Die Kinder lernen hier, woher unser Essen kommt und wie wichtig es ist, die Natur zu schützen.\n\nDas Projekt hat sich zu einem Modell für andere Stadtteile entwickelt. Viele kommen vorbei, um sich Ideen zu holen und selbst ähnliche Projekte zu starten. „Grüner Kiez“ zeigt, dass Engagement von unten wirklich etwas bewegen kann und Städte grüner und lebenswerter macht.",
+          "source": "aus einem deutschen Online-Magazin",
+          "questions": [
+            {
+              "number": 6,
+              "stem": "In diesem Text geht es darum, dass ...",
+              "options": {
+                "a": "die Stadtverwaltung in Berlin neue Gärten plant.",
+                "b": "Bürger in Berlin ungenutzte Flächen in Gemeinschaftsgärten verwandeln.",
+                "c": "man in Berlin viele Spenden für Umweltprojekte sammelt."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 7,
+              "stem": "Wie hat das Projekt „Grüner Kiez“ begonnen?",
+              "options": {
+                "a": "Eine kleine Gruppe von Nachbarn wollte einen Parkplatz umwandeln.",
+                "b": "Die Stadtverwaltung hat eine Initiative gestartet.",
+                "c": "Viele Schulen und Kindergärten haben sich zuerst engagiert."
+              },
+              "answer": "a"
+            },
+            {
+              "number": 8,
+              "stem": "Laut Anna Müller ist ein wichtiger Aspekt des Projekts ...",
+              "options": {
+                "a": "dass die Ernte auf dem Wochenmarkt verkauft wird.",
+                "b": "die finanzielle Unterstützung von Umweltorganisationen.",
+                "c": "dass Menschen zusammenkommen und sich austauschen."
+              },
+              "answer": "c"
+            },
+            {
+              "number": 9,
+              "stem": "Wie finanziert sich „Grüner Kiez“ hauptsächlich?",
+              "options": {
+                "a": "Durch den Verkauf von Gemüse an Restaurants.",
+                "b": "Durch Spenden und Fördergelder.",
+                "c": "Durch Beiträge der teilnehmenden Nachbarn."
+              },
+              "answer": "b"
+            },
+            {
+              "number": 10,
+              "stem": "Was ist ein weiterer Nutzen der Gärten?",
+              "options": {
+                "a": "Schulen und Kindergärten nutzen sie für Umweltbildung.",
+                "b": "Sie sind ein Modell für die Stadtverwaltung.",
+                "c": "Die Kinder lernen dort, wie man Gemüse verkauft."
+              },
+              "answer": "a"
+            }
+          ]
+        },
+        {
+          "teil_number": 3,
+          "name": "Selektives Verstehen",
+          "format_type": "selektives_matching",
+          "instructions": "Lesen Sie die Situationen 11–20 und die Anzeigen a–l. Finden Sie für jede Situation die passende Anzeige. Sie können jede Anzeige nur einmal benutzen. Wenn Sie zu einer Situation keine Anzeige finden, markieren Sie ein x. Markieren Sie Ihre Lösungen für die Aufgaben 11–20 auf dem Antwortbogen.",
+          "time_minutes": 20,
+          "max_score": 25,
+          "context": "Touristen suchen passende Angebote in einer deutschsprachigen Stadt.",
+          "anzeigen": {
+            "a": "Stadtrundfahrt: Entdecken Sie die Stadt bequem vom Bus aus! Täglich 10-17 Uhr, Abfahrt Hauptbahnhof. Tickets an Bord.",
+            "b": "Café „Zum Glück“: Genießen Sie unsere hausgemachten Kuchen und Kaffeespezialitäten in gemütlicher Atmosphäre. Täglich geöffnet von 9-19 Uhr.",
+            "c": "Fahrradverleih „Rad-Spaß“: Mieten Sie ein Fahrrad für einen Tag oder eine Woche. Viele Modelle, auch E-Bikes. Nahe dem Stadtpark.",
+            "d": "Konzert „Klassik am Abend“: Erleben Sie ein unvergessliches Klassikkonzert in der historischen Kirche. Tickets online oder an der Abendkasse.",
+            "e": "Sprachschule „Deutsch Aktiv“: Intensivkurse für Anfänger und Fortgeschrittene. Starten Sie jetzt Ihr Sprachabenteuer! Neue Kurse ab Montag.",
+            "f": "Hotel „Zur Post“: Komfortable Zimmer im Herzen der Stadt. Inklusive Frühstücksbuffet. Jetzt online buchen oder anrufen!",
+            "g": "Museum für Moderne Kunst: Neue Ausstellung 'Formen und Farben'. Täglich außer montags, 10-18 Uhr. Eintritt für Studenten ermäßigt.",
+            "h": "Souvenir-Shop „Stadterinnerungen“: Große Auswahl an Geschenken, Postkarten und Andenken für Ihre Lieben zu Hause. Wir sind täglich für Sie da.",
+            "i": "Schifffahrt auf dem Fluss: Entspannen Sie sich bei einer einstündigen Bootsfahrt mit Blick auf die Stadtkulisse. Abfahrt alle 30 Min. ab Anlegestelle.",
+            "j": "Schwimmbad „Aqua-Welt“: Badespaß für die ganze Familie mit Rutschen und Wellenbad. Auch Sauna und Wellnessbereich vorhanden.",
+            "k": "Restaurant „Alte Mühle“: Regionale Spezialitäten und saisonale Gerichte in traditionellem Ambiente. Reservierung empfohlen.",
+            "l": "Tageskarte Öffentliche Verkehrsmittel: Gültig für Bus, Tram und U-Bahn im gesamten Stadtgebiet. Erhältlich an allen Automaten und Verkaufsstellen."
+          },
+          "questions": [
+            {
+              "number": 11,
+              "situation": "Ein Tourist möchte die Stadt auf eigene Faust erkunden und braucht dafür ein passendes Verkehrsmittel.",
+              "answer": "c"
+            },
+            {
+              "number": 12,
+              "situation": "Eine Familie sucht eine Möglichkeit, die wichtigsten Sehenswürdigkeiten der Stadt bequem zu sehen, ohne viel zu laufen.",
+              "answer": "a"
+            },
+            {
+              "number": 13,
+              "situation": "Jemand ist müde von der Reise und sucht eine Unterkunft für die Nacht.",
+              "answer": "f"
+            },
+            {
+              "number": 14,
+              "situation": "Ein Besucher möchte gerne ein typisch deutsches Gericht probieren.",
+              "answer": "k"
+            },
+            {
+              "number": 15,
+              "situation": "Eine Touristin möchte ihren Freunden und ihrer Familie zu Hause kleine Präsente mitbringen.",
+              "answer": "h"
+            },
+            {
+              "number": 16,
+              "situation": "Zwei Freunde möchten die Stadt vom Wasser aus betrachten und dabei entspannen.",
+              "answer": "i"
+            },
+            {
+              "number": 17,
+              "situation": "Eine Person möchte einen ruhigen Nachmittag verbringen und dabei Kaffee und Kuchen genießen.",
+              "answer": "b"
+            },
+            {
+              "number": 18,
+              "situation": "Zwei Freunde interessieren sich für zeitgenössische Kunst und suchen eine passende Ausstellung.",
+              "answer": "g"
+            },
+            {
+              "number": 19,
+              "situation": "Jemand möchte am Abend einen Tanzkurs besuchen.",
+              "answer": "x"
+            },
+            {
+              "number": 20,
+              "situation": "Ein Tourist sucht einen Platz, um seine Postkarten zu versenden.",
+              "answer": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "sprachbausteine",
+      "name": "Sprachbausteine",
+      "time_limit_minutes": 0,
+      "max_score": 30,
+      "raw_items": 20,
+      "note": "Intégré dans le bloc Leseverstehen (90 min partagées)",
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Grammatik",
+          "format_type": "qcm_gap_fill",
+          "instructions": "Lesen Sie den Text und schließen Sie die Lücken 21–30. Welche Lösung (a, b oder c) ist jeweils richtig? Markieren Sie Ihre Lösungen für die Aufgaben 21–30 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 15,
+          "text_with_gaps": "Liebe Maria,\n\nwie geht es dir? Ich hoffe, alles ist gut bei _21_ . Ich wollte mich endlich mal melden und dir erzählen, _22_ es mir hier in Hamburg geht.\n\nIch bin jetzt _23_ zwei Monaten hier und habe mich schon gut eingelebt. Die Arbeit im neuen Büro ist sehr interessant, _24_ manchmal auch anspruchsvoll. Ich habe schon viele nette Kollegen kennengelernt, _25_ ich mich gut verstehe. Besonders gut gefällt mir, dass wir oft zusammen Mittagspause machen und dann über alles Mögliche sprechen können.\n\nAm Wochenende habe ich schon einige Ausflüge gemacht. Letzte Woche war ich _26_ einem Konzert in der Elbphilharmonie – ein wirklich beeindruckendes Gebäude! Und am Sonntag habe ich eine Fahrradtour _27_ der Alster gemacht. Das Wetter war toll und die Natur hier ist wunderschön. Es gibt so viel zu sehen und zu erleben. Ich habe das Gefühl, _28_ ich hier noch lange nicht alles entdeckt habe.\n\nMeine neue Wohnung ist auch super. Sie ist zwar nicht sehr groß, aber _29_ Balkon hat einen schönen Blick ins Grüne. Das ist perfekt, um abends noch ein Buch zu lesen _30_ einfach nur zu entspannen.\n\nIch würde mich freuen, bald mal wieder von dir zu hören! Vielleicht kommst du mich ja mal besuchen?\n\nLiebe Grüße\nDein Thomas",
+          "questions": [
+            {
+              "number": 21,
+              "options": {
+                "a": "dich",
+                "b": "dir",
+                "c": "du"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 22,
+              "options": {
+                "a": "wie",
+                "b": "dass",
+                "c": "wann"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 23,
+              "options": {
+                "a": "seit",
+                "b": "vor",
+                "c": "nach"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 24,
+              "options": {
+                "a": "aber",
+                "b": "oder",
+                "c": "denn"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 25,
+              "options": {
+                "a": "mit denen",
+                "b": "die",
+                "c": "von denen"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 26,
+              "options": {
+                "a": "in",
+                "b": "auf",
+                "c": "bei"
+              },
+              "answer": "c"
+            },
+            {
+              "number": 27,
+              "options": {
+                "a": "an",
+                "b": "in",
+                "c": "auf"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 28,
+              "options": {
+                "a": "dass",
+                "b": "ob",
+                "c": "wann"
+              },
+              "answer": "a"
+            },
+            {
+              "number": 29,
+              "options": {
+                "a": "ein",
+                "b": "der",
+                "c": "den"
+              },
+              "answer": "b"
+            },
+            {
+              "number": 30,
+              "options": {
+                "a": "und",
+                "b": "oder",
+                "c": "noch"
+              },
+              "answer": "b"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Lexik",
+          "format_type": "word_bank_gap_fill",
+          "instructions": "Lesen Sie den Text und schließen Sie die Lücken 31–40. Benutzen Sie die Wörter a–o. Jedes Wort passt nur einmal. Markieren Sie Ihre Lösungen für die Aufgaben 31–40 auf dem Antwortbogen.",
+          "time_minutes": 15,
+          "max_score": 15,
+          "text_with_gaps": "Sehr geehrte Damen und Herren,\n\nich interessiere mich _31_ Ihr aktuelles Kursangebot und hätte _32_ noch einige Fragen dazu. Ich habe Ihre Webseite besucht und bin _33_ an dem Intensivkurs B1 interessiert, _34_ ich plane, in den nächsten Monaten in Deutschland zu arbeiten und meine Sprachkenntnisse zu vertiefen.\n\n_35_ ich den Kurs bei Ihnen belege, müsste ich die Möglichkeit haben, auch am Abend teilzunehmen. Ich arbeite tagsüber und _36_ daher eine flexible Zeitplanung haben. _37_ ist es für mich wichtig, dass der Kurs zentral gelegen ist, _38_ ich ihn gut mit öffentlichen Verkehrsmitteln erreichen kann.\n\nIch würde auch gerne wissen, ob es eine Möglichkeit gibt, eine Probestunde zu besuchen. _39_ könnte ich mir einen besseren Eindruck vom Unterricht machen.\n\nIch wäre Ihnen sehr _40_ für eine baldige Rückmeldung.\n\nMit freundlichen Grüßen\nAnna Müller",
+          "word_bank": {
+            "a": "BESONDERS",
+            "b": "DA",
+            "c": "DAFÜR",
+            "d": "DAMALS",
+            "e": "DAMIT",
+            "f": "DANKBAR",
+            "g": "DESHALB",
+            "h": "FÜR",
+            "i": "GERNE",
+            "j": "KÖNNTEN",
+            "k": "MIT",
+            "l": "MÜSSTEN",
+            "m": "SCHLIESSLICH",
+            "n": "WANN",
+            "o": "WENN"
+          },
+          "questions": [
+            {
+              "number": 31,
+              "answer": "h"
+            },
+            {
+              "number": 32,
+              "answer": "i"
+            },
+            {
+              "number": 33,
+              "answer": "a"
+            },
+            {
+              "number": 34,
+              "answer": "b"
+            },
+            {
+              "number": 35,
+              "answer": "o"
+            },
+            {
+              "number": 36,
+              "answer": "l"
+            },
+            {
+              "number": 37,
+              "answer": "g"
+            },
+            {
+              "number": 38,
+              "answer": "e"
+            },
+            {
+              "number": 39,
+              "answer": "c"
+            },
+            {
+              "number": 40,
+              "answer": "f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "horen",
+      "name": "Hörverstehen",
+      "time_limit_minutes": 30,
+      "max_score": 75,
+      "raw_items": 20,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Globalverstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun fünf kurze Texte. Dazu sollen Sie fünf Aufgaben lösen. Sie hören diese Texte nur einmal. Entscheiden Sie beim Hören, ob die Aussagen 41-45 richtig oder falsch sind.",
+          "time_minutes": 8,
+          "max_score": 25,
+          "max_plays": 1,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Gespräch",
+              "transcription": "Hallo Markus, hier ist Julia. Ich wollte fragen, ob du am Samstagabend Zeit hast. Wir wollten doch ins Kino gehen, erinnerst du dich? Der neue Abenteuerfilm läuft jetzt. Ich habe schon online nach den Zeiten geschaut. Es gibt eine Vorstellung um 19:30 Uhr. Passt dir das? Ruf mich bitte zurück oder schreib mir eine Nachricht. Ich freue mich drauf!",
+              "questions": [
+                {
+                  "number": 41,
+                  "statement": "Julia schlägt vor, am Samstagabend ins Kino zu gehen.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil1_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Ansage",
+              "transcription": "Sehr geehrte Fahrgäste, bitte beachten Sie: Der ICE 783 nach Hamburg, planmäßige Abfahrt um 14:15 Uhr von Gleis 5, hat heute leider eine Verspätung von etwa 20 Minuten. Grund dafür ist eine technische Störung am Zug. Wir bitten um Ihr Verständnis. Nächste Durchsage in Kürze. Bitte informieren Sie sich auch an den Anzeigetafeln.",
+              "questions": [
+                {
+                  "number": 42,
+                  "statement": "Der Zug nach Hamburg fährt pünktlich ab.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil1_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Gespräch",
+              "transcription": "Entschuldigen Sie, können Sie mir helfen? Ich suche ein Buch für meinen Deutschkurs. Es sollte ein Roman sein, der nicht zu kompliziert ist und vielleicht auch als Hörbuch erhältlich. Ich lerne seit einem Jahr Deutsch und möchte meine Lesefähigkeiten verbessern. Haben Sie da eine Empfehlung? Ich bin für jeden Tipp dankbar.",
+              "questions": [
+                {
+                  "number": 43,
+                  "statement": "Die Person möchte ein Buch für ihren Deutschkurs kaufen.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil1_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Nachricht",
+              "transcription": "Hallo Herr Meier, hier ist Frau Schmidt vom Arztsekretariat. Ich rufe wegen Ihres Termins am Mittwoch an. Dr. Klein ist leider plötzlich erkrankt, deshalb müssen wir Ihren Termin um 10 Uhr verschieben. Bitte rufen Sie uns so schnell wie möglich zurück, um einen neuen Termin zu vereinbaren. Vielen Dank für Ihr Verständnis.",
+              "questions": [
+                {
+                  "number": 44,
+                  "statement": "Der Arzttermin findet am Mittwoch wie geplant statt.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil1_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Gespräch",
+              "transcription": "Guten Tag, Frau Weber. Ich wollte kurz fragen, ob Sie schon die E-Mail mit den Informationen für das Projektstreffen gelesen haben. Es findet morgen um 9 Uhr im großen Konferenzraum statt. Ich habe gehört, dass wir dort die neuen Aufgaben verteilen werden. Ich habe meine Präsentation schon vorbereitet. Ich hoffe, es wird produktiv.",
+              "questions": [
+                {
+                  "number": 45,
+                  "statement": "Das Projektstreffen ist heute Nachmittag.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil1_audio5.mp3"
+            }
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Detailverstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun ein Gespräch. Dazu sollen Sie zehn Aufgaben lösen. Sie hören das Gespräch zweimal. Entscheiden Sie beim Hören, ob die Aussagen 46-55 richtig oder falsch sind. Lesen Sie jetzt die Aufgaben 46-55. Sie haben dazu eine Minute Zeit.",
+          "time_minutes": 12,
+          "max_score": 25,
+          "max_plays": 2,
+          "context": "Ein Journalist spricht mit einer Vereinsvertreterin über das 100-jährige Jubiläum des Sportvereins.",
+          "transcription": "J: Guten Tag, Frau Müller. Vielen Dank, dass Sie sich die Zeit genommen haben. Mein Name ist Thomas Schmidt vom Stadtkurier. Wir berichten heute über das bevorstehende 100-jährige Jubiläum Ihres Sportvereins, des SV Eintracht.\nV: Guten Tag, Herr Schmidt. Gerne! Es ist uns eine Ehre, über unser Jubiläum zu sprechen. Wir freuen uns riesig auf die Feierlichkeiten.\nJ: Das kann ich mir vorstellen. 100 Jahre – das ist eine lange Zeit. Wann genau findet das Hauptfest statt?\nV: Das große Festwochenende ist für den 15. und 16. Juni geplant. Samstag ist der offizielle Festakt mit geladenen Gästen und am Sonntag gibt es ein großes Familienfest für alle Mitglieder und die Öffentlichkeit.\nJ: Wunderbar. Und was genau erwartet die Besucher am Sonntag?\nV: Am Sonntag, dem 16. Juni, starten wir um 10 Uhr mit einem Frühschoppen. Danach gibt es verschiedene Sportvorführungen unserer Abteilungen: Fußball, Handball, Turnen und auch unsere neue Yoga-Gruppe wird eine kleine Präsentation geben. Für die Kinder haben wir eine Hüpfburg und Kinderschminken organisiert. Und natürlich gibt es auch Kaffee und Kuchen sowie Grillspezialitäten.\nJ: Eine neue Yoga-Gruppe, das klingt interessant. Wie viele Mitglieder hat der Verein denn aktuell?\nV: Wir haben momentan etwa 850 Mitglieder. Die Tendenz ist steigend, besonders seit wir unser neues Sportzentrum mit Fitnessbereich eröffnet haben. Vor fünf Jahren waren es noch unter 700.\nJ: Das ist ja fantastisch! Und gibt es auch besondere Aktionen für die Jugend?\nV: Ja, am Samstagabend, nach dem offiziellen Teil, veranstalten wir ein kleines Konzert im Festzelt. Eine lokale Band wird auftreten. Das ist speziell für unsere jüngeren Mitglieder und alle, die gerne tanzen.\nJ: Und die Vorbereitungen? Läuft alles nach Plan?\nV: Im Großen und Ganzen ja. Die größte Herausforderung war die Finanzierung. Wir haben viele Spenden gesammelt und auch die Stadt hat uns mit einem Zuschuss unterstützt. Ohne die vielen ehrenamtlichen Helfer wäre das aber alles nicht möglich. Wir haben ein Team von über 50 Freiwilligen, die seit Monaten im Einsatz sind.\nJ: Eine beeindruckende Leistung. Gibt es auch eine Ausstellung zur Vereinsgeschichte?\nV: Ja, im Vereinsheim haben wir eine kleine Chronik mit alten Fotos und Urkunden vorbereitet. Die kann man das ganze Wochenende über besuchen. Auch der Bürgermeister wird am Samstag eine Rede halten.\nJ: Vielen Dank für diese ausführlichen Informationen, Frau Müller. Ich wünsche Ihnen viel Erfolg für die Feierlichkeiten!\nV: Vielen Dank, Herr Schmidt. Wir freuen uns auf viele Besucher!",
+          "questions": [
+            {
+              "number": 46,
+              "statement": "Der Journalist berichtet über das 50-jährige Jubiläum des Sportvereins.",
+              "answer": "falsch"
+            },
+            {
+              "number": 47,
+              "statement": "Das Hauptfest des SV Eintracht findet an einem Wochenende im Juni statt.",
+              "answer": "richtig"
+            },
+            {
+              "number": 48,
+              "statement": "Am Sonntag, dem 16. Juni, gibt es nur Sportvorführungen und keine Unterhaltung für Kinder.",
+              "answer": "falsch"
+            },
+            {
+              "number": 49,
+              "statement": "Die neue Yoga-Gruppe wird keine Präsentation geben.",
+              "answer": "falsch"
+            },
+            {
+              "number": 50,
+              "statement": "Der Verein hat aktuell weniger als 700 Mitglieder.",
+              "answer": "falsch"
+            },
+            {
+              "number": 51,
+              "statement": "Die Mitgliederzahl des Vereins ist in den letzten fünf Jahren gestiegen.",
+              "answer": "richtig"
+            },
+            {
+              "number": 52,
+              "statement": "Für die jüngeren Mitglieder gibt es am Samstagabend ein Konzert im Festzelt.",
+              "answer": "richtig"
+            },
+            {
+              "number": 53,
+              "statement": "Die Finanzierung des Jubiläums wurde nur durch Spenden bewältigt.",
+              "answer": "falsch"
+            },
+            {
+              "number": 54,
+              "statement": "Weniger als 50 Freiwillige helfen bei den Vorbereitungen.",
+              "answer": "falsch"
+            },
+            {
+              "number": 55,
+              "statement": "Im Vereinsheim kann man eine Ausstellung zur Geschichte des Vereins besichtigen.",
+              "answer": "richtig"
+            }
+          ],
+          "audio_file": "output\\audio_telc_20260423_181241\\horen_teil2.mp3"
+        },
+        {
+          "teil_number": 3,
+          "name": "Selektives Verstehen",
+          "format_type": "richtig_falsch",
+          "instructions": "Sie hören nun fünf kurze Texte. Dazu sollen Sie fünf Aufgaben lösen. Sie hören jeden Text zweimal. Entscheiden Sie beim Hören, ob die Aussagen 56-60 richtig oder falsch sind.",
+          "time_minutes": 10,
+          "max_score": 25,
+          "max_plays": 2,
+          "audios": [
+            {
+              "audio_number": 1,
+              "audio_type": "Wegbeschreibung",
+              "transcription": "Guten Tag, liebe Besucher! Das Stadtmuseum finden Sie im historischen Gebäude am Marktplatz. Gehen Sie vom Hauptbahnhof aus geradeaus die Bahnhofstraße entlang, bis Sie zum Rathaus kommen. Biegen Sie dort links ab, und nach etwa 50 Metern sehen Sie das Museum auf der rechten Seite. Der Eintritt ist frei.",
+              "questions": [
+                {
+                  "number": 56,
+                  "statement": "Das Museum befindet sich direkt neben dem Rathaus.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil3_audio1.mp3"
+            },
+            {
+              "audio_number": 2,
+              "audio_type": "Kinoprogramm",
+              "transcription": "Im City-Kino präsentieren wir heute Abend um 20:15 Uhr den neuen deutschen Film 'Der goldene Schlüssel'. Eine spannende Geschichte für die ganze Familie, empfohlen ab 12 Jahren. Tickets sind online oder an der Abendkasse erhältlich. Für Studierende gibt es heute 2 Euro Rabatt auf den Eintrittspreis. Wir freuen uns auf Ihren Besuch!",
+              "questions": [
+                {
+                  "number": 57,
+                  "statement": "Der Film ist für Kinder unter 12 Jahren geeignet.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil3_audio2.mp3"
+            },
+            {
+              "audio_number": 3,
+              "audio_type": "Wetterbericht",
+              "transcription": "Hier ist der Wetterbericht für morgen, Mittwoch, den 15. Mai. Im Norden bleibt es meist sonnig mit Temperaturen bis zu 22 Grad. Im Süden hingegen erwarten wir ab dem Nachmittag starke Regenschauer und Gewitter. Die Temperaturen liegen dort nur bei maximal 15 Grad. Bitte denken Sie an einen Regenschirm!",
+              "questions": [
+                {
+                  "number": 58,
+                  "statement": "Im Süden Deutschlands wird es morgen regnen.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil3_audio3.mp3"
+            },
+            {
+              "audio_number": 4,
+              "audio_type": "Zugdurchsage",
+              "transcription": "Achtung, eine wichtige Durchsage für Reisende nach München: Der Intercity 103 von Hamburg nach München, planmäßige Abfahrt um 14:30 Uhr von Gleis 7, fährt heute mit einer Verspätung von etwa 20 Minuten ab. Grund dafür ist eine technische Störung am Zug. Wir bitten um Ihr Verständnis. Nächste Information um 14:40 Uhr.",
+              "questions": [
+                {
+                  "number": 59,
+                  "statement": "Der Zug fährt pünktlich von Gleis 7 ab.",
+                  "answer": "falsch"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil3_audio4.mp3"
+            },
+            {
+              "audio_number": 5,
+              "audio_type": "Werbung",
+              "transcription": "Hunger auf etwas Besonderes? Dann besuchen Sie unser Restaurant 'Zum grünen Baum'! Wir bieten täglich frische, regionale Spezialitäten und eine große Auswahl an vegetarischen Gerichten. Jeden Dienstag ist Schnitzel-Tag: Zwei Schnitzel zum Preis von einem! Reservieren Sie jetzt Ihren Tisch unter 089/1234567.",
+              "questions": [
+                {
+                  "number": 60,
+                  "statement": "Am Dienstag gibt es ein spezielles Angebot für Schnitzel.",
+                  "answer": "richtig"
+                }
+              ],
+              "audio_file": "output\\audio_telc_20260423_181241\\horen_teil3_audio5.mp3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "schreiben",
+      "name": "Schriftlicher Ausdruck",
+      "time_limit_minutes": 30,
+      "max_score": 45,
+      "raw_items": 1,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "E-Mail schreiben",
+          "format_type": "free_text",
+          "instructions": "Sie haben von Ihrer Freundin Marianne folgende E-Mail erhalten. Antworten Sie auf die E-Mail. Schreiben Sie etwas zu allen vier Punkten:",
+          "time_minutes": 30,
+          "max_score": 45,
+          "text_type": "E-Mail",
+          "word_count_target": 80,
+          "stimulus_email": {
+            "sender": "Marianne",
+            "subject": "Geburtstagsparty und Geschenk für Max",
+            "body": "Hallo [Name des Freundes/der Freundin],\n\nwie geht es dir? Ich hoffe, alles ist gut bei dir!\n\nIch habe bald Geburtstag und möchte das gerne mit meinen Freunden feiern. Ich dachte an eine kleine Party bei mir zu Hause, vielleicht am Samstagabend, den 15. Mai. Was meinst du?\n\nIch würde mich sehr freuen, wenn du kommen könntest! Sag mir doch bitte Bescheid, ob du Zeit hast.\n\nHast du vielleicht eine Idee, was wir essen könnten? Ich bin offen für Vorschläge! Und was hältst du davon, wenn wir zusammen ein kleines Geschenk für Max besorgen, er hat ja auch bald Geburtstag?\n\nLiebe Grüße,\nMarianne"
+          },
+          "scenario": "Antworten Sie auf die E-Mail Ihrer Freundin Marianne.",
+          "prompts": [
+            "Sagen Sie, ob Sie zu Mariannes Geburtstagsparty kommen können.",
+            "Machen Sie einen Vorschlag für das Essen.",
+            "Sagen Sie, was Sie von der Idee mit dem gemeinsamen Geschenk für Max halten.",
+            "Fragen Sie Marianne nach der genauen Uhrzeit der Party."
+          ],
+          "register": "informell",
+          "scoring_criteria": {
+            "Aufgabenbewältigung": {
+              "A": "Alle vier Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "B": "Drei Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "C": "Zwei Leitpunkte werden inhaltlich angemessen bearbeitet.",
+              "D": "Nur ein oder kein Leitpunkt wird inhaltlich angemessen bearbeitet."
+            },
+            "Kommunikative_Gestaltung": {
+              "description": "Wortschatz, Kohäsion, Register, Textlogik"
+            },
+            "Formale_Richtigkeit": {
+              "description": "Grammatik, Morphologie, Syntax, Orthografie"
+            }
+          },
+          "musterlösung": "Liebe Marianne,\n\nvielen Dank für deine Einladung! Mir geht es gut, ich hoffe dir auch.\n\nIch freue mich sehr, dass du deinen Geburtstag feierst und komme natürlich gerne am Samstag, den 15. Mai! Ich habe an dem Abend Zeit.\n\nFür das Essen schlage ich vor, dass jeder etwas mitbringt, zum Beispiel einen Salat oder ein Dessert. Das ist immer lecker und einfach.\n\nDie Idee mit dem gemeinsamen Geschenk für Max finde ich super! Ich mache gerne mit. Was denkst du, was er sich wünschen würde?\n\nKönntest du mir noch sagen, wann die Party genau beginnt? Ich freue mich schon darauf!\n\nLiebe Grüße,\n[Dein Name]"
+        }
+      ]
+    },
+    {
+      "slug": "sprechen",
+      "name": "Mündlicher Ausdruck",
+      "time_limit_minutes": 15,
+      "max_score": 75,
+      "preparation_minutes": 20,
+      "raw_items": 3,
+      "teile": [
+        {
+          "teil_number": 1,
+          "name": "Einander kennenlernen",
+          "format_type": "oral_kennenlernen",
+          "instructions": "Unterhalten Sie sich mit Ihrer Partnerin bzw. Ihrem Partner über folgende Themen:",
+          "time_minutes": 3,
+          "max_score": 15,
+          "topics": [
+            "Name",
+            "Woher sie oder er kommt",
+            "Wie sie oder er wohnt",
+            "Familie",
+            "Wo sie oder er Deutsch gelernt hat",
+            "Was sie oder er macht (Schule, Studium, Beruf)",
+            "Hobbys und Freizeit"
+          ]
+        },
+        {
+          "teil_number": 2,
+          "name": "Über ein Thema sprechen",
+          "format_type": "oral_thema",
+          "instructions": "Sie haben in einer Zeitschrift etwas zum Thema gelesen. Berichten Sie Ihrer Gesprächspartnerin/Ihrem Gesprächspartner darüber. Unterhalten Sie sich dann über das Thema.",
+          "time_minutes": 6,
+          "max_score": 30,
+          "topic": "Online-Shopping",
+          "opinion_a": {
+            "person": "Lena, 28, Studentin",
+            "text": "Ich kaufe fast alles online. Es ist so praktisch, weil ich nicht in die Stadt fahren muss und die Geschäfte oft schon geschlossen sind, wenn ich Zeit habe. Die Auswahl ist riesig, und man kann Preise gut vergleichen. Außerdem kommen die Sachen direkt nach Hause, das spart viel Zeit."
+          },
+          "opinion_b": {
+            "person": "Max, 35, Verkäufer",
+            "text": "Online-Shopping finde ich nicht gut. Man kann die Produkte nicht anfassen oder anprobieren, das ist ein Nachteil. Oft muss man Sachen zurückschicken, das ist nervig. Außerdem gehen viele kleine Geschäfte pleite, weil alle nur noch online kaufen. Ich unterstütze lieber lokale Läden."
+          }
+        },
+        {
+          "teil_number": 3,
+          "name": "Gemeinsam etwas planen",
+          "format_type": "oral_interaction",
+          "instructions": "Sie haben zwei Wochen Urlaub gemacht und möchten vor dem Ende eine Abschiedsfeier organisieren. Planen Sie gemeinsam mit Ihrem Partner.",
+          "time_minutes": 6,
+          "max_score": 30,
+          "scenario": "Sie haben zwei Wochen Urlaub in einer schönen Ferienwohnung mit Freunden und anderen Gästen verbracht. Bald ist Ihr Urlaub zu Ende, und Sie möchten eine kleine Abschiedsfeier für alle organisieren, um sich zu bedanken und sich zu verabschieden.",
+          "prompts": [
+            "Wann?",
+            "Wo?",
+            "Essen und Getränke",
+            "Wer bezahlt wofür?",
+            "Musik / Unterhaltung?"
+          ]
+        }
+      ]
+    }
+  ]
+}

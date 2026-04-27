@@ -1,0 +1,35 @@
+{
+  "name": "frontend",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "generate:api": "npx openapi-typescript-codegen --input ./openapi.json --output ./shared/api --client fetch",
+    "generate:api:prod": "openapi-typescript-codegen --input https://api.deutschtest.com/openapi.json --output ./shared/api --client fetch"
+  },
+  "dependencies": {
+    "@pinia/nuxt": "^0.11.3",
+    "@primeuix/themes": "^2.0.3",
+    "@tailwindcss/vite": "^4.2.2",
+    "jspdf": "^4.2.1",
+    "nuxt": "^4.4.2",
+    "pinia": "^3.0.4",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.4",
+    "tailwindcss": "^4.2.2",
+    "vue": "^3.5.31",
+    "vue-router": "^5.0.4"
+  },
+  "packageManager": "pnpm@10.16.1+sha512.0e155aa2629db8672b49e8475da6226aa4bdea85fdcdfdc15350874946d4f3c91faaf64cbdc4a5d1ab8002f473d5c3fcedcd197989cf0390f9badd3c04678706",
+  "devDependencies": {
+    "@primevue/nuxt-module": "^4.5.4",
+    "@primevue/themes": "^4.5.4",
+    "@types/node": "^25.6.0",
+    "openapi-typescript-codegen": "^0.30.0",
+    "tailwindcss-primeui": "^0.6.1"
+  }
+}

@@ -1,0 +1,166 @@
+# ============================================
+# BACKEND (Python/FastAPI)
+# ============================================
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/**/*$py.class
+backend/**/*.so
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+
+# Python distribution
+backend/build/
+backend/dist/
+backend/*.egg-info/
+backend/.eggs/
+
+# Testing
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+backend/.tox/
+
+# UV
+backend/.uv/
+
+# Environment variables
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+# Logs
+backend/logs/
+backend/**/*.log
+
+# Database files
+backend/**/*.sqlite
+backend/**/*.sqlite3
+backend/**/*.db
+
+# NE PAS ignorer alembic/versions — les migrations doivent être versionnées
+# backend/alembic/versions/
+
+# Storage — ignorer le contenu mais pas les dossiers
+backend/storage/audio/
+backend/storage/invoices/
+backend/storage/temp/
+backend/storage/images/
+!backend/storage/.gitkeep
+
+# Uploads
+backend/uploads/
+backend/media/
+
+# Temporary files
+backend/tmp/
+backend/temp/
+backend/**/*.tmp
+
+# Backup files
+backend/**/*.bak
+backend/**/*.backup
+backend/**/*.old
+
+# Secrets
+backend/secrets/
+backend/.secrets/
+backend/**/*.secret
+backend/**/*.pem
+backend/**/*.key
+backend/**/*.crt
+
+# ============================================
+# FRONTEND (Nuxt 4)
+# ============================================
+# Dependencies
+frontend/node_modules/
+
+# Nuxt build outputs
+frontend/.nuxt/
+frontend/.output/
+frontend/.data/
+frontend/.nitro/
+frontend/.cache/
+
+# Production
+frontend/build/
+frontend/dist/
+
+# Environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# TypeScript
+frontend/*.tsbuildinfo
+
+# Vercel
+frontend/.vercel
+
+# Lock files (garder un seul selon ton package manager)
+# frontend/pnpm-lock.yaml   # décommenter si tu utilises npm/yarn
+# frontend/yarn.lock        # décommenter si tu utilises pnpm/npm
+# frontend/package-lock.json # décommenter si tu utilises pnpm/yarn
+
+# ============================================
+# IDEs et Éditeurs
+# ============================================
+.vscode/
+*.code-workspace
+.idea/
+*.iml
+*.iws
+*.ipr
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ============================================
+# OS
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================
+# Docker
+# ============================================
+# postgres_data/
+# redis_data/
+
+# ============================================
+# Misc
+# ============================================
+debug.log
+error.log
+*.prof
+.fuse_hidden*
+node_modules/
