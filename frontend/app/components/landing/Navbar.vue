@@ -9,7 +9,7 @@
         >
           <img
             src="/images/logo.png"
-            alt="Orange Money"
+            alt="GoToGermany"
             class="h-36 object-contain"
           />
         </NuxtLink>
@@ -27,7 +27,7 @@
           </NuxtLink>
         </nav>
 
-        <!-- User Menu (Authenticated) -->
+        <!-- Authenticated -->
         <div
           v-if="authStore.isAuthenticated"
           class="hidden md:flex items-center gap-3"
@@ -55,20 +55,20 @@
           />
         </div>
 
-        <!-- Guest Buttons (Not Authenticated) -->
+        <!-- Guest -->
         <div v-else class="hidden md:flex items-center gap-3">
           <Button
             label="Connexion"
             text
             class="font-semibold!"
-            @click="loginVisible = true"
+            @click="openLogin"
           />
           <Button
             label="Commencer gratuitement"
             icon="pi pi-arrow-right"
             iconPos="right"
             class="bg-linear-to-r! from-teal-600! to-teal-700! border-0! text-white! font-semibold! hover:from-teal-700! hover:to-teal-800!"
-            @click="signupVisible = true"
+            @click="openSignup"
           />
         </div>
 
@@ -83,7 +83,7 @@
       </div>
     </div>
 
-    <!-- Mobile Menu Overlay -->
+    <!-- Mobile Menu -->
     <Transition name="slide-down">
       <div
         v-if="mobileMenuOpen"
@@ -103,7 +103,6 @@
 
           <Divider v-if="authStore.isAuthenticated" />
 
-          <!-- Mobile Authenticated Menu -->
           <div v-if="authStore.isAuthenticated" class="space-y-1">
             <div
               class="flex items-center gap-3 px-4 py-3 text-gray-900 font-semibold"
@@ -116,26 +115,23 @@
               class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors font-medium"
               @click="closeMobileMenu"
             >
-              <i class="pi pi-th-large"></i>
-              <span>Dashboard</span>
+              <i class="pi pi-th-large"></i><span>Dashboard</span>
             </NuxtLink>
             <button
               class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium w-full"
               @click="handleLogout"
             >
-              <i class="pi pi-sign-out"></i>
-              <span>Déconnexion</span>
+              <i class="pi pi-sign-out"></i><span>Déconnexion</span>
             </button>
           </div>
 
-          <!-- Mobile Guest Buttons -->
           <div v-else class="space-y-2 pt-4">
             <Button
               label="Connexion"
               outlined
               class="w-full font-semibold!"
               @click="
-                loginVisible = true;
+                openLogin();
                 closeMobileMenu();
               "
             />
@@ -145,7 +141,7 @@
               iconPos="right"
               class="bg-linear-to-r! from-teal-600! to-teal-700! border-0! text-white! font-semibold! w-full"
               @click="
-                signupVisible = true;
+                openSignup();
                 closeMobileMenu();
               "
             />
@@ -154,17 +150,16 @@
       </div>
     </Transition>
 
-    <!-- Login Dialog -->
+    <!-- ─── Login Dialog ──────────────────────────────── -->
     <Dialog
       v-model:visible="loginVisible"
       header="Connexion"
       :style="{ width: '90vw', maxWidth: '450px' }"
       :modal="true"
     >
-      <Message v-if="loginError" severity="error" :closable="false">
-        {{ loginError }}
-      </Message>
-
+      <Message v-if="loginError" severity="error" :closable="false">{{
+        loginError
+      }}</Message>
       <div class="flex flex-col gap-4 mt-4">
         <div>
           <label class="block text-sm font-medium mb-2">Email</label>
@@ -176,7 +171,6 @@
             @keyup.enter="handleLogin"
           />
         </div>
-
         <div>
           <label class="block text-sm font-medium mb-2">Mot de passe</label>
           <Password
@@ -187,41 +181,34 @@
             @keyup.enter="handleLogin"
           />
         </div>
-
         <Button
           label="Se connecter"
           :loading="authStore.loading"
           class="w-full mt-2 bg-linear-to-r! from-teal-600! to-teal-700! border-0!"
           @click="handleLogin"
         />
-
         <p class="text-xs text-gray-500 text-center">
           Pas encore de compte ?
           <a
             href="#"
             class="text-teal-600 hover:underline font-medium"
-            @click.prevent="
-              loginVisible = false;
-              signupVisible = true;
-            "
+            @click.prevent="openSignup"
+            >S'inscrire</a
           >
-            S'inscrire
-          </a>
         </p>
       </div>
     </Dialog>
 
-    <!-- Signup Dialog -->
+    <!-- ─── Signup Dialog ─────────────────────────────── -->
     <Dialog
       v-model:visible="signupVisible"
       header="Inscription gratuite"
       :style="{ width: '90vw', maxWidth: '450px' }"
       :modal="true"
     >
-      <Message v-if="signupError" severity="error" :closable="false">
-        {{ signupError }}
-      </Message>
-
+      <Message v-if="signupError" severity="error" :closable="false">{{
+        signupError
+      }}</Message>
       <div class="flex flex-col gap-4 mt-4">
         <div>
           <label class="block text-sm font-medium mb-2">Nom complet</label>
@@ -231,7 +218,6 @@
             placeholder="Jean Dupont"
           />
         </div>
-
         <div>
           <label class="block text-sm font-medium mb-2">Email</label>
           <InputText
@@ -241,7 +227,6 @@
             placeholder="jean@example.com"
           />
         </div>
-
         <div>
           <label class="block text-sm font-medium mb-2"
             >Téléphone (optionnel)</label
@@ -252,59 +237,45 @@
             placeholder="+237 6XX XXX XXX"
           />
         </div>
-
         <div>
           <label class="block text-sm font-medium mb-2">Mot de passe</label>
           <Password v-model="signupForm.password" class="w-full" toggleMask />
         </div>
-
         <Button
           label="S'inscrire"
           :loading="authStore.loading"
           class="w-full mt-2 bg-linear-to-r! from-teal-600! to-teal-700! border-0!"
           @click="handleSignup"
         />
-
         <p class="text-xs text-gray-500 text-center">
           Déjà un compte ?
           <a
             href="#"
             class="text-teal-600 hover:underline font-medium"
-            @click.prevent="
-              signupVisible = false;
-              loginVisible = true;
-            "
+            @click.prevent="openLogin"
+            >Se connecter</a
           >
-            Se connecter
-          </a>
         </p>
       </div>
     </Dialog>
   </div>
 
-  <!-- Spacer pour compenser la navbar fixe -->
+  <!-- Spacer -->
   <div class="h-16"></div>
 </template>
 
 <script setup lang="ts">
+import { useAuthDialog } from "~/composables/useAuthDialog";
+
 const authStore = useAuthStore();
+const { loginVisible, signupVisible, openLogin, openSignup } = useAuthDialog();
+
 const mobileMenuOpen = ref(false);
-const loginVisible = ref(false);
-const signupVisible = ref(false);
 const loginError = ref("");
 const signupError = ref("");
 
-const loginForm = ref({
-  email: "",
-  password: "",
-});
-
-const signupForm = ref({
-  email: "",
-  password: "",
-  fullName: "",
-  phone: "",
-});
+const loginForm = ref({ email: "", password: "" });
+const signupForm = ref({ email: "", password: "", fullName: "", phone: "" });
 
 const mainItems = ref([
   { label: "Accueil", icon: "pi pi-home", to: "/" },
@@ -316,23 +287,19 @@ const mainItems = ref([
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value;
 };
-
 const closeMobileMenu = () => {
   mobileMenuOpen.value = false;
 };
 
 const handleLogin = async () => {
   loginError.value = "";
-
   const result = await authStore.login(
     loginForm.value.email,
     loginForm.value.password,
   );
-
   if (result.success) {
     loginVisible.value = false;
     loginForm.value = { email: "", password: "" };
-    // ← redirection selon le rôle
     navigateTo(authStore.isAdmin ? "/admin" : "/dashboard");
   } else {
     loginError.value = result.error || "Erreur de connexion";
@@ -341,18 +308,15 @@ const handleLogin = async () => {
 
 const handleSignup = async () => {
   signupError.value = "";
-
   const result = await authStore.register(
     signupForm.value.email,
     signupForm.value.password,
     signupForm.value.fullName,
     signupForm.value.phone,
   );
-
   if (result.success) {
     signupVisible.value = false;
     signupForm.value = { email: "", password: "", fullName: "", phone: "" };
-    // Un nouvel inscrit n'est jamais admin
     navigateTo("/dashboard");
   } else {
     signupError.value = result.error || "Erreur lors de l'inscription";
