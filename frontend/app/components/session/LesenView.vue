@@ -19,14 +19,20 @@
           v-html="formatText(stimulusText)"
         />
 
-        <!-- Anzeigen (matching) -->
-        <div v-if="teil.format_type === 'matching'" class="space-y-3 mt-4">
+        <!-- Anzeigen (matching + selektives_matching) -->
+        <div
+          v-if="
+            teil.format_type === 'matching' ||
+            teil.format_type === 'selektives_matching'
+          "
+          class="space-y-3 mt-4"
+        >
           <div
             v-for="(text, key) in teil.config?.anzeigen"
             :key="key"
             class="p-3 bg-white border border-gray-200 rounded-lg"
           >
-            <span class="font-bold text-teal-700 mr-2">{{
+            <span class="font-bold text-primary-700 mr-2">{{
               String(key).toUpperCase()
             }}</span>
             <span class="text-sm text-gray-700">{{ text }}</span>
@@ -72,6 +78,11 @@
               <QuestionItem
                 :question="q"
                 :answer="answers[q.id]?.user_answer"
+                :teil-anzeigen="
+                  teil.format_type === 'selektives_matching'
+                    ? teil.config?.anzeigen
+                    : undefined
+                "
                 @answer="
                   (val: Record<string, any>) => $emit('answer', q.id, val)
                 "
@@ -93,6 +104,11 @@
             <QuestionItem
               :question="q"
               :answer="answers[q.id]?.user_answer"
+              :teil-anzeigen="
+                teil.format_type === 'selektives_matching'
+                  ? teil.config?.anzeigen
+                  : undefined
+              "
               @answer="(val: Record<string, any>) => $emit('answer', q.id, val)"
             />
           </div>
@@ -113,10 +129,14 @@ const props = defineProps<{
 
 defineEmits<{ answer: [questionId: string, value: any] }>();
 
-const hasStimulus = computed(
-  () =>
-    !!props.teil.config?.stimulus_text || props.teil.format_type === "matching",
-);
+const hasStimulus = computed(() => {
+  const t = props.teil;
+  return (
+    !!t.config?.stimulus_text ||
+    t.format_type === "matching" ||
+    t.format_type === "selektives_matching"
+  );
+});
 
 const hasTexts = computed(
   () =>
@@ -125,11 +145,21 @@ const hasTexts = computed(
 );
 
 const stimulusText = computed(() => props.teil.config?.stimulus_text || "");
+watch(
+  () => props.teil,
+  (newTeil) => {
+    console.log("teil changed:", newTeil?.id);
+    console.log("stimulus_text:", newTeil?.config?.stimulus_text);
+    console.log("hasStimulus:", !!newTeil?.config?.stimulus_text);
+  },
+  { deep: true },
+);
 
 const getQuestionsForText = (textBlock: any) => {
   const numbers = (textBlock.questions || []).map((q: any) => q.number);
   return props.questions.filter((q) => numbers.includes(q.question_number));
 };
+console.log(stimulusText);
 
 const formatText = (text: string) => {
   if (!text) return "";

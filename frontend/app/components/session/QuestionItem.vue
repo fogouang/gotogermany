@@ -270,6 +270,7 @@
 const props = defineProps<{
   question: any;
   answer: any;
+  teilAnzeigen?: Record<string, string>;
 }>();
 
 defineEmits<{ answer: [value: any] }>();
@@ -293,7 +294,7 @@ const matchingKeys = computed(() => {
 });
 
 const selektivesKeys = computed(() => {
-  const anzeigen = props.question.content.anzeigen || {};
+  const anzeigen = props.teilAnzeigen || props.question.content.anzeigen || {};
   return [...Object.keys(anzeigen), "x"];
 });
 

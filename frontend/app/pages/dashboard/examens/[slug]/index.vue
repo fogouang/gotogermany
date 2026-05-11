@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Loading State -->
-    <div v-if="examsStore.loading" class="flex justify-center py-16">
+    <div v-if="pending || examsStore.loading" class="flex justify-center py-16">
       <ProgressSpinner style="width: 60px; height: 60px" />
     </div>
 
@@ -32,7 +32,7 @@
 
       <!-- Header -->
       <div
-        class="bg-linear-to-br from-teal-600 to-blue-600 rounded-2xl p-8 mb-8 text-white"
+        class="bg-secondary-600 rounded-2xl p-8 mb-8 text-white"
       >
         <div class="flex items-start justify-between mb-4">
           <div class="flex-1">
@@ -305,6 +305,20 @@ const route = useRoute();
 const examsStore = useExamsStore();
 const slug = computed(() => route.params.slug as string);
 
+// ✅ Fix : useAsyncData déclenché avant le premier render, plus de flash d'erreur
+const { pending } = await useAsyncData(
+  `exam-${route.params.slug}`,
+  async () => {
+    await Promise.all([
+      examsStore.fetchExamBySlug(route.params.slug as string),
+      examsStore.catalog.length === 0
+        ? examsStore.fetchCatalog()
+        : Promise.resolve(),
+    ]);
+  },
+  { server: false },
+);
+
 const homeItem = ref({ icon: "pi pi-home", to: "/dashboard" });
 const breadcrumbItems = computed(() => [
   { label: "Examens", to: "/dashboard/examens" },
@@ -401,11 +415,9 @@ const getModuleColor = (moduleSlug: string) => {
   return "bg-gray-100 text-gray-600";
 };
 
-// Démarrer sur un sujet précis
 const startSubject = (level: LevelWithSubjectsResponse, subjectId: string) => {
   if (!exam.value) return;
   if (!hasAccess(level) && !level.is_free) {
-    // Rediriger vers paiement avec exam_id
     navigateTo(`/dashboard/paiement?exam_id=${exam.value.id}`);
     return;
   }
@@ -415,7 +427,6 @@ const startSubject = (level: LevelWithSubjectsResponse, subjectId: string) => {
   });
 };
 
-// Démarrer sur le premier level accessible (sujet choisi auto par backend)
 const startModule = (level: LevelWithSubjectsResponse) => {
   if (!exam.value) return;
   if (!hasAccess(level) && !level.is_free) {
@@ -432,13 +443,4 @@ const startFreeLevel = () => {
   const freeLevel = sortedLevels.value.find((l) => l.is_free);
   if (freeLevel) startModule(freeLevel);
 };
-
-onMounted(async () => {
-  await Promise.all([
-    examsStore.fetchExamBySlug(slug.value),
-    examsStore.fetchCatalog(),
-  ]);
-});
-
-onUnmounted(() => examsStore.clearCurrentExam());
 </script>

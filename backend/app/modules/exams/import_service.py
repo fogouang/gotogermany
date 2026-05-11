@@ -29,9 +29,14 @@ def _extract_provider(data: dict) -> str:
 
 def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
     config = {}
+
+    # ✅ Champs globaux présents sur n'importe quel format
+    if "stimulus_text" in teil_data:
+        config["stimulus_text"] = teil_data["stimulus_text"]
+    if "texts" in teil_data:
+        config["texts"] = teil_data["texts"]
+
     if format_type == "richtig_falsch":
-        if "stimulus_text" in teil_data:
-            config["stimulus_text"] = teil_data["stimulus_text"]
         if "context" in teil_data:
             config["context"] = teil_data["context"]
             config["transcription"] = teil_data.get("transcription", "")
@@ -40,38 +45,72 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
             config["max_plays"] = teil_data["max_plays"]
         if "audios" in teil_data:
             config["max_plays"] = teil_data.get("max_plays", 2)
+
     if format_type == "ja_nein":
         config["topic"] = teil_data.get("topic", "")
+
     if format_type == "matching":
         config["anzeigen"] = teil_data.get("anzeigen", {})
+
     if format_type == "zuordnung_speaker":
         config["speakers"] = teil_data.get("speakers", {})
         config["transcription"] = teil_data.get("transcription", "")
+
     if format_type == "qcm_abc":
-        if "stimulus_text" in teil_data:
-            config["stimulus_text"] = teil_data["stimulus_text"]
         if "context" in teil_data:
             config["context"] = teil_data["context"]
             config["transcription"] = teil_data.get("transcription", "")
             config["audio_file"] = teil_data.get("audio_file", "")
         if "max_plays" in teil_data:
             config["max_plays"] = teil_data["max_plays"]
+
     if format_type == "zuordnung_titre":
         config["titres"] = teil_data.get("titres", {})
+
     if format_type == "selektives_matching":
         config["anzeigen"] = teil_data.get("anzeigen", {})
         config["context"] = teil_data.get("context", "")
+
     if format_type == "qcm_gap_fill":
         config["text_with_gaps"] = teil_data.get("text_with_gaps", "")
+
     if format_type == "word_bank_gap_fill":
         config["text_with_gaps"] = teil_data.get("text_with_gaps", "")
         config["word_bank"] = teil_data.get("word_bank", {})
+
     if format_type == "oral_kennenlernen":
         config["topics"] = teil_data.get("topics", [])
+
     if format_type == "oral_thema":
         config["topic"] = teil_data.get("topic", "")
         config["opinion_a"] = teil_data.get("opinion_a", {})
         config["opinion_b"] = teil_data.get("opinion_b", {})
+
+    # ✅ free_text — Schreiben (Goethe et TELC)
+    if format_type == "free_text":
+        if "stimulus_email" in teil_data:
+            config["stimulus_email"] = teil_data["stimulus_email"]
+        if "stimulus" in teil_data:
+            config["stimulus"] = teil_data["stimulus"]
+            config["stimulus_author"] = teil_data.get("stimulus_author", "")
+        if "scenario" in teil_data:
+            config["scenario"] = teil_data["scenario"]
+        if "prompts" in teil_data:
+            config["prompts"] = teil_data["prompts"]
+        config["word_count_target"] = teil_data.get("word_count_target", 80)
+        config["register"] = teil_data.get("register", "informell")
+        config["text_type"] = teil_data.get("text_type", "")
+
+    # ✅ Champs Hören spécifiques
+    if "audios" in teil_data:
+        config["audios"] = teil_data.get("audios", [])
+    if "transcription" in teil_data and "transcription" not in config:
+        config["transcription"] = teil_data["transcription"]
+    if "context" in teil_data and "context" not in config:
+        config["context"] = teil_data["context"]
+    if "audio_file" in teil_data and "audio_file" not in config:
+        config["audio_file"] = teil_data["audio_file"]
+
     return config or None
 
 

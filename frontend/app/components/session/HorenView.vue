@@ -41,7 +41,21 @@
             <i class="pi pi-info-circle"></i>
             Lisez d'abord les questions, puis écoutez l'audio
           </div>
-
+          <!-- Player audio -->
+          <div v-if="group.audio_file">
+            <AudioPlayer
+              :src="audioUrl(group.audio_file)"
+              :max-plays="99"
+              :read-time="0"
+            />
+          </div>
+          <div
+            v-else
+            class="flex items-center gap-2 text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm"
+          >
+            <i class="pi pi-exclamation-triangle"></i>
+            Audio non disponible pour ce groupe
+          </div>
           <!-- Questions de ce groupe -->
           <div class="space-y-4">
             <div
@@ -62,22 +76,6 @@
                 "
               />
             </div>
-          </div>
-
-          <!-- Player audio -->
-          <div v-if="group.audio_file">
-            <AudioPlayer
-              :src="audioUrl(group.audio_file)"
-              :max-plays="99"
-              :read-time="0"
-            />
-          </div>
-          <div
-            v-else
-            class="flex items-center gap-2 text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm"
-          >
-            <i class="pi pi-exclamation-triangle"></i>
-            Audio non disponible pour ce groupe
           </div>
         </div>
       </div>

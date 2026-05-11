@@ -21,7 +21,7 @@ export default defineNuxtConfig({
   nitro: {
     devProxy: {
       "/api": {
-        target: "http://localhost:8002/api",
+        target: "http://localhost:8001/api",
         changeOrigin: true,
       },
     },
@@ -30,7 +30,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl:
-        process.env.NODE_ENV === "production" ? "http://localhost:8002" : "", 
+        process.env.NODE_ENV === "production" ? "http://localhost:8001" : "", 
     },
   },
 

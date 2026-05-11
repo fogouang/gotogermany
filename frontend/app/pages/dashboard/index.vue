@@ -7,14 +7,8 @@
       <p class="text-gray-600 mt-2">Bienvenue sur votre tableau de bord</p>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      
-    </div>
-
-    <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Quick Start -->
+      <!-- Examens disponibles -->
       <Card class="lg:col-span-2">
         <template #title>
           <div class="flex items-center justify-between">
@@ -36,102 +30,115 @@
             v-else-if="examsStore.catalog.length === 0"
             class="text-center py-8 text-gray-500"
           >
-            <i class="pi pi-inbox text-4xl mb-4"></i>
+            <i class="pi pi-inbox text-4xl mb-4 block"></i>
             <p>Aucun examen disponible</p>
           </div>
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Card
+            <div
               v-for="exam in examsStore.catalog.slice(0, 4)"
               :key="exam.id"
-              class="hover:shadow-md transition-shadow cursor-pointer"
+              class="border border-gray-100 rounded-xl p-4 hover:shadow-md hover:border-primary-200 transition-all cursor-pointer"
               @click="navigateTo(`/dashboard/examens/${exam.slug}`)"
             >
-              <template #content>
-                <div class="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 class="font-semibold text-gray-900">{{ exam.name }}</h3>
-                    <p class="text-xs text-gray-500 mt-1">
-                      {{ exam.provider }}
-                    </p>
-                  </div>
-                  <Tag
-                    :value="exam.levels?.length + ' niveaux'"
-                    severity="info"
-                  />
+              <div class="flex items-start justify-between mb-2">
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-900 truncate">
+                    {{ exam.name }}
+                  </h3>
+                  <p class="text-xs text-primary-600 font-medium mt-0.5">
+                    {{ exam.provider.toUpperCase() }}
+                  </p>
                 </div>
-                <p class="text-sm text-gray-600 line-clamp-2">
-                  {{
-                    exam.description ||
-                    "Préparez-vous efficacement pour cet examen"
-                  }}
-                </p>
-              </template>
-            </Card>
+                <Tag
+                  :value="`${exam.levels?.length || 0} niveaux`"
+                  severity="secondary"
+                  class="shrink-0 ml-2"
+                />
+              </div>
+              <p class="text-sm text-gray-500 line-clamp-2">
+                {{
+                  exam.description ||
+                  "Préparez-vous efficacement pour cet examen"
+                }}
+              </p>
+              <div class="flex flex-wrap gap-1 mt-3">
+                <Tag
+                  v-for="level in exam.levels?.slice(0, 3)"
+                  :key="level.id"
+                  :value="level.cefr_code"
+                  size="small"
+                  severity="info"
+                />
+              </div>
+            </div>
           </div>
         </template>
       </Card>
 
-      <!-- Progress / Activity -->
+      <!-- Sessions récentes -->
       <Card>
-        <template #title>Progression</template>
+        <template #title>Sessions récentes</template>
         <template #content>
-          <div class="space-y-4">
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span class="text-gray-600">Niveau B1</span>
-                <span class="font-semibold">75%</span>
-              </div>
-              <ProgressBar :value="75" :showValue="false" />
-            </div>
-
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span class="text-gray-600">Niveau B2</span>
-                <span class="font-semibold">40%</span>
-              </div>
-              <ProgressBar :value="40" :showValue="false" />
-            </div>
-
-            <div>
-              <div class="flex justify-between text-sm mb-2">
-                <span class="text-gray-600">Niveau C1</span>
-                <span class="font-semibold">10%</span>
-              </div>
-              <ProgressBar :value="10" :showValue="false" />
-            </div>
+          <div v-if="sessionsLoading" class="text-center py-8">
+            <ProgressSpinner style="width: 40px; height: 40px" />
           </div>
 
-          <Divider />
+          <div v-else-if="recentSessions.length === 0" class="text-center py-8">
+            <i class="pi pi-history text-4xl text-gray-300 mb-3 block"></i>
+            <p class="text-sm text-gray-500">Aucune session pour le moment</p>
+            <Button
+              label="Commencer un examen"
+              text
+              size="small"
+              class="mt-3"
+              @click="navigateTo('/dashboard/examens')"
+            />
+          </div>
 
-          <div class="space-y-3">
-            <h4 class="font-semibold text-sm text-gray-900">
-              Activité récente
-            </h4>
-            <div class="flex items-center gap-3">
+          <div v-else class="space-y-3">
+            <div
+              v-for="s in recentSessions"
+              :key="s.id"
+              class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+            >
               <div
-                class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center"
+                :class="[
+                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',
+                  s.status === 'COMPLETED'
+                    ? 'bg-success-100'
+                    : 'bg-secondary-100',
+                ]"
               >
-                <i class="pi pi-check text-green-600"></i>
+                <i
+                  :class="[
+                    'pi text-sm',
+                    s.status === 'COMPLETED'
+                      ? 'pi-check text-success-600'
+                      : 'pi-clock text-secondary-600',
+                  ]"
+                ></i>
               </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium">Goethe B1 - Hören</p>
-                <p class="text-xs text-gray-500">Il y a 2 heures</p>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">
+                  {{ s.exam_name }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  Sujet {{ s.subject_number }} •
+                  {{ formatDate(s.started_at) }}
+                </p>
               </div>
-              <span class="text-sm font-semibold text-green-600">87%</span>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div
-                class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"
+              <span
+                v-if="s.score_percentage != null"
+                :class="[
+                  'text-sm font-semibold shrink-0',
+                  s.score_percentage >= 60
+                    ? 'text-success-600'
+                    : 'text-danger-600',
+                ]"
               >
-                <i class="pi pi-check text-blue-600"></i>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium">TestDaF - Lesen</p>
-                <p class="text-xs text-gray-500">Hier</p>
-              </div>
-              <span class="text-sm font-semibold text-blue-600">92%</span>
+                {{ s.score_percentage }}%
+              </span>
             </div>
           </div>
         </template>
@@ -141,19 +148,32 @@
 </template>
 
 <script setup lang="ts">
-import { useExamsStore } from "~/stores/exams";
-
-definePageMeta({
-  layout: "dashboard",
-  middleware: "auth",
-});
+definePageMeta({ layout: "dashboard", middleware: "auth" });
 
 const authStore = useAuthStore();
 const examsStore = useExamsStore();
+const sessionStore = useSessionStore();
 
+const sessionsLoading = ref(false);
+const recentSessions = ref<any[]>([]);
 
-// Charger les examens au montage
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 onMounted(async () => {
-  await examsStore.fetchCatalog();
+  if (examsStore.catalog.length === 0) {
+    await examsStore.fetchCatalog();
+  }
+
+  sessionsLoading.value = true;
+  const result = await sessionStore.getMySessions(0, 5);
+  if (result.success) recentSessions.value = result.data || [];
+  sessionsLoading.value = false;
 });
 </script>

@@ -147,6 +147,9 @@ export const useSessionStore = defineStore("session", {
       this._ensureApiConfig();
       this.loading = true;
       this.error = null;
+      this.$reset();
+      this.loading = true;
+      this.error = null;
 
       try {
         const response = await SessionsService.startSessionApiV1SessionsPost({

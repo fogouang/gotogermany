@@ -25,7 +25,7 @@
         <span class="font-mono text-sm text-gray-600">{{ formattedDuration }}</span>
       </div>
 
-      <!-- Visualiseur audio simple -->
+      <!-- Visualiseur -->
       <div class="flex items-center justify-center gap-1 h-8">
         <div
           v-for="i in 12"
@@ -43,19 +43,13 @@
       />
     </div>
 
-    <!-- État : uploading -->
-    <div v-else-if="state === 'uploading'" class="text-center space-y-3">
-      <ProgressSpinner style="width: 40px; height: 40px" />
-      <p class="text-sm text-gray-500">Envoi en cours...</p>
-    </div>
-
     <!-- État : terminé -->
     <div v-else-if="state === 'done'" class="space-y-3">
       <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
         <i class="pi pi-check-circle text-green-600 text-xl"></i>
         <div class="flex-1">
           <p class="text-sm font-medium text-green-800">Audio enregistré</p>
-          <p class="text-xs text-green-600">{{ formattedDuration }} • Enregistrement {{ recordCount }}</p>
+          <p class="text-xs text-green-600">{{ formattedDuration }}</p>
         </div>
         <Button
           icon="pi pi-refresh"
@@ -67,13 +61,10 @@
         />
       </div>
 
-      <!-- Lecture de l'audio enregistré -->
-      <div v-if="audioBlob" class="bg-gray-50 rounded-lg p-3">
-        <audio
-          :src="audioPreviewUrl as string"
-          controls
-          class="w-full h-8"
-        />
+      <!-- Réécoute locale -->
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-500 mb-2">Écoutez votre enregistrement :</p>
+        <audio :src="audioPreviewUrl!" controls class="w-full" />
       </div>
     </div>
 
@@ -85,23 +76,20 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  sessionId: string
-  teilNumber: number
-  questionId: string
+// Plus besoin de sessionId, teilNumber, questionId
+defineProps<{
+  teilNumber?: number  // gardé pour compatibilité mais inutilisé
 }>()
 
 const emit = defineEmits<{
-  recorded: [audioFile: string, url: string]
+  recorded: []  // signal simple — pas de fichier
 }>()
 
-type State = 'idle' | 'recording' | 'uploading' | 'done'
+type State = 'idle' | 'recording' | 'done'
 
 const state = ref<State>('idle')
 const error = ref<string | null>(null)
 const duration = ref(0)
-const recordCount = ref(0)
-const audioBlob = ref<Blob | null>(null)
 const audioPreviewUrl = ref<string | null>(null)
 const audioLevels = ref<number[]>(Array(12).fill(4))
 
@@ -110,7 +98,6 @@ let chunks: BlobEvent['data'][] = []
 let durationTimer: ReturnType<typeof setInterval> | null = null
 let analyserInterval: ReturnType<typeof setInterval> | null = null
 let audioContext: AudioContext | null = null
-let analyser: AnalyserNode | null = null
 
 const formattedDuration = computed(() => {
   const m = Math.floor(duration.value / 60)
@@ -126,12 +113,11 @@ const startRecording = async () => {
     // Visualiseur
     audioContext = new AudioContext()
     const source = audioContext.createMediaStreamSource(stream)
-    analyser = audioContext.createAnalyser()
+    const analyser = audioContext.createAnalyser()
     analyser.fftSize = 32
     source.connect(analyser)
 
     analyserInterval = setInterval(() => {
-      if (!analyser) return
       const data = new Uint8Array(analyser.frequencyBinCount)
       analyser.getByteFrequencyData(data)
       audioLevels.value = Array.from(data.slice(0, 12)).map(v =>
@@ -147,12 +133,13 @@ const startRecording = async () => {
       if (e.data.size > 0) chunks.push(e.data)
     }
 
-    mediaRecorder.onstop = async () => {
+    mediaRecorder.onstop = () => {
       const blob = new Blob(chunks, { type: 'audio/webm' })
-      audioBlob.value = blob
+      if (audioPreviewUrl.value) URL.revokeObjectURL(audioPreviewUrl.value)
       audioPreviewUrl.value = URL.createObjectURL(blob)
       stream.getTracks().forEach(t => t.stop())
-      await uploadAudio(blob)
+      state.value = 'done'
+      emit('recorded')
     }
 
     mediaRecorder.start(100)
@@ -162,7 +149,6 @@ const startRecording = async () => {
 
   } catch (err: any) {
     error.value = 'Impossible d\'accéder au microphone. Vérifiez les permissions.'
-    console.error(err)
   }
 }
 
@@ -172,48 +158,11 @@ const stopRecording = () => {
     if (durationTimer) clearInterval(durationTimer)
     if (analyserInterval) clearInterval(analyserInterval)
     audioContext?.close()
-    state.value = 'uploading'
-  }
-}
-
-const uploadAudio = async (blob: Blob) => {
-  state.value = 'uploading'
-  try {
-    const config = useRuntimeConfig()
-    const { OpenAPI } = await import('#shared/api')
-    const token = useCookie('access_token')
-
-    const formData = new FormData()
-    formData.append('file', blob, `sprechen_teil${props.teilNumber}.webm`)
-
-    const response = await fetch(
-      `${OpenAPI.BASE}/api/v1/sessions/${props.sessionId}/upload-audio?teil_number=${props.teilNumber}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-        },
-        body: formData,
-      }
-    )
-
-    if (!response.ok) throw new Error('Upload échoué')
-
-    const data = await response.json()
-    recordCount.value++
-    state.value = 'done'
-    emit('recorded', data.audio_file, data.url)
-
-  } catch (err: any) {
-    error.value = 'Erreur lors de l\'envoi. Réessayez.'
-    state.value = 'idle'
-    console.error(err)
   }
 }
 
 const resetRecording = () => {
   if (audioPreviewUrl.value) URL.revokeObjectURL(audioPreviewUrl.value)
-  audioBlob.value = null
   audioPreviewUrl.value = null
   state.value = 'idle'
   duration.value = 0

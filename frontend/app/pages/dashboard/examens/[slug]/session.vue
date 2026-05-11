@@ -70,9 +70,12 @@
       <div class="flex-1 overflow-auto">
         <component
           :is="currentView"
+          :key="`${currentModuleIndex}-${currentTeilIndex}`"
           :teil="currentTeil"
           :questions="currentTeilQuestions"
           :answers="sessionStore.answers"
+          :session-id="sessionStore.sessionId"
+          :exam-name="sessionStore.examName"
           @answer="onAnswer"
         />
       </div>
@@ -295,26 +298,17 @@ onMounted(async () => {
   const examId = route.query.examId as string;
   const subjectId = route.query.subjectId as string | undefined;
 
-  console.log("=== SESSION PAGE MOUNTED ===");
-  console.log("examId:", examId);
-  console.log("subjectId:", subjectId);
-  console.log("store loading before:", sessionStore.loading);
-  console.log("store sessionId before:", sessionStore.sessionId);
-
   if (!examId) {
     navigateTo("/dashboard/examens");
     return;
   }
 
-  const result = await session.startSession(examId, subjectId);
-  console.log("startSession result:", result);
-  console.log("store modules after:", sessionStore.modules.length);
-  console.log("store sessionId after:", sessionStore.sessionId);
-  console.log("store error:", sessionStore.error);
+  // ✅ Reset avant de démarrer pour éviter la pollution du state précédent
+  sessionStore.resetSession();
 
+  const result = await session.startSession(examId, subjectId);
   if (result.success) startTimer();
 });
-
 onUnmounted(() => stopTimer());
 
 onBeforeRouteLeave(() => {

@@ -1,13 +1,11 @@
 <template>
   <div class="max-w-3xl mx-auto p-6 space-y-6">
-
     <!-- Instructions -->
     <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <p class="text-sm text-blue-800 font-medium">{{ teil.instructions }}</p>
     </div>
 
     <div v-for="q in questions" :key="q.id" class="space-y-4">
-
       <!-- Stimulus (Aufgabe 2 — forum) -->
       <div
         v-if="q.content.stimulus"
@@ -16,12 +14,55 @@
         <div class="flex items-center gap-2 mb-3">
           <i class="pi pi-comment text-gray-500"></i>
           <span class="text-sm font-semibold text-gray-700">
-            {{ q.content.stimulus_author || 'Commentaire' }}
+            {{ q.content.stimulus_author || "Commentaire" }}
           </span>
         </div>
         <p class="text-sm text-gray-800 italic">{{ q.content.stimulus }}</p>
       </div>
 
+      <!-- Stimulus email (TELC — e-mail reçu) -->
+      <div
+        v-if="q.content.stimulus_email"
+        class="bg-white border border-gray-200 rounded-xl overflow-hidden"
+      >
+        <!-- En-tête email -->
+        <div class="bg-gray-50 border-b border-gray-200 px-5 py-3 space-y-1">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="font-semibold text-gray-500 w-16">Von:</span>
+            <span class="text-gray-900 font-medium">{{
+              q.content.stimulus_email.sender
+            }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="font-semibold text-gray-500 w-16">Betreff:</span>
+            <span class="text-gray-900">{{
+              q.content.stimulus_email.subject
+            }}</span>
+          </div>
+        </div>
+        <!-- Corps email -->
+        <div class="px-5 py-4">
+          <p class="text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+            {{ q.content.stimulus_email.body }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Stimulus forum (Goethe — commentaire) -->
+      <div
+        v-else-if="q.content.stimulus"
+        class="bg-gray-50 border border-gray-200 rounded-xl p-5"
+      >
+        <div class="flex items-center gap-2 mb-3">
+          <i class="pi pi-comment text-gray-500"></i>
+          <span class="text-sm font-semibold text-gray-700">
+            {{ q.content.stimulus_author || "Commentaire" }}
+          </span>
+        </div>
+        <p class="text-sm text-gray-800 italic">{{ q.content.stimulus }}</p>
+      </div>
+
+      
       <!-- Scénario -->
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
         <p class="text-sm font-semibold text-amber-800 mb-3">Aufgabe :</p>
@@ -38,14 +79,21 @@
           </li>
         </ul>
 
-        <p v-if="q.content.word_count_target" class="mt-3 text-xs text-amber-700 font-medium">
+        <p
+          v-if="q.content.word_count_target"
+          class="mt-3 text-xs text-amber-700 font-medium"
+        >
           Environ {{ q.content.word_count_target }} mots
-          <span v-if="q.content.register === 'formell'"> • Ton formel requis</span>
+          <span v-if="q.content.register === 'formell'">
+            • Ton formel requis</span
+          >
         </p>
       </div>
 
       <!-- Zone de rédaction -->
-      <div class="bg-white border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-teal-400 transition-colors">
+      <div
+        class="bg-white border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-teal-400 transition-colors"
+      >
         <Textarea
           :modelValue="getTextAnswer(q)"
           placeholder="Schreiben Sie hier Ihren Text..."
@@ -55,13 +103,18 @@
         />
 
         <!-- Pied de zone -->
-        <div class="border-t border-gray-100 px-5 py-2 flex items-center justify-between bg-gray-50">
+        <div
+          class="border-t border-gray-100 px-5 py-2 flex items-center justify-between bg-gray-50"
+        >
           <span class="text-xs text-gray-400">
             {{ getWordCount(q) }} mot(s)
           </span>
           <div class="flex items-center gap-3">
             <!-- Barre progression mots -->
-            <div v-if="q.content.word_count_target" class="flex items-center gap-2">
+            <div
+              v-if="q.content.word_count_target"
+              class="flex items-center gap-2"
+            >
               <div class="w-24 bg-gray-200 rounded-full h-1">
                 <div
                   :class="[
@@ -71,7 +124,7 @@
                       : 'bg-teal-400',
                   ]"
                   :style="{
-                    width: `${Math.min((getWordCount(q) / q.content.word_count_target) * 100, 100)}%`
+                    width: `${Math.min((getWordCount(q) / q.content.word_count_target) * 100, 100)}%`,
                   }"
                 />
               </div>
@@ -107,207 +160,207 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-  teil: any
-  questions: any[]
-  answers: Record<string, any>
-  examName?: string
-}>()
+  teil: any;
+  questions: any[];
+  answers: Record<string, any>;
+  examName?: string;
+}>();
 
-const emit = defineEmits<{ answer: [questionId: string, value: any] }>()
+const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
 
-const downloading = ref(false)
+const downloading = ref(false);
 
 const getTextAnswer = (q: any): string => {
-  return props.answers[q.id]?.user_answer?.text || ''
-}
+  return props.answers[q.id]?.user_answer?.text || "";
+};
 
 const getWordCount = (q: any): number => {
-  const text = getTextAnswer(q)
-  return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0
-}
+  const text = getTextAnswer(q);
+  return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+};
 
 const onInput = (q: any, val: string) => {
-  emit('answer', q.id, { text: val })
-}
+  emit("answer", q.id, { text: val });
+};
 
 const downloadPDF = async (q: any) => {
-  downloading.value = true
+  downloading.value = true;
   try {
     // Import dynamique jsPDF
-    const { jsPDF } = await import('jspdf')
+    const { jsPDF } = await import("jspdf");
 
     const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    })
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
-    const pageW = doc.internal.pageSize.getWidth()
-    const pageH = doc.internal.pageSize.getHeight()
-    const margin = 20
-    const maxW = pageW - margin * 2
-    let y = margin
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxW = pageW - margin * 2;
+    let y = margin;
 
     // ── En-tête ──────────────────────────────────────
-    doc.setFillColor(15, 118, 110) // teal-600
-    doc.rect(0, 0, pageW, 30, 'F')
+    doc.setFillColor(15, 118, 110); // teal-600
+    doc.rect(0, 0, pageW, 30, "F");
 
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('DeutschTest', margin, 13)
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("DeutschTest", margin, 13);
 
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.text(props.examName || 'Goethe-ÖSD Zertifikat B1', margin, 22)
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(props.examName || "Goethe-ÖSD Zertifikat B1", margin, 22);
 
-    doc.setFontSize(10)
+    doc.setFontSize(10);
     doc.text(
-      new Date().toLocaleDateString('fr-FR', {
-        day: '2-digit', month: 'long', year: 'numeric',
+      new Date().toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
       }),
       pageW - margin,
       22,
-      { align: 'right' }
-    )
+      { align: "right" },
+    );
 
-    y = 45
+    y = 45;
 
     // ── Module ───────────────────────────────────────
-    doc.setTextColor(80, 80, 80)
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'bold')
-    doc.text('SCHREIBEN', margin, y)
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("SCHREIBEN", margin, y);
 
-    y += 6
-    doc.setDrawColor(15, 118, 110)
-    doc.setLineWidth(0.5)
-    doc.line(margin, y, pageW - margin, y)
-    y += 8
+    y += 6;
+    doc.setDrawColor(15, 118, 110);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
 
     // ── Instructions ─────────────────────────────────
     if (props.teil.instructions) {
-      doc.setFillColor(239, 246, 255) // blue-50
-      doc.setDrawColor(147, 197, 253) // blue-300
-      doc.roundedRect(margin, y, maxW, 14, 2, 2, 'FD')
+      doc.setFillColor(239, 246, 255); // blue-50
+      doc.setDrawColor(147, 197, 253); // blue-300
+      doc.roundedRect(margin, y, maxW, 14, 2, 2, "FD");
 
-      doc.setTextColor(30, 64, 175) // blue-800
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'italic')
-      const instrLines = doc.splitTextToSize(props.teil.instructions, maxW - 6)
-      doc.text(instrLines, margin + 3, y + 5)
-      y += 18
+      doc.setTextColor(30, 64, 175); // blue-800
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      const instrLines = doc.splitTextToSize(props.teil.instructions, maxW - 6);
+      doc.text(instrLines, margin + 3, y + 5);
+      y += 18;
     }
 
     // ── Scénario ─────────────────────────────────────
-    doc.setFillColor(255, 251, 235) // amber-50
-    doc.setDrawColor(252, 211, 77)  // amber-300
+    doc.setFillColor(255, 251, 235); // amber-50
+    doc.setDrawColor(252, 211, 77); // amber-300
 
-    const scenarioText = q.content.scenario || ''
-    const scenarioLines = doc.splitTextToSize(scenarioText, maxW - 6)
-    const prompts = q.content.prompts || []
-    const promptLines = prompts.map((p: string) => `– ${p}`)
-    const blockH = 10 + (scenarioLines.length * 5) + (prompts.length * 6) + 10
+    const scenarioText = q.content.scenario || "";
+    const scenarioLines = doc.splitTextToSize(scenarioText, maxW - 6);
+    const prompts = q.content.prompts || [];
+    const promptLines = prompts.map((p: string) => `– ${p}`);
+    const blockH = 10 + scenarioLines.length * 5 + prompts.length * 6 + 10;
 
-    doc.roundedRect(margin, y, maxW, blockH, 2, 2, 'FD')
+    doc.roundedRect(margin, y, maxW, blockH, 2, 2, "FD");
 
-    doc.setTextColor(146, 64, 14) // amber-800
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Aufgabe :', margin + 3, y + 7)
+    doc.setTextColor(146, 64, 14); // amber-800
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Aufgabe :", margin + 3, y + 7);
 
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(9)
-    let textY = y + 13
-    doc.text(scenarioLines, margin + 3, textY)
-    textY += scenarioLines.length * 5 + 3
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    let textY = y + 13;
+    doc.text(scenarioLines, margin + 3, textY);
+    textY += scenarioLines.length * 5 + 3;
 
     if (prompts.length) {
       promptLines.forEach((line: string) => {
-        doc.text(line, margin + 5, textY)
-        textY += 6
-      })
+        doc.text(line, margin + 5, textY);
+        textY += 6;
+      });
     }
 
     if (q.content.word_count_target) {
-      doc.setFont('helvetica', 'bold')
-      doc.text(`Environ ${q.content.word_count_target} mots`, margin + 3, textY)
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        `Environ ${q.content.word_count_target} mots`,
+        margin + 3,
+        textY,
+      );
     }
 
-    y += blockH + 10
+    y += blockH + 10;
 
     // ── Réponse de l'étudiant ─────────────────────────
-    doc.setTextColor(30, 30, 30)
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Ma réponse :', margin, y)
-    y += 4
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Ma réponse :", margin, y);
+    y += 4;
 
-    doc.setDrawColor(200, 200, 200)
-    doc.line(margin, y, pageW - margin, y)
-    y += 8
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
 
-    const answerText = getTextAnswer(q)
+    const answerText = getTextAnswer(q);
     if (answerText) {
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(10)
-      doc.setTextColor(30, 30, 30)
-      const answerLines = doc.splitTextToSize(answerText, maxW)
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(30, 30, 30);
+      const answerLines = doc.splitTextToSize(answerText, maxW);
 
       answerLines.forEach((line: string) => {
         if (y > pageH - 25) {
-          doc.addPage()
-          y = margin
+          doc.addPage();
+          y = margin;
         }
-        doc.text(line, margin, y)
-        y += 6
-      })
+        doc.text(line, margin, y);
+        y += 6;
+      });
     } else {
-      doc.setFont('helvetica', 'italic')
-      doc.setTextColor(150, 150, 150)
-      doc.setFontSize(10)
-      doc.text('(Aucune réponse)', margin, y)
-      y += 8
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(10);
+      doc.text("(Aucune réponse)", margin, y);
+      y += 8;
     }
 
-    y += 6
+    y += 6;
 
     // ── Compteur de mots ─────────────────────────────
-    doc.setDrawColor(200, 200, 200)
-    doc.line(margin, y, pageW - margin, y)
-    y += 5
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
 
-    doc.setFont('helvetica', 'italic')
-    doc.setFontSize(8)
-    doc.setTextColor(120, 120, 120)
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
     doc.text(
-      `${getWordCount(q)} mot(s) rédigé(s)${q.content.word_count_target ? ` / ${q.content.word_count_target} recommandés` : ''}`,
+      `${getWordCount(q)} mot(s) rédigé(s)${q.content.word_count_target ? ` / ${q.content.word_count_target} recommandés` : ""}`,
       margin,
-      y
-    )
+      y,
+    );
 
     // ── Pied de page ─────────────────────────────────
-    doc.setFillColor(245, 245, 245)
-    doc.rect(0, pageH - 12, pageW, 12, 'F')
-    doc.setTextColor(150, 150, 150)
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Généré par DeutschTest — deutschtest.com', margin, pageH - 5)
-    doc.text(
-      `Page 1`,
-      pageW - margin,
-      pageH - 5,
-      { align: 'right' }
-    )
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, pageH - 12, pageW, 12, "F");
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.text("Généré par DeutschTest — deutschtest.com", margin, pageH - 5);
+    doc.text(`Page 1`, pageW - margin, pageH - 5, { align: "right" });
 
     // ── Télécharger ───────────────────────────────────
-    const filename = `schreiben_teil${props.teil.teil_number}_${Date.now()}.pdf`
-    doc.save(filename)
-
+    const filename = `schreiben_teil${props.teil.teil_number}_${Date.now()}.pdf`;
+    doc.save(filename);
   } catch (err) {
-    console.error('Erreur génération PDF:', err)
+    console.error("Erreur génération PDF:", err);
   } finally {
-    downloading.value = false
+    downloading.value = false;
   }
-}
+};
 </script>
