@@ -85,6 +85,22 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
         config["topic"] = teil_data.get("topic", "")
         config["opinion_a"] = teil_data.get("opinion_a", {})
         config["opinion_b"] = teil_data.get("opinion_b", {})
+        
+    if format_type == "zuordnung_personen":
+        config["persons"] = teil_data.get("persons", {})
+
+    if format_type == "lueckentext_saetze":
+        config["article_text"] = teil_data.get("article_text", "")
+        config["article_title"] = teil_data.get("article_title", "")
+        config["candidates"] = teil_data.get("candidates", {})
+
+    if format_type == "zuordnung_meinungen":
+        config["opinions"] = teil_data.get("opinions", {})
+        config["topic"] = teil_data.get("topic", "")
+
+    if format_type == "zuordnung_paragraphen":
+        config["headings"] = teil_data.get("headings", {})
+        config["paragraphs"] = teil_data.get("paragraphs", {})
 
     # ✅ free_text — Schreiben (Goethe et TELC)
     if format_type == "free_text":

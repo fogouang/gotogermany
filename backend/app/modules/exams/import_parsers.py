@@ -241,6 +241,84 @@ def parse_oral_thema(teil_data: dict) -> list[dict]:
         "audio_file": None,
     }]
 
+def parse_zuordnung_personen(teil_data: dict) -> list[dict]:
+    persons = teil_data.get("persons", {})
+    return [{
+        "question_number": q["number"],
+        "question_type": "zuordnung_personen",
+        "content": {
+            "statement": q["statement"],
+            "persons": {
+                key: {
+                    "name": p.get("name", key.upper()),
+                    "text": p.get("text", "")
+                }
+                for key, p in persons.items()
+            }
+        },
+        "correct_answer": {"answer": q["answer"]},
+        "points": 1,
+        "audio_file": None,
+    } for q in teil_data.get("questions", [])]
+
+
+def parse_lueckentext_saetze(teil_data: dict) -> list[dict]:
+    candidates = teil_data.get("candidates", {})
+    article_text = teil_data.get("article_text", "")
+    article_title = teil_data.get("article_title", "")
+    return [{
+        "question_number": q["number"],
+        "question_type": "lueckentext_saetze",
+        "content": {
+            "gap_number": q["number"],
+            "article_text": article_text,
+            "article_title": article_title,
+            "candidates": candidates,
+        },
+        "correct_answer": {"answer": q["answer"]},
+        "points": 1,
+        "audio_file": None,
+    } for q in teil_data.get("questions", [])]
+
+
+def parse_zuordnung_meinungen(teil_data: dict) -> list[dict]:
+    opinions = teil_data.get("opinions", {})
+    return [{
+        "question_number": q["number"],
+        "question_type": "zuordnung_meinungen",
+        "content": {
+            "title": q["title"],
+            "opinions": {
+                key: {
+                    "author": op.get("author", ""),
+                    "text": op.get("text", "")
+                }
+                for key, op in opinions.items()
+            }
+        },
+        "correct_answer": {"answer": q["answer"]},
+        "points": 1,
+        "audio_file": None,
+    } for q in teil_data.get("questions", [])]
+
+
+def parse_zuordnung_paragraphen(teil_data: dict) -> list[dict]:
+    headings = teil_data.get("headings", {})
+    paragraphs = teil_data.get("paragraphs", {})
+    return [{
+        "question_number": q["number"],
+        "question_type": "zuordnung_paragraphen",
+        "content": {
+            "paragraph_key": q.get("paragraph", ""),
+            "paragraph_text": paragraphs.get(f"p{q['number']}", {}).get("text", ""),
+            "paragraph_title": paragraphs.get(f"p{q['number']}", {}).get("title", ""),
+            "headings": headings,
+        },
+        "correct_answer": {"answer": q["answer"]},
+        "points": 1,
+        "audio_file": None,
+    } for q in teil_data.get("questions", [])]
+    
 
 PARSERS = {
     "richtig_falsch":           parse_richtig_falsch,
@@ -259,4 +337,9 @@ PARSERS = {
     "word_bank_gap_fill":       parse_word_bank_gap_fill,
     "oral_kennenlernen":        parse_oral_kennenlernen,
     "oral_thema":               parse_oral_thema,
+    "zuordnung_personen":    parse_zuordnung_personen,
+    "lueckentext_saetze":    parse_lueckentext_saetze,
+    "zuordnung_meinungen":   parse_zuordnung_meinungen,
+    "zuordnung_paragraphen": parse_zuordnung_paragraphen,
+    "oral_discussion":       lambda d: parse_oral(d, "oral_discussion"),
 }
