@@ -31,8 +31,9 @@
       <Breadcrumb :home="homeItem" :model="breadcrumbItems" class="mb-6" />
 
       <!-- Header -->
+      <!-- Header -->
       <div
-        class="bg-secondary-600 rounded-2xl p-8 mb-8 text-white"
+        class="bg-linear-to-br from-primary-600 to-primary-800 rounded-2xl p-6 mb-8 text-white"
       >
         <div class="flex items-start justify-between mb-4">
           <div class="flex-1">
@@ -42,8 +43,8 @@
               <i class="pi pi-bookmark"></i>
               <span>{{ exam.provider.toUpperCase() }}</span>
             </div>
-            <h1 class="text-4xl font-bold mb-3">{{ exam.name }}</h1>
-            <p class="text-teal-50 text-lg max-w-3xl">
+            <h1 class="text-2xl sm:text-4xl font-bold mb-3">{{ exam.name }}</h1>
+            <p class="text-primary-100 text-base max-w-3xl">
               {{
                 exam.description ||
                 "Préparez-vous efficacement pour cet examen d'allemand avec nos tests adaptatifs."
@@ -54,26 +55,39 @@
             icon="pi pi-arrow-left"
             rounded
             text
-            class="text-white!"
+            class="text-white! shrink-0"
             @click="navigateTo('/dashboard/examens')"
           />
         </div>
 
         <!-- Quick Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
-          <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-            <div class="text-2xl font-bold mb-1">
+        <div class="grid grid-cols-3 gap-3 mt-6">
+          <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm text-center">
+            <div class="text-xl sm:text-2xl font-bold mb-1">
               {{ exam.levels?.length || 0 }}
             </div>
-            <div class="text-sm text-teal-100">Niveaux disponibles</div>
+            <div class="text-xs sm:text-sm text-primary-100 leading-tight">
+              Niveaux<br class="sm:hidden" />
+              disponibles
+            </div>
           </div>
-          <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-            <div class="text-2xl font-bold mb-1">{{ totalSubjects }}</div>
-            <div class="text-sm text-teal-100">Sujets disponibles</div>
+          <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm text-center">
+            <div class="text-xl sm:text-2xl font-bold mb-1">
+              {{ totalSubjects }}
+            </div>
+            <div class="text-xs sm:text-sm text-primary-100 leading-tight">
+              Sujets<br class="sm:hidden" />
+              disponibles
+            </div>
           </div>
-          <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-            <div class="text-2xl font-bold mb-1">{{ freeLevelsCount }}</div>
-            <div class="text-sm text-teal-100">Niveaux gratuits</div>
+          <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm text-center">
+            <div class="text-xl sm:text-2xl font-bold mb-1">
+              {{ freeLevelsCount }}
+            </div>
+            <div class="text-xs sm:text-sm text-primary-100 leading-tight">
+              Niveaux<br class="sm:hidden" />
+              gratuits
+            </div>
           </div>
         </div>
       </div>
@@ -82,15 +96,11 @@
       <div>
         <h2 class="text-2xl font-bold text-gray-900 mb-6">Niveaux et sujets</h2>
 
-        <div
-          v-if="!exam.levels || exam.levels.length === 0"
-          class="text-center py-12 bg-gray-50 rounded-lg"
+        <Accordion
+          v-if="exam.levels?.length"
+          :multiple="true"
+          :activeIndex="[0]"
         >
-          <i class="pi pi-info-circle text-4xl text-gray-400 mb-4"></i>
-          <p class="text-gray-600">Aucun niveau disponible pour cet examen</p>
-        </div>
-
-        <Accordion v-else :multiple="true" :activeIndex="[0]">
           <AccordionTab v-for="level in sortedLevels" :key="level.id">
             <template #header>
               <div class="flex items-center justify-between w-full pr-4">
@@ -112,10 +122,10 @@
                   </div>
                   <div>
                     <h3 class="font-semibold text-gray-900">
-                      Niveau {{ level.cefr_code }} -
+                      Niveau {{ level.cefr_code }} —
                       {{ getLevelName(level.cefr_code) }}
                     </h3>
-                    <p class="text-sm text-gray-600">
+                    <p class="text-sm text-gray-500">
                       {{ level.subjects?.length || 0 }} sujet(s) • Score minimum
                       : {{ level.total_pass_score }}
                     </p>
@@ -144,111 +154,125 @@
               </div>
             </template>
 
-            <!-- Pas de sujets -->
-            <div
-              v-if="!level.subjects || level.subjects.length === 0"
-              class="text-center py-8 text-gray-500"
-            >
-              <i class="pi pi-inbox text-3xl mb-2"></i>
-              <p>Aucun sujet disponible pour ce niveau</p>
+            <!-- Modules summary (une seule fois, pas par sujet) -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
+                Modules inclus dans chaque sujet
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <div
+                  v-for="module in level.subjects?.[0]?.modules"
+                  :key="module.id"
+                  :class="[
+                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium',
+                    getModuleColor(module.slug),
+                  ]"
+                >
+                  <i :class="['pi text-sm', getModuleIcon(module.slug)]"></i>
+                  <span>{{ module.name }}</span>
+                  <span class="text-xs opacity-70"
+                    >{{ module.time_limit_minutes }}min</span
+                  >
+                </div>
+              </div>
             </div>
 
-            <!-- Sujets -->
-            <div v-else class="space-y-6 pt-4">
-              <div v-for="subject in level.subjects" :key="subject.id">
-                <!-- Sujet header -->
-                <div class="flex items-center justify-between mb-3">
-                  <h4
-                    class="text-sm font-semibold text-gray-700 flex items-center gap-2"
-                  >
-                    <i class="pi pi-file text-teal-600"></i>
-                    {{ subject.name || `Sujet ${subject.subject_number}` }}
-                  </h4>
-                  <Button
-                    :label="
-                      hasAccess(level) || level.is_free
-                        ? 'Commencer ce sujet'
-                        : 'Acheter l\'accès'
-                    "
-                    :icon="
-                      hasAccess(level) || level.is_free
-                        ? 'pi pi-play'
-                        : 'pi pi-lock'
-                    "
-                    :severity="
-                      hasAccess(level) || level.is_free ? 'primary' : 'warning'
-                    "
-                    size="small"
-                    @click="startSubject(level, subject.id)"
-                  />
+            <!-- Sujets en grille compacte -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div
+                v-for="subject in level.subjects"
+                :key="subject.id"
+                class="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md hover:border-primary-200 transition-all group"
+              >
+                <!-- Header sujet -->
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
+                    >
+                      <i class="pi pi-file text-primary-600"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-gray-900">
+                        {{ subject.name || `Sujet ${subject.subject_number}` }}
+                      </h4>
+                      <p class="text-xs text-gray-500">
+                        {{ subject.modules?.length || 0 }} modules
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Badge accès -->
+                  <div>
+                    <span
+                      v-if="hasAccess(level) || level.is_free"
+                      class="inline-flex items-center gap-1 text-xs font-medium text-success-600 bg-success-50 px-2 py-1 rounded-full"
+                    >
+                      <i class="pi pi-check-circle text-xs"></i> Disponible
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1 text-xs font-medium text-secondary-600 bg-secondary-50 px-2 py-1 rounded-full"
+                    >
+                      <i class="pi pi-lock text-xs"></i> Premium
+                    </span>
+                  </div>
                 </div>
 
-                <!-- Modules du sujet -->
-                <div
-                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                >
-                  <Card
-                    v-for="module in subject.modules"
-                    :key="module.id"
-                    class="hover:shadow-md transition-shadow"
-                  >
-                    <template #title>
-                      <div class="flex items-center gap-3">
-                        <div
-                          :class="[
-                            'w-10 h-10 rounded-lg flex items-center justify-center',
-                            getModuleColor(module.slug),
-                          ]"
-                        >
-                          <i
-                            :class="['pi text-lg', getModuleIcon(module.slug)]"
-                          ></i>
-                        </div>
-                        <div>
-                          <h4 class="text-base font-semibold text-gray-900">
-                            {{ module.name }}
-                          </h4>
-                          <p class="text-xs text-gray-500 mt-1">
-                            {{ module.slug }}
-                          </p>
-                        </div>
-                      </div>
-                    </template>
-
-                    <template #content>
-                      <div class="space-y-3">
-                        <div class="flex items-center justify-between text-sm">
-                          <div class="flex items-center gap-2 text-gray-600">
-                            <i class="pi pi-clock"></i>
-                            <span>{{ module.time_limit_minutes }} min</span>
-                          </div>
-                          <div class="flex items-center gap-2 text-gray-600">
-                            <i class="pi pi-star"></i>
-                            <span>{{ module.max_score }} pts</span>
-                          </div>
-                        </div>
-                        <div v-if="module.teile && module.teile.length > 0">
-                          <Divider />
-                          <div class="space-y-2">
-                            <h5
-                              class="text-xs font-semibold text-gray-700 uppercase"
-                            >
-                              Parties
-                            </h5>
-                            <div class="flex flex-wrap gap-2">
-                              <Tag
-                                v-for="teil in module.teile"
-                                :key="teil.id"
-                                :value="`Teil ${teil.teil_number}`"
-                                severity="secondary"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </template>
-                  </Card>
+                <!-- Stats rapides -->
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                  <div class="text-center p-2 bg-gray-50 rounded-lg">
+                    <div class="text-lg font-bold text-gray-900">
+                      {{ subject.modules?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-gray-500">Modules</div>
+                  </div>
+                  <div class="text-center p-2 bg-gray-50 rounded-lg">
+                    <div class="text-lg font-bold text-gray-900">
+                      {{
+                        subject.modules?.reduce(
+                          (s, m) => s + (m.time_limit_minutes || 0),
+                          0,
+                        )
+                      }}
+                    </div>
+                    <div class="text-xs text-gray-500">Minutes</div>
+                  </div>
+                  <div class="text-center p-2 bg-gray-50 rounded-lg">
+                    <div class="text-lg font-bold text-gray-900">
+                      {{
+                        subject.modules?.reduce(
+                          (s, m) => s + (m.max_score || 0),
+                          0,
+                        )
+                      }}
+                    </div>
+                    <div class="text-xs text-gray-500">Points</div>
+                  </div>
                 </div>
+
+                <!-- Bouton -->
+                <Button
+                  :label="
+                    hasAccess(level) || level.is_free
+                      ? 'Commencer ce sujet'
+                      : 'Acheter l\'accès'
+                  "
+                  :icon="
+                    hasAccess(level) || level.is_free
+                      ? 'pi pi-play'
+                      : 'pi pi-lock'
+                  "
+                  :class="[
+                    'w-full',
+                    hasAccess(level) || level.is_free
+                      ? 'bg-gradient-primary! border-none! text-white!'
+                      : '',
+                  ]"
+                  :severity="
+                    hasAccess(level) || level.is_free ? undefined : 'warning'
+                  "
+                  @click="startSubject(level, subject.id)"
+                />
               </div>
             </div>
           </AccordionTab>
@@ -257,13 +281,11 @@
 
       <!-- CTA Section -->
       <Card
-        class="mt-8 bg-linear-to-br from-teal-50 to-blue-50 border-2 border-teal-200"
+        class="mt-8 bg-linear-to-br from-teal-50 to-blue-50 border-2 border-primary-200"
       >
         <template #content>
-          <div
-            class="flex flex-col md:flex-row items-center justify-between gap-6"
-          >
-            <div class="flex-1">
+          <div class="flex flex-col gap-4">
+            <div>
               <h3 class="text-xl font-bold text-gray-900 mb-2">
                 Prêt à commencer votre préparation ?
               </h3>
@@ -271,18 +293,19 @@
                 Accédez à tous les niveaux et sujets pour progresser rapidement.
               </p>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
               <Button
                 label="Commencer gratuitement"
                 icon="pi pi-play"
-                size="large"
+                class="flex-1 bg-gradient-primary! border-none! text-white!"
                 @click="startFreeLevel"
               />
               <Button
                 label="Voir les tarifs"
                 icon="pi pi-tag"
                 outlined
-                size="large"
+                severity="secondary"
+                class="flex-1"
                 @click="navigateTo('/dashboard/tarifs')"
               />
             </div>

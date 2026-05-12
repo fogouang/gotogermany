@@ -173,6 +173,11 @@
   background-clip: text;
 }
 
+.p-dialog-content label {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
 /* ========================================
    BASE STYLES
    ======================================== */

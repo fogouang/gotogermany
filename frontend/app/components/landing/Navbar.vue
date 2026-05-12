@@ -162,7 +162,9 @@
       }}</Message>
       <div class="flex flex-col gap-4 mt-4">
         <div>
-          <label class="block text-sm font-medium mb-2">Email</label>
+          <label class="block text-sm font-semibold mb-2 text-gray-800"
+            >Email</label
+          >
           <InputText
             v-model="loginForm.email"
             type="email"
@@ -172,7 +174,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Mot de passe</label>
+          <label class="block text-sm font-semibold mb-2 text-gray-800"
+            >Mot de passe</label
+          >
           <Password
             v-model="loginForm.password"
             class="w-full"
@@ -211,7 +215,9 @@
       }}</Message>
       <div class="flex flex-col gap-4 mt-4">
         <div>
-          <label class="block text-sm font-medium mb-2">Nom complet</label>
+          <label class="block text-sm font-semibold mb-2 text-gray-800"
+            >Nom complet</label
+          >
           <InputText
             v-model="signupForm.fullName"
             class="w-full"
@@ -219,7 +225,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Email</label>
+          <label class="block text-sm font-semibold mb-2 text-gray-800"
+            >Email</label
+          >
           <InputText
             v-model="signupForm.email"
             type="email"
@@ -228,7 +236,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2"
+          <label class="block text-sm font-semibold mb-2 text-gray-800"
             >Téléphone (optionnel)</label
           >
           <InputText
@@ -238,7 +246,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Mot de passe</label>
+          <label class="block text-sm font-semibold mb-2 text-gray-800"
+            >Mot de passe</label
+          >
           <Password v-model="signupForm.password" class="w-full" toggleMask />
         </div>
         <Button

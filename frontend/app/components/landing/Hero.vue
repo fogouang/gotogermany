@@ -1,5 +1,5 @@
 <template>
-  <section class="relative overflow-hidden min-h-150 sm:min-h-[700px] flex items-center">
+  <section class="relative overflow-hidden min-h-150 sm:min-h-175 flex items-center">
 
     <!-- Background Image avec overlay -->
     <div class="absolute inset-0">
@@ -24,7 +24,7 @@
           <div class="animate-fade-in-up" style="animation-delay: 0.2s">
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
               Réussissez vos examens
-              <span class="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent block animate-gradient">
+              <span class="bg-linear-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent block animate-gradient">
                 d'allemand
               </span>
             </h1>
