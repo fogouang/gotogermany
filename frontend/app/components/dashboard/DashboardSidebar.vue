@@ -138,6 +138,7 @@ const mainItems = [
 const accountItems = [
   { label: "Profil", icon: "pi-user", to: "/dashboard/profil" },
   { label: "Factures", icon: "pi-receipt", to: "/dashboard/factures" },
+  { label: "Crédits", icon: "pi-credit-card", to: "/dashboard/credits" },
 ];
 
 const handleLogout = () => authStore.logout();

@@ -96,6 +96,7 @@ const pageTitle = computed(() => {
     "/dashboard/resultats": "Résultats",
     "/dashboard/profil": "Profil",
     "/dashboard/factures": "Factures",
+     "/dashboard/credits": "Crédits",
   };
   return titles[route.path] || "Dashboard";
 });
