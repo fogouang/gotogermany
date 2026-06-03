@@ -27,30 +27,22 @@ class GeminiProvider(AIProvider):
         self.model_id = "gemini-2.5-flash-lite"
 
     async def correct(self, prompt: str) -> dict[str, Any]:
-        """
-        Envoyer le prompt à Gemini et retourner la réponse parsée.
-
-        Args:
-            prompt: Prompt complet déjà construit
-
-        Returns:
-            dict avec la correction complète
-
-        Raises:
-            Exception: Quota dépassé, clé invalide, erreur réseau
-        """
         try:
             logger.debug(f"Sending prompt to Gemini ({self.model_id}), length={len(prompt)}")
-
+            
             response = await self.client.aio.models.generate_content(
                 model=self.model_id,
-                contents=prompt
+                contents=prompt,
+                config={
+                    "max_output_tokens": 8192,
+                    "temperature": 0.3,
+                    "response_mime_type": "application/json",  # ← force JSON natif
+                }
             )
-
+            
             result = self._parse_response(response.text)
             logger.info("Gemini correction completed successfully")
             return result
-
         except Exception as e:
             raise self._handle_error(e)
 
@@ -59,38 +51,29 @@ class GeminiProvider(AIProvider):
     # ------------------------------------------------------------------ #
 
     def _parse_response(self, content: str) -> dict[str, Any]:
-        """
-        Parser la réponse JSON de Gemini.
-
-        Gemini peut parfois retourner le JSON enveloppé dans des balises markdown
-        (```json ... ```). On nettoie ça avant de parser.
-
-        Args:
-            content: Texte brut retourné par Gemini
-
-        Returns:
-            dict parsé
-
-        Raises:
-            ValueError: Si le JSON est invalide et non récupérable
-        """
         cleaned = content.strip()
-
-        # Supprimer les balises markdown si présentes
         if cleaned.startswith("```"):
             lines = cleaned.splitlines()
-            # Retirer la première ligne (```json ou ```) et la dernière (```)
             cleaned = "\n".join(lines[1:-1]).strip()
 
         try:
             return json.loads(cleaned)
-
         except json.JSONDecodeError as e:
-            logger.error(f"JSON parse error: {e}")
-            logger.debug(f"Raw content (first 500 chars): {content[:500]}")
-            raise ValueError(
-                f"La réponse du modèle n'est pas un JSON valide: {str(e)}"
-            )
+            # Tentative de réparation si JSON tronqué
+            logger.warning(f"JSON tronqué détecté, tentative de réparation: {e}")
+            try:
+                # Compter les accolades ouvertes/fermées
+                open_braces  = cleaned.count('{')
+                close_braces = cleaned.count('}')
+                if open_braces > close_braces:
+                    cleaned += '}' * (open_braces - close_braces)
+                return json.loads(cleaned)
+            except json.JSONDecodeError:
+                logger.error(f"JSON parse error: {e}")
+                logger.debug(f"Raw content (first 500 chars): {content[:500]}")
+                raise ValueError(
+                    f"La réponse du modèle n'est pas un JSON valide: {str(e)}"
+                )
 
     def _handle_error(self, error: Exception) -> Exception:
         """
