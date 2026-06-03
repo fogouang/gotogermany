@@ -104,6 +104,11 @@ class SchreibenSubjectRepository:
         user_id: uuid.UUID,
         response: SimulatorCorrectResponse,
     ) -> SimulatorResult:
+        import json
+
+        # Sérialiser en JSON-safe (UUID → str)
+        result_data = json.loads(response.model_dump_json())
+
         result = SimulatorResult(
             user_id=user_id,
             subject_id=response.subject_id,
@@ -113,7 +118,7 @@ class SchreibenSubjectRepository:
             max_score=response.max_score,
             passed=response.passed,
             score_percentage=response.score_percentage,
-            result_data=response.model_dump(),
+            result_data=result_data,
         )
         self.db.add(result)
         await self.db.commit()
