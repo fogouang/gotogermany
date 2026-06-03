@@ -9,5 +9,6 @@ export type QuestionCreateRequest = {
     correct_answer: Record<string, any>;
     points?: number;
     audio_file?: (string | null);
+    image_file?: (string | null);
 };
 

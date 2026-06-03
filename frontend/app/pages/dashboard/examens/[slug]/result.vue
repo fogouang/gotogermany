@@ -1,242 +1,278 @@
 <template>
-  <div>
+  <div class="space-y-6">
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-16">
-      <ProgressSpinner style="width: 60px; height: 60px" />
+      <ProgressSpinner style="width: 50px; height: 50px" />
     </div>
 
     <!-- Erreur -->
-    <div v-else-if="!result" class="text-center py-16">
-      <i class="pi pi-exclamation-triangle text-5xl text-red-500 mb-4"></i>
-      <h2 class="text-xl font-bold mb-2">Résultat introuvable</h2>
+    <div
+      v-else-if="!result"
+      class="text-center py-16 bg-white rounded-xl border border-gray-100"
+    >
+      <i
+        class="pi pi-exclamation-triangle text-4xl text-red-400 mb-3 block"
+      ></i>
+      <p class="font-medium text-gray-700">{{ t("result.not_found") }}</p>
       <Button
-        label="Retour aux examens"
+        :label="t('result.back_to_exams')"
+        outlined
+        class="mt-4"
         @click="navigateTo('/dashboard/examens')"
       />
     </div>
 
-    <!-- Résultat -->
-    <div v-else class="max-w-4xl mx-auto space-y-8">
-      <!-- Header résultat -->
+    <div v-else class="space-y-6">
+      <!-- En-tête -->
       <div
-        :class="[
-          'rounded-2xl p-8 text-white',
+        class="rounded-2xl p-6 text-white"
+        :class="
           result.passed === true
-            ? 'bg-linear-to-br from-green-600 to-teal-600'
+            ? 'bg-linear-to-br from-green-500 to-teal-600'
             : result.passed === false
-              ? 'bg-linear-to-br from-red-500 to-orange-500'
-              : 'bg-linear-to-br from-green-600 to-teal-600',
-        ]"
+              ? 'bg-linear-to-br from-orange-500 to-red-500'
+              : 'bg-linear-to-br from-gray-600 to-gray-700'
+        "
       >
-        <div class="text-center">
-          <i
-            :class="[
-              'text-6xl mb-4',
-              result.passed === true
-                ? 'pi pi-check-circle'
-                : result.passed === false
-                  ? 'pi pi-times-circle'
-                  : 'pi pi-clock',
-            ]"
-          ></i>
-          <h1 class="text-3xl font-bold mb-2">{{ result.exam_name }}</h1>
-          <p class="text-xl opacity-90 mb-6">{{ result.result_message }}</p>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm opacity-75 font-medium mb-1">
+              {{ result.exam_name }} · {{ t("result.subject") }}
+              {{ result.subject_number }}
+              <span
+                v-if="isSingleModule"
+                class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs"
+              >
+                {{ displayedModules[0]?.name }}
+              </span>
+            </p>
+            <h1 class="text-2xl font-bold">
+              {{
+                result.passed === true
+                  ? t("result.passed")
+                  : result.passed === false
+                    ? t("result.failed")
+                    : t("result.pending")
+              }}
+            </h1>
+            <p class="mt-1 opacity-80 text-sm">{{ result.result_message }}</p>
+          </div>
 
           <!-- Score global -->
-          <div
-            class="inline-flex items-center gap-6 bg-white/20 rounded-xl px-8 py-4"
-          >
-            <div class="text-center">
-              <div class="text-4xl font-bold">
-                {{ result.score !== null ? result.score?.toFixed(1) : "—" }}
-              </div>
-              <div class="text-sm opacity-75">Score /100</div>
+          <div class="text-center shrink-0">
+            <div class="text-4xl font-extrabold">
+              {{ result.score != null ? result.score.toFixed(0) : "—" }}
             </div>
-            <div class="w-px h-12 bg-white/30"></div>
-            <div class="text-center">
-              <div class="text-4xl font-bold">
-                {{ result.total_pass_score }}
-              </div>
-              <div class="text-sm opacity-75">Score requis</div>
+            <div class="text-xs opacity-70 mt-0.5">
+              / 100 · {{ t("result.min_score") }} {{ result.total_pass_score }}
             </div>
-            <div class="w-px h-12 bg-white/30"></div>
-            <div class="text-center">
-              <div class="text-4xl font-bold">
-                {{
-                  result.duration_seconds
-                    ? formatDuration(result.duration_seconds)
-                    : "—"
-                }}
-              </div>
-              <div class="text-sm opacity-75">Durée</div>
+            <div v-if="actualDuration" class="text-xs opacity-60 mt-1">
+              {{ actualDuration }}
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Score par module -->
-      <Card>
-        <template #title>
-          <h2 class="text-xl font-bold">Résultats par module</h2>
-        </template>
-        <template #content>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Modules -->
+      <div
+        class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+      >
+        <div class="px-6 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800">
+            {{
+              isSingleModule
+                ? t("result.module_result")
+                : t("result.modules_result")
+            }}
+          </h2>
+        </div>
+        <div class="divide-y divide-gray-50">
+          <div
+            v-for="module in displayedModules"
+            :key="module.slug"
+            class="px-6 py-4 flex items-center gap-4"
+          >
             <div
-              v-for="module in result.modules"
-              :key="module.slug"
-              class="bg-gray-50 rounded-xl p-4"
+              :class="[
+                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                getModuleBg(module.slug),
+              ]"
             >
-              <div class="flex items-center gap-3 mb-3">
-                <div
-                  :class="[
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    getModuleColor(module.slug),
-                  ]"
-                >
-                  <i :class="['pi text-lg', getModuleIcon(module.slug)]"></i>
+              <i
+                :class="[
+                  'pi',
+                  getModuleIcon(module.slug),
+                  getModuleIconColor(module.slug),
+                ]"
+              ></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-gray-900">{{ module.name }}</p>
+              <div v-if="module.is_corrected" class="mt-1.5">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="flex-1 bg-gray-100 rounded-full h-1.5">
+                    <div
+                      class="h-1.5 rounded-full transition-all"
+                      :class="
+                        (module.score_obtained ?? 0) >= 60
+                          ? 'bg-green-500'
+                          : 'bg-orange-400'
+                      "
+                      :style="{ width: `${module.score_obtained ?? 0}%` }"
+                    />
+                  </div>
+                  <span class="text-sm font-bold text-gray-700 shrink-0">
+                    {{ module.score_obtained?.toFixed(0) ?? "—" }} / 100
+                  </span>
                 </div>
-                <div>
-                  <h3 class="font-semibold text-gray-900">{{ module.name }}</h3>
-                  <p class="text-xs text-gray-500">
-                    Max : {{ module.max_score }} pts
+              </div>
+              <div
+                v-else
+                class="flex items-center gap-1.5 mt-1 text-amber-600 text-xs"
+              >
+                <i class="pi pi-clock text-xs"></i>
+                <span>{{ t("result.waiting_correction") }}</span>
+              </div>
+            </div>
+            <Button
+              v-if="module.slug.includes('schreiben') && module.is_corrected"
+              :label="t('result.see_correction')"
+              icon="pi pi-eye"
+              size="small"
+              outlined
+              severity="secondary"
+              @click="goToSchreibenCorrection"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Détail des réponses -->
+      <div
+        v-for="module in displayedModules.filter(
+          (m) => !m.slug.includes('schreiben'),
+        )"
+        :key="`detail-${module.slug}`"
+        class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+      >
+        <button
+          class="w-full flex items-center justify-between px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+          @click="toggleModule(module.slug)"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              :class="[
+                'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                getModuleBg(module.slug),
+              ]"
+            >
+              <i
+                :class="[
+                  'pi text-sm',
+                  getModuleIcon(module.slug),
+                  getModuleIconColor(module.slug),
+                ]"
+              ></i>
+            </div>
+            <h2 class="font-semibold text-gray-800">
+              {{ t("result.detail_title") }} — {{ module.name }}
+            </h2>
+          </div>
+          <i
+            :class="[
+              'pi text-gray-400',
+              expandedModules.has(module.slug)
+                ? 'pi-chevron-up'
+                : 'pi-chevron-down',
+            ]"
+          ></i>
+        </button>
+
+        <div v-if="expandedModules.has(module.slug)">
+          <div
+            v-for="teil in module.teile"
+            :key="teil.teil_number"
+            class="border-b border-gray-50 last:border-0"
+          >
+            <div class="px-6 py-3 bg-gray-50 flex items-center justify-between">
+              <p
+                class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                Teil {{ teil.teil_number }}
+              </p>
+              <span class="text-xs font-bold text-gray-600">
+                {{ teil.score_obtained?.toFixed(1) ?? "—" }} /
+                {{ teil.max_score }} pts
+              </span>
+            </div>
+            <div class="divide-y divide-gray-50">
+              <div
+                v-for="answer in teil.answers"
+                :key="answer.question_id"
+                class="px-6 py-3 flex items-start gap-3"
+              >
+                <div class="shrink-0 mt-0.5">
+                  <i
+                    v-if="answer.is_correct === true"
+                    class="pi pi-check-circle text-green-500"
+                  ></i>
+                  <i
+                    v-else-if="answer.is_correct === false"
+                    class="pi pi-times-circle text-red-400"
+                  ></i>
+                  <i v-else class="pi pi-circle text-gray-300"></i>
+                </div>
+                <div class="flex-1 min-w-0 text-sm">
+                  <div class="flex flex-wrap gap-4 text-gray-600">
+                    <span>
+                      Q{{ answer.question_number }} —
+                      {{ t("result.your_answer") }} :
+                      <strong class="text-gray-900">{{
+                        formatAnswer(answer.user_answer)
+                      }}</strong>
+                    </span>
+                    <span
+                      v-if="
+                        answer.correct_answer && answer.is_correct === false
+                      "
+                      class="text-green-700"
+                    >
+                      {{ t("result.correct_answer") }} :
+                      <strong>{{ formatAnswer(answer.correct_answer) }}</strong>
+                    </span>
+                  </div>
+                  <p v-if="answer.feedback" class="text-xs text-gray-400 mt-1">
+                    {{ answer.feedback }}
                   </p>
                 </div>
               </div>
-
-              <div
-                v-if="!module.is_corrected"
-                class="flex items-center gap-2 text-amber-600"
-              >
-                <i class="pi pi-clock"></i>
-                <span class="text-sm">En attente de correction</span>
-              </div>
-              <div v-else>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-600">Score</span>
-                  <span class="font-bold">
-                    {{ module.score_obtained?.toFixed(1) ?? "—" }} / 100
-                  </span>
-                </div>
-                <ProgressBar
-                  :value="module.score_obtained ?? 0"
-                  :showValue="false"
-                  :class="[
-                    'h-2',
-                    (module.score_obtained ?? 0) >= 60
-                      ? '[&_.p-progressbar-value]:bg-green-500'
-                      : '[&_.p-progressbar-value]:bg-red-500',
-                  ]"
-                />
-              </div>
             </div>
           </div>
-        </template>
-      </Card>
-
-      <!-- Détail par module -->
-      <div v-for="module in result.modules" :key="`detail-${module.slug}`">
-        <Accordion>
-          <AccordionTab>
-            <template #header>
-              <div class="flex items-center gap-3">
-                <i :class="['pi', getModuleIcon(module.slug)]"></i>
-                <span class="font-semibold"
-                  >{{ module.name }} — Détail des réponses</span
-                >
-              </div>
-            </template>
-
-            <div
-              v-for="teil in module.teile"
-              :key="teil.teil_number"
-              class="mb-6"
-            >
-              <h4 class="font-medium text-gray-700 mb-3">
-                Teil {{ teil.teil_number }} —
-                {{ teil.score_obtained?.toFixed(1) }} / {{ teil.max_score }} pts
-              </h4>
-
-              <div class="space-y-3">
-                <div
-                  v-for="answer in teil.answers"
-                  :key="answer.question_id"
-                  :class="[
-                    'p-4 rounded-lg border-l-4',
-                    answer.is_correct === true
-                      ? 'bg-green-50 border-green-500'
-                      : answer.is_correct === false
-                        ? 'bg-red-50 border-red-500'
-                        : 'bg-gray-50 border-gray-300',
-                  ]"
-                >
-                  <div class="flex items-start justify-between gap-4">
-                    <div class="flex-1">
-                      <p class="text-sm font-medium text-gray-700 mb-1">
-                        Question {{ answer.question_number }}
-                      </p>
-                      <div class="flex flex-wrap gap-4 text-sm">
-                        <span class="text-gray-600">
-                          Votre réponse :
-                          <strong>{{
-                            formatAnswer(answer.user_answer)
-                          }}</strong>
-                        </span>
-                        <span
-                          v-if="
-                            answer.correct_answer && answer.is_correct === false
-                          "
-                          class="text-green-700"
-                        >
-                          Bonne réponse :
-                          <strong>{{
-                            formatAnswer(answer.correct_answer)
-                          }}</strong>
-                        </span>
-                      </div>
-                      <p
-                        v-if="answer.feedback"
-                        class="text-xs text-gray-500 mt-2"
-                      >
-                        {{ answer.feedback }}
-                      </p>
-                    </div>
-                    <div class="shrink-0">
-                      <i
-                        v-if="answer.is_correct === true"
-                        class="pi pi-check-circle text-green-600 text-xl"
-                      ></i>
-                      <i
-                        v-else-if="answer.is_correct === false"
-                        class="pi pi-times-circle text-red-600 text-xl"
-                      ></i>
-                      <i v-else class="pi pi-clock text-gray-400 text-xl"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </AccordionTab>
-        </Accordion>
+        </div>
       </div>
 
       <!-- Actions -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-center pb-8">
+      <div class="flex flex-col sm:flex-row gap-3 pb-6">
         <Button
-          label="Retour aux examens"
+          :label="t('result.back_to_exams')"
           icon="pi pi-arrow-left"
           outlined
+          class="flex-1"
           @click="navigateTo('/dashboard/examens')"
         />
         <Button
-          label="Voir mes résultats"
+          v-if="isSingleModule"
+          :label="t('result.another_module')"
           icon="pi pi-list"
           outlined
-          @click="navigateTo('/dashboard/resultats')"
+          class="flex-1"
+          @click="router.back()"
         />
         <Button
-          label="Recommencer"
-          icon="pi pi-refresh"
-          @click="navigateTo(`/dashboard/examens`)"
+          :label="t('result.my_results')"
+          icon="pi pi-trophy"
+          class="flex-1"
+          @click="navigateTo('/dashboard/resultats')"
         />
       </div>
     </div>
@@ -249,59 +285,98 @@ import type { SessionResultResponse } from "#shared/api";
 definePageMeta({ layout: "dashboard", middleware: "auth" });
 
 const route = useRoute();
+const router = useRouter();
 const sessionStore = useSessionStore();
+const { t } = useI18n();
 
 const loading = ref(true);
 const result = ref<SessionResultResponse | null>(null);
+const expandedModules = ref<Set<string>>(new Set());
 
-const sessionId = computed(() => route.params.sessionId as string);
+// Détecte si on vient d'un module seul
+const moduleSlug = computed(() => route.query.moduleSlug as string | undefined);
+const isSingleModule = computed(() => !!moduleSlug.value);
 
-const formatDuration = (seconds: number): string => {
+// Filtre les modules à afficher
+const displayedModules = computed(() => {
+  if (!result.value?.modules) return [];
+  if (isSingleModule.value) {
+    return result.value.modules.filter((m) =>
+      m.slug.toLowerCase().includes(moduleSlug.value!.toLowerCase()),
+    );
+  }
+  return result.value.modules;
+});
+
+const toggleModule = (slug: string) => {
+  if (expandedModules.value.has(slug)) expandedModules.value.delete(slug);
+  else expandedModules.value.add(slug);
+};
+
+// ── Navigation ───────────────────────────────────────────
+
+const goToSchreibenCorrection = () => {
+  const slug = route.params.slug as string;
+  const sessionId = result.value?.session_id;
+  if (!sessionId) return;
+  navigateTo({
+    path: `/dashboard/examens/${slug}/correction/${sessionId}`,
+    query: { examId: result.value?.exam_id },
+  });
+};
+
+// ── Helpers ──────────────────────────────────────────────
+
+const actualDuration = computed(() => {
+  if (!result.value?.submitted_at || !result.value?.started_at) return null;
+  const start = new Date(result.value.started_at).getTime();
+  const end = new Date(result.value.submitted_at).getTime();
+  const seconds = Math.round((end - start) / 1000);
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}m${s.toString().padStart(2, "0")}s`;
-};
+});
 
 const formatAnswer = (answer: Record<string, any> | null): string => {
   if (!answer) return "—";
   return answer.answer ?? answer.text ?? JSON.stringify(answer);
 };
 
-const getModuleIcon = (slug: string) => {
-  const icons: Record<string, string> = {
-    horen: "pi-volume-up",
-    lesen: "pi-book",
-    schreiben: "pi-pencil",
-    sprechen: "pi-microphone",
-  };
-  for (const key in icons) {
-    if (slug.toLowerCase().includes(key)) return icons[key];
-  }
+const getModuleIcon = (s: string) => {
+  if (s.includes("lesen")) return "pi-book";
+  if (s.includes("horen") || s.includes("hören")) return "pi-volume-up";
+  if (s.includes("schreiben")) return "pi-pencil";
+  if (s.includes("sprechen")) return "pi-microphone";
   return "pi-file";
 };
 
-const getModuleColor = (slug: string) => {
-  const colors: Record<string, string> = {
-    horen: "bg-purple-100 text-purple-600",
-    lesen: "bg-blue-100 text-blue-600",
-    schreiben: "bg-green-100 text-green-600",
-    sprechen: "bg-orange-100 text-orange-600",
-  };
-  for (const key in colors) {
-    if (slug.toLowerCase().includes(key)) return colors[key];
-  }
-  return "bg-gray-100 text-gray-600";
+const getModuleBg = (s: string) => {
+  if (s.includes("lesen")) return "bg-blue-50";
+  if (s.includes("horen") || s.includes("hören")) return "bg-purple-50";
+  if (s.includes("schreiben")) return "bg-green-50";
+  if (s.includes("sprechen")) return "bg-orange-50";
+  return "bg-gray-50";
 };
 
+const getModuleIconColor = (s: string) => {
+  if (s.includes("lesen")) return "text-blue-500";
+  if (s.includes("horen") || s.includes("hören")) return "text-purple-500";
+  if (s.includes("schreiben")) return "text-green-500";
+  if (s.includes("sprechen")) return "text-orange-500";
+  return "text-gray-500";
+};
+
+// ── Chargement ───────────────────────────────────────────
+
 onMounted(async () => {
-  // 1. Essayer depuis le store (soumission directe)
+  // 1. Depuis le store (soumission directe)
   if (sessionStore.result) {
     result.value = sessionStore.result;
     loading.value = false;
     return;
   }
 
-  // 2. Essayer depuis query param ?sessionId=...
+  // 2. Depuis query ?sessionId=
   const sessionId = route.query.sessionId as string;
   if (sessionId) {
     const res = await sessionStore.getResult(sessionId);
@@ -310,12 +385,10 @@ onMounted(async () => {
     return;
   }
 
-  // 3. Essayer depuis sessionId du store
+  // 3. Depuis sessionId du store
   if (sessionStore.sessionId) {
     const res = await sessionStore.getResult(sessionStore.sessionId);
     if (res.success) result.value = res.result ?? null;
-    loading.value = false;
-    return;
   }
 
   loading.value = false;

@@ -86,6 +86,8 @@ class Question(Base, UUIDMixin, TimestampMixin):
     # Chemin relatif vers l'audio si la question nécessite un fichier audio
     # ex: "horen/teil1/audio1.mp3"  — NULL si pas d'audio
     audio_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
+    image_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Relations
     teil: Mapped["Teil"] = relationship("Teil", back_populates="questions", lazy="noload")

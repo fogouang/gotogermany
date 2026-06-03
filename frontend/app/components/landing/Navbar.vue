@@ -1,85 +1,109 @@
 <template>
-  <div class="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+  <div
+    class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100"
+  >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
         <NuxtLink
           to="/"
-          class="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          class="flex items-center hover:opacity-80 transition-opacity shrink-0"
         >
           <img
             src="/images/logo.png"
-            alt="GoToGermany"
-            class="h-36 object-contain"
+            alt="DeutschTest"
+            class="h-10 object-contain"
           />
         </NuxtLink>
 
-        <!-- Desktop Menu -->
+        <!-- Desktop Nav -->
         <nav class="hidden md:flex items-center gap-1">
           <NuxtLink
             v-for="item in mainItems"
-            :key="item.label"
+            :key="item.key"
             :to="item.to"
-            class="px-4 py-2 rounded-lg text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors font-medium flex items-center gap-2"
+            class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-medium flex items-center gap-2"
+            active-class="text-white bg-[#076152]"
           >
-            <i :class="item.icon"></i>
+            <i :class="[item.icon, 'text-xs']"></i>
             <span>{{ item.label }}</span>
           </NuxtLink>
         </nav>
 
-        <!-- Authenticated -->
-        <div
-          v-if="authStore.isAuthenticated"
-          class="hidden md:flex items-center gap-3"
-        >
-          <Button
-            :label="authStore.userName"
-            icon="pi pi-user"
-            text
-            severity="secondary"
-            class="font-medium!"
-          />
-          <Button
-            label="Dashboard"
-            icon="pi pi-th-large"
-            class="bg-linear-to-r! from-teal-600! to-teal-700! border-0! text-white! font-semibold!"
-            @click="navigateTo('/dashboard')"
-          />
-          <Button
-            icon="pi pi-sign-out"
-            text
-            severity="danger"
-            rounded
-            @click="handleLogout"
-            v-tooltip.bottom="'Déconnexion'"
-          />
+        <!-- Right side -->
+        <div class="hidden md:flex items-center gap-2">
+          <!-- Lang switcher -->
+          <div
+            class="flex items-center gap-0.5 border border-gray-200 rounded-lg p-0.5"
+          >
+            <button
+              v-for="loc in locales"
+              :key="loc.code"
+              :class="[
+                'text-xs font-bold px-2 py-1 rounded-md transition-colors uppercase',
+                locale === loc.code
+                  ? 'bg-[#076152] text-white'
+                  : 'text-gray-400 hover:text-gray-600',
+              ]"
+              @click="setLocale(loc.code)"
+            >
+              {{ loc.code }}
+            </button>
+          </div>
+
+          <!-- Authenticated -->
+          <template v-if="authStore.isAuthenticated">
+            <span
+              class="text-sm text-gray-600 font-medium flex items-center gap-1.5"
+            >
+              <i class="pi pi-user text-[#076152] text-xs"></i>
+              {{ authStore.userName }}
+            </span>
+            <div class="w-px h-4 bg-gray-200 mx-1" />
+            <Button
+              :label="t('nav.dashboard')"
+              icon="pi pi-th-large"
+              size="small"
+              class="bg-teal-600! hover:bg-teal-700! border-0! text-white! font-semibold!"
+              @click="navigateTo('/dashboard')"
+            />
+            <Button
+              icon="pi pi-sign-out"
+              text
+              rounded
+              size="small"
+              severity="danger"
+              v-tooltip.bottom="t('nav.logout')"
+              @click="handleLogout"
+            />
+          </template>
+
+          <!-- Guest -->
+          <template v-else>
+            <button
+              class="px-4 py-2 text-sm font-semibold text-[#076152] hover:bg-teal-50 rounded-lg transition-colors"
+              @click="openLogin"
+            >
+              {{ t("nav.login") }}
+            </button>
+            <button
+              class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+              style="background-color: #076152"
+              @click="openSignup"
+            >
+              {{ t("nav.signup") }}
+              <i class="pi pi-arrow-right text-xs"></i>
+            </button>
+          </template>
         </div>
 
-        <!-- Guest -->
-        <div v-else class="hidden md:flex items-center gap-3">
-          <Button
-            label="Connexion"
-            text
-            class="font-semibold!"
-            @click="openLogin"
-          />
-          <Button
-            label="Commencer gratuitement"
-            icon="pi pi-arrow-right"
-            iconPos="right"
-            class="bg-linear-to-r! from-teal-600! to-teal-700! border-0! text-white! font-semibold! hover:from-teal-700! hover:to-teal-800!"
-            @click="openSignup"
-          />
-        </div>
-
-        <!-- Mobile Menu Button -->
-        <Button
-          icon="pi pi-bars"
-          text
-          rounded
-          class="md:hidden text-gray-700!"
+        <!-- Mobile toggle -->
+        <button
+          class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
           @click="toggleMobileMenu"
-        />
+        >
+          <i :class="mobileMenuOpen ? 'pi pi-times' : 'pi pi-bars'"></i>
+        </button>
       </div>
     </div>
 
@@ -87,74 +111,96 @@
     <Transition name="slide-down">
       <div
         v-if="mobileMenuOpen"
-        class="md:hidden bg-white border-t border-gray-200"
+        class="md:hidden bg-white border-t border-gray-100 shadow-lg"
       >
         <nav class="px-4 py-4 space-y-1">
           <NuxtLink
             v-for="item in mainItems"
-            :key="item.label"
+            :key="item.key"
             :to="item.to"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors font-medium"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
             @click="closeMobileMenu"
           >
             <i :class="item.icon"></i>
             <span>{{ item.label }}</span>
           </NuxtLink>
+        </nav>
 
-          <Divider v-if="authStore.isAuthenticated" />
-
-          <div v-if="authStore.isAuthenticated" class="space-y-1">
-            <div
-              class="flex items-center gap-3 px-4 py-3 text-gray-900 font-semibold"
-            >
-              <i class="pi pi-user"></i>
-              <span>{{ authStore.userName }}</span>
-            </div>
-            <NuxtLink
-              to="/dashboard"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors font-medium"
-              @click="closeMobileMenu"
-            >
-              <i class="pi pi-th-large"></i><span>Dashboard</span>
-            </NuxtLink>
+        <div class="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+          <!-- Lang switcher mobile -->
+          <div class="flex items-center gap-1 px-4">
             <button
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium w-full"
-              @click="handleLogout"
+              v-for="loc in locales"
+              :key="loc.code"
+              :class="[
+                'text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors uppercase',
+                locale === loc.code
+                  ? 'bg-[#076152] text-white border-[#076152]'
+                  : 'text-gray-400 border-gray-200 hover:text-gray-600',
+              ]"
+              @click="setLocale(loc.code)"
             >
-              <i class="pi pi-sign-out"></i><span>Déconnexion</span>
+              {{ loc.code }}
             </button>
           </div>
 
-          <div v-else class="space-y-2 pt-4">
-            <Button
-              label="Connexion"
-              outlined
-              class="w-full font-semibold!"
+          <!-- Authenticated mobile -->
+          <div v-if="authStore.isAuthenticated" class="space-y-1">
+            <div
+              class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700"
+            >
+              <i class="pi pi-user text-teal-600"></i>
+              {{ authStore.userName }}
+            </div>
+            <NuxtLink
+              to="/dashboard"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
+              @click="closeMobileMenu"
+            >
+              <i class="pi pi-th-large"></i>
+              <span>{{ t("nav.dashboard") }}</span>
+            </NuxtLink>
+            <button
+              class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium text-sm w-full"
+              @click="handleLogout"
+            >
+              <i class="pi pi-sign-out"></i>
+              <span>{{ t("nav.logout") }}</span>
+            </button>
+          </div>
+
+          <!-- Guest mobile -->
+          <div v-else class="space-y-2">
+            <button
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
               @click="
                 openLogin();
                 closeMobileMenu();
               "
-            />
-            <Button
-              label="Commencer gratuitement"
-              icon="pi pi-arrow-right"
-              iconPos="right"
-              class="bg-linear-to-r! from-teal-600! to-teal-700! border-0! text-white! font-semibold! w-full"
+            >
+              {{ t("nav.login") }}
+            </button>
+            <button
+              class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+              style="background-color: #1cb098"
               @click="
                 openSignup();
                 closeMobileMenu();
               "
-            />
+            >
+              {{ t("nav.signup") }}
+              <i class="pi pi-arrow-right text-xs"></i>
+            </button>
           </div>
-        </nav>
+        </div>
       </div>
     </Transition>
 
-    <!-- ─── Login Dialog ──────────────────────────────── -->
+    <!-- Login Dialog -->
     <Dialog
       v-model:visible="loginVisible"
-      header="Connexion"
-      :style="{ width: '90vw', maxWidth: '450px' }"
+      :header="t('auth.login_title')"
+      :style="{ width: '90vw', maxWidth: '420px' }"
       :modal="true"
     >
       <Message v-if="loginError" severity="error" :closable="false">{{
@@ -162,9 +208,9 @@
       }}</Message>
       <div class="flex flex-col gap-4 mt-4">
         <div>
-          <label class="block text-sm font-semibold mb-2 text-gray-800"
-            >Email</label
-          >
+          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+            t("auth.email")
+          }}</label>
           <InputText
             v-model="loginForm.email"
             type="email"
@@ -174,9 +220,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold mb-2 text-gray-800"
-            >Mot de passe</label
-          >
+          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+            t("auth.password")
+          }}</label>
           <Password
             v-model="loginForm.password"
             class="w-full"
@@ -186,28 +232,30 @@
           />
         </div>
         <Button
-          label="Se connecter"
+          :label="t('auth.login_btn')"
           :loading="authStore.loading"
-          class="w-full mt-2 bg-linear-to-r! from-teal-600! to-teal-700! border-0!"
+          class="w-full mt-1"
+          style="background-color: #076152; border: none"
           @click="handleLogin"
         />
         <p class="text-xs text-gray-500 text-center">
-          Pas encore de compte ?
+          {{ t("auth.no_account") }}
           <a
             href="#"
             class="text-teal-600 hover:underline font-medium"
             @click.prevent="openSignup"
-            >S'inscrire</a
           >
+            {{ t("auth.register_link") }}
+          </a>
         </p>
       </div>
     </Dialog>
 
-    <!-- ─── Signup Dialog ─────────────────────────────── -->
+    <!-- Signup Dialog -->
     <Dialog
       v-model:visible="signupVisible"
-      header="Inscription gratuite"
-      :style="{ width: '90vw', maxWidth: '450px' }"
+      :header="t('auth.signup_title')"
+      :style="{ width: '90vw', maxWidth: '420px' }"
       :modal="true"
     >
       <Message v-if="signupError" severity="error" :closable="false">{{
@@ -215,9 +263,9 @@
       }}</Message>
       <div class="flex flex-col gap-4 mt-4">
         <div>
-          <label class="block text-sm font-semibold mb-2 text-gray-800"
-            >Nom complet</label
-          >
+          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+            t("auth.full_name")
+          }}</label>
           <InputText
             v-model="signupForm.fullName"
             class="w-full"
@@ -225,9 +273,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold mb-2 text-gray-800"
-            >Email</label
-          >
+          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+            t("auth.email")
+          }}</label>
           <InputText
             v-model="signupForm.email"
             type="email"
@@ -236,9 +284,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold mb-2 text-gray-800"
-            >Téléphone (optionnel)</label
-          >
+          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+            t("auth.phone")
+          }}</label>
           <InputText
             v-model="signupForm.phone"
             class="w-full"
@@ -246,25 +294,27 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold mb-2 text-gray-800"
-            >Mot de passe</label
-          >
+          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+            t("auth.password")
+          }}</label>
           <Password v-model="signupForm.password" class="w-full" toggleMask />
         </div>
         <Button
-          label="S'inscrire"
+          :label="t('auth.signup_btn')"
           :loading="authStore.loading"
-          class="w-full mt-2 bg-linear-to-r! from-teal-600! to-teal-700! border-0!"
+          class="w-full mt-1"
+          style="background-color: #076152; border: none"
           @click="handleSignup"
         />
         <p class="text-xs text-gray-500 text-center">
-          Déjà un compte ?
+          {{ t("auth.have_account") }}
           <a
             href="#"
-            class="text-teal-600 hover:underline font-medium"
+            class="text-[#076152] hover:underline font-medium"
             @click.prevent="openLogin"
-            >Se connecter</a
           >
+            {{ t("auth.login_link") }}
+          </a>
         </p>
       </div>
     </Dialog>
@@ -277,21 +327,36 @@
 <script setup lang="ts">
 import { useAuthDialog } from "~/composables/useAuthDialog";
 
+const { t, locale, locales, setLocale } = useI18n();
 const authStore = useAuthStore();
 const { loginVisible, signupVisible, openLogin, openSignup } = useAuthDialog();
 
 const mobileMenuOpen = ref(false);
 const loginError = ref("");
 const signupError = ref("");
-
 const loginForm = ref({ email: "", password: "" });
 const signupForm = ref({ email: "", password: "", fullName: "", phone: "" });
 
-const mainItems = ref([
-  { label: "Accueil", icon: "pi pi-home", to: "/" },
-  { label: "Tarifs", icon: "pi pi-tags", to: "/tarifs" },
-  { label: "À propos", icon: "pi pi-info-circle", to: "/about" },
-  { label: "Contact", icon: "pi pi-envelope", to: "/contact" },
+const mainItems = computed(() => [
+  { key: "home", label: t("nav.home"), icon: "pi pi-home", to: "/" },
+  {
+    key: "pricing",
+    label: t("nav.pricing"),
+    icon: "pi pi-tags",
+    to: "/tarifs",
+  },
+  {
+    key: "about",
+    label: t("nav.about"),
+    icon: "pi pi-info-circle",
+    to: "/about",
+  },
+  {
+    key: "contact",
+    label: t("nav.contact"),
+    icon: "pi pi-envelope",
+    to: "/contact",
+  },
 ]);
 
 const toggleMobileMenu = () => {
@@ -312,7 +377,7 @@ const handleLogin = async () => {
     loginForm.value = { email: "", password: "" };
     navigateTo(authStore.isAdmin ? "/admin" : "/dashboard");
   } else {
-    loginError.value = result.error || "Erreur de connexion";
+    loginError.value = result.error || t("auth.login_error");
   }
 };
 
@@ -329,7 +394,7 @@ const handleSignup = async () => {
     signupForm.value = { email: "", password: "", fullName: "", phone: "" };
     navigateTo("/dashboard");
   } else {
-    signupError.value = result.error || "Erreur lors de l'inscription";
+    signupError.value = result.error || t("auth.signup_error");
   }
 };
 
@@ -342,16 +407,11 @@ const handleLogout = () => {
 <style scoped>
 .slide-down-enter-active,
 .slide-down-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 .slide-down-enter-from,
 .slide-down-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
-}
-.slide-down-enter-to,
-.slide-down-leave-from {
-  opacity: 1;
-  transform: translateY(0);
+  transform: translateY(-8px);
 }
 </style>

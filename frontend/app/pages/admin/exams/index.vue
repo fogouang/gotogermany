@@ -145,91 +145,7 @@
       </div>
     </div>
 
-    <!-- ─── Dialog Aperçu ─────────────────────────────── -->
-    <Dialog
-      v-model:visible="previewDialog"
-      :header="`Aperçu — ${selectedExam?.name} · Sujet ${selectedSubject?.subject_number}`"
-      :modal="true"
-      :style="{ width: '90vw', maxWidth: '640px' }"
-    >
-      <div v-if="loadingPreview" class="flex justify-center py-8">
-        <ProgressSpinner style="width: 40px; height: 40px" />
-      </div>
-      <div v-else-if="previewData" class="space-y-4 mt-2">
-        <!-- Stats -->
-        <div class="grid grid-cols-3 gap-3">
-          <div class="bg-teal-50 rounded-lg p-3 text-center">
-            <p class="text-xl font-bold text-teal-700">
-              {{ previewData.modules?.length ?? 0 }}
-            </p>
-            <p class="text-xs text-teal-600">Modules</p>
-          </div>
-          <div class="bg-blue-50 rounded-lg p-3 text-center">
-            <p class="text-xl font-bold text-blue-700">{{ totalTeile }}</p>
-            <p class="text-xs text-blue-600">Teile</p>
-          </div>
-          <div class="bg-purple-50 rounded-lg p-3 text-center">
-            <p class="text-xl font-bold text-purple-700">
-              {{ totalQuestions }}
-            </p>
-            <p class="text-xs text-purple-600">Questions</p>
-          </div>
-        </div>
-
-        <!-- Modules liste -->
-        <div class="space-y-2">
-          <div
-            v-for="mod in previewData.modules"
-            :key="mod.id"
-            class="border border-gray-100 rounded-lg overflow-hidden"
-          >
-            <div
-              class="flex items-center justify-between px-4 py-2.5 bg-gray-50"
-            >
-              <div class="flex items-center gap-2">
-                <div
-                  :class="[
-                    'w-7 h-7 rounded-md flex items-center justify-center',
-                    getModuleColor(mod.slug),
-                  ]"
-                >
-                  <i :class="['pi text-xs', getModuleIcon(mod.slug)]"></i>
-                </div>
-                <span class="font-medium text-sm text-gray-900">{{
-                  mod.name
-                }}</span>
-              </div>
-              <div class="flex items-center gap-3 text-xs text-gray-400">
-                <span
-                  ><i class="pi pi-clock mr-1"></i
-                  >{{ mod.time_limit_minutes }}min</span
-                >
-                <span
-                  ><i class="pi pi-star mr-1"></i>{{ mod.max_score }}pts</span
-                >
-              </div>
-            </div>
-            <div class="px-4 py-2 flex flex-wrap gap-2">
-              <div
-                v-for="teil in mod.teile"
-                :key="teil.id"
-                class="flex items-center gap-1.5 text-xs text-gray-500"
-              >
-                <span class="bg-gray-100 px-2 py-0.5 rounded font-mono"
-                  >Teil {{ teil.teil_number }}</span
-                >
-                <span class="text-gray-400">{{ teil.format_type }}</span>
-                <span class="text-gray-300">·</span>
-                <span>{{ teil.questions?.length ?? 0 }} questions</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Fermer" text @click="previewDialog = false" />
-      </template>
-    </Dialog>
+   
 
     <!-- ─── Dialog Éditer ─────────────────────────────── -->
     <Dialog
@@ -556,27 +472,32 @@ const subjects = ref<Record<string, any[]>>({});
 const loadingSubjects = ref<Record<string, boolean>>({});
 
 const loadSubjects = async (exam: ExamCatalogResponse) => {
-  if (subjects.value[exam.id]) return
-  loadingSubjects.value[exam.id] = true
+  if (subjects.value[exam.id]) return;
+  loadingSubjects.value[exam.id] = true;
   try {
-    const { ExamsService } = await import('#shared/api')
-    await setupApi()
-    const detail = await ExamsService.getExamDetailApiV1ExamsExamIdGet(exam.id)
-    const allSubjects: any[] = []
+    const { ExamsService } = await import("#shared/api");
+    await setupApi();
+    const detail = await ExamsService.getExamDetailApiV1ExamsExamIdGet(exam.id);
+    const allSubjects: any[] = [];
     for (const level of detail.levels ?? []) {
       // ← Utiliser l'endpoint subjects qui retourne has_audio
-      const levelSubjects = await ExamsService.getSubjectsApiV1ExamsLevelsLevelIdSubjectsGet(level.id)
+      const levelSubjects =
+        await ExamsService.getSubjectsApiV1ExamsLevelsLevelIdSubjectsGet(
+          level.id,
+        );
       for (const subject of levelSubjects) {
-        allSubjects.push({ ...subject, level_cefr: level.cefr_code })
+        allSubjects.push({ ...subject, level_cefr: level.cefr_code });
       }
     }
-    subjects.value[exam.id] = allSubjects.sort((a, b) => a.subject_number - b.subject_number)
+    subjects.value[exam.id] = allSubjects.sort(
+      (a, b) => a.subject_number - b.subject_number,
+    );
   } catch {
-    subjects.value[exam.id] = []
+    subjects.value[exam.id] = [];
   } finally {
-    loadingSubjects.value[exam.id] = false
+    loadingSubjects.value[exam.id] = false;
   }
-}
+};
 
 const reloadSubjects = async (exam: ExamCatalogResponse) => {
   delete subjects.value[exam.id];
@@ -589,44 +510,15 @@ const selectedSubject = ref<any>(null);
 const resultDialog = ref(false);
 const importResult = ref<any>(null);
 
-// ── Aperçu ────────────────────────────────────────────
-const previewDialog = ref(false);
-const previewData = ref<any>(null);
-const loadingPreview = ref(false);
 
-const totalTeile = computed(() =>
-  (previewData.value?.modules ?? []).reduce(
-    (s: number, m: any) => s + (m.teile?.length ?? 0),
-    0,
-  ),
-);
-const totalQuestions = computed(() =>
-  (previewData.value?.modules ?? []).reduce(
-    (s: number, m: any) =>
-      s +
-      (m.teile ?? []).reduce(
-        (st: number, t: any) => st + (t.questions?.length ?? 0),
-        0,
-      ),
-    0,
-  ),
-);
 
-const openPreview = async (exam: ExamCatalogResponse, subject: any) => {
-  selectedExam.value = exam;
-  selectedSubject.value = subject;
-  previewData.value = null;
-  loadingPreview.value = true;
-  previewDialog.value = true;
-  try {
-    // Le subject vient du detail déjà chargé
-    const subjectList = subjects.value[exam.id] ?? [];
-    const full = subjectList.find((s) => s.id === subject.id);
-    previewData.value = full ?? subject;
-  } finally {
-    loadingPreview.value = false;
-  }
-};
+
+const openPreview = (exam: ExamCatalogResponse, subject: any) => {
+  navigateTo({
+    path: `/admin/exams/${subject.id}`,
+    query: { examId: exam.id },
+  })
+}
 
 // ── Éditer ────────────────────────────────────────────
 const editDialog = ref(false);

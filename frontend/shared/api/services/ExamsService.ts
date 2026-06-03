@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { Body_import_exam_audio_api_v1_exams_admin__exam_id__audio_post } from '../models/Body_import_exam_audio_api_v1_exams_admin__exam_id__audio_post';
 import type { Body_import_exam_json_api_v1_exams_admin_import_post } from '../models/Body_import_exam_json_api_v1_exams_admin_import_post';
+import type { Body_import_teil_images_api_v1_exams_admin__exam_id__teil_images_post } from '../models/Body_import_teil_images_api_v1_exams_admin__exam_id__teil_images_post';
 import type { ExamCatalogResponse } from '../models/ExamCatalogResponse';
 import type { ExamCreateRequest } from '../models/ExamCreateRequest';
 import type { ExamDetailResponse } from '../models/ExamDetailResponse';
@@ -20,6 +21,7 @@ import type { SubjectUpdateRequest } from '../models/SubjectUpdateRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
 import type { TeilCreateRequest } from '../models/TeilCreateRequest';
 import type { TeilResponse } from '../models/TeilResponse';
+import type { TeilUpdateRequest } from '../models/TeilUpdateRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -474,6 +476,36 @@ export class ExamsService {
         });
     }
     /**
+     * Update Teil
+     * Met à jour le config d'un Teil — pour associer images, instructions...
+     * @param teilId
+     * @param requestBody
+     * @param accessToken
+     * @returns TeilResponse Successful Response
+     * @throws ApiError
+     */
+    public static updateTeilApiV1ExamsTeileTeilIdPatch(
+        teilId: string,
+        requestBody: TeilUpdateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<TeilResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/exams/teile/{teil_id}',
+            path: {
+                'teil_id': teilId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Delete Teil
      * @param teilId
      * @param accessToken
@@ -493,6 +525,42 @@ export class ExamsService {
             cookies: {
                 'access_token': accessToken,
             },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Import Teil Images
+     * Upload des images associées au config d'un Teil.
+     * Convention de nommage :
+     * lesen_teil1_person_a.png  → Lesen Teil 1, persons.a.image
+     * lesen_teil2_article.png   → Lesen Teil 2, article_image
+     * horen_teil3_speaker_a.png → Hören Teil 3, speakers.a.image
+     * schreiben_teil1_topic.png → Schreiben Teil 1, topic_image
+     * sprechen_teil2_image.png  → Sprechen Teil 2, image
+     * @param examId
+     * @param formData
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static importTeilImagesApiV1ExamsAdminExamIdTeilImagesPost(
+        examId: string,
+        formData: Body_import_teil_images_api_v1_exams_admin__exam_id__teil_images_post,
+        accessToken?: (string | null),
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/exams/admin/{exam_id}/teil-images',
+            path: {
+                'exam_id': examId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            formData: formData,
+            mediaType: 'multipart/form-data',
             errors: {
                 422: `Validation Error`,
             },

@@ -124,6 +124,7 @@ const mainNav = [
   { name: 'Utilisateurs', href: '/admin/users', icon: 'pi-users' },
   { name: 'Examens', href: '/admin/exams', icon: 'pi-book' },
   { name: 'Sessions', href: '/admin/sessions', icon: 'pi-list' },
+  { name: 'simulateur', href: '/admin/simulateur', icon: 'pi-book' },
   { name: 'Plans', href: '/admin/plans', icon: 'pi-tag' },
   { name: 'Paiements', href: '/admin/paiements', icon: 'pi-credit-card' }
 ]
@@ -142,6 +143,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   '/admin/users': { title: 'Utilisateurs', subtitle: 'Gestion des comptes et accès' },
   '/admin/exams': { title: 'Examens', subtitle: 'Gestion du contenu' },
   '/admin/sessions': { title: 'Sessions', subtitle: 'Historique des examens passés' },
+  '/admin/simulateur': { title: 'simulateur', subtitle: 'simulateur des examens' },
   '/admin/partners': { title: 'Partenaires', subtitle: 'Centres et affiliés' },
   '/admin/promo-code': { title: 'Codes Promo', subtitle: 'Gestion des réductions et commissions' },
   '/admin/settings': { title: 'Paramètres', subtitle: 'Configuration de la plateforme' },

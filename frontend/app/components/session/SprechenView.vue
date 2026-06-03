@@ -100,6 +100,18 @@
 
     <!-- oral_monologue — présentation avec slides -->
     <div v-else-if="teil.format_type === 'oral_monologue'" class="space-y-5">
+      <!-- Image config du Teil (Sprechen Teil 2) -->
+      <div
+        v-if="teil.config?.image"
+        class="rounded-xl overflow-hidden border border-gray-200"
+      >
+        <img
+          :src="`${apiBase}/images/${teil.config.image}`"
+          alt="Thème"
+          class="w-full object-contain max-h-64"
+        />
+      </div>
+
       <!-- Goethe B2 : candidate_a / candidate_b -->
       <template v-if="hasGoetheThemes">
         <div v-if="!selectedTheme" class="space-y-3">
@@ -405,6 +417,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
+
+const runtimeConfig = useRuntimeConfig()
+const apiBase = (runtimeConfig.public.apiBaseUrl as string) || 'http://localhost:8001'
 
 const selectedTheme = ref<string | null>(null);
 const activeSlide = ref(0);

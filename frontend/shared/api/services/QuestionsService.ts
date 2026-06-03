@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_upload_question_image_api_v1_admin_questions__question_id__image_post } from '../models/Body_upload_question_image_api_v1_admin_questions__question_id__image_post';
 import type { BulkQuestionCreateRequest } from '../models/BulkQuestionCreateRequest';
 import type { QuestionAdminResponse } from '../models/QuestionAdminResponse';
 import type { QuestionCreateRequest } from '../models/QuestionCreateRequest';
@@ -230,6 +231,63 @@ export class QuestionsService {
             },
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Upload Question Image
+     * Upload et associe une image à une question.
+     * Remplace l'image existante si présente.
+     * @param questionId
+     * @param formData
+     * @param accessToken
+     * @returns QuestionAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static uploadQuestionImageApiV1AdminQuestionsQuestionIdImagePost(
+        questionId: string,
+        formData: Body_upload_question_image_api_v1_admin_questions__question_id__image_post,
+        accessToken?: (string | null),
+    ): CancelablePromise<QuestionAdminResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/admin/questions/{question_id}/image',
+            path: {
+                'question_id': questionId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            formData: formData,
+            mediaType: 'multipart/form-data',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Delete Question Image
+     * Supprime l'image associée à une question.
+     * @param questionId
+     * @param accessToken
+     * @returns QuestionAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static deleteQuestionImageApiV1AdminQuestionsQuestionIdImageDelete(
+        questionId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<QuestionAdminResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/admin/questions/{question_id}/image',
+            path: {
+                'question_id': questionId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
             errors: {
                 422: `Validation Error`,
             },

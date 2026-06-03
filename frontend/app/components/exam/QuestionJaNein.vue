@@ -48,8 +48,8 @@
         <div 
           class="flex-1 p-4 border-2 rounded-lg cursor-pointer transition-all"
           :class="userAnswer === 'nein' 
-            ? 'border-red-500 bg-red-50' 
-            : 'border-gray-200 hover:border-red-300'"
+            ? 'border-green-500 bg-red-50' 
+            : 'border-gray-200 hover:border-green-300'"
           @click="selectAnswer('nein')"
         >
           <div class="flex items-center gap-3">

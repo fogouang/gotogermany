@@ -1,0 +1,610 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "pricing": "Tarifs",
+    "about": "À propos",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "login": "Connexion",
+    "signup": "Commencer gratuitement",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "login_title": "Connexion",
+    "signup_title": "Inscription gratuite",
+    "email": "Email",
+    "password": "Mot de passe",
+    "full_name": "Nom complet",
+    "phone": "Téléphone (optionnel)",
+    "login_btn": "Se connecter",
+    "signup_btn": "S'inscrire",
+    "no_account": "Pas encore de compte ?",
+    "register_link": "S'inscrire",
+    "have_account": "Déjà un compte ?",
+    "login_link": "Se connecter",
+    "login_error": "Erreur de connexion",
+    "signup_error": "Erreur lors de l'inscription"
+  },
+
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "close": "Fermer"
+  },
+  "hero": {
+    "title": "Ne soyez pas le énième candidat à devoir repasser son examen d'allemand.",
+    "subtitle": "Préparez sereinement les certifications Goethe, TELC ou ÖSD. Maîtrisez la redoutable épreuve du Schreiben grâce à notre correction IA, et validez votre niveau B1 ou B2 dès le premier essai.",
+    "cta": "S'entraîner",
+    "social_proof": "+500 apprenants satisfaits",
+    "image_alt": "Étudiant préparant son examen d'allemand"
+  },
+  "how_it_works": {
+    "title": "Comment ça marche",
+    "subtitle1": "Comment ",
+    "subtitle2": "GoToGermany",
+    "subtitle3": " fonctionne ?",
+    "steps": {
+      "account": {
+        "title": "Créer un compte",
+        "description": "En tant qu'apprenant ou préparateur"
+      },
+      "exam": {
+        "title": "Choisir son examen et s'entraîner",
+        "description": "Accédez aux sujets et rédigez votre texte"
+      },
+      "progress": {
+        "title": "Suivre et progresser",
+        "description": "Obtenez votre score et vos corrections détaillées"
+      }
+    }
+  },
+  "cta_section": {
+    "title": "Ne laissez pas l'examen décider à votre place",
+    "title_line1": "Passez votre certification",
+    "title_line2": "Goethe, TELC ou ÖSD",
+    "title_line3": "du premier coup.",
+    "phone": "+237 691 85 09 13",
+    "button": "S'entraîner maintenant"
+  },
+  "exams_section": {
+    "title": "Examens officiels",
+    "subtitle1": "Préparez votre certification",
+    "subtitle2": "B1 ou B2",
+    "subtitle3": " avec le bon organisme",
+    "features": "Simulations conformes aux examens officiels · Correction IA instantanée des Schreiben",
+    "orgs": {
+      "goethe": {
+        "name": "Goethe-Institut",
+        "subtitle": "Certification internationale"
+      },
+      "telc": {
+        "name": "TELC",
+        "subtitle": "Certifications européennes"
+      },
+      "osd": {
+        "name": "ÖSD",
+        "subtitle": "Diplôme autrichien"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "Votre plateforme de préparation aux examens d'allemand. Simulations conformes, corrections IA, suivi de progression.",
+    "exams": {
+      "title": "Examens",
+      "links": {
+        "goethe_b1": "Goethe B1",
+        "goethe_b2": "Goethe B2",
+        "osd": "ÖSD Zertifikat",
+        "testdaf": "TestDaF",
+        "telc": "TELC Deutsch"
+      }
+    },
+    "resources": {
+      "title": "Ressources",
+      "links": {
+        "guides": "Guides d'étude",
+        "faq": "FAQ",
+        "tutorials": "Tutoriels vidéo",
+        "privacy_policy": "Politique et confidentialité"
+      }
+    },
+    "about": {
+      "title": "À propos",
+      "links": {
+        "mission": "Notre mission",
+        "pricing": "Tarifs",
+        "terms": "CGU",
+        "privacy": "Confidentialité",
+        "contact": "Contact"
+      }
+    },
+    "copyright": "© 2026 GoToGermany. Tous droits réservés.",
+    "secure_payment": "Paiement sécurisé"
+  },
+  "pricing": {
+    "title": "Tarifs GoToGermany",
+    "subtitle": "Choisissez la durée qui vous convient et accédez à tous les examens disponibles.",
+    "payment_methods": "Moyens de paiement acceptés",
+    "immediate_access": "Accès immédiat après paiement",
+    "no_plans": "Aucun plan disponible pour le moment.",
+    "popular": "⭐ Le plus populaire",
+    "per_day": "soit",
+    "per_day_suffix": "FCFA/jour",
+    "features": {
+      "unlimited": "Accès illimité à tous les examens",
+      "subjects": "Tous les sujets disponibles",
+      "corrections": "Corrections automatiques",
+      "progress": "Suivi de progression"
+    },
+    "cta": "Choisir ce plan",
+    "default_description": "Accès complet à tous les examens pendant"
+  },
+  "about": {
+    "hero": {
+      "badge": "Plateforme officielle de préparation",
+      "title_line1": "Réussissez votre",
+      "title_line2": "examen d'allemand",
+      "subtitle": "GoToGermany vous propose des simulations conformes aux examens officiels Goethe, ÖSD et TELC. Préparez-vous aux niveaux B1 et B2 avec des tests réalistes et des corrections intelligentes.",
+      "cta_start": "Commencer maintenant",
+      "cta_exams": "Voir les examens"
+    },
+    "stats": {
+      "candidates": "Candidats préparés",
+      "success_rate": "Taux de réussite",
+      "levels": "Niveaux disponibles",
+      "access": "Accès illimité"
+    },
+    "features": {
+      "title": "Une préparation sérieuse, simple et efficace",
+      "subtitle": "Accédez à des examens blancs conçus selon les mêmes critères que les tests officiels.",
+      "badge": "Notre offre",
+      "items": {
+        "exams": {
+          "title": "Examens blancs réalistes",
+          "desc": "Chaque test reproduit fidèlement la structure, la durée et les types de questions des examens officiels Goethe, ÖSD et TELC."
+        },
+        "audio": {
+          "title": "Hörverstehen avec audio",
+          "desc": "La compréhension orale est intégrée avec de vrais fichiers audio, exactement comme le jour de l'examen."
+        },
+        "access": {
+          "title": "Accès simple & flexible",
+          "desc": "Choisissez votre durée d'accès et payez via MTN ou Orange Money. Accès immédiat."
+        },
+        "progress": {
+          "title": "Suivi de progression",
+          "desc": "Consultez vos scores par module, identifiez vos points faibles et mesurez votre progression."
+        },
+        "partners": {
+          "title": "Centres partenaires",
+          "desc": "Nous collaborons avec des centres de formation certifiés qui recommandent GoToGermany."
+        },
+        "payment": {
+          "title": "Paiement mobile money",
+          "desc": "Payez facilement avec MTN MoMo ou Orange Money. Aucune carte bancaire nécessaire."
+        }
+      }
+    },
+    "levels": {
+      "title": "Niveaux disponibles",
+      "subtitle": "Deux niveaux, des milliers de questions, une seule plateforme",
+      "b1": {
+        "badge": "POPULAIRE",
+        "name": "Intermédiaire",
+        "desc": "Comprenez l'essentiel dans des situations courantes — travail, école, voyages. Idéal pour la demande de visa ou de résidence en Allemagne."
+      },
+      "b2": {
+        "badge": "NOUVEAU",
+        "name": "Avancé",
+        "desc": "Maîtrisez des sujets complexes avec fluidité. Requis pour les études universitaires ou les emplois qualifiés en Allemagne ou en Autriche."
+      }
+    },
+    "certifications": {
+      "title": "Certifications & Partenaires",
+      "subtitle": "Nos tests sont conçus selon les critères officiels de ces institutions reconnues.",
+      "items": {
+        "goethe": "Certification internationale",
+        "osd": "Diplôme autrichien",
+        "telc": "Certifications européennes",
+        "partners": {
+          "name": "Centres partenaires",
+          "desc": "Réseau de formation certifié"
+        }
+      },
+      "cta_pricing": "Voir les tarifs",
+      "cta_exams": "Essayer un examen"
+    }
+  },
+  "contact": {
+    "badge": "Nous contacter",
+    "title": "Contactez-nous",
+    "subtitle": "Une question sur nos examens d'allemand ? Nous sommes là pour vous aider.",
+    "form": {
+      "name": "Nom complet",
+      "name_placeholder": "Votre nom",
+      "name_required": "Le nom est requis",
+      "email_placeholder": "votre{'@'}email.com",
+      "email_required": "L'email est requis",
+      "subject": "Sujet",
+      "subject_placeholder": "Sélectionnez un sujet",
+      "subject_required": "Le sujet est requis",
+      "message": "Message",
+      "message_placeholder": "Votre message...",
+      "message_required": "Le message est requis",
+      "submit": "Envoyer le message",
+      "error_fill": "Veuillez remplir tous les champs",
+      "success_summary": "Message envoyé",
+      "success_detail": "Nous vous répondrons dans les plus brefs délais"
+    },
+    "subjects": {
+      "inscription": "Inscription à un examen",
+      "tarifs": "Question sur les tarifs",
+      "technique": "Problème technique",
+      "partenariat": "Demande de partenariat",
+      "renseignements": "Demande de renseignements",
+      "autre": "Autre"
+    },
+    "info": {
+      "email_response": "Réponse sous 24h ouvrées",
+      "phone_hours": "Lun - Ven, 9h - 17h",
+      "whatsapp": "Chat instantané disponible",
+      "office": "Bureau",
+      "office_location": "Dschang, Cameroun",
+      "office_note": "Sur rendez-vous uniquement",
+      "faq_title": "Besoin d'aide rapide ?",
+      "faq_desc": "Consultez notre FAQ pour des réponses immédiates aux questions fréquentes.",
+      "faq_btn": "Voir la FAQ",
+      "phone": "Téléphone"
+    }
+  },
+  "dashboard_exams": {
+    "title": "Examens disponibles",
+    "subtitle": "Choisissez un examen et commencez votre préparation",
+    "search_placeholder": "Rechercher un examen...",
+    "provider_placeholder": "Provider",
+    "level_placeholder": "Niveau",
+    "all_providers": "Tous les providers",
+    "all_levels": "Tous les niveaux",
+    "empty_title": "Aucun examen trouvé",
+    "empty_subtitle": "Essayez d'autres critères",
+    "reset": "Réinitialiser",
+    "exam_count": "examen(s)",
+    "default_desc": "Préparez-vous efficacement pour cet examen d'allemand.",
+    "access_active": "Accès actif",
+    "free": "Gratuit",
+    "premium": "Premium",
+    "see_subjects": "Voir les sujets"
+  },
+  "session": {
+    "loading": "Chargement de la session...",
+    "error": "Erreur",
+    "back_to_exams": "Retour aux examens",
+    "subject": "Sujet",
+    "exit_title": "Quitter l'examen ?",
+    "exit_warning": "Vos réponses en cours seront perdues.",
+    "cancel": "Annuler",
+    "quit": "Quitter",
+    "submit_title": "Terminer l'examen ?",
+    "answered": "Vous avez répondu à",
+    "questions_of": "question(s) sur",
+    "unanswered_warning": "Certaines questions sont sans réponse.",
+    "continue": "Continuer",
+    "submit": "Soumettre"
+  },
+  "result": {
+    "not_found": "Résultat introuvable",
+    "back_to_exams": "Retour aux examens",
+    "subject": "Sujet",
+    "passed": "Réussi ✓",
+    "failed": "Non réussi",
+    "pending": "En attente",
+    "min_score": "min",
+    "module_result": "Résultat du module",
+    "modules_result": "Résultats par module",
+    "waiting_correction": "En attente de correction manuelle",
+    "see_correction": "Voir la correction",
+    "detail_title": "Voir correction",
+    "your_answer": "Votre réponse",
+    "correct_answer": "Bonne réponse",
+    "another_module": "Faire un autre module",
+    "my_results": "Mes résultats"
+  },
+  "exam_detail": {
+    "not_found": "Examen introuvable",
+    "back": "Retour",
+    "levels": "Niveaux",
+    "subjects": "Sujets",
+    "free_levels": "Niveaux gratuits",
+    "level_prefix": "Niveau",
+    "subjects_count": "sujet(s)",
+    "min_score": "Score minimum",
+    "access_active": "Accès actif",
+    "free": "Gratuit",
+    "premium": "Premium",
+    "available": "Disponible",
+    "subject_default": "Sujet",
+    "modules": "modules",
+    "level_names": {
+      "A1": "Débutant",
+      "A2": "Élémentaire",
+      "B1": "Intermédiaire",
+      "B2": "Indépendant",
+      "C1": "Autonome",
+      "C2": "Maîtrise"
+    }
+  },
+  "subject_detail": {
+    "not_found": "Sujet introuvable",
+    "back": "Retour",
+    "subject_default": "Sujet",
+    "how_to_work": "Comment souhaitez-vous travailler ce sujet ?",
+    "choose_module": "Choisissez un module ou passez l'examen complet.",
+    "work_module": "Travailler un module",
+    "or": "ou",
+    "full_exam_title": "Mode examen complet",
+    "full_exam_desc": "Tous les modules dans les conditions réelles d'examen.",
+    "start_full_exam": "Commencer l'examen complet",
+    "minutes": "min",
+    "modules": "modules",
+    "points": "pts"
+  },
+  "correction": {
+    "loading": "Chargement de la correction…",
+    "not_found": "Correction introuvable",
+    "back": "Retour",
+    "passed": "Prüfung bestanden",
+    "failed": "Nicht bestanden",
+    "points": "points",
+    "score_detail": "Détail des scores",
+    "hide": "Masquer",
+    "see_correction": "Voir la correction",
+    "strengths": "Points forts",
+    "to_improve": "À améliorer",
+    "corrected_text": "Texte corrigé",
+    "detailed_corrections": "Corrections détaillées",
+    "tips": "Conseils pour progresser",
+    "back_to_exam": "Retour à l'examen",
+    "my_results": "Voir mes résultats",
+    "page_title": "Correction Schreiben — DeutschTest"
+  },
+  "invoices": {
+    "title": "Mes paiements",
+    "subtitle": "Historique de vos achats et factures",
+    "empty_title": "Aucun paiement",
+    "empty_subtitle": "Vous n'avez pas encore effectué d'achat",
+    "see_pricing": "Voir les tarifs",
+    "ref": "Réf.",
+    "invoice_btn": "Facture",
+    "dialog_title": "Facture",
+    "payment_confirmed": "Paiement confirmé",
+    "client": "Client",
+    "product": "Produit",
+    "date": "Date",
+    "operator": "Opérateur",
+    "discount": "Réduction",
+    "total": "Total payé",
+    "partner_code": "Code partenaire",
+    "close": "Fermer",
+    "download_pdf": "Télécharger PDF",
+    "generate_pdf": "Générer PDF",
+    "status": {
+      "COMPLETED": "Payé",
+      "FAILED": "Échoué",
+      "PENDING": "En attente"
+    }
+  },
+  "payment": {
+    "back": "Retour aux examens",
+    "title": "Finaliser votre accès",
+    "subtitle": "Accédez à tous les examens GoToGermany",
+    "choose_duration": "Choisissez votre durée",
+    "per_day": "FCFA/j",
+    "included": "Inclus dans votre accès",
+    "promo_code": "Code partenaire (optionnel)",
+    "promo_placeholder": "PARTNER2024",
+    "apply": "Appliquer",
+    "remove": "Retirer",
+    "payment_method": "Méthode de paiement",
+    "mobile_money": "Mobile Money",
+    "mobile_desc": "Orange, MTN",
+    "card": "Carte bancaire",
+    "card_desc": "Visa, Mastercard",
+    "operator": "Opérateur *",
+    "phone": "Numéro de téléphone *",
+    "phone_hint": "Sans indicatif, commencez par 6 ou 9",
+    "card_number": "Numéro de carte *",
+    "card_expiry": "Expiration (MM/AA) *",
+    "card_cvc": "CVC *",
+    "card_holder": "Titulaire de la carte *",
+    "total": "Total à payer",
+    "pay_now": "Payer maintenant",
+    "secure": "Paiement sécurisé My-CoolPay",
+    "features": {
+      "unlimited": "Accès illimité à tous les examens",
+      "subjects": "Tous les sujets disponibles",
+      "audio": "Hörverstehen avec audio",
+      "corrections": "Corrections automatiques",
+      "progress": "Suivi de progression"
+    },
+    "ussd": {
+      "title": "Confirmez votre paiement",
+      "dial": "Composez ce code sur votre téléphone",
+      "pending": "En attente de confirmation...",
+      "completed": "Paiement confirmé !",
+      "failed": "Paiement échoué",
+      "ref": "Réf.",
+      "retry": "Réessayer",
+      "go_to_exams": "Accéder aux examens"
+    }
+  },
+  "my_results": {
+    "title": "Mes résultats",
+    "subtitle": "Historique de vos sessions d'examen",
+    "empty_title": "Aucun résultat",
+    "empty_subtitle": "Vous n'avez pas encore passé d'examen.",
+    "start_exam": "Commencer un examen",
+    "all_statuses": "Tous les statuts",
+    "filter_passed": "Réussies",
+    "filter_failed": "Échouées",
+    "filter_pending": "En correction",
+    "filter_in_progress": "En cours",
+    "sort_desc": "Plus récentes d'abord",
+    "sort_asc": "Plus anciennes d'abord",
+    "reset": "Réinitialiser",
+    "stats": {
+      "total": "Sessions totales",
+      "passed": "Réussies",
+      "avg_score": "Score moyen",
+      "pending": "En correction"
+    },
+    "score": "Score",
+    "continue": "Continuer",
+    "status": {
+      "in_progress": "En cours",
+      "pending_review": "En correction",
+      "passed": "Réussi",
+      "failed": "Échoué",
+      "completed": "Terminé"
+    },
+    "load_more": "Charger plus"
+  },"simulator": {
+  "title": "Simulateur Schreiben",
+  "subtitle": "Entraînez-vous sur des sujets réels et obtenez une correction IA immédiate.",
+  "tab_subjects": "Sujets disponibles",
+  "tab_results": "Mes corrections",
+  "all": "Tous",
+  "no_subjects_title": "Aucun sujet disponible",
+  "no_subjects_subtitle": "Essayez d'autres filtres",
+  "show_all": "Tout afficher",
+  "tasks": "tâche",
+  "tasks_plural": "tâches",
+  "start": "Commencer",
+  "no_results_title": "Aucune correction pour l'instant",
+  "no_results_subtitle": "Commencez par vous entraîner sur un sujet",
+  "see_subjects": "Voir les sujets",
+  "see": "Voir",
+  "deleted_subject": "Sujet supprimé",
+  "dialog_title": "Résultat de correction",
+  "appreciation": "Appréciation",
+  "criteria_scores": "Scores par critère",
+  "tips": "Conseils",
+  "close": "Fermer",
+  "redo": "Refaire ce sujet",
+  "page_title": "Simulateur Schreiben — DeutschTest"
+},
+"simulator_result": {
+  "no_correction": "Aucune correction disponible.",
+  "back_simulator": "Retour au simulateur",
+  "score": "Score",
+  "success_rate": "Réussite",
+  "level": "Niveau",
+  "criteria_title": "Détail des critères",
+  "task_title": "Correction par Teil",
+  "strengths": "Points forts",
+  "to_improve": "À améliorer",
+  "corrected_text": "Texte corrigé",
+  "detailed_corrections": "Corrections détaillées",
+  "tips": "Conseils pour progresser",
+  "redo": "Refaire ce sujet",
+  "choose_another": "Choisir un autre sujet",
+  "page_title": "Résultats — DeutschTest"
+},
+"simulator_subject": {
+  "words_written": "mot(s) rédigé(s)",
+  "ad_context": "Annonce / Context",
+  "task_label": "Aufgabe",
+  "word_range": "mots",
+  "write_placeholder": "Schreiben Sie hier Ihren Text…",
+  "words_count": "mot(s)",
+  "prev_teil": "Teil précédent",
+  "next_teil": "Teil suivant",
+  "correct_btn": "Corriger avec l'IA",
+  "correct_hint": "Rédigez au moins une réponse pour lancer la correction",
+  "correcting": "Correction en cours…",
+  "correcting_sub": "L'IA analyse vos textes, cela peut prendre quelques secondes.",
+  "error_title": "Erreur de correction",
+  "retry": "Réessayer",
+  "see_results": "Voir les résultats",
+  "back": "Retour",
+  "page_title": "Simulateur — DeutschTest"
+},"profile": {
+  "title": "Mon profil",
+  "subtitle": "Gérez vos informations personnelles",
+  "email_verified": "Email vérifié",
+  "email_not_verified": "Email non vérifié",
+  "member_since": "Membre depuis",
+  "status": "Statut",
+  "admin": "Administrateur",
+  "user": "Utilisateur",
+  "personal_info": "Informations personnelles",
+  "full_name": "Nom complet",
+  "email": "Email",
+  "email_readonly": "L'email ne peut pas être modifié",
+  "phone": "Téléphone",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "success_update": "Profil mis à jour avec succès !",
+  "error_update": "Erreur lors de la mise à jour",
+  "change_password": "Changer le mot de passe",
+  "current_password": "Mot de passe actuel",
+  "new_password": "Nouveau mot de passe",
+  "confirm_password": "Confirmer le mot de passe",
+  "change_password_btn": "Changer le mot de passe",
+  "success_password": "Mot de passe changé avec succès !",
+  "error_password": "Erreur lors du changement de mot de passe",
+  "error_fields": "Veuillez remplir tous les champs",
+  "error_match": "Les mots de passe ne correspondent pas",
+  "error_length": "Le mot de passe doit contenir au moins 8 caractères",
+  "stats_exams": "Examens complétés",
+  "stats_score": "Score moyen",
+  "stats_time": "Temps d'étude",
+  "danger_zone": "Zone dangereuse",
+  "delete_account": "Supprimer mon compte",
+  "delete_desc": "Une fois votre compte supprimé, toutes vos données seront définitivement perdues.",
+  "delete_btn": "Supprimer le compte",
+  "delete_dialog_title": "Supprimer votre compte ?",
+  "delete_warning": "Cette action est irréversible !",
+  "delete_confirm_text": "Êtes-vous absolument sûr de vouloir supprimer votre compte ? Toutes vos données, y compris vos résultats d'examens, seront définitivement supprimées.",
+  "delete_type": "Tapez \"SUPPRIMER\" pour confirmer",
+  "delete_placeholder": "SUPPRIMER",
+  "delete_confirm_btn": "Supprimer définitivement",
+  "delete_confirm_word": "SUPPRIMER"
+},"faq": {
+  "badge": "Centre d'aide",
+  "title": "Questions fréquentes",
+  "subtitle": "Trouvez rapidement les réponses à vos questions sur DeutschTest",
+  "categories": {
+    "all": "Toutes",
+    "exams": "Examens",
+    "account": "Compte",
+    "technical": "Technique"
+  },
+  "cta_title": "Vous ne trouvez pas votre réponse ?",
+  "cta_desc": "Notre équipe est là pour vous aider. Contactez-nous et nous vous répondrons dans les plus brefs délais.",
+  "cta_btn": "Nous contacter",
+  "page_title": "FAQ - DeutschTest",
+  "page_desc": "Questions fréquentes sur DeutschTest : examens, tarifs, inscription, préparation et assistance technique.",
+  "questions": {
+    "exams_1": { "q": "Quels examens d'allemand sont disponibles sur DeutschTest ?", "a": "Nous proposons actuellement des simulations complètes pour les examens <strong>Goethe B1</strong> et <strong>Goethe B2</strong>. Nous couvrons également les formats <strong>ÖSD</strong> et <strong>TELC</strong> qui partagent des structures similaires. Les niveaux A1, A2 et C1 seront ajoutés prochainement." },
+    "exams_2": { "q": "Les simulations sont-elles conformes aux examens officiels ?", "a": "Oui, absolument ! Nos simulations respectent scrupuleusement le format, la durée et les critères d'évaluation des examens officiels Goethe-Institut, ÖSD et TELC. Nos contenus sont créés par des examinateurs certifiés avec une expérience réelle des examens." },
+    "exams_3": { "q": "Comment fonctionne la correction IA ?", "a": "Notre système d'IA analyse vos productions écrites et orales selon les <strong>critères officiels</strong> (contenu, cohérence, grammaire, vocabulaire, prononciation). Vous recevez un <strong>feedback détaillé</strong> avec vos points forts, vos axes d'amélioration et une estimation de votre score potentiel." },
+    "exams_4": { "q": "Combien de tests puis-je passer ?", "a": "Avec l'accès <strong>Unique</strong>, vous passez un examen blanc complet. Avec l'accès <strong>Illimité 30 jours</strong>, vous pouvez passer autant de tests que vous le souhaitez pendant 30 jours. Idéal pour une préparation intensive avant votre examen officiel." },
+    "exams_5": { "q": "Les enregistrements audio sont-ils conformes aux conditions réelles ?", "a": "Oui, nos enregistrements audio utilisent des <strong>locuteurs natifs</strong> avec les accents standards (allemand, autrichien, suisse). La qualité et le débit correspondent exactement aux conditions d'examen officielles." },
+    "account_1": { "q": "Comment créer un compte ?", "a": "Cliquez sur <strong>\"Commencer gratuitement\"</strong> en haut de la page. Renseignez votre email, créez un mot de passe et validez. Vous recevrez un email de confirmation. C'est tout ! Aucune carte bancaire n'est requise pour créer votre compte." },
+    "account_2": { "q": "Quels sont les moyens de paiement acceptés ?", "a": "Nous acceptons les paiements par <strong>carte bancaire</strong> (Visa, Mastercard), <strong>Mobile Money</strong> (MTN, Orange), et <strong>PayPal</strong>. Tous les paiements sont sécurisés et cryptés." },
+    "account_3": { "q": "Puis-je changer de formule après mon inscription ?", "a": "Oui, vous pouvez passer de l'accès <strong>Unique</strong> à l'accès <strong>Illimité</strong> à tout moment depuis votre tableau de bord. La différence de prix sera calculée automatiquement." },
+    "account_4": { "q": "Comment puis-je récupérer mon mot de passe ?", "a": "Cliquez sur <strong>\"Mot de passe oublié ?\"</strong> sur la page de connexion. Entrez votre email et vous recevrez un lien de réinitialisation valable 24h. Si vous ne recevez pas l'email, vérifiez vos spams ou contactez-nous." },
+    "technical_1": { "q": "Sur quels appareils puis-je utiliser DeutschTest ?", "a": "DeutschTest fonctionne sur <strong>ordinateurs</strong> (Windows, Mac, Linux), <strong>tablettes</strong> et <strong>smartphones</strong> (iOS, Android). Nous recommandons un ordinateur avec un micro pour les sections d'expression orale, mais vous pouvez aussi utiliser votre téléphone." },
+    "technical_2": { "q": "Ai-je besoin d'une connexion Internet ?", "a": "Oui, une connexion Internet stable est nécessaire pour passer les examens, charger les audios et recevoir vos corrections. Nous recommandons une connexion d'au moins <strong>2 Mbps</strong> pour une expérience optimale." },
+    "technical_3": { "q": "Que faire si j'ai un problème technique pendant un examen ?", "a": "Votre progression est <strong>sauvegardée automatiquement</strong>. En cas de problème (coupure Internet, bug), vous pouvez reprendre exactement où vous vous étiez arrêté. Si le problème persiste, contactez notre support via le chat en direct ou par email à <strong>lfogouang39{'@'}gmail.com</strong>." }
+  }
+}
+}

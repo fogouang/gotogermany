@@ -13,6 +13,7 @@ export type QuestionAdminResponse = {
     content: Record<string, any>;
     points: number;
     audio_file: (string | null);
+    image_file?: (string | null);
     correct_answer: Record<string, any>;
 };
 

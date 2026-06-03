@@ -23,6 +23,7 @@ class QuestionCreateRequest(BaseSchema):
     correct_answer: dict[str, Any]
     points: int = Field(default=1, gt=0)
     audio_file: str | None = Field(default=None, max_length=255)
+    image_file: str | None = Field(default=None, max_length=255)
 
 
 class QuestionUpdateRequest(BaseSchema):
@@ -30,6 +31,7 @@ class QuestionUpdateRequest(BaseSchema):
     correct_answer: dict[str, Any] | None = None
     points: int | None = Field(default=None, gt=0)
     audio_file: str | None = None
+    image_file: str | None = None
 
 
 class BulkQuestionCreateRequest(BaseSchema):
@@ -53,6 +55,7 @@ class QuestionResponse(BaseSchema):
     content: dict[str, Any]
     points: int
     audio_file: str | None
+    image_file: str | None = None
 
 
 class QuestionAdminResponse(QuestionResponse):

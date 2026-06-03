@@ -1,179 +1,231 @@
 <template>
-  <div>
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">
+  <div class="space-y-8">
+
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">
         Bonjour, {{ authStore.userName }} 👋
       </h1>
-      <p class="text-gray-600 mt-2">Bienvenue sur votre tableau de bord</p>
+      <p class="text-gray-500 mt-1 text-sm">Que souhaitez-vous faire aujourd'hui ?</p>
     </div>
 
+    <!-- ── Actions rapides ────────────────────────────── -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <button
+        class="group flex items-center gap-4 bg-white border border-gray-100 rounded-xl p-5 hover:border-teal-400 hover:shadow-md transition-all text-left"
+        @click="navigateTo('/dashboard/examens')"
+      >
+        <div class="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center shrink-0 group-hover:bg-teal-100 transition-colors">
+          <i class="pi pi-book text-teal-600 text-xl"></i>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">
+            Passer un examen
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">Goethe, TELC, ÖSD</p>
+        </div>
+        <i class="pi pi-arrow-right text-gray-300 group-hover:text-teal-500 ml-auto transition-all group-hover:translate-x-1"></i>
+      </button>
+
+      <button
+        class="group flex items-center gap-4 bg-white border border-gray-100 rounded-xl p-5 hover:border-indigo-400 hover:shadow-md transition-all text-left"
+        @click="navigateTo('/dashboard/simulateur')"
+      >
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors">
+          <i class="pi pi-pen-to-square text-indigo-600 text-xl"></i>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
+            Simulateur Schreiben
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">Correction IA instantanée</p>
+        </div>
+        <i class="pi pi-arrow-right text-gray-300 group-hover:text-indigo-500 ml-auto transition-all group-hover:translate-x-1"></i>
+      </button>
+
+      <button
+        class="group flex items-center gap-4 bg-white border border-gray-100 rounded-xl p-5 hover:border-orange-400 hover:shadow-md transition-all text-left"
+        @click="navigateTo('/dashboard/resultats')"
+      >
+        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 group-hover:bg-orange-100 transition-colors">
+          <i class="pi pi-chart-line text-orange-500 text-xl"></i>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 group-hover:text-orange-700 transition-colors">
+            Mes résultats
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">Suivi de progression</p>
+        </div>
+        <i class="pi pi-arrow-right text-gray-300 group-hover:text-orange-500 ml-auto transition-all group-hover:translate-x-1"></i>
+      </button>
+    </div>
+
+    <!-- ── Contenu principal ──────────────────────────── -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
       <!-- Examens disponibles -->
-      <Card class="lg:col-span-2">
-        <template #title>
-          <div class="flex items-center justify-between">
-            <span>Commencer un examen</span>
-            <Button
-              label="Voir tout"
-              text
-              size="small"
-              @click="navigateTo('/dashboard/examens')"
-            />
-          </div>
-        </template>
-        <template #content>
-          <div v-if="examsStore.loading" class="text-center py-8">
-            <ProgressSpinner style="width: 50px; height: 50px" />
-          </div>
-
-          <div
-            v-else-if="examsStore.catalog.length === 0"
-            class="text-center py-8 text-gray-500"
+      <div class="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800">Choisir un examen</h2>
+          <button
+            class="text-sm text-teal-600 font-medium hover:underline"
+            @click="navigateTo('/dashboard/examens')"
           >
-            <i class="pi pi-inbox text-4xl mb-4 block"></i>
-            <p>Aucun examen disponible</p>
-          </div>
+            Voir tout →
+          </button>
+        </div>
 
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div v-if="examsStore.loading" class="flex justify-center py-10">
+          <ProgressSpinner style="width: 40px; height: 40px" />
+        </div>
+
+        <div v-else-if="examsStore.catalog.length === 0" class="text-center py-10 text-gray-400">
+          <i class="pi pi-inbox text-4xl mb-3 block"></i>
+          <p class="text-sm">Aucun examen disponible</p>
+        </div>
+
+        <div v-else class="divide-y divide-gray-50">
+          <button
+            v-for="exam in examsStore.catalog.slice(0, 4)"
+            :key="exam.id"
+            class="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left group"
+            @click="navigateTo(`/dashboard/examens/${exam.slug}`)"
+          >
+            <!-- Avatar provider -->
             <div
-              v-for="exam in examsStore.catalog.slice(0, 4)"
-              :key="exam.id"
-              class="border border-gray-100 rounded-xl p-4 hover:shadow-md hover:border-primary-200 transition-all cursor-pointer"
-              @click="navigateTo(`/dashboard/examens/${exam.slug}`)"
+              class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
+              :class="providerBg(exam.provider)"
             >
-              <div class="flex items-start justify-between mb-2">
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-gray-900 truncate">
-                    {{ exam.name }}
-                  </h3>
-                  <p class="text-xs text-primary-600 font-medium mt-0.5">
-                    {{ exam.provider.toUpperCase() }}
-                  </p>
-                </div>
-                <Tag
-                  :value="`${exam.levels?.length || 0} niveaux`"
-                  severity="secondary"
-                  class="shrink-0 ml-2"
-                />
-              </div>
-              <p class="text-sm text-gray-500 line-clamp-2">
-                {{
-                  exam.description ||
-                  "Préparez-vous efficacement pour cet examen"
-                }}
+              {{ exam.provider.slice(0, 2).toUpperCase() }}
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors truncate">
+                {{ exam.name }}
               </p>
-              <div class="flex flex-wrap gap-1 mt-3">
-                <Tag
-                  v-for="level in exam.levels?.slice(0, 3)"
-                  :key="level.id"
-                  :value="level.cefr_code"
-                  size="small"
-                  severity="info"
-                />
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xs font-medium" :class="providerText(exam.provider)">
+                  {{ exam.provider.toUpperCase() }}
+                </span>
+                <span class="text-gray-300 text-xs">•</span>
+                <div class="flex gap-1">
+                  <Tag
+                    v-for="level in exam.levels?.slice(0, 3)"
+                    :key="level.id"
+                    :value="level.cefr_code"
+                    size="small"
+                    severity="info"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-      </Card>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs text-teal-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                Commencer
+              </span>
+              <i class="pi pi-arrow-right text-gray-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all text-sm"></i>
+            </div>
+          </button>
+        </div>
+      </div>
 
       <!-- Sessions récentes -->
-      <Card>
-        <template #title>Sessions récentes</template>
-        <template #content>
-          <div v-if="sessionsLoading" class="text-center py-8">
-            <ProgressSpinner style="width: 40px; height: 40px" />
-          </div>
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800">Sessions récentes</h2>
+        </div>
 
-          <div v-else-if="recentSessions.length === 0" class="text-center py-8">
-            <i class="pi pi-history text-4xl text-gray-300 mb-3 block"></i>
-            <p class="text-sm text-gray-500">Aucune session pour le moment</p>
-            <Button
-              label="Commencer un examen"
-              text
-              size="small"
-              class="mt-3"
-              @click="navigateTo('/dashboard/examens')"
-            />
-          </div>
+        <div v-if="sessionsLoading" class="flex justify-center py-10">
+          <ProgressSpinner style="width: 40px; height: 40px" />
+        </div>
 
-          <div v-else class="space-y-3">
+        <div v-else-if="recentSessions.length === 0" class="text-center py-10 px-4">
+          <i class="pi pi-history text-4xl text-gray-200 mb-3 block"></i>
+          <p class="text-sm text-gray-500 mb-3">Aucune session pour le moment</p>
+          <button
+            class="text-sm text-teal-600 font-medium hover:underline"
+            @click="navigateTo('/dashboard/examens')"
+          >
+            Commencer un examen →
+          </button>
+        </div>
+
+        <div v-else class="divide-y divide-gray-50">
+          <div
+            v-for="s in recentSessions"
+            :key="s.id"
+            class="flex items-center gap-3 px-5 py-4"
+          >
             <div
-              v-for="s in recentSessions"
-              :key="s.id"
-              class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+              :class="[
+                'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                s.status === 'COMPLETED' ? 'bg-green-100' : 'bg-amber-100',
+              ]"
             >
-              <div
+              <i
                 :class="[
-                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',
-                  s.status === 'COMPLETED'
-                    ? 'bg-success-100'
-                    : 'bg-secondary-100',
+                  'pi text-xs',
+                  s.status === 'COMPLETED' ? 'pi-check text-green-600' : 'pi-clock text-amber-600',
                 ]"
-              >
-                <i
-                  :class="[
-                    'pi text-sm',
-                    s.status === 'COMPLETED'
-                      ? 'pi-check text-success-600'
-                      : 'pi-clock text-secondary-600',
-                  ]"
-                ></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">
-                  {{ s.exam_name }}
-                </p>
-                <p class="text-xs text-gray-500">
-                  Sujet {{ s.subject_number }} •
-                  {{ formatDate(s.started_at) }}
-                </p>
-              </div>
-              <span
-                v-if="s.score_percentage != null"
-                :class="[
-                  'text-sm font-semibold shrink-0',
-                  s.score_percentage >= 60
-                    ? 'text-success-600'
-                    : 'text-danger-600',
-                ]"
-              >
-                {{ s.score_percentage }}%
-              </span>
+              ></i>
             </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ s.exam_name }}</p>
+              <p class="text-xs text-gray-400">
+                Sujet {{ s.subject_number }} · {{ formatDate(s.started_at) }}
+              </p>
+            </div>
+            <span
+              v-if="s.score_percentage != null"
+              :class="[
+                'text-sm font-bold shrink-0',
+                s.score_percentage >= 60 ? 'text-green-600' : 'text-red-500',
+              ]"
+            >
+              {{ s.score_percentage }}%
+            </span>
           </div>
-        </template>
-      </Card>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const authStore = useAuthStore();
-const examsStore = useExamsStore();
-const sessionStore = useSessionStore();
+const authStore    = useAuthStore()
+const examsStore   = useExamsStore()
+const sessionStore = useSessionStore()
 
-const sessionsLoading = ref(false);
-const recentSessions = ref<any[]>([]);
+const sessionsLoading = ref(false)
+const recentSessions  = ref<any[]>([])
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('fr-FR', {
+    day: '2-digit', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  })
+
+const providerBg = (p: string) => ({
+  goethe: 'bg-blue-500',
+  telc:   'bg-purple-500',
+  osd:    'bg-orange-500',
+}[p?.toLowerCase()] ?? 'bg-gray-400')
+
+const providerText = (p: string) => ({
+  goethe: 'text-blue-600',
+  telc:   'text-purple-600',
+  osd:    'text-orange-600',
+}[p?.toLowerCase()] ?? 'text-gray-500')
 
 onMounted(async () => {
-  if (examsStore.catalog.length === 0) {
-    await examsStore.fetchCatalog();
-  }
-
-  sessionsLoading.value = true;
-  const result = await sessionStore.getMySessions(0, 5);
-  if (result.success) recentSessions.value = result.data || [];
-  sessionsLoading.value = false;
-});
+  if (examsStore.catalog.length === 0) await examsStore.fetchCatalog()
+  sessionsLoading.value = true
+  const result = await sessionStore.getMySessions(0, 5)
+  if (result.success) recentSessions.value = result.data || []
+  sessionsLoading.value = false
+})
 </script>

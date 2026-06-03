@@ -14,5 +14,6 @@ export type QuestionResponse = {
     content: Record<string, any>;
     points: number;
     audio_file: (string | null);
+    image_file?: (string | null);
 };
 

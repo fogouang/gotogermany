@@ -1,104 +1,144 @@
 <template>
   <aside
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 lg:block"
+    :class="[
+      'fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-100 lg:block transition-all duration-300',
+      props.collapsed ? 'w-16' : 'w-64',
+    ]"
   >
     <div class="flex flex-col h-full">
       <!-- Logo -->
-      <div class="flex items-center gap-3 px-6 py-4 border-b">
+      <div
+        class="flex items-center px-4 py-5 border-b border-gray-100 overflow-hidden h-14"
+      >
+        <img
+          v-if="!props.collapsed"
+          src="/images/logo.png"
+          alt="DeutschTest"
+          class="h-7 object-contain"
+        />
         <div
-          class="w-10 h-10 bg-linear-to-br from-yellow-400 to-orange-400 rounded-xl flex items-center justify-center"
+          v-else
+          class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center mx-auto"
         >
-          <i class="pi pi-graduation-cap text-xl text-gray-900"></i>
+          <i class="pi pi-graduation-cap text-white text-sm"></i>
         </div>
-        <span class="text-xl font-bold text-gray-900">GotoGermany</span>
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
+        <template v-if="!props.collapsed">
+          <p
+            class="text-xs font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2"
+          >
+            Principal
+          </p>
+        </template>
+
         <NuxtLink
-          v-for="item in menuItems"
+          v-for="item in mainItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-teal-50 hover:text-primary-700 transition-colors font-medium"
-          active-class="bg-primary-700 text-white"
+          :class="[
+            'flex items-center rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-medium group',
+            props.collapsed
+              ? 'justify-center px-0 py-2.5 mx-1'
+              : 'gap-3 px-3 py-2.5',
+          ]"
+          active-class="!bg-teal-50 !text-teal-700 font-semibold"
+          v-tooltip.right="props.collapsed ? item.label : undefined"
           @click="$emit('navigate')"
         >
-          <i :class="['pi', item.icon, 'text-lg']"></i>
-          <span>{{ item.label }}</span>
+          <i :class="['pi text-base', item.icon]"></i>
+          <span v-if="!props.collapsed">{{ item.label }}</span>
+        </NuxtLink>
+
+        <template v-if="!props.collapsed">
+          <p
+            class="text-xs font-semibold text-gray-400 uppercase tracking-widest px-3 mt-5 mb-2"
+          >
+            Compte
+          </p>
+        </template>
+        <div v-else class="my-3 mx-2 h-px bg-gray-100" />
+
+        <NuxtLink
+          v-for="item in accountItems"
+          :key="item.to"
+          :to="item.to"
+          :class="[
+            'flex items-center rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-medium group',
+            props.collapsed
+              ? 'justify-center px-0 py-2.5 mx-1'
+              : 'gap-3 px-3 py-2.5',
+          ]"
+          active-class="!bg-teal-50 !text-teal-700 font-semibold"
+          v-tooltip.right="props.collapsed ? item.label : undefined"
+          @click="$emit('navigate')"
+        >
+          <i :class="['pi text-base', item.icon]"></i>
+          <span v-if="!props.collapsed">{{ item.label }}</span>
         </NuxtLink>
       </nav>
 
-      <!-- User Section -->
-      <div class="border-t p-4">
-        <div class="flex items-center gap-3 mb-3 px-2">
-          <Avatar
-            :label="authStore.userName[0]?.toUpperCase()"
-            shape="circle"
-            size="large"
-            class="bg-teal-600 text-white"
-          />
+      <!-- User -->
+      <div class="border-t border-gray-100 p-2">
+        <div
+          v-if="!props.collapsed"
+          class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 mb-1"
+        >
+          <div
+            class="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0"
+          >
+            {{ authStore.userName?.[0]?.toUpperCase() }}
+          </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-gray-900 truncate">
               {{ authStore.userName }}
             </p>
-            <p class="text-xs text-gray-500 truncate">
+            <p class="text-xs text-gray-400 truncate">
               {{ authStore.userEmail }}
             </p>
           </div>
         </div>
 
-        <Button
-          label="Déconnexion"
-          icon="pi pi-sign-out"
-          severity="secondary"
-          outlined
-          class="w-full"
+        <button
+          :class="[
+            'w-full flex items-center rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors font-medium',
+            props.collapsed ? 'justify-center py-2.5' : 'gap-2 px-3 py-2',
+          ]"
+          v-tooltip.right="props.collapsed ? 'Déconnexion' : undefined"
           @click="handleLogout"
-        />
+        >
+          <i class="pi pi-sign-out text-sm"></i>
+          <span v-if="!props.collapsed">Déconnexion</span>
+        </button>
       </div>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{ collapsed?: boolean }>();
 const authStore = useAuthStore();
-
 defineEmits(["navigate"]);
 
-const menuItems = ref([
+const mainItems = [
+  { label: "Tableau de bord", icon: "pi-th-large", to: "/dashboard" },
+  { label: "Examens", icon: "pi-book", to: "/dashboard/examens" },
   {
-    label: "Tableau de bord",
-    icon: "pi-th-large",
-    to: "/dashboard",
+    label: "Simulateur",
+    icon: "pi-pen-to-square",
+    to: "/dashboard/simulateur",
   },
-  {
-    label: "Examens",
-    icon: "pi-book",
-    to: "/dashboard/examens",
-  },
-  {
-    label: "Mes résultats",
-    icon: "pi-chart-line",
-    to: "/dashboard/resultats",
-  },
-  {
-    label: "Profil",
-    icon: "pi-user",
-    to: "/dashboard/profil",
-  },
-  {
-    label: "Factures",
-    icon: "pi-credit-card",
-    to: "/dashboard/factures",
-  },
-  // {
-  //   label: "Paramètres",
-  //   icon: "pi-cog",
-  //   to: "/dashboard/settings",
-  // },
-]);
+  { label: 'Méthodologie', icon: 'pi-book', to: '/dashboard/methodologie' },
+  { label: "Mes résultats", icon: "pi-chart-line", to: "/dashboard/resultats" },
+  
+];
 
-const handleLogout = () => {
-  authStore.logout();
-};
+const accountItems = [
+  { label: "Profil", icon: "pi-user", to: "/dashboard/profil" },
+  { label: "Factures", icon: "pi-receipt", to: "/dashboard/factures" },
+];
+
+const handleLogout = () => authStore.logout();
 </script>

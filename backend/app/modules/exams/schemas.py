@@ -189,3 +189,9 @@ class ExamCatalogResponse(BaseSchema):
     slug: str
     description: str | None
     levels: list[LevelAccessResponse] = []
+    
+class TeilUpdateRequest(BaseSchema):
+    instructions: str | None = None
+    config: dict[str, Any] | None = None
+    max_score: int | None = Field(default=None, gt=0)
+    time_minutes: int | None = Field(default=None, gt=0)

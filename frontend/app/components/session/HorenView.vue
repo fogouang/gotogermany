@@ -9,6 +9,52 @@
          Les questions sont groupées par audio_file via audioGroups     -->
     <div v-if="isMultiAudio" class="space-y-8">
       <div
+        v-if="teil.format_type === 'zuordnung_speaker' && teil.config?.speakers"
+        class="bg-white border border-gray-200 rounded-xl p-5"
+      >
+        <p
+          class="text-xs text-center font-bold text-gray-700 uppercase tracking-wide mb-3"
+        >
+          Intervenants
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-8">
+          <div
+            v-for="(speaker, key) in teil.config.speakers"
+            :key="key"
+            class="flex flex-col items-center gap-2 w-32"
+          >
+            <!-- Image grande -->
+            <img
+              v-if="getSpeakerImage(speaker)"
+              :src="`${apiBase}/images/${getSpeakerImage(speaker)}`"
+              :alt="getSpeakerName(speaker)"
+              class="w-32 h-40 object-cover rounded-lg border border-gray-200"
+            />
+            <div
+              v-else
+              class="w-32 h-40 rounded-lg bg-teal-50 border-2 border-dashed border-gray-200 flex items-center justify-center"
+            >
+              <span class="font-bold text-teal-400 text-2xl">{{
+                String(key).toUpperCase()
+              }}</span>
+            </div>
+
+            <!-- Label + nom en dessous -->
+            <div class="text-center">
+              <span
+                class="text-xs font-bold text-teal-600 border border-teal-200 bg-teal-50 px-1.5 py-0.5 rounded mr-1"
+              >
+                {{ String(key) }}
+              </span>
+              <span class="text-sm font-medium text-gray-700">{{
+                getSpeakerName(speaker)
+              }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
         v-for="(group, gi) in audioGroups"
         :key="gi"
         class="bg-white border border-gray-200 rounded-xl overflow-hidden"
@@ -139,6 +185,15 @@ const props = defineProps<{
 }>();
 
 defineEmits<{ answer: [questionId: string, value: any] }>();
+
+const config = useRuntimeConfig();
+const apiBase = (config.public.apiBaseUrl as string) || "http://localhost:8001";
+
+const getSpeakerImage = (speaker: any): string | null =>
+  typeof speaker === "object" ? (speaker?.image ?? null) : null;
+
+const getSpeakerName = (speaker: any): string =>
+  typeof speaker === "object" ? (speaker?.name ?? "") : String(speaker);
 
 // ── URL audio ────────────────────────────────────────
 const audioUrl = (path: string): string => {

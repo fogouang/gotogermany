@@ -3,7 +3,7 @@ app/modules/questions/router.py
 """
 from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, File, UploadFile
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,8 @@ from app.modules.questions.schemas import (
 from app.modules.questions.service import QuestionService
 from app.shared.database.session import get_db
 from app.shared.schemas.responses import SuccessResponse
+from app.modules.questions.image_service import QuestionImageService
+
 
 router = APIRouter()
 
@@ -135,3 +137,38 @@ async def delete_question(
 ):
     await QuestionService(db).delete(question_id)
     return SuccessResponse(message="Question supprimée.")
+
+
+
+@router.post(
+    "/admin/questions/{question_id}/image",
+    response_model=QuestionAdminResponse,
+)
+async def upload_question_image(
+    question_id: UUID,
+    _: CurrentAdmin,
+    file: UploadFile = File(..., description="Image PNG/JPG/WebP"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Upload et associe une image à une question.
+    Remplace l'image existante si présente.
+    """
+    ext = (file.filename or "").rsplit(".", 1)[-1].lower()
+    if ext not in ("png", "jpg", "jpeg", "webp"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Format image non supporté (png, jpg, webp).")
+    return await QuestionImageService(db).attach_image(question_id, file)
+
+
+@router.delete(
+    "/admin/questions/{question_id}/image",
+    response_model=QuestionAdminResponse,
+)
+async def delete_question_image(
+    question_id: UUID,
+    _: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """Supprime l'image associée à une question."""
+    return await QuestionImageService(db).detach_image(question_id)

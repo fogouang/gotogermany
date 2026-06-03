@@ -18,3 +18,5 @@ import app.modules.exam_access.models    # noqa: F401
 
 # Niveau 5 — dépend de users + exams + questions
 import app.modules.exam_sessions.models  # noqa: F401
+import app.modules.corrections.models  # noqa: F401
+import app.modules.schreiben_simulator.models  # noqa: F401

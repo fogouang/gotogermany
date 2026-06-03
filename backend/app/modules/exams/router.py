@@ -3,7 +3,7 @@ app/modules/exams/router.py
 """
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, File, Form, UploadFile
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +14,7 @@ from app.modules.exams.schemas import (
     LevelCreateRequest, LevelUpdateRequest, LevelResponse,
     SubjectCreateRequest, SubjectResponse,
     ModuleCreateRequest, ModuleResponse, SubjectUpdateRequest,
-    TeilCreateRequest, TeilResponse,
+    TeilCreateRequest, TeilResponse, TeilUpdateRequest,
 )
 from app.modules.exams.service import ExamService
 from app.modules.exam_access.service import ExamAccessService
@@ -192,7 +192,45 @@ async def create_teil(
 ):
     return await ExamService(db).create_teil(module_id, data)
 
+@router.patch("/teile/{teil_id}", response_model=TeilResponse)
+async def update_teil(
+    teil_id: UUID,
+    data: TeilUpdateRequest,
+    _: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """Met à jour le config d'un Teil — pour associer images, instructions..."""
+    return await ExamService(db).update_teil(teil_id, data)
 
+
+@router.post("/admin/{exam_id}/teil-images")
+async def import_teil_images(
+    _: CurrentAdmin,
+    exam_id: UUID,
+    files: list[UploadFile] = File(...),
+    subject_number: int = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Upload des images associées au config d'un Teil.
+    Convention de nommage :
+      lesen_teil1_person_a.png  → Lesen Teil 1, persons.a.image
+      lesen_teil2_article.png   → Lesen Teil 2, article_image
+      horen_teil3_speaker_a.png → Hören Teil 3, speakers.a.image
+      schreiben_teil1_topic.png → Schreiben Teil 1, topic_image
+      sprechen_teil2_image.png  → Sprechen Teil 2, image
+    """
+    from app.modules.exams.image_import_service import TeilImageImportService
+    img_files = [f for f in files if f.filename and
+                 f.filename.lower().split('.')[-1] in ('png', 'jpg', 'jpeg', 'webp')]
+    if not img_files:
+        raise HTTPException(status_code=400, detail="Aucun fichier image trouvé.")
+    return await TeilImageImportService(db).import_teil_images(
+        exam_id=exam_id,
+        files=img_files,
+        subject_number=subject_number,
+    )
+    
 @router.delete("/teile/{teil_id}", response_model=SuccessResponse)
 async def delete_teil(
     teil_id: UUID,

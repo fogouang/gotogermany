@@ -16,7 +16,7 @@ from app.modules.exams.schemas import (
     LevelCreateRequest, LevelUpdateRequest,
     SubjectCreateRequest, SubjectUpdateRequest,
     SubjectResponse,
-    ModuleCreateRequest, TeilCreateRequest,
+    ModuleCreateRequest, TeilCreateRequest, TeilUpdateRequest,
 )
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 
@@ -170,3 +170,9 @@ class ExamService:
 
     async def delete_teil(self, teil_id: UUID) -> bool:
         return await self.teil_repo.delete(teil_id)
+    
+    async def update_teil(self, teil_id: UUID, data: TeilUpdateRequest) -> Teil:
+        update_data = data.model_dump(exclude_unset=True, exclude_none=True)
+        if not update_data:
+            return await self.teil_repo.get_by_id_or_404(teil_id)
+        return await self.teil_repo.update(teil_id, **update_data)

@@ -7,5 +7,6 @@ export type QuestionUpdateRequest = {
     correct_answer?: (Record<string, any> | null);
     points?: (number | null);
     audio_file?: (string | null);
+    image_file?: (string | null);
 };
 

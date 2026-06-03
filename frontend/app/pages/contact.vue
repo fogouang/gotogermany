@@ -1,271 +1,193 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-12 px-4">
     <div class="max-w-4xl mx-auto mb-16">
-      <!-- En-tête avec animation -->
-      <div class="text-center mb-12 animate-fade-in">
-        <div
-          class="inline-flex items-center gap-2 bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-semibold mb-4"
-        >
+
+      <!-- En-tête -->
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
           <i class="pi pi-envelope"></i>
-          <span>Nous contacter</span>
+          <span>{{ t('contact.badge') }}</span>
         </div>
-        <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-          Contactez-nous
-        </h1>
-        <p class="text-lg text-gray-600">
-          Une question sur nos examens d'allemand ? Nous sommes là pour vous
-          aider.
-        </p>
+        <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">{{ t('contact.title') }}</h1>
+        <p class="text-lg text-gray-600">{{ t('contact.subtitle') }}</p>
       </div>
 
       <div class="grid md:grid-cols-2 gap-8">
+
         <!-- Formulaire -->
-        <Card class="shadow-xl border-2 border-gray-200 animate-slide-in-left">
+        <Card class="shadow-xl border-2 border-gray-200">
           <template #content>
             <form @submit.prevent="handleSubmit" class="space-y-6">
+
               <!-- Nom -->
-              <div class="animate-fade-in-up" style="animation-delay: 0.1s">
-                <label
-                  for="name"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  <i class="pi pi-user text-teal-600"></i> Nom complet
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                  <i class="pi pi-user text-teal-600"></i> {{ t('contact.form.name') }}
                 </label>
                 <InputText
-                  id="name"
-                  v-model="form.name"
-                  placeholder="Votre nom"
-                  class="w-full"
-                  :invalid="submitted && !form.name"
+                  id="name" v-model="form.name"
+                  :placeholder="t('contact.form.name_placeholder')"
+                  class="w-full" :invalid="submitted && !form.name"
                 />
                 <small v-if="submitted && !form.name" class="text-red-500">
-                  Le nom est requis
+                  {{ t('contact.form.name_required') }}
                 </small>
               </div>
 
               <!-- Email -->
-              <div class="animate-fade-in-up" style="animation-delay: 0.2s">
-                <label
-                  for="email"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                   <i class="pi pi-at text-teal-600"></i> Email
                 </label>
                 <InputText
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  placeholder="votre@email.com"
-                  class="w-full"
-                  :invalid="submitted && !form.email"
+                  id="email" v-model="form.email" type="email"
+                  :placeholder="t('contact.form.email_placeholder')"
+                  class="w-full" :invalid="submitted && !form.email"
                 />
                 <small v-if="submitted && !form.email" class="text-red-500">
-                  L'email est requis
+                  {{ t('contact.form.email_required') }}
                 </small>
               </div>
 
               <!-- Sujet -->
-              <div class="animate-fade-in-up" style="animation-delay: 0.3s">
-                <label
-                  for="subject"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  <i class="pi pi-tag text-teal-600"></i> Sujet
+              <div>
+                <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
+                  <i class="pi pi-tag text-teal-600"></i> {{ t('contact.form.subject') }}
                 </label>
                 <Select
-                  id="subject"
-                  v-model="form.subject"
-                  :options="subjects"
-                  optionLabel="name"
-                  placeholder="Sélectionnez un sujet"
-                  class="w-full"
-                  :invalid="submitted && !form.subject"
+                  id="subject" v-model="form.subject"
+                  :options="subjects" optionLabel="name"
+                  :placeholder="t('contact.form.subject_placeholder')"
+                  class="w-full" :invalid="submitted && !form.subject"
                 />
                 <small v-if="submitted && !form.subject" class="text-red-500">
-                  Le sujet est requis
+                  {{ t('contact.form.subject_required') }}
                 </small>
               </div>
 
               <!-- Message -->
-              <div class="animate-fade-in-up" style="animation-delay: 0.4s">
-                <label
-                  for="message"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  <i class="pi pi-comment text-teal-600"></i> Message
+              <div>
+                <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
+                  <i class="pi pi-comment text-teal-600"></i> {{ t('contact.form.message') }}
                 </label>
                 <Textarea
-                  id="message"
-                  v-model="form.message"
-                  rows="5"
-                  placeholder="Votre message..."
-                  class="w-full"
-                  :invalid="submitted && !form.message"
+                  id="message" v-model="form.message" rows="5"
+                  :placeholder="t('contact.form.message_placeholder')"
+                  class="w-full" :invalid="submitted && !form.message"
                 />
                 <small v-if="submitted && !form.message" class="text-red-500">
-                  Le message est requis
+                  {{ t('contact.form.message_required') }}
                 </small>
               </div>
 
-              <!-- Bouton -->
-              <div class="animate-fade-in-up" style="animation-delay: 0.5s">
-                <Button
-                  type="submit"
-                  label="Envoyer le message"
-                  icon="pi pi-send"
-                  class="w-full bg-gradient-primary! border-0! text-white! hover:opacity-90 transition-opacity"
-                  :loading="loading"
-                />
-              </div>
+              <Button
+                type="submit" :label="t('contact.form.submit')"
+                icon="pi pi-send"
+                class="w-full bg-gradient-primary! border-0! text-white! hover:opacity-90"
+                :loading="loading"
+              />
             </form>
           </template>
         </Card>
 
-        <!-- Informations de contact -->
-        <div class="space-y-6 animate-slide-in-right">
-          <!-- Carte Email -->
-          <Card
-            class="shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-200 hover:border-teal-600 group"
-          >
+        <!-- Informations -->
+        <div class="space-y-6">
+
+          <!-- Email -->
+          <Card class="shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-teal-600 group">
             <template #content>
               <div class="flex items-start gap-4">
-                <div
-                  class="bg-gradient-primary p-3 rounded-lg group-hover:scale-110 transition-transform"
-                >
+                <div class="bg-gradient-primary p-3 rounded-lg group-hover:scale-110 transition-transform">
                   <i class="pi pi-envelope text-2xl text-white"></i>
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
-                  <a
-                    href="mailto:lfogouang39@gmail.com"
-                    class="text-teal-700 hover:text-teal-800 font-medium"
-                  >
+                  <a href="mailto:lfogouang39@gmail.com" class="text-teal-700 hover:text-teal-800 font-medium">
                     lfogouang39@gmail.com
                   </a>
-                  <p class="text-sm text-gray-500 mt-1">
-                    Réponse sous 24h ouvrées
-                  </p>
+                  <p class="text-sm text-gray-500 mt-1">{{ t('contact.info.email_response') }}</p>
                 </div>
               </div>
             </template>
           </Card>
 
-          <!-- Carte Téléphone -->
-          <Card
-            class="shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-200 hover:border-teal-600 group"
-          >
+          <!-- Téléphone -->
+          <Card class="shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-teal-600 group">
             <template #content>
               <div class="flex items-start gap-4">
-                <div
-                  class="bg-gradient-secondary p-3 rounded-lg group-hover:scale-110 transition-transform"
-                >
+                <div class="bg-gradient-secondary p-3 rounded-lg group-hover:scale-110 transition-transform">
                   <i class="pi pi-phone text-2xl text-white"></i>
                 </div>
                 <div>
-                  <h3 class="font-semibold text-gray-900 mb-1">Téléphone</h3>
+                  <h3 class="font-semibold text-gray-900 mb-1">{{ t('contact.info.phone') }}</h3>
                   <div class="space-y-1">
-                    <a
-                      href="tel:+237691850913"
-                      class="block text-teal-700 hover:text-teal-800 font-medium"
-                    >
-                      +237 691 85 09 13
-                    </a>
-                    <a
-                      href="tel:+237670886288"
-                      class="block text-teal-700 hover:text-teal-800 font-medium"
-                    >
-                      +237 670 88 62 88
-                    </a>
+                    <a href="tel:+237691850913" class="block text-teal-700 hover:text-teal-800 font-medium">+237 691 85 09 13</a>
+                    <a href="tel:+237670886288" class="block text-teal-700 hover:text-teal-800 font-medium">+237 670 88 62 88</a>
                   </div>
-                  <p class="text-sm text-gray-500 mt-1">Lun - Ven, 9h - 17h</p>
+                  <p class="text-sm text-gray-500 mt-1">{{ t('contact.info.phone_hours') }}</p>
                 </div>
               </div>
             </template>
           </Card>
 
-          <!-- Carte WhatsApp -->
-          <Card
-            class="shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-200 hover:border-green-600 group"
-          >
+          <!-- WhatsApp -->
+          <Card class="shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-green-600 group">
             <template #content>
               <div class="flex items-start gap-4">
-                <div
-                  class="bg-green-500 p-3 rounded-lg group-hover:scale-110 transition-transform"
-                >
+                <div class="bg-green-500 p-3 rounded-lg group-hover:scale-110 transition-transform">
                   <i class="pi pi-whatsapp text-2xl text-white"></i>
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-900 mb-1">WhatsApp</h3>
-                  <a
-                    href="https://wa.me/237691850913"
-                    target="_blank"
-                    class="text-green-600 hover:text-green-700 font-medium"
-                  >
+                  <a href="https://wa.me/237691850913" target="_blank" class="text-green-600 hover:text-green-700 font-medium">
                     +237 691 85 09 13
                   </a>
-                  <p class="text-sm text-gray-500 mt-1">
-                    Chat instantané disponible
-                  </p>
+                  <p class="text-sm text-gray-500 mt-1">{{ t('contact.info.whatsapp') }}</p>
                 </div>
               </div>
             </template>
           </Card>
 
-          <!-- Carte Localisation -->
-          <Card
-            class="shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-200 hover:border-teal-600 group"
-          >
+          <!-- Bureau -->
+          <Card class="shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-teal-600 group">
             <template #content>
               <div class="flex items-start gap-4">
-                <div
-                  class="bg-gradient-primary p-3 rounded-lg group-hover:scale-110 transition-transform"
-                >
+                <div class="bg-gradient-primary p-3 rounded-lg group-hover:scale-110 transition-transform">
                   <i class="pi pi-map-marker text-2xl text-white"></i>
                 </div>
                 <div>
-                  <h3 class="font-semibold text-gray-900 mb-1">Bureau</h3>
-                  <p class="text-gray-600">Yaoundé, Cameroun</p>
-                  <p class="text-sm text-gray-500 mt-1">
-                    Sur rendez-vous uniquement
-                  </p>
+                  <h3 class="font-semibold text-gray-900 mb-1">{{ t('contact.info.office') }}</h3>
+                  <p class="text-gray-600">{{ t('contact.info.office_location') }}</p>
+                  <p class="text-sm text-gray-500 mt-1">{{ t('contact.info.office_note') }}</p>
                 </div>
               </div>
             </template>
           </Card>
 
-          <!-- FAQ rapide -->
-          <Card
-            class="shadow-lg bg-linear-to-br from-teal-50 to-teal-100 border-2 border-teal-200"
-          >
+          <!-- FAQ -->
+          <Card class="shadow-lg bg-linear-to-br from-teal-50 to-teal-100 border-2 border-teal-200">
             <template #content>
               <div class="flex items-start gap-3">
                 <i class="pi pi-info-circle text-xl text-teal-600 mt-1"></i>
                 <div>
-                  <h3 class="font-semibold text-gray-900 mb-2">
-                    Besoin d'aide rapide ?
-                  </h3>
-                  <p class="text-sm text-gray-600 mb-3">
-                    Consultez notre FAQ pour des réponses immédiates aux
-                    questions fréquentes.
-                  </p>
+                  <h3 class="font-semibold text-gray-900 mb-2">{{ t('contact.info.faq_title') }}</h3>
+                  <p class="text-sm text-gray-600 mb-3">{{ t('contact.info.faq_desc') }}</p>
                   <Button
-                    label="Voir la FAQ"
-                    icon="pi pi-arrow-right"
-                    iconPos="right"
-                    text
-                    size="small"
+                    :label="t('contact.info.faq_btn')"
+                    icon="pi pi-arrow-right" iconPos="right"
+                    text size="small"
                     class="text-teal-700! hover:bg-teal-200/50!"
-                    @click="goToFAQ"
+                    @click="navigateTo('/faq')"
                   />
                 </div>
               </div>
             </template>
           </Card>
+
         </div>
       </div>
     </div>
 
-    <!-- Toast pour les notifications -->
     <Toast position="top-right" />
   </div>
 </template>
@@ -273,6 +195,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useToast } from "primevue/usetoast";
+const { t } = useI18n();
 
 useHead({
   title: "Contact - GotoGermany",
@@ -294,13 +217,13 @@ const form = ref({
   message: "",
 });
 
-const subjects = ref([
-  { name: "Inscription à un examen", value: "inscription" },
-  { name: "Question sur les tarifs", value: "tarifs" },
-  { name: "Problème technique", value: "technique" },
-  { name: "Demande de partenariat", value: "partenariat" },
-  { name: "Demande de renseignements", value: "renseignements" },
-  { name: "Autre", value: "autre" },
+const subjects = computed(() => [
+  { name: t("contact.subjects.inscription"), value: "inscription" },
+  { name: t("contact.subjects.tarifs"), value: "tarifs" },
+  { name: t("contact.subjects.technique"), value: "technique" },
+  { name: t("contact.subjects.partenariat"), value: "partenariat" },
+  { name: t("contact.subjects.renseignements"), value: "renseignements" },
+  { name: t("contact.subjects.autre"), value: "autre" },
 ]);
 
 const submitted = ref(false);
@@ -308,8 +231,6 @@ const loading = ref(false);
 
 const handleSubmit = async () => {
   submitted.value = true;
-
-  // Validation
   if (
     !form.value.name ||
     !form.value.email ||
@@ -319,31 +240,21 @@ const handleSubmit = async () => {
     toast.add({
       severity: "error",
       summary: "Erreur",
-      detail: "Veuillez remplir tous les champs",
+      detail: t("contact.form.error_fill"),
       life: 3000,
     });
     return;
   }
-
   loading.value = true;
-
-  // Simulation d'envoi (à remplacer par un vrai appel API)
   setTimeout(() => {
     loading.value = false;
     toast.add({
       severity: "success",
-      summary: "Message envoyé",
-      detail: "Nous vous répondrons dans les plus brefs délais",
+      summary: t("contact.form.success_summary"),
+      detail: t("contact.form.success_detail"),
       life: 5000,
     });
-
-    // Reset form
-    form.value = {
-      name: "",
-      email: "",
-      subject: null,
-      message: "",
-    };
+    form.value = { name: "", email: "", subject: null, message: "" };
     submitted.value = false;
   }, 2000);
 };

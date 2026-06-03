@@ -12,6 +12,9 @@
     "generate:api:prod": "openapi-typescript-codegen --input https://api.deutschtest.com/openapi.json --output ./shared/api --client fetch"
   },
   "dependencies": {
+    "@nuxtjs/i18n": "10.4.0",
+    "@nuxtjs/robots": "^6.0.9",
+    "@nuxtjs/sitemap": "^8.0.15",
     "@pinia/nuxt": "^0.11.3",
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/vite": "^4.2.2",

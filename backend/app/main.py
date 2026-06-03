@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
         raise
 
     # Créer dossiers storage si absents
-    for folder in ["storage/audio", "storage/temp"]:
+    for folder in ["storage/audio", "storage/images", "storage/temp"]:
         Path(folder).mkdir(parents=True, exist_ok=True)
 
     logger.info("🎉 Startup complete")
@@ -74,6 +74,10 @@ app = FastAPI(
 audio_path = Path("storage/audio")
 audio_path.mkdir(parents=True, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=str(audio_path)), name="audio")
+
+image_path = Path("storage/images")
+image_path.mkdir(parents=True, exist_ok=True)
+app.mount("/images", StaticFiles(directory=str(image_path)), name="images")
 
 # ── CORS ─────────────────────────────────────
 app.add_middleware(
@@ -125,6 +129,9 @@ from app.modules.promo_codes.router import router as promo_codes_router
 from app.modules.payments.router import router as payments_router
 from app.modules.plans.router import router as plans_router
 from app.modules.invoices.router import router as invoices_router
+from app.modules.corrections.router import router as corrections_router
+from app.modules.schreiben_simulator.router import router as simulator_router
+
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
@@ -137,16 +144,10 @@ app.include_router(promo_codes_router, prefix="/api/v1/promo-codes", tags=["prom
 app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(plans_router, prefix="/api/v1/plans", tags=["plans"])
 app.include_router(invoices_router, prefix="/api/v1/invoices", tags=["invoices"])
+app.include_router(corrections_router, prefix="/api/v1/corrections", tags=["corrections"])
+app.include_router( simulator_router,  prefix="/api/v1/schreiben-simulator",  tags=["Schreiben Simulator"])
 
-# À décommenter au fur et à mesure
-# from app.modules.exams.router import router as exams_router
-# from app.modules.payments.router import router as payments_router
-# from app.modules.exam_sessions.router import router as sessions_router
-# from app.modules.admin.router import router as admin_router
-# app.include_router(exams_router, prefix="/api/v1/exams", tags=["exams"])
-# app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
-# app.include_router(sessions_router, prefix="/api/v1/sessions", tags=["sessions"])
-# app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
+
 
 
 # ── Health ───────────────────────────────────

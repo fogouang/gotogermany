@@ -7,7 +7,7 @@
     >
       <div class="text-center">
         <ProgressSpinner style="width: 60px; height: 60px" />
-        <p class="mt-4 text-gray-600 text-sm">Chargement de la session...</p>
+        <p class="mt-4 text-gray-600 text-sm">{{ t("session.loading") }}</p>
       </div>
     </div>
 
@@ -22,10 +22,10 @@
             <i
               class="pi pi-exclamation-triangle text-5xl text-red-500 mb-4"
             ></i>
-            <h2 class="text-xl font-bold mb-2">Erreur</h2>
+            <h2 class="text-xl font-bold mb-2">{{ t("session.error") }}</h2>
             <p class="text-gray-600 mb-4">{{ sessionStore.error }}</p>
             <Button
-              label="Retour aux examens"
+              :label="t('session.back_to_exams')"
               @click="navigateTo('/dashboard/examens')"
             />
           </div>
@@ -38,7 +38,7 @@
       <!-- Header -->
       <SessionHeader
         :exam-name="sessionStore.examName"
-        :subject-info="`Sujet ${sessionStore.subjectNumber}`"
+        :subject-info="`${t('session.subject')} ${sessionStore.subjectNumber}`"
         :module-name="currentModule.name"
         :current-teil-index="currentTeilIndex"
         :teile="currentModule.teile"
@@ -95,30 +95,38 @@
     <!-- Dialog quitter -->
     <Dialog
       v-model:visible="exitDialogVisible"
-      header="Quitter l'examen ?"
+      :header="t('session.exit_title')"
       :modal="true"
       :style="{ width: '90vw', maxWidth: '420px' }"
     >
       <Message severity="warn" :closable="false" class="mb-4">
-        Vos réponses en cours seront perdues.
+        {{ t("session.exit_warning") }}
       </Message>
       <template #footer>
-        <Button label="Annuler" text @click="exitDialogVisible = false" />
-        <Button label="Quitter" severity="danger" @click="exitSession" />
+        <Button
+          :label="t('session.cancel')"
+          text
+          @click="exitDialogVisible = false"
+        />
+        <Button
+          :label="t('session.quit')"
+          severity="danger"
+          @click="exitSession"
+        />
       </template>
     </Dialog>
 
     <!-- Dialog soumettre -->
     <Dialog
       v-model:visible="submitDialogVisible"
-      header="Terminer l'examen ?"
+      :header="t('session.submit_title')"
       :modal="true"
       :style="{ width: '90vw', maxWidth: '420px' }"
     >
       <p class="mb-2">
-        Vous avez répondu à
+        {{ t("session.answered") }}
         <strong>{{ sessionStore.answeredQuestions }}</strong>
-        question(s) sur
+        {{ t("session.questions_of") }}
         <strong>{{ sessionStore.totalQuestions }}</strong
         >.
       </p>
@@ -128,12 +136,16 @@
         :closable="false"
         class="mb-2"
       >
-        Certaines questions sont sans réponse.
+        {{ t("session.unanswered_warning") }}
       </Message>
       <template #footer>
-        <Button label="Continuer" text @click="submitDialogVisible = false" />
         <Button
-          label="Soumettre"
+          :label="t('session.continue')"
+          text
+          @click="submitDialogVisible = false"
+        />
+        <Button
+          :label="t('session.submit')"
           severity="success"
           :loading="sessionStore.isSubmitting"
           @click="handleSubmit"
@@ -156,6 +168,7 @@ definePageMeta({ layout: false, middleware: "auth" });
 const route = useRoute();
 const session = useSession();
 const sessionStore = useSessionStore();
+const { t } = useI18n();
 
 const currentModuleIndex = ref(0);
 const currentTeilIndex = ref(0);
@@ -266,9 +279,13 @@ const handleSubmit = async () => {
   const result = await sessionStore.submitSession();
   if (result.success) {
     const slug = route.params.slug as string;
+    const moduleSlug = route.query.moduleSlug as string | undefined;
     navigateTo({
       path: `/dashboard/examens/${slug}/result`,
-      query: { sessionId: sessionStore.sessionId },
+      query: {
+        sessionId: sessionStore.sessionId,
+        ...(moduleSlug ? { moduleSlug } : {}),
+      },
     });
   }
 };
@@ -297,23 +314,32 @@ const stopTimer = () => {
 onMounted(async () => {
   const examId = route.query.examId as string;
   const subjectId = route.query.subjectId as string | undefined;
+  const moduleSlug = route.query.moduleSlug as string | undefined;
 
   if (!examId) {
     navigateTo("/dashboard/examens");
     return;
   }
 
-  // ✅ Reset avant de démarrer pour éviter la pollution du state précédent
   sessionStore.resetSession();
 
   const result = await session.startSession(examId, subjectId);
-  if (result.success) startTimer();
-});
-onUnmounted(() => stopTimer());
 
-onBeforeRouteLeave(() => {
-  if (sessionStore.sessionId && !sessionStore.isSubmitting) {
-    return confirm("Quitter ? Votre progression ne sera pas sauvegardée.");
+  // ── Si moduleSlug fourni → filtrer pour ne garder que ce module ──
+  if (result.success && moduleSlug) {
+    sessionStore.modules = sessionStore.modules.filter((m) =>
+      m.slug.toLowerCase().includes(moduleSlug.toLowerCase()),
+    );
+    // Réinitialiser les questions pour ne garder que celles du module filtré
+    const moduleIds = new Set(sessionStore.modules.map((m) => m.id));
+    sessionStore.questions = sessionStore.questions.filter((q) => {
+      // Garder les questions dont le teil appartient au module filtré
+      return sessionStore.modules.some((m) =>
+        m.teile?.some((t: any) => t.id === q.teil_id),
+      );
+    });
   }
+
+  if (result.success) startTimer();
 });
 </script>

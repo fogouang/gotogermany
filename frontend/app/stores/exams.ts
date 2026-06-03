@@ -158,5 +158,31 @@ export const useExamsStore = defineStore("exams", {
         this.loading = false;
       }
     },
+
+    async importTeilImages(
+      examId: string,
+      files: File[],
+      subjectNumber: number,
+    ) {
+      this._ensureApiConfig();
+      this.loading = true;
+      this.error = null;
+      try {
+        const result =
+          await ExamsService.importTeilImagesApiV1ExamsAdminExamIdTeilImagesPost(
+            examId,
+            {
+              files: files as any,
+              subject_number: subjectNumber,
+            },
+          );
+        return { success: true, data: result };
+      } catch (error: any) {
+        this.error = error.body?.detail || "Erreur lors de l'import images";
+        return { success: false, error: this.error };
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 });
