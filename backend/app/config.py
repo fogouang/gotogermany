@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     # AI Correction Configuration
     AI_PROVIDER: str = "gemini"  # Options: "grok", "gemini", "claude"
     # Gemini (Google)
-    GEMINI_API_KEY: str = "AIzaSyAN4j-KkcEKgRg2o9ehhkTnwxiDMJYfLhI"
+    
+    GEMINI_API_KEY: str = ""
 
     @property
     def origins(self) -> list[str]:
