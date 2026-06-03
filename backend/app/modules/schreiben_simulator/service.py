@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 class SchreibenSimulatorService:
 
     def __init__(self, db: AsyncSession):
+        self.db   = db
         self.repo = SchreibenSubjectRepository(db)
         self._ai  = None
 
