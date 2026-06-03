@@ -6,6 +6,7 @@ interface AuthState {
   user: AuthUserResponse | UserMeResponse | null;
   token: string | null;
   loading: boolean;
+  aiCredits: number,
 }
 
 export const useAuthStore = defineStore("auth", {
@@ -13,6 +14,7 @@ export const useAuthStore = defineStore("auth", {
     user: null,
     token: null,
     loading: false,
+    aiCredits:0
   }),
 
   getters: {
@@ -27,7 +29,7 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     _ensureApiConfig() {
       const config = useRuntimeConfig();
-      OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
+      OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8081";
       // Toujours setter le token depuis le cookie
       const tokenCookie = useCookie("access_token");
       if (tokenCookie.value) {
@@ -55,6 +57,7 @@ export const useAuthStore = defineStore("auth", {
         OpenAPI.TOKEN = response.access_token;
         this.token = response.access_token;
         this.user = response.user;
+        this.aiCredits = (response.user as any)?.ai_credits ?? 0 
 
         return { success: true, user: response.user };
       } catch (error: any) {
@@ -94,6 +97,7 @@ export const useAuthStore = defineStore("auth", {
         OpenAPI.TOKEN = response.access_token;
         this.token = response.access_token;
         this.user = response.user;
+        this.aiCredits = (response.user as any)?.ai_credits ?? 2
 
         return { success: true, user: response.user };
       } catch (error: any) {
@@ -124,6 +128,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const response = await UsersService.getMeApiV1UsersMeGet();
         this.user = response;
+        this.aiCredits = (response as any)?.ai_credits ?? 0
         this.token = tokenCookie.value;
       } catch (error) {
         console.error("Fetch user error:", error);
@@ -177,6 +182,7 @@ export const useAuthStore = defineStore("auth", {
       // Vider le state
       this.user = null;
       this.token = null;
+      this.aiCredits = 0
       OpenAPI.TOKEN = undefined;
 
       // Cookie côté client uniquement

@@ -28,7 +28,17 @@ async def get_me(current_user: CurrentUser):
     """Profil de l'utilisateur connecté."""
     return current_user
 
-
+@router.get("/me/credits", response_model=dict)
+async def get_my_credits(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Retourne le solde de crédits IA de l'utilisateur."""
+    return {
+        "ai_credits": current_user.ai_credits,
+        "can_correct": current_user.ai_credits > 0,
+    }
+    
 @router.patch("/me", response_model=UserMeResponse)
 async def update_me(
     data: UserUpdateRequest,

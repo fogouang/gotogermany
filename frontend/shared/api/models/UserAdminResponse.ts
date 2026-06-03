@@ -13,6 +13,7 @@ export type UserAdminResponse = {
     is_active: boolean;
     is_verified: boolean;
     created_at: string;
+    ai_credits?: number;
     is_admin: boolean;
     updated_at: string;
 };

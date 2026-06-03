@@ -86,21 +86,40 @@ class SchreibenSimulatorService:
     async def correct(
         self,
         request: SimulatorCorrectRequest,
-        user_id: uuid.UUID,                 
+        user_id: uuid.UUID,
     ) -> SimulatorCorrectResponse:
-        
-        """_summary_
+        """
         Lancer la correction IA depuis un sujet simulateur.
         Pas de session — les textes sont envoyés directement.
         """
+        # ── Vérifier et déduire le crédit ───────────────────
+        from app.modules.users.models import User
+        from app.shared.exceptions.http import ForbiddenException
+
+        user = await self.db.get(User, user_id)
+        if not user:
+            raise ValueError("Utilisateur introuvable.")
+
+        if user.ai_credits <= 0:
+            raise ForbiddenException(
+                detail="Vous n'avez plus de crédits IA. Achetez des crédits pour continuer."
+            )
+
+        # Déduire 1 crédit avant l'appel IA
+        user.ai_credits -= 1
+        await self.db.flush()
+
+        # ── Correction ────────────────────────────────────────
         subject = await self.repo.get_by_id(request.subject_id)
         if not subject:
+            await self.db.rollback()
             raise ValueError(f"Sujet {request.subject_id} introuvable.")
         if not subject.is_active:
+            await self.db.rollback()
             raise ValueError("Ce sujet n'est plus disponible.")
 
         self._validate_task_count(subject.provider, subject.level, len(request.task_texts))
-        tasks = self._build_tasks(subject, request.task_texts)
+        tasks  = self._build_tasks(subject, request.task_texts)
         prompt = build_correction_prompt(
             provider=subject.provider,
             level=subject.level,
@@ -108,11 +127,21 @@ class SchreibenSimulatorService:
         )
 
         logger.info(f"Simulateur — correction {subject.provider.upper()} {subject.level.upper()}: {subject.title}")
-        ai_result = await self.ai.correct(prompt)
+
+        try:
+            ai_result = await self.ai.correct(prompt)
+        except Exception as e:
+            # ── Rembourser le crédit si l'IA échoue ─────────
+            user.ai_credits += 1
+            await self.db.flush()
+            logger.error(f"Erreur IA — crédit remboursé pour user {user_id}: {e}")
+            raise e
+
         response = self._build_response(subject, ai_result)
 
         # ── Persister le résultat ────────────────────────────
         await self.repo.save_result(user_id, response)
+        await self.db.commit()
 
         return response
 

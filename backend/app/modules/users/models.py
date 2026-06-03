@@ -4,7 +4,7 @@ app/modules/users/models.py
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, Text
+from sqlalchemy import Integer, String, Boolean, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -46,6 +46,14 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     exam_sessions: Mapped[list["ExamSession"]] = relationship(
         "ExamSession", back_populates="user", lazy="noload"
+    )
+    
+    ai_credits: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=2,  # 2 crédits offerts à l'inscription
+        server_default="2",
+        doc="Crédits IA disponibles pour les corrections Schreiben"
     )
 
     def __repr__(self) -> str:

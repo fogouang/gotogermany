@@ -58,6 +58,27 @@ export class UsersService {
         });
     }
     /**
+     * Get My Credits
+     * Retourne le solde de crédits IA de l'utilisateur.
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static getMyCreditsApiV1UsersMeCreditsGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Record<string, any>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/me/credits',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Change Password
      * Changement de mot de passe.
      * @param requestBody

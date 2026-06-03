@@ -224,11 +224,13 @@ export const useSimulatorStore = defineStore("simulator", {
       try {
         this.correction =
           await SchreibenSimulatorService.correctSubmissionApiV1SchreibenSimulatorCorrectPost(
-            {
-              subject_id: subjectId,
-              task_texts: taskTexts,
-            },
+            { subject_id: subjectId, task_texts: taskTexts },
           );
+
+        // ← Décrémenter le crédit après succès
+        const authStore = useAuthStore();
+        authStore.aiCredits = Math.max(0, authStore.aiCredits - 1);
+
         return { success: true };
       } catch (e: any) {
         this.correctionError =

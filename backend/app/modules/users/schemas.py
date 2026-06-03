@@ -80,6 +80,7 @@ class UserResponse(BaseSchema):
     is_active: bool
     is_verified: bool
     created_at: datetime
+    ai_credits: int = 0
 
 
 class UserAdminResponse(UserResponse):
