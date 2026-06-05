@@ -384,7 +384,7 @@
     "tips": "Tips for improvement",
     "back_to_exam": "Back to exam",
     "my_results": "View my results",
-    "page_title": "Schreiben Correction — DeutschTest"
+    "page_title": "Schreiben Correction  DeutschTest"
   },
   "invoices": {
     "title": "My payments",
@@ -510,7 +510,7 @@
     "tips": "Tips",
     "close": "Close",
     "redo": "Redo this subject",
-    "page_title": "Schreiben Simulator — DeutschTest"
+    "page_title": "Schreiben Simulator DeutschTest"
   },
   "simulator_result": {
     "no_correction": "No correction available.",
@@ -527,7 +527,7 @@
     "tips": "Tips for improvement",
     "redo": "Redo this subject",
     "choose_another": "Choose another subject",
-    "page_title": "Results — DeutschTest"
+    "page_title": "Results  DeutschTest"
   },
   "simulator_subject": {
     "words_written": "word(s) written",
@@ -546,7 +546,7 @@
     "retry": "Retry",
     "see_results": "View results",
     "back": "Back",
-    "page_title": "Simulator — DeutschTest"
+    "page_title": "Simulator  DeutschTest"
   },
   "profile": {
     "title": "My profile",
@@ -604,7 +604,7 @@
     "cta_title": "Can't find your answer?",
     "cta_desc": "Our team is here to help. Contact us and we'll get back to you as soon as possible.",
     "cta_btn": "Contact us",
-    "page_title": "FAQ - DeutschTest",
+    "page_title": "FAQ  DeutschTest",
     "page_desc": "Frequently asked questions about DeutschTest: exams, pricing, registration, preparation and technical support.",
     "questions": {
       "exams_1": {

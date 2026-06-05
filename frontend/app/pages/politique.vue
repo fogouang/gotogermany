@@ -36,7 +36,7 @@
         <div>
           <div class="flex items-start gap-3 mb-4">
             <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0"
+              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
             >
               <i class="pi pi-database text-white"></i>
             </div>
@@ -87,7 +87,7 @@
         <div>
           <div class="flex items-start gap-3 mb-4">
             <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0"
+              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
             >
               <i class="pi pi-cog text-white"></i>
             </div>
@@ -125,7 +125,7 @@
         <div>
           <div class="flex items-start gap-3 mb-4">
             <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0"
+              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
             >
               <i class="pi pi-share-alt text-white"></i>
             </div>
@@ -155,7 +155,7 @@
         <div>
           <div class="flex items-start gap-3 mb-4">
             <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0"
+              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
             >
               <i class="pi pi-user text-white"></i>
             </div>
@@ -210,7 +210,7 @@
         <div>
           <div class="flex items-start gap-3 mb-4">
             <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0"
+              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
             >
               <i class="pi pi-lock text-white"></i>
             </div>
@@ -240,11 +240,11 @@
 
         <!-- Contact -->
         <div
-          class="bg-gradient-to-br from-teal-50 to-teal-100 p-8 rounded-xl border-2 border-teal-200"
+          class="bg-linear-to-br from-teal-50 to-teal-100 p-8 rounded-xl border-2 border-teal-200"
         >
           <div class="flex items-start gap-3 mb-4">
             <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0"
+              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
             >
               <i class="pi pi-envelope text-white"></i>
             </div>

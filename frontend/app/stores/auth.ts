@@ -29,7 +29,7 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     _ensureApiConfig() {
       const config = useRuntimeConfig();
-      OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8081";
+      OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
       // Toujours setter le token depuis le cookie
       const tokenCookie = useCookie("access_token");
       if (tokenCookie.value) {

@@ -17,6 +17,7 @@ interface SimulatorState {
   loadingResults: boolean;
   error: string | null;
   correctionError: string | null;
+  originalAnswers: Record<string, string>;
 }
 
 export const useSimulatorStore = defineStore("simulator", {
@@ -30,6 +31,7 @@ export const useSimulatorStore = defineStore("simulator", {
     loadingResults: false,
     error: null,
     correctionError: null,
+    originalAnswers: {},
   }),
 
   getters: {
@@ -105,6 +107,19 @@ export const useSimulatorStore = defineStore("simulator", {
       OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
       const tokenCookie = useCookie("access_token");
       OpenAPI.TOKEN = tokenCookie.value ?? undefined;
+    },
+
+    loadResultIntoCorrection(result: SimulatorResultResponse) {
+      this.correction = {
+        subject_id: result.subject_id,
+        provider: result.provider,
+        level: result.level,
+        overall_score: result.overall_score,
+        max_score: result.max_score,
+        passed: result.passed,
+        score_percentage: result.score_percentage,
+        ...result.result_data,
+      } as any;
     },
 
     async fetchSubjects(provider?: string | null, level?: string | null) {
@@ -221,6 +236,13 @@ export const useSimulatorStore = defineStore("simulator", {
       this._ensureApiConfig();
       this.correcting = true;
       this.correctionError = null;
+
+      // Sauvegarder les textes originaux
+      this.originalAnswers = {};
+      taskTexts.forEach((text, i) => {
+        this.originalAnswers[`task${i + 1}`] = text;
+      });
+
       try {
         this.correction =
           await SchreibenSimulatorService.correctSubmissionApiV1SchreibenSimulatorCorrectPost(
