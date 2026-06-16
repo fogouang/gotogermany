@@ -120,18 +120,19 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const mainNav = [
-  { name: 'Dashboard', href: '/admin', icon: 'pi-chart-bar' },
-  { name: 'Utilisateurs', href: '/admin/users', icon: 'pi-users' },
-  { name: 'Examens', href: '/admin/exams', icon: 'pi-book' },
-  { name: 'Sessions', href: '/admin/sessions', icon: 'pi-list' },
-  { name: 'simulateur', href: '/admin/simulateur', icon: 'pi-book' },
-  { name: 'Plans', href: '/admin/plans', icon: 'pi-tag' },
-  { name: 'Paiements', href: '/admin/paiements', icon: 'pi-credit-card' }
+  { name: 'Dashboard',          href: '/admin',                   icon: 'pi-chart-bar'   },
+  { name: 'Utilisateurs',       href: '/admin/users',             icon: 'pi-users'       },
+  { name: 'Examens',            href: '/admin/exams',             icon: 'pi-book'        },
+  { name: 'Sessions',           href: '/admin/sessions',          icon: 'pi-list'        },
+  { name: 'Simulateur',         href: '/admin/simulateur',        icon: 'pi-desktop'     },
+  { name: 'Plans',              href: '/admin/plans',             icon: 'pi-tag'         },
+  { name: 'Paiements',          href: '/admin/paiements',         icon: 'pi-credit-card' },
+  { name: 'Paiements manuels',  href: '/admin/paiements-manuels', icon: 'pi-money-bill'  },
 ]
 
 const partnerNav = [
-  { name: 'Partenaires', href: '/admin/partners', icon: 'pi-building' },
-  { name: 'Codes Promo', href: '/admin/promo-code', icon: 'pi-tag' },
+  { name: 'Partenaires',  href: '/admin/partners',   icon: 'pi-building' },
+  { name: 'Codes Promo',  href: '/admin/promo-code', icon: 'pi-ticket'   },
 ]
 
 const configNav = [
@@ -139,19 +140,20 @@ const configNav = [
 ]
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
-  '/admin': { title: 'Dashboard', subtitle: "Vue d'ensemble de la plateforme" },
-  '/admin/users': { title: 'Utilisateurs', subtitle: 'Gestion des comptes et accès' },
-  '/admin/exams': { title: 'Examens', subtitle: 'Gestion du contenu' },
-  '/admin/sessions': { title: 'Sessions', subtitle: 'Historique des examens passés' },
-  '/admin/simulateur': { title: 'simulateur', subtitle: 'simulateur des examens' },
-  '/admin/partners': { title: 'Partenaires', subtitle: 'Centres et affiliés' },
-  '/admin/promo-code': { title: 'Codes Promo', subtitle: 'Gestion des réductions et commissions' },
-  '/admin/settings': { title: 'Paramètres', subtitle: 'Configuration de la plateforme' },
-  '/admin/plans': { title: 'Plans', subtitle: 'Configuration des prix' },
-  '/admin/paiements': { title: 'Factures', subtitle: 'Gestion des factures' },
+  '/admin':                    { title: 'Dashboard',          subtitle: "Vue d'ensemble de la plateforme"      },
+  '/admin/users':              { title: 'Utilisateurs',       subtitle: 'Gestion des comptes et accès'         },
+  '/admin/exams':              { title: 'Examens',            subtitle: 'Gestion du contenu'                   },
+  '/admin/sessions':           { title: 'Sessions',           subtitle: 'Historique des examens passés'        },
+  '/admin/simulateur':         { title: 'Simulateur',         subtitle: 'Simulateur des examens'               },
+  '/admin/partners':           { title: 'Partenaires',        subtitle: 'Centres et affiliés'                  },
+  '/admin/promo-code':         { title: 'Codes Promo',        subtitle: 'Gestion des réductions et commissions'},
+  '/admin/settings':           { title: 'Paramètres',         subtitle: 'Configuration de la plateforme'       },
+  '/admin/plans':              { title: 'Plans',              subtitle: 'Configuration des prix'                },
+  '/admin/paiements':          { title: 'Paiements',          subtitle: 'Gestion des factures'                 },
+  '/admin/paiements-manuels':  { title: 'Paiements manuels',  subtitle: 'Accès exam et crédits IA hors plateforme' },
 }
 
-const pageTitle = computed(() => pageMeta[route.path]?.title || 'Admin')
+const pageTitle    = computed(() => pageMeta[route.path]?.title    || 'Admin')
 const pageSubtitle = computed(() => pageMeta[route.path]?.subtitle || '')
 const adminInitial = computed(() => (authStore.userName || 'A').charAt(0).toUpperCase())
 </script>

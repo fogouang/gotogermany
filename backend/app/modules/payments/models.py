@@ -51,7 +51,7 @@ class Payment(Base, UUIDMixin, TimestampMixin):
     exam_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("exams.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
     promo_code_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -64,7 +64,7 @@ class Payment(Base, UUIDMixin, TimestampMixin):
     plan_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("plans.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
     # Montant original avant réduction (en FCFA, entier)

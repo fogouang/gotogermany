@@ -14,6 +14,7 @@ import app.modules.questions.models      # noqa: F401
 
 # Niveau 4 — dépend de users + exams + promo_codes + plans
 import app.modules.payments.models       # noqa: F401  ← après plans
+import app.modules.ai_credit_purchases.models  # noqa
 import app.modules.exam_access.models    # noqa: F401
 
 # Niveau 5 — dépend de users + exams + questions

@@ -18,6 +18,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.dependencies import CurrentAdmin, CurrentUser
 from app.modules.payments.schemas import (
+    ManualPaymentRequest,
+    ManualPaymentResponse,
+    PaymentAdminResponse,
     PaymentInitiateRequest,
     PaymentInitiateResponse,
     PaymentResponse,
@@ -125,3 +128,44 @@ async def get_summary(
     """Stats paiements — admin uniquement."""
     summary = await PaymentService(db).repo.get_summary()
     return PaymentSummaryResponse(**summary)
+
+
+
+@router.post(
+    "/admin/manual",
+    response_model=ManualPaymentResponse,
+    status_code=201,
+    summary="[Admin] Valider un paiement manuellement",
+)
+async def create_manual_payment(
+    data: ManualPaymentRequest,
+    current_admin: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Crée un paiement validé manuellement sans passer par My-CoolPay.
+
+    Cas d'usage :
+    - My-CoolPay indisponible
+    - Paiement par virement bancaire
+    - Paiement cash en présentiel
+    - Accès offert / correction admin
+
+    L'ExamAccess est créé immédiatement (même flow que le webhook).
+    La facture PDF est générée automatiquement.
+    """
+    result = await PaymentService(db).create_manual_payment(data, current_admin)
+    return ManualPaymentResponse(**result)
+
+
+@router.get("/admin/manual-list", response_model=list[PaymentAdminResponse])
+async def list_manual_payments(
+    _: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Liste tous les paiements manuels d'exam — admin uniquement.
+    operator=MANUAL + exam_id non null (exclut les crédits IA).
+    """
+    payments = await PaymentService(db).get_manual_payments()
+    return [PaymentAdminResponse.model_validate(p) for p in payments]

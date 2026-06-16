@@ -118,11 +118,11 @@
                           ? 'bg-green-500'
                           : 'bg-orange-400'
                       "
-                      :style="{ width: `${module.score_obtained ?? 0}%` }"
+                      :style="{ width: `${moduleScorePercent(module)}%` }"
                     />
                   </div>
                   <span class="text-sm font-bold text-gray-700 shrink-0">
-                    {{ module.score_obtained?.toFixed(0) ?? "—" }} / 100
+                    {{ module.score_obtained?.toFixed(1) ?? "—" }} / {{ module.max_score }}
                   </span>
                 </div>
               </div>
@@ -280,7 +280,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SessionResultResponse } from "#shared/api";
+import type { ModuleResultResponse, SessionResultResponse } from "#shared/api";
 
 definePageMeta({ layout: "dashboard", middleware: "auth" });
 
@@ -365,6 +365,11 @@ const getModuleIconColor = (s: string) => {
   if (s.includes("sprechen")) return "text-orange-500";
   return "text-gray-500";
 };
+
+const moduleScorePercent = (module: ModuleResultResponse): number => {
+  if (!module.score_obtained || !module.max_score) return 0
+  return Math.round((module.score_obtained / module.max_score) * 100)
+}
 
 // ── Chargement ───────────────────────────────────────────
 

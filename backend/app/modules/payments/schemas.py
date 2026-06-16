@@ -86,10 +86,12 @@ class PaymentResponse(BaseSchema):
     created_at: datetime
 
 class PaymentAdminResponse(PaymentResponse):
-    """Response étendue pour l'admin — inclut user et détails partenaire."""
     user_id: uuid.UUID
-    mycoolpay_ref: str | None
-    promo_code: str | None          # le code saisi, pas juste l'ID
+    user_email: str | None = None
+    user_name: str | None = None
+    exam_name: str | None = None
+    mycoolpay_ref: str | None = None
+    expires_at: str | None = None  # depuis ExamAccess       # le code saisi, pas juste l'ID
 
 
 class PaymentSummaryResponse(BaseSchema):
@@ -100,3 +102,26 @@ class PaymentSummaryResponse(BaseSchema):
     total_revenue: int              # somme amount_paid des COMPLETED
     total_discounts: int            # somme des réductions accordées
     total_commissions_due: float    # somme des commissions à verser
+    
+
+class ManualPaymentRequest(BaseSchema):
+    """Admin valide manuellement un accès exam (MyCoolPay indisponible, virement, cash)."""
+    user_id: uuid.UUID
+    exam_id: uuid.UUID
+    plan_id: uuid.UUID
+    note: str | None = Field(
+        None,
+        max_length=500,
+        description="Ex: 'Virement Orange Money reçu le 16/06/2026'",
+    )
+
+
+class ManualPaymentResponse(BaseSchema):
+    """Réponse après création d'un paiement manuel."""
+    payment_id: uuid.UUID
+    transaction_reference: str
+    user_id: uuid.UUID
+    exam_id: uuid.UUID
+    amount_paid: int
+    expires_at: datetime
+    note: str | None

@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.payments.models import Payment
 from app.modules.payments.mycoolpay import MyCoolPayClient
 from app.modules.payments.repository import PaymentRepository
-from app.modules.payments.schemas import PaymentInitiateRequest, WebhookPayload
+from app.modules.payments.schemas import ManualPaymentRequest, PaymentInitiateRequest, WebhookPayload
 from app.modules.users.models import User
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 
@@ -305,3 +305,89 @@ class PaymentService:
 
     async def get_my_payments(self, current_user: User) -> list[Payment]:
         return await self.repo.get_by_user(current_user.id)
+    
+
+
+
+    async def create_manual_payment(
+        self,
+        data: "ManualPaymentRequest",
+        admin: User,
+    ) -> dict:
+        """
+        Admin crée un paiement validé manuellement.
+        Utilisé quand My-CoolPay est indisponible (virement, cash, bon).
+
+        Steps :
+          1. Vérifier exam + plan
+          2. Créer Payment(COMPLETED, operator="MANUAL")
+          3. Appeler _grant_exam_access() directement
+          4. Générer facture
+        """
+        from datetime import datetime, timedelta, timezone
+        from app.modules.exams.models import Exam
+        from app.modules.plans.models import Plan
+
+        # 1. Vérifier exam
+        exam = await self.db.get(Exam, data.exam_id)
+        if not exam or not exam.is_active:
+            raise NotFoundException(resource="Exam", identifier=str(data.exam_id))
+
+        # 2. Vérifier plan
+        plan = await self.db.get(Plan, data.plan_id)
+        if not plan or not plan.is_active:
+            raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+
+        # 3. Générer référence (même pattern que MyCoolPay)
+        transaction_reference = await self.repo.generate_transaction_reference()
+        # Remplacer le préfixe pour identifier les paiements manuels
+        transaction_reference = transaction_reference.replace("GTG-", "GTG-M-", 1)
+
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(days=plan.duration_days)
+
+        # 4. Créer Payment COMPLETED directement
+        payment = await self.repo.create(
+            user_id=data.user_id,
+            exam_id=data.exam_id,
+            plan_id=data.plan_id,
+            promo_code_id=None,
+            amount_gross=plan.price,
+            amount_paid=plan.price,
+            commission_due=0.0,
+            currency="XAF",
+            payment_status="COMPLETED",
+            transaction_reference=transaction_reference,
+            operator="MANUAL",
+            completed_at=now,
+            # Note admin stockée dans mycoolpay_ref (champ nullable existant)
+            # — ou mieux : ajouter un champ `note` sur le modèle (voir PATCH 3)
+            mycoolpay_ref=None,
+        )
+
+        # 5. Accorder l'accès exam (même méthode que le webhook)
+        await self._grant_exam_access(payment)
+
+        # 6. Générer facture
+        await self._generate_invoice(payment)
+
+        logger.info(
+            f"Paiement manuel créé par admin {admin.id} "
+            f"pour user {data.user_id} — exam {data.exam_id} "
+            f"— ref {transaction_reference}"
+            + (f" — note: {data.note}" if data.note else "")
+        )
+
+        return {
+            "payment_id": payment.id,
+            "transaction_reference": transaction_reference,
+            "user_id": data.user_id,
+            "exam_id": data.exam_id,
+            "amount_paid": plan.price,
+            "expires_at": expires_at,
+            "note": data.note,
+        }
+        
+    async def get_manual_payments(self, limit: int = 20) -> list[Payment]:
+            """Liste les paiements manuels d'exam pour l'admin."""
+            return await self.repo.get_manual_payments(limit=limit)

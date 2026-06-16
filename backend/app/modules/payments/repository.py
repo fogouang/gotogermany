@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.payments.models import Payment
 from app.shared.database.repository import BaseRepository
+from app.modules.payments.schemas import PaymentResponse
 
 
 class PaymentRepository(BaseRepository[Payment]):
@@ -96,3 +97,33 @@ class PaymentRepository(BaseRepository[Payment]):
             "total_discounts": row.discounts,
             "total_commissions_due": row.commissions,
         }
+        
+    async def get_manual_payments(self, limit: int = 20) -> list[dict]:
+        from app.modules.users.models import User
+        from app.modules.exams.models import Exam
+        from app.modules.exam_access.models import ExamAccess
+
+        result = await self.db.execute(
+            select(Payment, User, Exam, ExamAccess)
+            .join(User, Payment.user_id == User.id)
+            .join(Exam, Payment.exam_id == Exam.id)
+            .outerjoin(ExamAccess, (ExamAccess.user_id == Payment.user_id) & (ExamAccess.exam_id == Payment.exam_id))
+            .where(
+                Payment.operator == "MANUAL",
+                Payment.exam_id.is_not(None),
+            )
+            .order_by(Payment.created_at.desc())
+            .limit(limit)
+        )
+        rows = result.all()
+        return [
+            {
+                **PaymentResponse.model_validate(payment).model_dump(),
+                "user_id": str(payment.user_id),
+                "user_email": user.email,
+                "user_name": user.full_name,
+                "exam_name": exam.name,
+                "expires_at": access.expires_at.isoformat() if access else None,
+            }
+            for payment, user, exam, access in rows
+        ]

@@ -330,14 +330,14 @@ onMounted(async () => {
     sessionStore.modules = sessionStore.modules.filter((m) =>
       m.slug.toLowerCase().includes(moduleSlug.toLowerCase()),
     );
-    // Réinitialiser les questions pour ne garder que celles du module filtré
-    const moduleIds = new Set(sessionStore.modules.map((m) => m.id));
-    sessionStore.questions = sessionStore.questions.filter((q) => {
-      // Garder les questions dont le teil appartient au module filtré
-      return sessionStore.modules.some((m) =>
+    sessionStore.questions = sessionStore.questions.filter((q) =>
+      sessionStore.modules.some((m) =>
         m.teile?.some((t: any) => t.id === q.teil_id),
-      );
-    });
+      ),
+    );
+    // Timer du module filtré
+    sessionStore.timeRemaining =
+      (sessionStore.modules[0]?.time_limit_minutes ?? 30) * 60;
   }
 
   if (result.success) startTimer();

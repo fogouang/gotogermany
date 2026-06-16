@@ -131,6 +131,7 @@ from app.modules.plans.router import router as plans_router
 from app.modules.invoices.router import router as invoices_router
 from app.modules.corrections.router import router as corrections_router
 from app.modules.schreiben_simulator.router import router as simulator_router
+from app.modules.ai_credit_purchases.router import router as ai_credits_router
 
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
@@ -146,6 +147,7 @@ app.include_router(plans_router, prefix="/api/v1/plans", tags=["plans"])
 app.include_router(invoices_router, prefix="/api/v1/invoices", tags=["invoices"])
 app.include_router(corrections_router, prefix="/api/v1/corrections", tags=["corrections"])
 app.include_router( simulator_router,  prefix="/api/v1/schreiben-simulator",  tags=["Schreiben Simulator"])
+app.include_router(ai_credits_router, prefix="/api/v1")
 
 
 

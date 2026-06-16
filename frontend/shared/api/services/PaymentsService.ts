@@ -2,6 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ManualPaymentRequest } from '../models/ManualPaymentRequest';
+import type { ManualPaymentResponse } from '../models/ManualPaymentResponse';
+import type { PaymentAdminResponse } from '../models/PaymentAdminResponse';
 import type { PaymentInitiateRequest } from '../models/PaymentInitiateRequest';
 import type { PaymentInitiateResponse } from '../models/PaymentInitiateResponse';
 import type { PaymentResponse } from '../models/PaymentResponse';
@@ -132,6 +135,62 @@ export class PaymentsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/payments/admin/summary',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * [Admin] Valider un paiement manuellement
+     * Crée un paiement validé manuellement sans passer par My-CoolPay.
+     *
+     * Cas d'usage :
+     * - My-CoolPay indisponible
+     * - Paiement par virement bancaire
+     * - Paiement cash en présentiel
+     * - Accès offert / correction admin
+     *
+     * L'ExamAccess est créé immédiatement (même flow que le webhook).
+     * La facture PDF est générée automatiquement.
+     * @param requestBody
+     * @param accessToken
+     * @returns ManualPaymentResponse Successful Response
+     * @throws ApiError
+     */
+    public static createManualPaymentApiV1PaymentsAdminManualPost(
+        requestBody: ManualPaymentRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<ManualPaymentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/payments/admin/manual',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Manual Payments
+     * Liste tous les paiements manuels d'exam — admin uniquement.
+     * operator=MANUAL + exam_id non null (exclut les crédits IA).
+     * @param accessToken
+     * @returns PaymentAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static listManualPaymentsApiV1PaymentsAdminManualListGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<PaymentAdminResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/payments/admin/manual-list',
             cookies: {
                 'access_token': accessToken,
             },
