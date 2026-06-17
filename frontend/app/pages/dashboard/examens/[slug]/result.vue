@@ -61,7 +61,7 @@
           <!-- Score global -->
           <div class="text-center shrink-0">
             <div class="text-4xl font-extrabold">
-              {{ result.score != null ? result.score.toFixed(0) : "—" }}
+              {{ result.score != null ? result.score.toFixed(0) : "-" }}
             </div>
             <div class="text-xs opacity-70 mt-0.5">
               / 100 · {{ t("result.min_score") }} {{ result.total_pass_score }}
@@ -122,7 +122,7 @@
                     />
                   </div>
                   <span class="text-sm font-bold text-gray-700 shrink-0">
-                    {{ module.score_obtained?.toFixed(1) ?? "—" }} / {{ module.max_score }}
+                    {{ module.score_obtained?.toFixed(1) ?? "-" }} / {{ module.max_score }}
                   </span>
                 </div>
               </div>
@@ -175,7 +175,7 @@
               ></i>
             </div>
             <h2 class="font-semibold text-gray-800">
-              {{ t("result.detail_title") }} — {{ module.name }}
+              {{ t("result.detail_title") }} - {{ module.name }}
             </h2>
           </div>
           <i
@@ -201,7 +201,7 @@
                 Teil {{ teil.teil_number }}
               </p>
               <span class="text-xs font-bold text-gray-600">
-                {{ teil.score_obtained?.toFixed(1) ?? "—" }} /
+                {{ teil.score_obtained?.toFixed(1) ?? "-" }} /
                 {{ teil.max_score }} pts
               </span>
             </div>
@@ -225,7 +225,7 @@
                 <div class="flex-1 min-w-0 text-sm">
                   <div class="flex flex-wrap gap-4 text-gray-600">
                     <span>
-                      Q{{ answer.question_number }} —
+                      Q{{ answer.question_number }} -
                       {{ t("result.your_answer") }} :
                       <strong class="text-gray-900">{{
                         formatAnswer(answer.user_answer)
@@ -338,7 +338,7 @@ const actualDuration = computed(() => {
 });
 
 const formatAnswer = (answer: Record<string, any> | null): string => {
-  if (!answer) return "—";
+  if (!answer) return "-";
   return answer.answer ?? answer.text ?? JSON.stringify(answer);
 };
 

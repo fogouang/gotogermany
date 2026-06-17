@@ -45,13 +45,11 @@ class ExamSessionService:
     async def start_session(
         self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None
         ) -> SessionStartResponse:
-        # 1. Vérifier accès
         await self.access_service.require_access(user_id, exam_id)
 
-        # 2. Session active existante → reprendre
         active = await self.repo.get_active_session(user_id, exam_id)
         if active:
-            subject = await self._load_subject_full(active.subject_id)  # ← fix
+            subject = await self._load_subject_full(active.subject_id)
             exam = await self._load_exam_by_subject(active.subject_id)
             modules_data = self._build_modules_content(subject)
             answers = await self.answer_repo.get_by_session(active.id)
@@ -72,14 +70,12 @@ class ExamSessionService:
                 existing_answers=existing,
             )
 
-        # 3. Choisir le sujet
         subject = await self._pick_subject(user_id, exam_id, subject_id)
-        subject = await self._load_subject_full(subject.id)  # ← fix
+        subject = await self._load_subject_full(subject.id)
         exam = await self.exam_repo.get_by_id(exam_id)
         if not exam:
             raise NotFoundException(resource="Exam", identifier=str(exam_id))
 
-        # 4. Créer une nouvelle session
         session = await self.repo.create(
             user_id=user_id,
             exam_id=exam_id,
@@ -100,9 +96,8 @@ class ExamSessionService:
             status=session.status,
             started_at=session.started_at,
             modules=modules_data,
-    )
-        
-        
+        )
+
     # ── Réponses ─────────────────────────────────────────
 
     async def submit_answer(
@@ -126,12 +121,10 @@ class ExamSessionService:
 
         is_correct = None
         score_obtained = None
-        correct_answer = None
 
         if question.is_auto_correctable:
             is_correct = self._auto_correct(question, data.user_answer)
             score_obtained = float(question.points) if is_correct else 0.0
-
             await self.answer_repo.update(
                 answer.id,
                 is_correct=is_correct,
@@ -143,7 +136,7 @@ class ExamSessionService:
             user_answer=data.user_answer,
             is_correct=is_correct,
             score_obtained=score_obtained,
-            correct_answer=correct_answer,
+            correct_answer=None,
         )
 
     async def submit_bulk_answers(
@@ -171,7 +164,8 @@ class ExamSessionService:
         subject = await self._load_subject_full(session.subject_id)
         exam = await self.exam_repo.get_by_id(session.exam_id)
 
-        score_breakdown, has_pending = self._compute_scores(subject, answers)
+        provider = exam.provider if exam else "TELC"
+        score_breakdown, has_pending = self._compute_scores(subject, answers, provider=provider)
 
         corrected_scores = [v for v in score_breakdown.values() if v is not None]
         global_score = (
@@ -254,9 +248,7 @@ class ExamSessionService:
 
     # ── Helpers privés ───────────────────────────────────
 
-    async def _get_session_or_403(
-        self, session_id: UUID, user_id: UUID
-    ) -> ExamSession:
+    async def _get_session_or_403(self, session_id: UUID, user_id: UUID) -> ExamSession:
         session = await self.repo.get_by_id(session_id)
         if not session:
             raise NotFoundException(resource="Session", identifier=str(session_id))
@@ -265,28 +257,21 @@ class ExamSessionService:
         return session
 
     async def _get_question(self, question_id: UUID) -> Question:
-        result = await self.db.execute(
-            select(Question).where(Question.id == question_id)
-        )
+        result = await self.db.execute(select(Question).where(Question.id == question_id))
         q = result.scalar_one_or_none()
         if not q:
             raise NotFoundException(resource="Question", identifier=str(question_id))
         return q
 
     async def _get_subject(self, subject_id: UUID) -> Subject:
-        result = await self.db.execute(
-            select(Subject).where(Subject.id == subject_id)
-        )
+        result = await self.db.execute(select(Subject).where(Subject.id == subject_id))
         return result.scalar_one_or_none()
 
     async def _get_level(self, level_id: UUID) -> Level | None:
-        result = await self.db.execute(
-            select(Level).where(Level.id == level_id)
-        )
+        result = await self.db.execute(select(Level).where(Level.id == level_id))
         return result.scalar_one_or_none()
 
     async def _load_subject_full(self, subject_id: UUID) -> Subject | None:
-        """Charge subject + modules + teile + questions."""
         result = await self.db.execute(
             select(Subject)
             .options(
@@ -299,7 +284,6 @@ class ExamSessionService:
         return result.scalar_one_or_none()
 
     async def _load_exam_by_subject(self, subject_id: UUID) -> Exam | None:
-        """Remonte exam depuis subject_id."""
         result = await self.db.execute(
             select(Exam)
             .join(Level, Level.exam_id == Exam.id)
@@ -308,22 +292,13 @@ class ExamSessionService:
         )
         return result.scalar_one_or_none()
 
-    async def _pick_subject(
-        self, user_id: UUID, exam_id: UUID, subject_id: UUID | None
-    ) -> Subject:
-        """
-        Choisit le sujet à jouer :
-        - Si subject_id fourni → utiliser ce sujet
-        - Sinon → prochain sujet non encore complété par ce user
-        - Si tous faits → revenir au premier
-        """
+    async def _pick_subject(self, user_id: UUID, exam_id: UUID, subject_id: UUID | None) -> Subject:
         if subject_id:
             subject = await self._get_subject(subject_id)
             if not subject:
                 raise NotFoundException(resource="Subject", identifier=str(subject_id))
             return subject
 
-        # Récupérer tous les subjects du level de cet exam
         result = await self.db.execute(
             select(Subject)
             .join(Level, Level.id == Subject.level_id)
@@ -338,19 +313,13 @@ class ExamSessionService:
                 identifier=f"Aucun sujet disponible pour l'exam {exam_id}"
             )
 
-        # Sujets déjà complétés par ce user
         done_ids = await self.repo.get_done_subject_ids(user_id, exam_id)
-
-        # Prochain sujet non fait
         for subject in all_subjects:
             if subject.id not in done_ids:
                 return subject
-
-        # Tous faits → revenir au premier
         return all_subjects[0]
 
     def _build_modules_content(self, subject: Subject) -> list[dict]:
-        """Construit la liste de modules pour SessionStartResponse."""
         modules = []
         for module in subject.modules:
             teile_data = []
@@ -399,7 +368,17 @@ class ExamSessionService:
         self,
         subject: Subject,
         answers: list[ExamSessionAnswer],
+        provider: str = "TELC",
     ) -> tuple[dict, bool]:
+        """
+        Calcule les scores par module selon le provider.
+
+        TELC  : (points_obtenus / points_max) × 100
+                Points configurés en DB : 5, 2.5, 1.5 selon module/teil.
+
+        Goethe : points_obtenus × 3.33, plafonné à 100
+                 Toutes questions valent 1 pt brut en DB.
+        """
         answer_map = {a.question_id: a for a in answers}
         score_breakdown = {}
         has_pending = False
@@ -428,9 +407,14 @@ class ExamSessionService:
                     for q in teil.questions
                 )
                 if total_points > 0:
-                    score_breakdown[module.slug] = round(
-                        (module_score / total_points) * 100, 2
-                    )
+                    if provider == "Goethe":
+                        score_breakdown[module.slug] = min(
+                            round(module_score * 3.33, 0), 100.0
+                        )
+                    else:
+                        score_breakdown[module.slug] = round(
+                            (module_score / total_points) * 100, 2
+                        )
                 else:
                     score_breakdown[module.slug] = 0.0
 
@@ -446,6 +430,7 @@ class ExamSessionService:
     ) -> SessionResultResponse:
         answer_map = {a.question_id: a for a in answers}
         modules_result = []
+        provider = exam.provider if exam else "TELC"
 
         for module in subject.modules:
             teil_results = []
@@ -486,11 +471,27 @@ class ExamSessionService:
                 ))
                 module_score += teil_score
 
+            # Convertir en score /100 selon le provider
+            if module_is_corrected:
+                total_points = sum(
+                    q.points
+                    for teil in module.teile
+                    for q in teil.questions
+                )
+                if provider == "Goethe":
+                    score_on_100 = min(round(module_score * 3.33, 0), 100.0)
+                else:
+                    score_on_100 = round(
+                        (module_score / total_points) * 100, 2
+                    ) if total_points > 0 else 0.0
+            else:
+                score_on_100 = None
+
             modules_result.append(ModuleResultResponse(
                 slug=module.slug,
                 name=module.name,
                 max_score=module.max_score,
-                score_obtained=round(module_score, 2) if module_is_corrected else None,
+                score_obtained=score_on_100,
                 is_corrected=module_is_corrected,
                 teile=teil_results,
             ))

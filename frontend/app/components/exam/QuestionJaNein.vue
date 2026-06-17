@@ -48,7 +48,7 @@
         <div 
           class="flex-1 p-4 border-2 rounded-lg cursor-pointer transition-all"
           :class="userAnswer === 'nein' 
-            ? 'border-green-500 bg-red-50' 
+            ? 'border-green-500 bg-green-50' 
             : 'border-gray-200 hover:border-green-300'"
           @click="selectAnswer('nein')"
         >

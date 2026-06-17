@@ -105,21 +105,21 @@
                     class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700"
                   >
                     <i class="pi pi-check-circle text-xs"></i>
-                    {{ level.cefr_code }} — {{ t('dashboard_exams.access_active') }}
+                    {{ level.cefr_code }} - {{ t('dashboard_exams.access_active') }}
                   </span>
                   <span
                     v-else-if="level.is_free"
                     class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-teal-50 text-teal-700"
                   >
                     <i class="pi pi-lock-open text-xs"></i>
-                    {{ level.cefr_code }} — {{ t('dashboard_exams.free') }}
+                    {{ level.cefr_code }} - {{ t('dashboard_exams.free') }}
                   </span>
                   <span
                     v-else
                     class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"
                   >
                     <i class="pi pi-lock text-xs"></i>
-                    {{ level.cefr_code }} — {{ t('dashboard_exams.premium') }}
+                    {{ level.cefr_code }} - {{ t('dashboard_exams.premium') }}
                   </span>
                 </div>
               </div>

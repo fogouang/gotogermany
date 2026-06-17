@@ -71,8 +71,8 @@
               class="flex-1 p-4 border-2 rounded-lg cursor-pointer transition-all"
               :class="
                 userAnswers[question.number] === 'falsch'
-                  ? 'border-red-500 bg-red-50'
-                  : 'border-gray-200 hover:border-red-300'
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-200 hover:border-gray-300'
               "
               @click="selectAnswer(question.number, 'falsch')"
             >

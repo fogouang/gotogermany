@@ -38,7 +38,7 @@
           <div>
             <p class="text-sm opacity-80 font-medium uppercase tracking-wide">
               {{ correction.provider.toUpperCase() }}
-              {{ correction.level.toUpperCase() }} — Schreiben
+              {{ correction.level.toUpperCase() }} - Schreiben
             </p>
             <h1 class="text-3xl font-bold mt-1">
               {{

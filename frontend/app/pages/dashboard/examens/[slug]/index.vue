@@ -52,7 +52,7 @@
             </div>
             <div class="flex-1">
               <p class="font-semibold text-gray-900">
-                {{ t('exam_detail.level_prefix') }} {{ level.cefr_code }} — {{ getLevelName(level.cefr_code) }}
+                {{ t('exam_detail.level_prefix') }} {{ level.cefr_code }} - {{ getLevelName(level.cefr_code) }}
               </p>
               <p class="text-xs text-gray-400">
                 {{ level.subjects?.length || 0 }} {{ t('exam_detail.subjects_count') }} ·

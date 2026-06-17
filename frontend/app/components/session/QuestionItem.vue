@@ -22,7 +22,7 @@
             answer?.answer === opt.value
               ? opt.value === 'richtig' || opt.value === 'ja'
                 ? 'border-green-500 bg-green-50 text-green-800'
-                : 'border-red-500 bg-red-50 text-red-800'
+                : 'border-green-500 bg-green-50 text-green-800'
               : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50',
           ]"
           @click="$emit('answer', { answer: opt.value })"
