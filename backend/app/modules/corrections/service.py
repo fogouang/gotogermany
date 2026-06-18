@@ -26,6 +26,7 @@ from app.modules.corrections.schemas import (
 )
 from app.modules.corrections.repository import CorrectionRepository
 from app.modules.corrections.ai_providers.gemini import GeminiProvider
+from app.modules.corrections.ai_providers.claude import ClaudeProvider
 from app.modules.corrections.prompts import (
     build_correction_prompt,
     get_max_score,
@@ -33,6 +34,9 @@ from app.modules.corrections.prompts import (
 )
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.modules.exams.models import Subject, Level, Exam, Module, Teil
+
+from app.config import get_settings
+settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +50,13 @@ class CorrectionService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = CorrectionRepository(db)
-        self.ai = GeminiProvider()
+        
+        # Choisir provider selon config (default: gemini avec fallback claude)
+        provider = settings.AI_PROVIDER
+        if provider == "claude":
+            self.ai = ClaudeProvider()
+        else:
+            self.ai = GeminiProvider()  # fallback Claude automatique si 503
 
     # ── Point d'entrée principal ─────────────────────────
 

@@ -20,22 +20,29 @@ from app.modules.schreiben_simulator.schemas import (
 )
 from app.modules.schreiben_simulator.repository import SchreibenSubjectRepository
 from app.modules.corrections.ai_providers.gemini import GeminiProvider
+from app.modules.corrections.ai_providers.claude import ClaudeProvider
 from app.modules.corrections.prompts import build_correction_prompt, get_max_score, TaskData
+from app.config import get_settings
 
+settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
 class SchreibenSimulatorService:
 
+
     def __init__(self, db: AsyncSession):
         self.db   = db
         self.repo = SchreibenSubjectRepository(db)
-        self._ai  = None
+
+        provider = settings.AI_PROVIDER
+        if provider == "claude":
+            self._ai = ClaudeProvider()
+        else:
+            self._ai = GeminiProvider()
 
     @property
-    def ai(self) -> GeminiProvider:
-        if self._ai is None:
-            self._ai = GeminiProvider()
+    def ai(self):
         return self._ai
     
     # ── Lecture ──────────────────────────────────────────
