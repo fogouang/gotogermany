@@ -39,7 +39,7 @@ mixed_richtig_falsch_qcm (Hören Teil 1) :
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import uuid
-from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint,Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
@@ -81,7 +81,7 @@ class Question(Base, UUIDMixin, TimestampMixin):
     correct_answer: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
     # Points attribués à cette question
-    points: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    points: Mapped[float] = mapped_column(Float, nullable=False, default=1)
 
     # Chemin relatif vers l'audio si la question nécessite un fichier audio
     # ex: "horen/teil1/audio1.mp3"  — NULL si pas d'audio

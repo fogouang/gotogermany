@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="h-screen bg-gray-50 flex flex-col overflow-hidden">
     <!-- Loading -->
     <div
       v-if="sessionStore.loading"
@@ -35,8 +35,9 @@
 
     <!-- Session active -->
     <template v-else-if="sessionStore.sessionId && currentModule">
-      <!-- Header -->
+      <!-- Header — sticky, ne scroll jamais -->
       <SessionHeader
+        class="shrink-0"
         :exam-name="sessionStore.examName"
         :subject-info="`${t('session.subject')} ${sessionStore.subjectNumber}`"
         :module-name="currentModule.name"
@@ -46,8 +47,8 @@
         @exit="exitDialogVisible = true"
       />
 
-      <!-- Tabs modules -->
-      <div class="bg-white border-b border-gray-200">
+      <!-- Tabs modules — sticky, ne scroll jamais -->
+      <div class="shrink-0 bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 flex gap-0 overflow-x-auto">
           <button
             v-for="(mod, mi) in sessionStore.modules"
@@ -55,7 +56,7 @@
             :class="[
               'px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
               mi === currentModuleIndex
-                ? 'border-teal-600 text-teal-700'
+                ? 'border-primary-600 text-primary-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700',
             ]"
             @click="goToModule(mi)"
@@ -66,8 +67,8 @@
         </div>
       </div>
 
-      <!-- Vue du Teil courant -->
-      <div class="flex-1 overflow-auto">
+      <!-- Vue du Teil courant — seule zone scrollable -->
+      <div class="flex-1 overflow-y-auto min-h-0">
         <component
           :is="currentView"
           :key="`${currentModuleIndex}-${currentTeilIndex}`"
@@ -80,8 +81,9 @@
         />
       </div>
 
-      <!-- Footer navigation -->
+      <!-- Footer navigation — sticky, ne scroll jamais -->
       <SessionFooter
+        class="shrink-0"
         :is-first-teil="isFirstTeil"
         :is-last-teil="isLastTeil && isLastModule"
         :answered-in-teil="answeredInCurrentTeil"
@@ -110,7 +112,7 @@
         />
         <Button
           :label="t('session.quit')"
-          severity="danger"
+          severity="warn"
           @click="exitSession"
         />
       </template>

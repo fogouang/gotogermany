@@ -15,7 +15,7 @@
             {{ examName }}
           </p>
           <p class="text-xs text-gray-500 leading-tight">
-            {{ moduleName }} — {{ teilLabel }}
+            {{ moduleName }} - {{ teilLabel }}
           </p>
         </div>
       </div>

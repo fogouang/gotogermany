@@ -37,7 +37,7 @@ class AnswerDetailResponse(BaseSchema):
     correct_answer: dict[str, Any] | None
     is_correct: bool | None
     score_obtained: float | None
-    points_possible: int
+    points_possible: float
     feedback: dict[str, Any] | None
     corrected_at: datetime | None
 

@@ -1,9 +1,9 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-0 min-h-[calc(100vh-7rem)]">
+  <div class="flex flex-col lg:flex-row gap-0 lg:h-[calc(100vh-7rem)]">
     <!-- Colonne gauche : texte stimulus -->
     <div
       v-if="hasStimulus"
-      class="lg:w-1/2 bg-gray-50 border-r border-gray-200 overflow-y-auto"
+      class="lg:w-1/2 bg-gray-50 border-r border-gray-200 overflow-y-auto lg:min-h-0"
     >
       <div class="p-6 mx-auto">
         <!-- Instructions -->
@@ -31,12 +31,32 @@
         >
           {{ teil.config.article_title }}
         </h3>
-        <!-- Stimulus text simple -->
+        <!-- Stimulus text simple (teil.config) -->
         <div
           v-if="stimulusText"
           class="prose prose-sm text-gray-800 leading-relaxed"
           v-html="formatText(stimulusText)"
         />
+
+        <!-- ✅ NOUVEAU : zuordnung_titre — texte stimulus par question -->
+        <div
+          v-if="teil.format_type === 'zuordnung_titre'"
+          class="space-y-5 mt-2"
+        >
+          <div
+            v-for="q in questions"
+            :key="`stimulus-${q.id}`"
+            class="bg-white border border-gray-200 rounded-lg p-4"
+          >
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+              Text {{ q.question_number }}
+            </p>
+            <div
+              class="prose prose-sm text-gray-800 leading-relaxed"
+              v-html="formatText(q.content?.stimulus_text || '')"
+            />
+          </div>
+        </div>
 
         <!-- Article (lueckentext_saetze) -->
         <div v-if="teil.format_type === 'lueckentext_saetze'" class="space-y-2">
@@ -67,7 +87,6 @@
             class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4"
           >
             <div class="flex gap-3 sm:gap-4 items-start">
-              <!-- Image — petite sur mobile, normale sur desktop -->
               <img
                 v-if="person?.image"
                 :src="`${apiBase}/images/${person.image}`"
@@ -83,7 +102,6 @@
                 </span>
               </div>
 
-              <!-- Texte -->
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-gray-900 mb-1 text-sm sm:text-base">
                   {{ String(key).toLowerCase() }}) {{ person.name }}
@@ -177,7 +195,7 @@
     </div>
 
     <!-- Colonne droite : questions -->
-    <div :class="['overflow-y-auto', hasStimulus ? 'lg:w-1/2' : 'w-full']">
+    <div :class="['overflow-y-auto lg:min-h-0', hasStimulus ? 'lg:w-1/2' : 'w-full']">
       <div class="p-6 max-w-2xl mx-auto space-y-6">
         <!-- Instructions si pas de stimulus -->
         <div
@@ -196,7 +214,6 @@
             :key="ti"
             class="space-y-4"
           >
-            <!-- Image du bloc texte -->
             <div v-if="textBlock?.image" class="mb-2">
               <img
                 :src="`${apiBase}/images/${textBlock.image}`"
@@ -222,6 +239,62 @@
                   (val: Record<string, any>) => $emit('answer', q.id, val)
                 "
               />
+            </div>
+          </div>
+        </template>
+
+        <!-- ✅ zuordnung_titre : on n'affiche QUE le choix de titre ici,
+             le stimulus_text est déjà dans la colonne gauche -->
+        <template v-else-if="teil.format_type === 'zuordnung_titre'">
+          <div
+            v-for="q in questions"
+            :key="q.id"
+            :class="[
+              'bg-white border rounded-xl p-5 transition-all scroll-mt-4',
+              answers[q.id] ? 'border-primary-300' : 'border-gray-200',
+            ]"
+            :id="`question-${q.id}`"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Text {{ q.question_number }}
+              </span>
+              <span class="text-xs text-gray-400">{{ q.points }} pt(s)</span>
+            </div>
+            <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
+              Choisissez le titre correspondant :
+            </p>
+            <div class="grid grid-cols-1 gap-2">
+              <button
+                v-for="(titre, key) in q.content?.titres"
+                :key="key"
+                :class="[
+                  'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
+                  answers[q.id]?.user_answer?.answer === String(key)
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
+                ]"
+                @click="$emit('answer', q.id, { answer: String(key) })"
+              >
+                <span
+                  :class="[
+                    'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
+                    answers[q.id]?.user_answer?.answer === String(key)
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white border-2 border-gray-300 text-gray-500',
+                  ]"
+                  >{{ String(key).toUpperCase() }}</span
+                >
+                <span
+                  :class="
+                    answers[q.id]?.user_answer?.answer === String(key)
+                      ? 'font-medium text-primary-900'
+                      : 'text-gray-700'
+                  "
+                >
+                  {{ titre }}
+                </span>
+              </button>
             </div>
           </div>
         </template>
@@ -278,6 +351,7 @@ const hasStimulus = computed(() => {
     t.format_type === "zuordnung_personen" ||
     t.format_type === "zuordnung_meinungen" ||
     t.format_type === "zuordnung_paragraphen" ||
+    t.format_type === "zuordnung_titre" || // ✅ ajouté — active la colonne gauche
     t.format_type === "lueckentext_saetze"
   );
 });

@@ -112,40 +112,40 @@
     </div>
 
     <!-- zuordnung_titre -->
-    <div v-else-if="question.question_type === 'zuordnung_titre'">
-      <div
-        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
+<div v-else-if="question.question_type === 'zuordnung_titre'">
+  <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed">
+    {{ question.content.stimulus_text }}
+  </div>
+  <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
+    Choisissez le titre correspondant :
+  </p>
+  <div class="grid grid-cols-1 gap-2">
+    <button
+      v-for="(titre, key) in question.content.titres"
+      :key="key"
+      :class="[
+        'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
+        answer?.answer === String(key)
+          ? 'border-primary-500 bg-primary-50'
+          : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
+      ]"
+      @click="$emit('answer', { answer: String(key) })"
+    >
+      <span
+        :class="[
+          'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
+          answer?.answer === String(key)
+            ? 'bg-primary-600 text-white'
+            : 'bg-white border-2 border-gray-300 text-gray-500',
+        ]"
+        >{{ String(key).toUpperCase() }}</span
       >
-        {{ question.content.stimulus_text }}
-      </div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Choisissez le titre correspondant :
-      </p>
-      <div class="grid grid-cols-1 gap-2">
-        <button
-          v-for="(titre, key) in question.content.titres"
-          :key="key"
-          :class="[
-            'w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm transition-all flex items-start gap-3',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
-        >
-          <span
-            :class="[
-              'shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-              answer?.answer === String(key)
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-600',
-            ]"
-            >{{ String(key).toUpperCase() }}</span
-          >
-          <span>{{ titre }}</span>
-        </button>
-      </div>
-    </div>
+      <span :class="answer?.answer === String(key) ? 'font-medium text-primary-900' : 'text-gray-700'">
+        {{ titre }}
+      </span>
+    </button>
+  </div>
+</div>
 
     <!-- selektives_matching -->
     <div v-else-if="question.question_type === 'selektives_matching'">
