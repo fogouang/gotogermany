@@ -411,6 +411,7 @@ const canCorrect = computed(() =>
 const launchCorrection = async () => {
   store.clearCorrection();
   await store.correct(subjectId, answers.value);
+  await authStore.fetchUser();  
 };
 
 const goToResults = () =>
