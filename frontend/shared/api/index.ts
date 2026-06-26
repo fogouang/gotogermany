@@ -121,5 +121,6 @@ export { PromoCodesService } from './services/PromoCodesService';
 export { QuestionsService } from './services/QuestionsService';
 export { SchreibenSimulatorService } from './services/SchreibenSimulatorService';
 export { SessionsService } from './services/SessionsService';
+export { SettingsService } from './services/SettingsService';
 export { SystemService } from './services/SystemService';
 export { UsersService } from './services/UsersService';

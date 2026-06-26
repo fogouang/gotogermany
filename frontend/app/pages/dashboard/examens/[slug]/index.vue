@@ -104,7 +104,7 @@
             <div class="flex-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <p class="font-bold text-gray-900">
-                  {{ t("exam_detail.level_prefix") }} {{ level.cefr_code }} -
+                  {{ t("exam_detail.level_prefix") }} {{ level.cefr_code }} —
                   {{ getLevelName(level.cefr_code) }}
                 </p>
                 <!-- Badge accès -->
@@ -128,7 +128,7 @@
             <Button
               v-if="!hasAccess(level)"
               :label="t('exam_detail.subscribe')"
-              icon="pi pi-credit-card"
+              icon="pi pi-crown"
               size="small"
               class="shrink-0"
               @click="goToPayment(level)"
@@ -269,7 +269,7 @@
             <div
               class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0"
             >
-              <i class="pi pi-lock text-teal-600"></i>
+              <i class="pi pi-crown text-teal-600"></i>
             </div>
             <div class="flex-1">
               <p class="text-sm font-semibold text-gray-800">
@@ -286,6 +286,7 @@
               icon="pi pi-arrow-right"
               iconPos="right"
               size="small"
+              severity="info"
               @click="goToPayment(level)"
             />
           </div>
@@ -306,6 +307,7 @@ definePageMeta({ layout: "dashboard", middleware: "auth" });
 const { t } = useI18n();
 const route = useRoute();
 const examsStore = useExamsStore();
+const appStore = useAppStore();
 const slug = computed(() => route.params.slug as string);
 
 const { pending } = await useAsyncData(
@@ -319,10 +321,7 @@ const { pending } = await useAsyncData(
         : Promise.resolve(),
     ]);
   },
-  {
-    server: false,
-    watch: [slug],
-  },
+  { server: false, watch: [slug] },
 );
 
 const exam = computed<ExamDetailResponse | null>(() => examsStore.currentExam);
@@ -342,21 +341,18 @@ const totalSubjects = computed(
     ) ?? 0,
 );
 
-// Vérifie si l'user a un accès payant à ce level via le catalogue
 const hasAccess = (level: LevelWithSubjectsResponse): boolean => {
   const catalogExam = examsStore.catalog.find((e) => e.slug === slug.value);
   const catalogLevel = catalogExam?.levels?.find((l) => l.id === level.id);
   return catalogLevel?.has_access ?? false;
 };
 
-// Les 3 premiers sujets sont toujours gratuits
 const isSubjectFree = (subject: any): boolean => {
-  return subject.subject_number <= 3;
-};
+  return subject.subject_number <= 3
+}
 
 const goToSubject = (level: LevelWithSubjectsResponse, subject: any) => {
   if (!exam.value) return;
-  // Bloquer uniquement si sujet > 3 ET pas d'accès payant
   if (!isSubjectFree(subject) && !hasAccess(level)) {
     goToPayment(level);
     return;
@@ -370,8 +366,6 @@ const goToSubject = (level: LevelWithSubjectsResponse, subject: any) => {
 const goToPayment = (level: LevelWithSubjectsResponse) => {
   navigateTo(`/dashboard/paiement?level_id=${level.id}`);
 };
-
-// ── Helpers UI ───────────────────────────────────────────────
 
 const getLevelName = (code: string) =>
   t(`exam_detail.level_names.${code}`) ?? code;

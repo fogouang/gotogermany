@@ -30,10 +30,10 @@ export const useAdminUsersStore = defineStore("adminUsers", {
       try {
         const data = await UsersService.listUsersApiV1UsersGet();
         this.users = data;
-        return { success: true }
+        return { success: true };
       } catch (error: any) {
         this.error = error.body?.detail || "Erreur chargement users";
-        return { success: false, error: this.error }
+        return { success: false, error: this.error };
       } finally {
         this.loading = false;
       }
@@ -42,12 +42,15 @@ export const useAdminUsersStore = defineStore("adminUsers", {
     async toggleActive(userId: string) {
       this._ensureApiConfig();
       try {
-        const updated = await UsersService.toggleActiveApiV1UsersUserIdToggleActivePatch(userId);
-        const index = this.users.findIndex(u => u.id === userId);
+        const updated =
+          await UsersService.toggleActiveApiV1UsersUserIdToggleActivePatch(
+            userId,
+          );
+        const index = this.users.findIndex((u) => u.id === userId);
         if (index !== -1) this.users[index] = updated;
-        return { success: true }
+        return { success: true };
       } catch (error: any) {
-        return { success: false, error: error.body?.detail }
+        return { success: false, error: error.body?.detail };
       }
     },
 
@@ -55,22 +58,35 @@ export const useAdminUsersStore = defineStore("adminUsers", {
       this._ensureApiConfig();
       try {
         await UsersService.deleteUserApiV1UsersUserIdDelete(userId);
-        this.users = this.users.filter(u => u.id !== userId);
-        return { success: true }
+        this.users = this.users.filter((u) => u.id !== userId);
+        return { success: true };
       } catch (error: any) {
-        return { success: false, error: error.body?.detail }
+        return { success: false, error: error.body?.detail };
       }
     },
 
-    async grantAccess(userId: string, examId: string) {
+    async grantAccess(userId: string, levelId: string) {
       this._ensureApiConfig();
       try {
         await ExamAccessService.adminGrantAccessApiV1AccessAdminGrantPost(
-          userId, examId
+          userId,
+          levelId, 
         );
-        return { success: true }
+        return { success: true };
       } catch (error: any) {
-        return { success: false, error: error.body?.detail }
+        return { success: false, error: error.body?.detail };
+      }
+    },
+
+    async grantAllAccess(userId: string) {
+      this._ensureApiConfig();
+      try {
+        await ExamAccessService.adminGrantAllLevelsApiV1AccessAdminGrantAllUserIdPost(
+          userId,
+        );
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.body?.detail };
       }
     },
   },

@@ -1,6 +1,7 @@
 # Niveau 0 — pas de FK vers d'autres modèles custom
 import app.modules.users.models          # noqa: F401
 import app.modules.partners.models       # noqa: F401
+import app.modules.settings.models
 
 # Niveau 1 — dépend de partners
 import app.modules.promo_codes.models    # noqa: F401

@@ -174,6 +174,10 @@ class ExamAccessService:
         - has_access : user a un ExamAccess pour ce level
         - subject_count : nb de sujets disponibles
         """
+        # Vérifier le mode accès libre
+        from app.modules.settings.service import AppSettingsService
+        free_access_mode = await AppSettingsService(self.db).is_free_access_mode()
+
         user_accesses = await self.repo.get_all_by_user(user_id)
         # Indexer par level_id
         accessible_level_ids = {a.level_id for a in user_accesses}
@@ -197,8 +201,8 @@ class ExamAccessService:
         for exam in exams:
             levels = []
             for level in exam.levels:
-                # Accès si level payé — les 3 premiers sujets sont libres par défaut
-                has_access = level.id in accessible_level_ids
+                # Si free_access_mode → tout le monde a accès complet
+                has_access = free_access_mode or (level.id in accessible_level_ids)
                 levels.append(
                     LevelAccessResponse(
                         id=level.id,
@@ -222,3 +226,16 @@ class ExamAccessService:
                 )
             )
         return catalog
+    
+    
+    async def check_subject_access(
+        self, user_id: UUID, subject: Subject
+    ) -> bool:
+        # Vérifier le mode accès libre
+        from app.modules.settings.service import AppSettingsService
+        if await AppSettingsService(self.db).is_free_access_mode():
+            return True
+        # Logique normale
+        if subject.subject_number <= 3:
+            return True
+        return await self.repo.user_has_access(user_id, subject.level_id)
