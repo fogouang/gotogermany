@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type PaymentAdminResponse = {
     id: string;
-    exam_id: string;
+    level_id: string;
     plan_id: string;
     promo_code_id: (string | null);
     amount_gross: number;
@@ -20,8 +20,8 @@ export type PaymentAdminResponse = {
     user_id: string;
     user_email?: (string | null);
     user_name?: (string | null);
-    exam_name?: (string | null);
-    mycoolpay_ref?: (string | null);
+    level_name?: (string | null);
+    pawapay_deposit_id?: (string | null);
     expires_at?: (string | null);
 };
 

@@ -103,6 +103,7 @@ class SessionResultResponse(BaseSchema):
     duration_seconds: int | None
     modules: list[ModuleResultResponse] = []
     result_message: str | None
+    module_passed: bool | None = None 
 
 
 class ActiveSessionResponse(BaseSchema):

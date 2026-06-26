@@ -29,7 +29,7 @@ export type { CreditPurchaseHistoryResponse } from './models/CreditPurchaseHisto
 export type { CreditPurchaseRequest } from './models/CreditPurchaseRequest';
 export type { CreditPurchaseResponse } from './models/CreditPurchaseResponse';
 export type { ExamAccessResponse } from './models/ExamAccessResponse';
-export type { ExamAccessWithExamResponse } from './models/ExamAccessWithExamResponse';
+export type { ExamAccessWithLevelResponse } from './models/ExamAccessWithLevelResponse';
 export type { ExamCatalogResponse } from './models/ExamCatalogResponse';
 export type { ExamCreateRequest } from './models/ExamCreateRequest';
 export type { ExamDetailResponse } from './models/ExamDetailResponse';
@@ -103,7 +103,7 @@ export type { TeilResultResponse } from './models/TeilResultResponse';
 export type { TeilUpdateRequest } from './models/TeilUpdateRequest';
 export type { UserAdminResponse } from './models/UserAdminResponse';
 export type { UserChangePasswordRequest } from './models/UserChangePasswordRequest';
-export type { UserExamsResponse } from './models/UserExamsResponse';
+export type { UserLevelsResponse } from './models/UserLevelsResponse';
 export type { UserMeResponse } from './models/UserMeResponse';
 export type { UserUpdateRequest } from './models/UserUpdateRequest';
 export type { ValidationError } from './models/ValidationError';

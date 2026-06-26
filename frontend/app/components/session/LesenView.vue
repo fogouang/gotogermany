@@ -3,12 +3,12 @@
     <!-- Colonne gauche : texte stimulus -->
     <div
       v-if="hasStimulus"
-      class="lg:w-1/2 bg-gray-50 border-r border-gray-200 overflow-y-auto lg:min-h-0"
+      class="lg:w-1/2 bg-white shadow-sm border-r border-gray-200 overflow-y-auto lg:min-h-0"
     >
       <div class="p-6 mx-auto">
         <!-- Instructions -->
-        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p class="text-sm text-blue-800 font-medium">
+        <div class="mb-4 p-3 bg-green-50 border border-blue-200 rounded-lg">
+          <p class="text-sm text-green-600 font-medium">
             {{ teil.instructions }}
           </p>
         </div>
@@ -202,7 +202,7 @@
           v-if="!hasStimulus"
           class="p-3 bg-blue-50 border border-blue-200 rounded-lg"
         >
-          <p class="text-sm text-blue-800 font-medium">
+          <p class="text-sm text-green-800 font-medium">
             {{ teil.instructions }}
           </p>
         </div>
@@ -230,7 +230,7 @@
             <div
               v-for="q in getQuestionsForText(textBlock)"
               :key="q.id"
-              class="bg-white border border-gray-200 rounded-xl p-5"
+              class="bg-white shadow-md border border-gray-200 rounded-xl p-5"
             >
               <QuestionItem
                 :question="q"

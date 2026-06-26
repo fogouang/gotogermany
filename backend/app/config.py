@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     DEBUG: bool = True
     ALLOWED_ORIGINS: str = "http://localhost:3000"
+    PAWAPAY_API_TOKEN: str
+    PAWAPAY_SANDBOX: bool = True
     
     # AI Correction Configuration
     AI_PROVIDER: str = "gemini"  # Options: "grok", "gemini", "claude"

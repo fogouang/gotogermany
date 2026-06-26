@@ -44,9 +44,19 @@ class ExamSessionService:
 
     async def start_session(
         self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None
-        ) -> SessionStartResponse:
-        await self.access_service.require_access(user_id, exam_id)
+    ) -> SessionStartResponse:
 
+        # Vérifier accès selon le subject
+        if subject_id:
+            subject_obj = await self._get_subject(subject_id)
+            if not subject_obj:
+                raise NotFoundException(resource="Subject", identifier=str(subject_id))
+            await self.access_service.require_subject_access(user_id, subject_obj)
+        else:
+            subject_obj = await self._pick_subject(user_id, exam_id, None)
+            await self.access_service.require_subject_access(user_id, subject_obj)
+
+        # Session active existante ?
         active = await self.repo.get_active_session(user_id, exam_id)
         if active:
             subject = await self._load_subject_full(active.subject_id)
@@ -70,8 +80,8 @@ class ExamSessionService:
                 existing_answers=existing,
             )
 
-        subject = await self._pick_subject(user_id, exam_id, subject_id)
-        subject = await self._load_subject_full(subject.id)
+        # ← Utiliser subject_obj déjà chargé, pas refaire _pick_subject
+        subject = await self._load_subject_full(subject_obj.id)
         exam = await self.exam_repo.get_by_id(exam_id)
         if not exam:
             raise NotFoundException(resource="Exam", identifier=str(exam_id))
@@ -83,7 +93,6 @@ class ExamSessionService:
             status="IN_PROGRESS",
             started_at=datetime.now(timezone.utc),
         )
-
         modules_data = self._build_modules_content(subject)
 
         return SessionStartResponse(
@@ -183,7 +192,21 @@ class ExamSessionService:
                 level = await self._get_level(subject.level_id)
             if level:
                 total_pass_score = level.total_pass_score
-                passed = global_score >= total_pass_score
+                provider = exam.provider if exam else "TELC"
+
+                # Seuil 60% par module pour tous les providers
+                all_modules_pass = all(
+                    v >= 60.0
+                    for v in score_breakdown.values()
+                    if v is not None
+                )
+
+                if provider == "TELC":
+                    # TELC : score global >= seuil ET chaque module >= 60%
+                    passed = global_score >= total_pass_score and all_modules_pass
+                else:
+                    # Goethe / ÖSD : score global >= seuil suffit
+                    passed = global_score >= total_pass_score
 
         now = datetime.now(timezone.utc)
         duration = int((now - session.started_at).total_seconds())
@@ -272,6 +295,9 @@ class ExamSessionService:
         return result.scalar_one_or_none()
 
     async def _load_subject_full(self, subject_id: UUID) -> Subject | None:
+        # Expirer le cache pour forcer un vrai chargement
+        await self.db.execute(select(Subject).where(Subject.id == subject_id))
+        
         result = await self.db.execute(
             select(Subject)
             .options(
@@ -280,8 +306,15 @@ class ExamSessionService:
                 .selectinload(Teil.questions)
             )
             .where(Subject.id == subject_id)
+            .execution_options(populate_existing=True)
         )
-        return result.scalar_one_or_none()
+        subject = result.scalar_one_or_none()
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"_load_subject_full: subject_id={subject_id}, modules={len(subject.modules) if subject else 'None'}")
+        
+        return subject
 
     async def _load_exam_by_subject(self, subject_id: UUID) -> Exam | None:
         result = await self.db.execute(
@@ -496,13 +529,41 @@ class ExamSessionService:
                 teile=teil_results,
             ))
 
+        # Calculer module_passed pour mode module seul
+        module_passed = None
+        if len(modules_result) == 1:
+            m = modules_result[0]
+            if m.score_obtained is not None:
+                module_passed = m.score_obtained >= 60.0
+
+        # Messages enrichis
         result_message = None
-        if session.passed is True:
-            result_message = "Félicitations ! Vous avez réussi cet examen."
-        elif session.passed is False:
-            result_message = "Vous n'avez pas atteint le score requis. Continuez à vous entraîner !"
-        elif session.status == "PENDING_REVIEW":
-            result_message = "Résultat partiel — certaines parties sont en attente de correction."
+        if len(modules_result) == 1:
+            # Mode module seul
+            m = modules_result[0]
+            if m.score_obtained is not None:
+                if module_passed:
+                    result_message = f"Excellent ! Vous avez réussi le module {m.name} avec {m.score_obtained:.0f}/100."
+                else:
+                    result_message = f"Vous n'avez pas atteint 60% au module {m.name} ({m.score_obtained:.0f}/100). Continuez à pratiquer !"
+            elif session.status == "PENDING_REVIEW":
+                result_message = f"Module {m.name} en attente de correction IA."
+        else:
+            # Mode examen complet
+            if session.passed is True:
+                result_message = "Félicitations ! Vous avez réussi cet examen."
+            elif session.passed is False:
+                # Identifier le module faible
+                weak_modules = [
+                    m.name for m in modules_result
+                    if m.score_obtained is not None and m.score_obtained < 60.0
+                ]
+                if weak_modules:
+                    result_message = f"Score insuffisant. Module(s) à renforcer : {', '.join(weak_modules)}."
+                else:
+                    result_message = "Vous n'avez pas atteint le score requis. Continuez à vous entraîner !"
+            elif session.status == "PENDING_REVIEW":
+                result_message = "Résultat partiel — certaines parties sont en attente de correction."
 
         return SessionResultResponse(
             session_id=session.id,
@@ -514,6 +575,7 @@ class ExamSessionService:
             score=session.score,
             score_breakdown=session.score_breakdown,
             passed=session.passed,
+            module_passed=module_passed,      
             total_pass_score=total_pass_score or 0,
             started_at=session.started_at,
             submitted_at=session.submitted_at,

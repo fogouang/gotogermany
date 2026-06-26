@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Accès à un exam — retourné après paiement ou inscription.
+ * Accès à un level — retourné après grant admin ou paiement.
  */
 export type ExamAccessResponse = {
     id: string;
-    exam_id: string;
+    level_id: string;
     access_type: string;
     granted_at: string;
     expires_at: (string | null);

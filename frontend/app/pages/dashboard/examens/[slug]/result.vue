@@ -1,84 +1,139 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 pb-10">
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-16">
-      <ProgressSpinner style="width: 50px; height: 50px" />
+      <ProgressSpinner style="width: 48px; height: 48px" strokeWidth="3" />
     </div>
 
-    <!-- Erreur -->
+    <!-- Not found -->
     <div
       v-else-if="!result"
-      class="text-center py-16 bg-white rounded-xl border border-gray-100"
+      class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-100"
     >
-      <i
-        class="pi pi-exclamation-triangle text-4xl text-red-400 mb-3 block"
-      ></i>
-      <p class="font-medium text-gray-700">{{ t("result.not_found") }}</p>
+      <div
+        class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4"
+      >
+        <i class="pi pi-exclamation-triangle text-2xl text-red-400"></i>
+      </div>
+      <p class="font-semibold text-gray-700 mb-4">
+        {{ t("result.not_found") }}
+      </p>
       <Button
         :label="t('result.back_to_exams')"
         outlined
-        class="mt-4"
+        size="small"
         @click="navigateTo('/dashboard/examens')"
       />
     </div>
 
     <div v-else class="space-y-6">
-      <!-- En-tête -->
+      <!-- ── Hero résultat ── -->
       <div
-        class="rounded-2xl p-6 text-white"
-        :class="
-          result.passed === true
-            ? 'bg-linear-to-br from-green-500 to-teal-600'
-            : result.passed === false
-              ? 'bg-linear-to-br from-orange-500 to-red-500'
-              : 'bg-linear-to-br from-gray-600 to-gray-700'
-        "
+        class="relative rounded-2xl p-6 text-white overflow-hidden"
+        :class="heroBg"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-sm opacity-75 font-medium mb-1">
+        <!-- Cercle décoratif -->
+        <div
+          class="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10 bg-white"
+        ></div>
+        <div
+          class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10 bg-white"
+        ></div>
+
+        <div class="relative flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <!-- Breadcrumb -->
+            <p
+              class="text-xs font-bold uppercase tracking-widest opacity-70 mb-2"
+            >
               {{ result.exam_name }} · {{ t("result.subject") }}
               {{ result.subject_number }}
               <span
                 v-if="isSingleModule"
-                class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs"
+                class="ml-2 bg-white/20 px-2 py-0.5 rounded-full"
               >
                 {{ displayedModules[0]?.name }}
               </span>
             </p>
-            <h1 class="text-2xl font-bold">
-              {{
-                result.passed === true
-                  ? t("result.passed")
-                  : result.passed === false
-                    ? t("result.failed")
-                    : t("result.pending")
-              }}
-            </h1>
-            <p class="mt-1 opacity-80 text-sm">{{ result.result_message }}</p>
+
+            <!-- Titre résultat -->
+            <div class="flex items-center gap-3 mb-2">
+              <div
+                class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0"
+              >
+                <i :class="['pi text-xl', heroIcon]"></i>
+              </div>
+              <h1 class="text-2xl font-bold">{{ heroTitle }}</h1>
+            </div>
+
+            <p class="text-sm opacity-85 leading-relaxed max-w-md">
+              {{ result.result_message }}
+            </p>
+
+            <!-- Tags info -->
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span
+                v-if="actualDuration"
+                class="inline-flex items-center gap-1 bg-white/15 text-white text-xs font-semibold px-3 py-1.5 rounded-full"
+              >
+                <i class="pi pi-clock text-xs"></i>
+                {{ actualDuration }}
+              </span>
+              <span
+                class="inline-flex items-center gap-1 bg-white/15 text-white text-xs font-semibold px-3 py-1.5 rounded-full"
+              >
+                <i class="pi pi-list text-xs"></i>
+                {{ displayedModules.length }}
+                {{ isSingleModule ? t("result.module") : t("result.modules") }}
+              </span>
+            </div>
           </div>
 
           <!-- Score global -->
           <div class="text-center shrink-0">
-            <div class="text-4xl font-extrabold">
-              {{ result.score != null ? result.score.toFixed(0) : "-" }}
+            <div class="relative w-20 h-20">
+              <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="32"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.2)"
+                  stroke-width="8"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="32"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="8"
+                  stroke-linecap="round"
+                  :stroke-dasharray="`${(scorePercent / 100) * 201} 201`"
+                />
+              </svg>
+              <div
+                class="absolute inset-0 flex flex-col items-center justify-center"
+              >
+                <span class="text-xl font-extrabold leading-none">
+                  {{ displayScore }}
+                </span>
+                <span class="text-xs opacity-70">/100</span>
+              </div>
             </div>
-            <div class="text-xs opacity-70 mt-0.5">
-              / 100 · {{ t("result.min_score") }} {{ result.total_pass_score }}
-            </div>
-            <div v-if="actualDuration" class="text-xs opacity-60 mt-1">
-              {{ actualDuration }}
-            </div>
+            <p class="text-xs opacity-60 mt-1">
+              {{ t("result.min_score") }} {{ result.total_pass_score }}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Modules -->
+      <!-- ── Résumé modules ── -->
       <div
-        class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
       >
-        <div class="px-6 py-4 border-b border-gray-100">
-          <h2 class="font-semibold text-gray-800">
+        <div class="px-6 py-4 border-b border-gray-50">
+          <h2 class="font-bold text-gray-800">
             {{
               isSingleModule
                 ? t("result.module_result")
@@ -92,9 +147,10 @@
             :key="module.slug"
             class="px-6 py-4 flex items-center gap-4"
           >
+            <!-- Icône module -->
             <div
               :class="[
-                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                'w-11 h-11 rounded-xl flex items-center justify-center shrink-0',
                 getModuleBg(module.slug),
               ]"
             >
@@ -106,34 +162,74 @@
                 ]"
               ></i>
             </div>
+
+            <!-- Infos -->
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-gray-900">{{ module.name }}</p>
-              <div v-if="module.is_corrected" class="mt-1.5">
-                <div class="flex items-center gap-2 mb-1">
-                  <div class="flex-1 bg-gray-100 rounded-full h-1.5">
-                    <div
-                      class="h-1.5 rounded-full transition-all"
-                      :class="
-                        (module.score_obtained ?? 0) >= 60
-                          ? 'bg-green-500'
-                          : 'bg-orange-400'
-                      "
-                      :style="{ width: `${moduleScorePercent(module)}%` }"
-                    />
-                  </div>
-                  <span class="text-sm font-bold text-gray-700 shrink-0">
-                    {{ module.score_obtained?.toFixed(1) ?? "-" }} / {{ module.max_score }}
-                  </span>
-                </div>
+              <div class="flex items-center gap-2 mb-1.5">
+                <p class="font-semibold text-gray-900 text-sm">
+                  {{ module.name }}
+                </p>
+                <!-- Badge réussite module -->
+                <span
+                  v-if="module.is_corrected && module.score_obtained !== null"
+                  :class="[
+                    'inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full',
+                    (module.score_obtained ?? 0) >= 60
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-600',
+                  ]"
+                >
+                  <i
+                    :class="[
+                      'pi text-xs',
+                      (module.score_obtained ?? 0) >= 60
+                        ? 'pi-check'
+                        : 'pi-times',
+                    ]"
+                  ></i>
+                  {{
+                    (module.score_obtained ?? 0) >= 60
+                      ? t("result.module_passed")
+                      : t("result.module_failed")
+                  }}
+                </span>
               </div>
+
+              <!-- Barre progression -->
+              <div v-if="module.is_corrected" class="flex items-center gap-2">
+                <div
+                  class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden"
+                >
+                  <div
+                    class="h-2 rounded-full transition-all duration-500"
+                    :class="
+                      (module.score_obtained ?? 0) >= 60
+                        ? 'bg-green-500'
+                        : 'bg-orange-400'
+                    "
+                    :style="{
+                      width: `${Math.min(module.score_obtained ?? 0, 100)}%`,
+                    }"
+                  />
+                </div>
+                <span
+                  class="text-sm font-bold text-gray-700 shrink-0 w-14 text-right"
+                >
+                  {{ module.score_obtained?.toFixed(0) ?? "-" }}/100
+                </span>
+              </div>
+
+              <!-- En attente correction -->
               <div
                 v-else
-                class="flex items-center gap-1.5 mt-1 text-amber-600 text-xs"
+                class="flex items-center gap-1.5 text-amber-600 text-xs"
               >
                 <i class="pi pi-clock text-xs"></i>
                 <span>{{ t("result.waiting_correction") }}</span>
               </div>
             </div>
+
+            <!-- Bouton correction Schreiben -->
             <Button
               v-if="module.slug.includes('schreiben') && module.is_corrected"
               :label="t('result.see_correction')"
@@ -141,22 +237,55 @@
               size="small"
               outlined
               severity="secondary"
+              class="shrink-0"
               @click="goToSchreibenCorrection"
             />
           </div>
         </div>
       </div>
 
-      <!-- Détail des réponses -->
+      <!-- ── Info seuil de réussite ── -->
+      <div
+        v-if="!isSingleModule && result.passed === false"
+        class="flex items-start gap-3 bg-orange-50 border border-orange-100 rounded-2xl px-5 py-4"
+      >
+        <i class="pi pi-info-circle text-orange-500 mt-0.5 shrink-0"></i>
+        <div class="text-sm text-orange-800">
+          <p class="font-semibold mb-1">{{ t("result.why_failed") }}</p>
+          <ul class="space-y-1 text-xs">
+            <li v-if="(result.score ?? 0) < result.total_pass_score">
+              ·
+              {{
+                t("result.global_score_insufficient", {
+                  score: result.score?.toFixed(0) ?? 0,
+                  threshold: result.total_pass_score,
+                })
+              }}
+            </li>
+            <li v-for="m in failedModules" :key="m.slug">
+              ·
+              {{
+                t("result.module_score_insufficient", {
+                  module: m.name,
+                  score: m.score_obtained?.toFixed(0),
+                })
+              }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ── Détail réponses par module ── -->
       <div
         v-for="module in displayedModules.filter(
           (m) => !m.slug.includes('schreiben'),
         )"
         :key="`detail-${module.slug}`"
-        class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
       >
+        <!-- Header accordéon -->
         <button
-          class="w-full flex items-center justify-between px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+          class="w-full flex items-center justify-between px-6 py-4 border-b border-gray-50 hover:bg-gray-50/70 transition-colors"
           @click="toggleModule(module.slug)"
         >
           <div class="flex items-center gap-3">
@@ -174,13 +303,13 @@
                 ]"
               ></i>
             </div>
-            <h2 class="font-semibold text-gray-800">
-              {{ t("result.detail_title") }} - {{ module.name }}
+            <h2 class="font-semibold text-gray-800 text-sm">
+              {{ t("result.detail_title") }}-{{ module.name }}
             </h2>
           </div>
           <i
             :class="[
-              'pi text-gray-400',
+              'pi text-gray-400 text-sm',
               expandedModules.has(module.slug)
                 ? 'pi-chevron-up'
                 : 'pi-chevron-down',
@@ -188,15 +317,19 @@
           ></i>
         </button>
 
+        <!-- Contenu accordéon -->
         <div v-if="expandedModules.has(module.slug)">
           <div
             v-for="teil in module.teile"
             :key="teil.teil_number"
             class="border-b border-gray-50 last:border-0"
           >
-            <div class="px-6 py-3 bg-gray-50 flex items-center justify-between">
+            <!-- Teil header -->
+            <div
+              class="px-6 py-3 bg-gray-50/50 flex items-center justify-between"
+            >
               <p
-                class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                class="text-xs font-bold text-gray-500 uppercase tracking-wide"
               >
                 Teil {{ teil.teil_number }}
               </p>
@@ -205,6 +338,8 @@
                 {{ teil.max_score }} pts
               </span>
             </div>
+
+            <!-- Réponses -->
             <div class="divide-y divide-gray-50">
               <div
                 v-for="answer in teil.answers"
@@ -212,18 +347,27 @@
                 class="px-6 py-3 flex items-start gap-3"
               >
                 <div class="shrink-0 mt-0.5">
-                  <i
+                  <div
                     v-if="answer.is_correct === true"
-                    class="pi pi-check-circle text-green-500"
-                  ></i>
-                  <i
+                    class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center"
+                  >
+                    <i class="pi pi-check text-green-600 text-xs"></i>
+                  </div>
+                  <div
                     v-else-if="answer.is_correct === false"
-                    class="pi pi-times-circle text-red-400"
-                  ></i>
-                  <i v-else class="pi pi-circle text-gray-300"></i>
+                    class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center"
+                  >
+                    <i class="pi pi-times text-red-500 text-xs"></i>
+                  </div>
+                  <div
+                    v-else
+                    class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center"
+                  >
+                    <i class="pi pi-minus text-gray-400 text-xs"></i>
+                  </div>
                 </div>
                 <div class="flex-1 min-w-0 text-sm">
-                  <div class="flex flex-wrap gap-4 text-gray-600">
+                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-gray-600">
                     <span>
                       Q{{ answer.question_number }} -
                       {{ t("result.your_answer") }} :
@@ -251,8 +395,8 @@
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="flex flex-col sm:flex-row gap-3 pb-6">
+      <!-- ── Actions ── -->
+      <div class="flex flex-col sm:flex-row gap-3">
         <Button
           :label="t('result.back_to_exams')"
           icon="pi pi-arrow-left"
@@ -293,11 +437,10 @@ const loading = ref(true);
 const result = ref<SessionResultResponse | null>(null);
 const expandedModules = ref<Set<string>>(new Set());
 
-// Détecte si on vient d'un module seul
+// ── Mode module seul ─────────────────────────────────────
 const moduleSlug = computed(() => route.query.moduleSlug as string | undefined);
 const isSingleModule = computed(() => !!moduleSlug.value);
 
-// Filtre les modules à afficher
 const displayedModules = computed(() => {
   if (!result.value?.modules) return [];
   if (isSingleModule.value) {
@@ -308,12 +451,63 @@ const displayedModules = computed(() => {
   return result.value.modules;
 });
 
+// ── Score & résultat ─────────────────────────────────────
+const isPassed = computed(() => {
+  if (isSingleModule.value) return result.value?.module_passed ?? null;
+  return result.value?.passed ?? null;
+});
+
+const displayScore = computed(() => {
+  if (
+    isSingleModule.value &&
+    displayedModules.value[0]?.score_obtained != null
+  ) {
+    return displayedModules.value[0].score_obtained.toFixed(0);
+  }
+  return result.value?.score != null ? result.value.score.toFixed(0) : "-";
+});
+
+const scorePercent = computed(() => {
+  const s = parseFloat(displayScore.value);
+  return isNaN(s) ? 0 : Math.min(s, 100);
+});
+
+const failedModules = computed(() =>
+  (result.value?.modules ?? []).filter(
+    (m) => m.score_obtained !== null && (m.score_obtained ?? 0) < 60,
+  ),
+);
+
+// ── Hero ─────────────────────────────────────────────────
+const heroBg = computed(() => {
+  if (result.value?.status === "PENDING_REVIEW")
+    return "bg-gradient-to-br from-gray-500 to-gray-700";
+  if (isPassed.value === true)
+    return "bg-gradient-to-br from-green-500 to-teal-600";
+  if (isPassed.value === false)
+    return "bg-gradient-to-br from-orange-500 to-red-500";
+  return "bg-gradient-to-br from-gray-500 to-gray-700";
+});
+
+const heroIcon = computed(() => {
+  if (result.value?.status === "PENDING_REVIEW") return "pi-clock";
+  if (isPassed.value === true) return "pi-check-circle";
+  if (isPassed.value === false) return "pi-times-circle";
+  return "pi-clock";
+});
+
+const heroTitle = computed(() => {
+  if (result.value?.status === "PENDING_REVIEW") return t("result.pending");
+  if (isPassed.value === true) return t("result.passed");
+  if (isPassed.value === false) return t("result.failed");
+  return t("result.pending");
+});
+
+// ── Helpers ──────────────────────────────────────────────
 const toggleModule = (slug: string) => {
   if (expandedModules.value.has(slug)) expandedModules.value.delete(slug);
   else expandedModules.value.add(slug);
 };
-
-// ── Navigation ───────────────────────────────────────────
 
 const goToSchreibenCorrection = () => {
   const slug = route.params.slug as string;
@@ -324,8 +518,6 @@ const goToSchreibenCorrection = () => {
     query: { examId: result.value?.exam_id },
   });
 };
-
-// ── Helpers ──────────────────────────────────────────────
 
 const actualDuration = computed(() => {
   if (!result.value?.submitted_at || !result.value?.started_at) return null;
@@ -366,22 +558,13 @@ const getModuleIconColor = (s: string) => {
   return "text-gray-500";
 };
 
-const moduleScorePercent = (module: ModuleResultResponse): number => {
-  if (!module.score_obtained || !module.max_score) return 0
-  return Math.round((module.score_obtained / module.max_score) * 100)
-}
-
 // ── Chargement ───────────────────────────────────────────
-
 onMounted(async () => {
-  // 1. Depuis le store (soumission directe)
   if (sessionStore.result) {
     result.value = sessionStore.result;
     loading.value = false;
     return;
   }
-
-  // 2. Depuis query ?sessionId=
   const sessionId = route.query.sessionId as string;
   if (sessionId) {
     const res = await sessionStore.getResult(sessionId);
@@ -389,13 +572,10 @@ onMounted(async () => {
     loading.value = false;
     return;
   }
-
-  // 3. Depuis sessionId du store
   if (sessionStore.sessionId) {
     const res = await sessionStore.getResult(sessionStore.sessionId);
     if (res.success) result.value = res.result ?? null;
   }
-
   loading.value = false;
 });
 </script>

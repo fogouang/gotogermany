@@ -3,7 +3,6 @@
  */
 import { usePaymentsStore } from "~/stores/payments";
 import type { PaymentStatusResponse } from "#shared/api";
-import { AiCreditsService } from "#shared/api";
 import { PaymentsService } from "#shared/api";
 
 export const usePayments = () => {
@@ -13,7 +12,7 @@ export const usePayments = () => {
 
   // ── User : initier un paiement + polling ────────────────────
   const pay = async (data: {
-    exam_id: string;
+    level_id: string;
     plan_id: string;
     operator: string;
     phone_number: string;
@@ -46,7 +45,7 @@ export const usePayments = () => {
     try {
       const res = await PaymentsService.createManualPaymentApiV1PaymentsAdminManualPost({
         user_id: data.user_id,
-        exam_id: data.exam_id,
+        level_id: data.exam_id,
         plan_id: data.plan_id,
         note: data.note ?? null,
       });

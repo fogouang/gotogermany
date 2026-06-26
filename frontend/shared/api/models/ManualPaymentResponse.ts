@@ -9,7 +9,7 @@ export type ManualPaymentResponse = {
     payment_id: string;
     transaction_reference: string;
     user_id: string;
-    exam_id: string;
+    level_id: string;
     amount_paid: number;
     expires_at: string;
     note: (string | null);

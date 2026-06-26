@@ -20,41 +20,37 @@ from app.shared.schemas.base import BaseSchema
 
 class PaymentInitiateRequest(BaseSchema):
     """L'étudiant initie un paiement pour un exam."""
-    exam_id: uuid.UUID
+    level_id: uuid.UUID
     plan_id: uuid.UUID          # ← ajouter
     promo_code: str | None = None
     operator: str = Field(max_length=30)
     phone_number: str = Field(max_length=20)
 
-class WebhookPayload(BaseSchema):
-    """
-    Payload reçu de My-CoolPay après confirmation du paiement.
-    Champs selon doc My-CoolPay.
-    """
-    transaction_ref: str
-    transaction_type: str
-    transaction_amount: float
-    transaction_currency: str
-    transaction_operator: str
-    app_transaction_ref: str        # notre transaction_reference interne
-    transaction_status: str         # "SUCCESS" | "FAILED"
-    signature: str                  # MD5 à vérifier
-
+# Supprimer WebhookPayload, remplacer par :
+class PawapayCallbackPayload(BaseSchema):
+    depositId: str
+    status: str                     # COMPLETED | FAILED
+    amount: str
+    currency: str
+    country: str
+    payer: dict
+    created: datetime
+    customerMessage: str | None = None
+    providerTransactionId: str | None = None
+    failureReason: dict | None = None
+    metadata: dict | None = None
 
 # ─────────────────────────────────────────────
 # Responses
 # ─────────────────────────────────────────────
-
 class PaymentInitiateResponse(BaseSchema):
-    """Retourné après création du payin My-CoolPay."""
     payment_id: uuid.UUID
-    transaction_reference: str      # notre ref interne
+    transaction_reference: str
     amount_gross: int
-    amount_paid: int                # après réduction promo
+    amount_paid: int
     discount_amount: int
     currency: str
-    ussd_code: str | None           # ex: "#150*50#" pour composer sur le téléphone
-    message: str                    # instruction à afficher à l'étudiant
+    message: str   # "Confirmez le paiement sur votre téléphone"
 
 
 class PaymentStatusResponse(BaseSchema):
@@ -71,7 +67,7 @@ class PaymentStatusResponse(BaseSchema):
 class PaymentResponse(BaseSchema):
     """Response complète d'un paiement — historique."""
     id: uuid.UUID
-    exam_id: uuid.UUID
+    level_id: uuid.UUID
     plan_id: uuid.UUID          # ← ajouter aussi
     promo_code_id: uuid.UUID | None
     amount_gross: int
@@ -89,8 +85,8 @@ class PaymentAdminResponse(PaymentResponse):
     user_id: uuid.UUID
     user_email: str | None = None
     user_name: str | None = None
-    exam_name: str | None = None
-    mycoolpay_ref: str | None = None
+    level_name: str | None = None
+    pawapay_deposit_id: str | None = None
     expires_at: str | None = None  # depuis ExamAccess       # le code saisi, pas juste l'ID
 
 
@@ -107,7 +103,7 @@ class PaymentSummaryResponse(BaseSchema):
 class ManualPaymentRequest(BaseSchema):
     """Admin valide manuellement un accès exam (MyCoolPay indisponible, virement, cash)."""
     user_id: uuid.UUID
-    exam_id: uuid.UUID
+    level_id: uuid.UUID
     plan_id: uuid.UUID
     note: str | None = Field(
         None,
@@ -121,7 +117,7 @@ class ManualPaymentResponse(BaseSchema):
     payment_id: uuid.UUID
     transaction_reference: str
     user_id: uuid.UUID
-    exam_id: uuid.UUID
+    level_id: uuid.UUID
     amount_paid: int
     expires_at: datetime
     note: str | None

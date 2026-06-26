@@ -201,7 +201,7 @@ class ExamImportService:
 
         # 3. Subject
         result = await self.db.execute(
-            select(func.count()).select_from(Subject).where(Subject.level_id == level.id)
+            select(func.max(Subject.subject_number)).where(Subject.level_id == level.id)
         )
         subject_count = result.scalar() or 0
         next_number = subject_count + 1

@@ -7,7 +7,7 @@
  */
 export type PaymentResponse = {
     id: string;
-    exam_id: string;
+    level_id: string;
     plan_id: string;
     promo_code_id: (string | null);
     amount_gross: number;

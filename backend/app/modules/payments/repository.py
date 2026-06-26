@@ -25,10 +25,10 @@ class PaymentRepository(BaseRepository[Payment]):
         )
         return result.scalar_one_or_none()
 
-    async def find_by_mycoolpay_ref(self, mycoolpay_ref: str) -> Payment | None:
-        """Trouver par référence My-CoolPay."""
+    # Renommer find_by_mycoolpay_ref :
+    async def find_by_pawapay_deposit_id(self, deposit_id: str) -> Payment | None:
         result = await self.db.execute(
-            select(Payment).where(Payment.mycoolpay_ref == mycoolpay_ref)
+            select(Payment).where(Payment.pawapay_deposit_id == deposit_id)
         )
         return result.scalar_one_or_none()
 

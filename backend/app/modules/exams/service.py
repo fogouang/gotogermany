@@ -176,3 +176,16 @@ class ExamService:
         if not update_data:
             return await self.teil_repo.get_by_id_or_404(teil_id)
         return await self.teil_repo.update(teil_id, **update_data)
+    
+    
+    async def delete_subject(self, subject_id: UUID) -> bool:
+        # 1. Supprimer les sessions liées à ce subject
+        from sqlalchemy import delete as sql_delete
+        from app.modules.exam_sessions.models import ExamSession
+        
+        await self.db.execute(
+            sql_delete(ExamSession).where(ExamSession.subject_id == subject_id)
+        )
+        
+        # 2. Supprimer le subject (cascade vers modules/teile/questions)
+        return await self.subject_repo.delete(subject_id)

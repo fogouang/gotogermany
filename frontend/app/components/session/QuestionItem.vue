@@ -1,11 +1,11 @@
 <template>
   <div>
     <!-- Numéro + points -->
-    <div class="flex items-center justify-between mb-3">
-      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+    <div class="flex items-center  justify-between mb-3">
+      <span class="text-xs font-semibold text-gray-900 uppercase tracking-wide">
         Question {{ question.question_number }}
       </span>
-      <span class="text-xs text-gray-400">{{ question.points }} pt(s)</span>
+      <span class="text-xs text-gray-900">{{ question.points }} pt(s)</span>
     </div>
 
     <!-- richtig_falsch / ja_nein -->

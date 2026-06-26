@@ -25,8 +25,9 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from app.shared.database.base import Base, UUIDMixin, TimestampMixin
 
+
 if TYPE_CHECKING:
-    from app.modules.exams.models import Exam
+    from app.modules.exams.models import Level
     from app.modules.payments.models import Payment
     from app.modules.users.models import User
 
@@ -35,8 +36,7 @@ class ExamAccess(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "exam_access"
 
     __table_args__ = (
-        # Un user ne peut avoir qu'un accès par exam
-        UniqueConstraint("user_id", "exam_id", name="uq_exam_access_user_exam"),
+        UniqueConstraint("user_id", "level_id", name="uq_exam_access_user_level"),  
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -45,13 +45,14 @@ class ExamAccess(Base, UUIDMixin, TimestampMixin):
         nullable=False,
         index=True,
     )
-    exam_id: Mapped[uuid.UUID] = mapped_column(
+    
+    level_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("exams.id", ondelete="CASCADE"),
+        ForeignKey("levels.id", ondelete="CASCADE"),  
         nullable=False,
         index=True,
     )
-
+    
     # "free" | "paid"
     access_type: Mapped[str] = mapped_column(String(10), nullable=False)
 
@@ -74,7 +75,7 @@ class ExamAccess(Base, UUIDMixin, TimestampMixin):
 
     # Relations
     user: Mapped["User"] = relationship("User", back_populates="exam_accesses", lazy="noload")
-    exam: Mapped["Exam"] = relationship("Exam", back_populates="exam_accesses", lazy="noload")
+    level: Mapped["Level"] = relationship("Level", back_populates="exam_accesses", lazy="noload")
     payment: Mapped["Payment | None"] = relationship(
         "Payment", lazy="noload", foreign_keys=[payment_id]
     )

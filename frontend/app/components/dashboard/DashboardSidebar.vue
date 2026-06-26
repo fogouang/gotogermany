@@ -30,7 +30,7 @@
           <p
             class="text-xs font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2"
           >
-            Principal
+            {{ t("sidebar.main") }}
           </p>
         </template>
 
@@ -56,7 +56,7 @@
           <p
             class="text-xs font-semibold text-gray-400 uppercase tracking-widest px-3 mt-5 mb-2"
           >
-            Compte
+            {{ t("sidebar.account") }}
           </p>
         </template>
         <div v-else class="my-3 mx-2 h-px bg-gray-100" />
@@ -106,11 +106,11 @@
             'w-full flex items-center rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors font-medium',
             props.collapsed ? 'justify-center py-2.5' : 'gap-2 px-3 py-2',
           ]"
-          v-tooltip.right="props.collapsed ? 'Déconnexion' : undefined"
+          v-tooltip.right="props.collapsed ? t('sidebar.logout') : undefined"
           @click="handleLogout"
         >
           <i class="pi pi-sign-out text-sm"></i>
-          <span v-if="!props.collapsed">Déconnexion</span>
+          <span v-if="!props.collapsed">{{ t("sidebar.logout") }}</span>
         </button>
       </div>
     </div>
@@ -120,26 +120,57 @@
 <script setup lang="ts">
 const props = defineProps<{ collapsed?: boolean }>();
 const authStore = useAuthStore();
+const { t } = useI18n();
 defineEmits(["navigate"]);
 
-const mainItems = [
-  { label: "Tableau de bord", icon: "pi-th-large", to: "/dashboard" },
-  { label: "Examens", icon: "pi-book", to: "/dashboard/examens" },
+const mainItems = computed(() => [
   {
-    label: "Simulateur",
+    label: t("dashboard.pages.dashboard"),
+    icon: "pi-th-large",
+    to: "/dashboard",
+  },
+  {
+    label: t("dashboard.pages.examens"),
+    icon: "pi-book",
+    to: "/dashboard/examens",
+  },
+  {
+    label: t("dashboard.pages.simulateur"),
     icon: "pi-pen-to-square",
     to: "/dashboard/simulateur",
   },
-  { label: 'Méthodologie', icon: 'pi-book', to: '/dashboard/methodologie' },
-  { label: "Mes résultats", icon: "pi-chart-line", to: "/dashboard/resultats" },
-  
-];
+  {
+    label: t("dashboard.pages.methodologie"),
+    icon: "pi-book",
+    to: "/dashboard/methodologie",
+  },
+  {
+    label: t("dashboard.quick_actions.results"),
+    icon: "pi-chart-line",
+    to: "/dashboard/resultats",
+  },
+]);
 
-const accountItems = [
-  { label: "Profil", icon: "pi-user", to: "/dashboard/profil" },
-  { label: "Factures", icon: "pi-receipt", to: "/dashboard/factures" },
-  { label: "Crédits", icon: "pi-credit-card", to: "/dashboard/credits" },
-];
+const accountItems = computed(() => [
+  {
+    label: t("dashboard.pages.profil"),
+    icon: "pi-user",
+    to: "/dashboard/profil",
+  },
+  {
+    label: t("dashboard.pages.factures"),
+    icon: "pi-receipt",
+    to: "/dashboard/factures",
+  },
+  {
+    label: t("dashboard.pages.credits"),
+    icon: "pi-credit-card",
+    to: "/dashboard/credits",
+  },
+]);
 
-const handleLogout = () => authStore.logout();
+const handleLogout = async () => {
+  authStore.logout();
+  await navigateTo("/");
+};
 </script>

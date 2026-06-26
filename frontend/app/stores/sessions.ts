@@ -166,6 +166,7 @@ export const useSessionStore = defineStore("session", {
         this.status = response.status;
         this.startTime = new Date(response.started_at);
         this.modules = (response.modules || []) as Module[];
+        console.log('=== STORE modules set ===', this.modules.length, JSON.stringify(response.modules?.map((m: any) => m.slug)))
         this.questions = this._extractQuestions(this.modules);
         this.timeRemaining = (this.modules[0]?.time_limit_minutes ?? 30) * 60;
 

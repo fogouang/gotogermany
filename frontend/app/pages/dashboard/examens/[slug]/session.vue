@@ -1,8 +1,9 @@
 <template>
-  <div class="h-screen bg-gray-50 flex flex-col overflow-hidden">
+  <div class="h-screen bg-white flex flex-col overflow-hidden">
     <!-- Loading -->
+    <!-- Avant initialized → toujours spinner -->
     <div
-      v-if="sessionStore.loading"
+      v-if="!initialized || sessionStore.loading"
       class="flex items-center justify-center flex-1"
     >
       <div class="text-center">
@@ -313,6 +314,8 @@ const stopTimer = () => {
 
 // ── Lifecycle ─────────────────────────────────────────
 
+const initialized = ref(false);
+
 onMounted(async () => {
   const examId = route.query.examId as string;
   const subjectId = route.query.subjectId as string | undefined;
@@ -323,11 +326,8 @@ onMounted(async () => {
     return;
   }
 
-  sessionStore.resetSession();
-
   const result = await session.startSession(examId, subjectId);
 
-  // ── Si moduleSlug fourni → filtrer pour ne garder que ce module ──
   if (result.success && moduleSlug) {
     sessionStore.modules = sessionStore.modules.filter((m) =>
       m.slug.toLowerCase().includes(moduleSlug.toLowerCase()),
@@ -337,11 +337,10 @@ onMounted(async () => {
         m.teile?.some((t: any) => t.id === q.teil_id),
       ),
     );
-    // Timer du module filtré
     sessionStore.timeRemaining =
       (sessionStore.modules[0]?.time_limit_minutes ?? 30) * 60;
   }
 
-  if (result.success) startTimer();
+  initialized.value = true;
 });
 </script>

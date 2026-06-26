@@ -3,7 +3,7 @@
     <div class="max-w-6xl mx-auto px-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <!-- ── Image + cercle rotatif ─────────────────── -->
-        <div class="relative flex justify-center items-center">
+        <div class=" hidden  relative md:flex justify-center items-center">
           <!-- Cercle qui tourne -->
           <div
             class="absolute w-80 h-80 rounded-full border-0 opacity-80 animate-spin-slow"
@@ -31,7 +31,7 @@
 
           <!-- Version simplifiée du cercle hachuré -->
           <div
-            class="absolute w-72 h-72 animate-spin-slow"
+            class=" absolute w-72 h-72 animate-spin-slow"
             style="animation-duration: 20s"
           >
             <svg viewBox="0 0 300 300" class="w-full h-full opacity-70">
@@ -73,18 +73,18 @@
           <img
             src="/images/works.png"
             alt="Comment ça marche"
-            class="relative z-10 w-170 object-contain drop-shadow-xl"
+            class=" relative z-10 w-170 object-contain drop-shadow-xl"
           />
         </div>
 
         <!-- ── Contenu droite ──────────────────────────── -->
         <div class="space-y-8">
           <!-- Titre -->
-          <div class="space-y-3">
+          <div class="space-y-2">
             <span class="text-sm font-semibold text-[#076152] tracking-wide">
               {{ t("how_it_works.title") }}
             </span>
-            <h2 class="text-4xl font-bold text-gray-900 leading-tight">
+            <h2 class="text-2xl md:text-4xl font-bold text-gray-900 leading-tight">
               {{ t("how_it_works.subtitle1") }} <span style="color: #f5a623">{{ t("how_it_works.subtitle2") }}</span>{{ t("how_it_works.subtitle3") }}
             </h2>
             <!-- Underline orange -->

@@ -1,0 +1,731 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "pricing": "Preise",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "dashboard": "Dashboard",
+    "login": "Anmelden",
+    "signup": "Kostenlos starten",
+    "logout": "Abmelden"
+  },
+  "auth": {
+    "login_title": "Anmelden",
+    "signup_title": "Kostenlose Registrierung",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "full_name": "Vollständiger Name",
+    "phone": "Telefon (optional)",
+    "login_btn": "Anmelden",
+    "signup_btn": "Registrieren",
+    "no_account": "Noch kein Konto?",
+    "register_link": "Registrieren",
+    "have_account": "Bereits ein Konto?",
+    "login_link": "Anmelden",
+    "login_error": "Anmeldefehler",
+    "signup_error": "Registrierungsfehler"
+  },
+  "exam": {
+    "start": "Starten",
+    "available": "Verfügbar",
+    "premium": "Premium",
+    "free": "Kostenlos",
+    "levels": "Niveaus",
+    "subjects": "Themen",
+    "modules": "Module",
+    "minutes": "Minuten",
+    "points": "Punkte"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "back": "Zurück",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "confirm": "Bestätigen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "reset": "Zurücksetzen",
+    "close": "Schließen"
+  },
+  "hero": {
+    "title": "Sei nicht der nächste Kandidat, der seine Deutschprüfung wiederholen muss.",
+    "subtitle": "Bereite dich ruhig auf Goethe-, TELC- oder ÖSD-Zertifizierungen vor. Meistere den anspruchsvollen Schreiben-Teil mit unserer KI-Korrektur und bestehe dein B1- oder B2-Niveau beim ersten Versuch.",
+    "cta": "Training starten",
+    "social_proof": "+500 zufriedene Lernende",
+    "image_alt": "Student bereitet sich auf die Deutschprüfung vor"
+  },
+  "how_it_works": {
+    "title": "So funktioniert es",
+    "subtitle1": "Wie funktioniert",
+    "subtitle2": " GoToGermany",
+    "subtitle3": "?",
+    "steps": {
+      "account": {
+        "title": "Konto erstellen",
+        "description": "Als Lernender oder Kursleiter"
+      },
+      "exam": {
+        "title": "Prüfung wählen und üben",
+        "description": "Themen aufrufen und Text schreiben"
+      },
+      "progress": {
+        "title": "Verfolgen und verbessern",
+        "description": "Punktzahl und detaillierte Korrekturen erhalten"
+      }
+    }
+  },
+  "cta_section": {
+    "title": "Lass die Prüfung nicht über dich entscheiden",
+    "title_line1": "Bestehe dein Zertifikat",
+    "title_line2": "Goethe, TELC oder ÖSD",
+    "title_line3": "beim ersten Versuch.",
+    "phone": "+237 691 85 09 13",
+    "button": "Jetzt mit dem Training beginnen"
+  },
+  "exams_section": {
+    "title": "Offizielle Prüfungen",
+    "subtitle1": "Bereite dein ",
+    "subtitle2": " B1- oder B2-",
+    "subtitle3": "Zertifikat mit der richtigen Organisation vor",
+    "features": "An offizielle Prüfungen angepasste Simulationen · Sofortige KI-Korrektur der Schreiben-Aufgaben",
+    "orgs": {
+      "goethe": {
+        "name": "Goethe-Institut",
+        "subtitle": "Internationale Zertifizierung"
+      },
+      "telc": {
+        "name": "TELC",
+        "subtitle": "Europäische Zertifizierungen"
+      },
+      "osd": {
+        "name": "ÖSD",
+        "subtitle": "Österreichisches Sprachdiplom"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "Deine Plattform zur Vorbereitung auf die Deutschprüfung. Realistische Simulationen, KI-Korrekturen, Fortschrittsverfolgu­ng.",
+    "exams": {
+      "title": "Prüfungen",
+      "links": {
+        "goethe_b1": "Goethe B1",
+        "goethe_b2": "Goethe B2",
+        "osd": "ÖSD Zertifikat",
+        "testdaf": "TestDaF",
+        "telc": "TELC Deutsch"
+      }
+    },
+    "resources": {
+      "title": "Ressourcen",
+      "links": {
+        "guides": "Lernleitfäden",
+        "faq": "FAQ",
+        "tutorials": "Videotutorials",
+        "privacy_policy": "Datenschutzrichtlinie"
+      }
+    },
+    "about": {
+      "title": "Über uns",
+      "links": {
+        "mission": "Unsere Mission",
+        "pricing": "Preise",
+        "terms": "Nutzungsbedingungen",
+        "privacy": "Datenschutz",
+        "contact": "Kontakt"
+      }
+    },
+    "copyright": "© 2026 GoToGermany. Alle Rechte vorbehalten.",
+    "secure_payment": "Sichere Zahlung"
+  },
+  "pricing": {
+    "title": "GoToGermany Preise",
+    "subtitle": "Wähle die Laufzeit, die zu dir passt, und greife auf alle verfügbaren Prüfungen zu.",
+    "payment_methods": "Akzeptierte Zahlungsmethoden",
+    "immediate_access": "Sofortiger Zugang nach der Zahlung",
+    "no_plans": "Derzeit keine Pläne verfügbar.",
+    "popular": "⭐ Am beliebtesten",
+    "per_day": "d. h.",
+    "per_day_suffix": "FCFA/Tag",
+    "features": {
+      "unlimited": "Unbegrenzter Zugang zu allen Prüfungen",
+      "subjects": "Alle verfügbaren Themen",
+      "corrections": "Automatische Korrekturen",
+      "progress": "Fortschrittsverfolgung"
+    },
+    "cta": "Diesen Plan wählen",
+    "default_description": "Vollständiger Zugang zu allen Prüfungen für"
+  },
+  "about": {
+    "hero": {
+      "badge": "Offizielle Vorbereitungsplattform",
+      "title_line1": "Bestehe deine",
+      "title_line2": "Deutschprüfung",
+      "subtitle": "GoToGermany bietet Simulationen, die an die offiziellen Goethe-, ÖSD- und TELC-Prüfungen angepasst sind. Bereite dich auf B1- und B2-Niveau mit realistischen Tests und intelligenten Korrekturen vor.",
+      "cta_start": "Jetzt starten",
+      "cta_exams": "Prüfungen ansehen"
+    },
+    "stats": {
+      "candidates": "Vorbereitete Kandidaten",
+      "success_rate": "Erfolgsquote",
+      "levels": "Verfügbare Niveaus",
+      "access": "Unbegrenzter Zugang"
+    },
+    "features": {
+      "title": "Ernsthafte, einfache und effektive Vorbereitung",
+      "subtitle": "Zugang zu Probeprüfungen, die nach denselben Kriterien wie die offiziellen Tests erstellt wurden.",
+      "badge": "Unser Angebot",
+      "items": {
+        "exams": {
+          "title": "Realistische Probeprüfungen",
+          "desc": "Jeder Test reproduziert originalgetreu Struktur, Dauer und Fragetypen der offiziellen Goethe-, ÖSD- und TELC-Prüfungen."
+        },
+        "audio": {
+          "title": "Hörverstehen mit Audio",
+          "desc": "Das Hörverstehen ist mit echten Audiodateien integriert, genau wie am Prüfungstag."
+        },
+        "access": {
+          "title": "Einfacher & flexibler Zugang",
+          "desc": "Wähle deine Zugangsdauer und zahle per MTN oder Orange Money. Sofortiger Zugang."
+        },
+        "progress": {
+          "title": "Fortschrittsverfolgung",
+          "desc": "Sieh deine Punktzahlen nach Modul, erkenne Schwächen und miss deine Verbesserung."
+        },
+        "partners": {
+          "title": "Partnerzentren",
+          "desc": "Wir arbeiten mit zertifizierten Ausbildungszentren zusammen, die GoToGermany ihren Lernenden empfehlen."
+        },
+        "payment": {
+          "title": "Mobile-Money-Zahlung",
+          "desc": "Zahle einfach mit MTN MoMo oder Orange Money. Keine Bankkarte erforderlich."
+        }
+      }
+    },
+    "levels": {
+      "title": "Verfügbare Niveaus",
+      "subtitle": "Zwei Niveaus, Tausende von Fragen, eine Plattform",
+      "b1": {
+        "badge": "BELIEBT",
+        "name": "Mittelstufe",
+        "desc": "Das Wesentliche in alltäglichen Situationen verstehen — Arbeit, Schule, Reisen. Ideal für Visum- oder Aufenthaltsgenehmigungsanträge in Deutschland."
+      },
+      "b2": {
+        "badge": "NEU",
+        "name": "Fortgeschritten",
+        "desc": "Komplexe Themen flüssig beherrschen. Erforderlich für ein Universitätsstudium oder qualifizierte Stellen in Deutschland oder Österreich."
+      }
+    },
+    "certifications": {
+      "title": "Zertifizierungen & Partner",
+      "subtitle": "Unsere Tests wurden nach den offiziellen Kriterien dieser anerkannten Institutionen erstellt.",
+      "items": {
+        "goethe": "Internationale Zertifizierung",
+        "osd": "Österreichisches Sprachdiplom",
+        "telc": "Europäische Zertifizierungen",
+        "partners": {
+          "name": "Partnerzentren",
+          "desc": "Zertifiziertes Ausbildungsnetzwerk"
+        }
+      },
+      "cta_pricing": "Preise ansehen",
+      "cta_exams": "Eine Prüfung ausprobieren"
+    }
+  },
+  "contact": {
+    "badge": "Kontaktiere uns",
+    "title": "Nimm Kontakt auf",
+    "subtitle": "Hast du eine Frage zu unseren Deutschprüfungen? Wir helfen dir gerne.",
+    "form": {
+      "name": "Vollständiger Name",
+      "name_placeholder": "Dein Name",
+      "name_required": "Name ist erforderlich",
+      "email_placeholder": "deine{'@'}email.com",
+      "email_required": "E-Mail ist erforderlich",
+      "subject": "Betreff",
+      "subject_placeholder": "Betreff auswählen",
+      "subject_required": "Betreff ist erforderlich",
+      "message": "Nachricht",
+      "message_placeholder": "Deine Nachricht...",
+      "message_required": "Nachricht ist erforderlich",
+      "submit": "Nachricht senden",
+      "error_fill": "Bitte fülle alle Felder aus",
+      "success_summary": "Nachricht gesendet",
+      "success_detail": "Wir melden uns so schnell wie möglich bei dir"
+    },
+    "subjects": {
+      "inscription": "Prüfungsanmeldung",
+      "tarifs": "Preisfrage",
+      "technique": "Technisches Problem",
+      "partenariat": "Partnerschaftsanfrage",
+      "renseignements": "Allgemeine Anfrage",
+      "autre": "Sonstiges"
+    },
+    "info": {
+      "email_response": "Antwort innerhalb von 24 Werkstagsstunden",
+      "phone_hours": "Mo - Fr, 9 - 17 Uhr",
+      "whatsapp": "Sofort-Chat verfügbar",
+      "office": "Büro",
+      "office_location": "Dschang, Kamerun",
+      "office_note": "Nur nach Terminvereinbarung",
+      "faq_title": "Brauchst du schnelle Hilfe?",
+      "faq_desc": "Sieh dir unsere FAQ an, um sofortige Antworten auf häufige Fragen zu erhalten.",
+      "faq_btn": "FAQ ansehen",
+      "phone": "Telefon"
+    }
+  },
+  "dashboard_exams": {
+    "title": "Verfügbare Prüfungen",
+    "subtitle": "Wähle eine Prüfung und starte deine Vorbereitung",
+    "search_placeholder": "Prüfung suchen...",
+    "provider_placeholder": "Anbieter",
+    "level_placeholder": "Niveau",
+    "all_providers": "Alle Anbieter",
+    "all_levels": "Alle Niveaus",
+    "empty_title": "Keine Prüfungen gefunden",
+    "empty_subtitle": "Versuche andere Kriterien",
+    "reset": "Zurücksetzen",
+    "exam_count": "Prüfung(en)",
+    "default_desc": "Bereite dich effektiv auf diese Deutschprüfung vor.",
+    "access_active": "Aktiver Zugang",
+    "free": "Kostenlos",
+    "premium": "Premium",
+    "see_subjects": "Themen ansehen"
+  },
+  "dashboard": {
+    "greeting": "Hallo",
+    "subtitle": "Was möchtest du heute tun?",
+    "quick_actions": {
+      "exam": "Prüfung ablegen",
+      "exam_sub": "Goethe, TELC, ÖSD",
+      "simulator": "Schreiben-Simulator",
+      "simulator_sub": "Sofortige KI-Korrektur",
+      "results": "Meine Ergebnisse",
+      "results_sub": "Fortschrittsverfolgung"
+    },
+    "choose_exam": "Prüfung wählen",
+    "see_all": "Alle ansehen →",
+    "no_exams": "Keine Prüfungen verfügbar",
+    "start": "Starten",
+    "recent_sessions": "Letzte Sitzungen",
+    "no_sessions": "Noch keine Sitzungen",
+    "start_exam": "Prüfung starten →",
+    "subject": "Thema",
+    "pages": {
+      "dashboard": "Dashboard",
+      "examens": "Prüfungen",
+      "simulateur": "Simulator",
+      "methodologie": "Methodik",
+      "resultats": "Ergebnisse",
+      "profil": "Profil",
+      "factures": "Rechnungen",
+      "credits": "Guthaben"
+    }
+  },
+  "sidebar": {
+    "main": "Hauptmenü",
+    "account": "Konto",
+    "logout": "Abmelden"
+  },
+  "session": {
+    "loading": "Sitzung wird geladen...",
+    "error": "Fehler",
+    "back_to_exams": "Zurück zu den Prüfungen",
+    "subject": "Thema",
+    "exit_title": "Prüfung verlassen?",
+    "exit_warning": "Deine aktuellen Antworten gehen verloren.",
+    "cancel": "Abbrechen",
+    "quit": "Verlassen",
+    "submit_title": "Prüfung beenden?",
+    "answered": "Du hast",
+    "questions_of": "Frage(n) von",
+    "unanswered_warning": "Einige Fragen sind noch unbeantwortet.",
+    "continue": "Weiter",
+    "submit": "Abgeben"
+  },
+  "result": {
+    "not_found": "Ergebnis nicht gefunden",
+    "back_to_exams": "Zurück zu den Prüfungen",
+    "subject": "Thema",
+    "passed": "Bestanden ✓",
+    "failed": "Nicht bestanden",
+    "pending": "Ausstehend",
+    "min_score": "Min.",
+    "module_result": "Modulergebnis",
+    "modules_result": "Ergebnisse nach Modul",
+    "waiting_correction": "Wartet auf manuelle Korrektur",
+    "see_correction": "Korrektur ansehen",
+    "detail_title": "Korrektur ansehen",
+    "your_answer": "Deine Antwort",
+    "correct_answer": "Richtige Antwort",
+    "another_module": "Anderes Modul versuchen",
+    "my_results": "Meine Ergebnisse",
+    "module": "Modul",
+    "modules": "Module",
+    "module_passed": "Bestanden",
+    "module_failed": "Nicht bestanden",
+    "why_failed": "Warum haben Sie nicht bestanden?",
+"global_score_insufficient": "Gesamtpunktzahl unzureichend: {score}/100 (Schwelle: {threshold})",
+"module_score_insufficient": "{module}: {score}/100 (Modulschwelle: 60)"
+  },
+  "exam_detail": {
+    "not_found": "Prüfung nicht gefunden",
+    "back": "Zurück",
+    "levels": "Niveaus",
+    "subjects": "Themen",
+    "free_levels": "Kostenlose Niveaus",
+    "level_prefix": "Niveau",
+    "subjects_count": "Thema/Themen",
+    "min_score": "Mindestpunktzahl",
+    "access_active": "Aktiver Zugang",
+    "free": "Kostenlos",
+    "premium": "Premium",
+    "available": "Verfügbar",
+    "subscribe": "Kaufen",
+    "free_per_level": "Kostenlose Themen",
+    "subject_default": "Thema",
+    "modules": "Module",
+    "level_names": {
+      "A1": "Anfänger",
+      "A2": "Grundstufe",
+      "B1": "Mittelstufe",
+      "B2": "Selbstständig",
+      "C1": "Fortgeschritten",
+      "C2": "Meisterschaft"
+    }
+  },
+  "subject_detail": {
+    "not_found": "Thema nicht gefunden",
+    "back": "Zurück",
+    "subject_default": "Thema",
+    "how_to_work": "Wie möchtest du an diesem Thema arbeiten?",
+    "choose_module": "Wähle ein Modul oder mache die vollständige Prüfung.",
+    "work_module": "An einem Modul arbeiten",
+    "or": "oder",
+    "full_exam_title": "Vollständiger Prüfungsmodus",
+    "full_exam_desc": "Alle Module unter echten Prüfungsbedingungen.",
+    "start_full_exam": "Vollständige Prüfung starten",
+    "minutes": "Min.",
+    "modules": "Module",
+    "points": "Pkt."
+  },
+  "correction": {
+    "loading": "Korrektur wird geladen…",
+    "not_found": "Korrektur nicht gefunden",
+    "back": "Zurück",
+    "passed": "Prüfung bestanden",
+    "failed": "Nicht bestanden",
+    "points": "Punkte",
+    "score_detail": "Punktedetails",
+    "hide": "Ausblenden",
+    "see_correction": "Korrektur ansehen",
+    "strengths": "Stärken",
+    "to_improve": "Verbesserungspotenzial",
+    "corrected_text": "Korrigierter Text",
+    "detailed_corrections": "Detaillierte Korrekturen",
+    "tips": "Verbesserungstipps",
+    "back_to_exam": "Zurück zur Prüfung",
+    "my_results": "Meine Ergebnisse ansehen",
+    "page_title": "Schreiben-Korrektur — DeutschTest"
+  },
+  "invoices": {
+    "title": "Meine Zahlungen",
+    "subtitle": "Verlauf deiner Käufe und Rechnungen",
+    "empty_title": "Keine Zahlungen",
+    "empty_subtitle": "Du hast noch keine Käufe getätigt",
+    "see_pricing": "Preise ansehen",
+    "ref": "Ref.",
+    "invoice_btn": "Rechnung",
+    "dialog_title": "Rechnung",
+    "payment_confirmed": "Zahlung bestätigt",
+    "client": "Kunde",
+    "product": "Produkt",
+    "date": "Datum",
+    "operator": "Betreiber",
+    "discount": "Rabatt",
+    "total": "Gezahlter Betrag",
+    "partner_code": "Partnercode",
+    "close": "Schließen",
+    "download_pdf": "PDF herunterladen",
+    "generate_pdf": "PDF erstellen",
+    "status": {
+      "COMPLETED": "Bezahlt",
+      "FAILED": "Fehlgeschlagen",
+      "PENDING": "Ausstehend"
+    }
+  },
+  "payment": {
+    "back": "Zurück zu den Prüfungen",
+    "title": "Zugang abschließen",
+    "subtitle": "Zugang zu allen GoToGermany-Prüfungen",
+    "level": "Niveau nicht gefunden.",
+    "subjet": "verfügbare Themen",
+    "message": "Eine Benachrichtigung wurde an Ihr Telefon gesendet",
+    "pin": "Mit Ihrer PIN bestätigen",
+    "ref": "Transaktionsreferenz",
+    "polling": "Alle 5 Sekunden prüfen...",
+    "choose_duration": "Laufzeit wählen",
+    "per_day": "FCFA/Tag",
+    "included": "In deinem Zugang enthalten",
+    "promo_code": "Partnercode (optional)",
+    "promo_placeholder": "PARTNER2024",
+    "apply": "Anwenden",
+    "remove": "Entfernen",
+    "payment_method": "Zahlungsmethode",
+    "mobile_money": "Mobile Money",
+    "mobile_desc": "Orange, MTN",
+    "card": "Bankkarte",
+    "card_desc": "Visa, Mastercard",
+    "operator": "Betreiber *",
+    "phone": "Telefonnummer *",
+    "phone_hint": "Ohne Ländervorwahl, beginne mit 6 oder 9",
+    "card_number": "Kartennummer *",
+    "card_expiry": "Ablaufdatum (MM/JJ) *",
+    "card_cvc": "CVC *",
+    "card_holder": "Name des Karteninhabers *",
+    "total": "Zu zahlender Betrag",
+    "pay_now": "Jetzt bezahlen",
+    "secure": "Sichere Zahlung über My-CoolPay",
+    "features": {
+      "unlimited": "Unbegrenzter Zugang zu allen Prüfungen",
+      "subjects": "Alle verfügbaren Themen",
+      "audio": "Hörverstehen mit Audio",
+      "corrections": "Automatische Korrekturen",
+      "progress": "Fortschrittsverfolgung"
+    },
+    "ussd": {
+      "title": "Zahlung bestätigen",
+      "dial": "Gib diesen Code auf deinem Handy ein",
+      "pending": "Warte auf Bestätigung...",
+      "completed": "Zahlung bestätigt!",
+      "failed": "Zahlung fehlgeschlagen",
+      "ref": "Ref.",
+      "retry": "Erneut versuchen",
+      "go_to_exams": "Zu den Prüfungen"
+    }
+  },
+  "my_results": {
+    "title": "Meine Ergebnisse",
+    "subtitle": "Verlauf meiner Prüfungssitzungen",
+    "empty_title": "Keine Ergebnisse",
+    "empty_subtitle": "Du hast noch keine Prüfungen abgelegt.",
+    "start_exam": "Prüfung starten",
+    "all_statuses": "Alle Status",
+    "filter_passed": "Bestanden",
+    "filter_failed": "Nicht bestanden",
+    "filter_pending": "In Überprüfung",
+    "filter_in_progress": "In Bearbeitung",
+    "sort_desc": "Neueste zuerst",
+    "sort_asc": "Älteste zuerst",
+    "reset": "Zurücksetzen",
+    "stats": {
+      "total": "Gesamtsitzungen",
+      "passed": "Bestanden",
+      "avg_score": "Durchschnittspunktzahl",
+      "pending": "In Überprüfung"
+    },
+    "score": "Punktzahl",
+    "continue": "Weiter",
+    "status": {
+      "in_progress": "In Bearbeitung",
+      "pending_review": "In Überprüfung",
+      "passed": "Bestanden",
+      "failed": "Nicht bestanden",
+      "completed": "Abgeschlossen"
+    },
+    "load_more": "Mehr laden"
+  },
+  "simulator": {
+    "title": "Schreiben-Simulator",
+    "subtitle": "Übe mit echten Themen und erhalte sofortige KI-Korrekturen.",
+    "tab_subjects": "Verfügbare Themen",
+    "tab_results": "Meine Korrekturen",
+    "all": "Alle",
+    "no_subjects_title": "Keine Themen verfügbar",
+    "no_subjects_subtitle": "Versuche andere Filter",
+    "show_all": "Alle anzeigen",
+    "tasks": "Aufgabe",
+    "tasks_plural": "Aufgaben",
+    "start": "Starten",
+    "no_results_title": "Noch keine Korrekturen",
+    "no_results_subtitle": "Beginne mit dem Üben an einem Thema",
+    "see_subjects": "Themen ansehen",
+    "see": "Ansehen",
+    "deleted_subject": "Gelöschtes Thema",
+    "dialog_title": "Korrekturgeber",
+    "appreciation": "Bewertung",
+    "criteria_scores": "Punktzahlen nach Kriterium",
+    "tips": "Tipps",
+    "close": "Schließen",
+    "redo": "Dieses Thema wiederholen",
+    "page_title": "Schreiben-Simulator — DeutschTest"
+  },
+  "simulator_result": {
+    "no_correction": "Keine Korrektur verfügbar.",
+    "back_simulator": "Zurück zum Simulator",
+    "score": "Punktzahl",
+    "success_rate": "Erfolgsquote",
+    "level": "Niveau",
+    "criteria_title": "Kriteriendetails",
+    "task_title": "Korrektur nach Teil",
+    "strengths": "Stärken",
+    "to_improve": "Verbesserungspotenzial",
+    "corrected_text": "Korrigierter Text",
+    "detailed_corrections": "Detaillierte Korrekturen",
+    "tips": "Verbesserungstipps",
+    "redo": "Dieses Thema wiederholen",
+    "choose_another": "Anderes Thema wählen",
+    "page_title": "Ergebnisse — DeutschTest"
+  },
+  "simulator_subject": {
+    "words_written": "geschriebene(s) Wort(e)",
+    "ad_context": "Anzeige / Kontext",
+    "task_label": "Aufgabe",
+    "word_range": "Wörter",
+    "write_placeholder": "Schreibe deinen Text hier…",
+    "words_count": "Wort(e)",
+    "prev_teil": "Vorheriger Teil",
+    "next_teil": "Nächster Teil",
+    "correct_btn": "Mit KI korrigieren",
+    "correct_hint": "Schreibe mindestens eine Antwort, um die Korrektur zu starten",
+    "correcting": "Korrektur läuft…",
+    "correcting_sub": "Die KI analysiert deine Texte, das kann einige Sekunden dauern.",
+    "error_title": "Korekturfehler",
+    "retry": "Erneut versuchen",
+    "see_results": "Ergebnisse ansehen",
+    "back": "Zurück",
+    "page_title": "Simulator — DeutschTest",
+    "credit": "KI-Guthaben verfügbar",
+    "credits": "KI-Guthaben verfügbar",
+    "no_credits": "Guthaben unzureichend",
+    "no_credits_hint": "Sie haben kein KI-Guthaben mehr.",
+    "buy_credits": "Guthaben kaufen"
+  },
+  "schreiben": {
+    "comment": "Kommentar",
+    "task": "Aufgabe",
+    "approx": "Ca.",
+    "words": "Wörter",
+    "formal_required": "Formeller Ton erforderlich",
+    "placeholder": "Schreiben Sie hier Ihren Text...",
+    "word_count": "Wort/Wörter",
+    "download_pdf": "Meine Aufgabe als PDF herunterladen",
+    "correct_btn": "Mit KI korrigieren",
+    "correct_hint": "Schreiben Sie mindestens eine Antwort, um die Korrektur zu starten",
+    "correcting": "Korrektur läuft…",
+    "correcting_sub": "Die KI analysiert Ihren Text, das kann einige Sekunden dauern.",
+    "error_title": "Korrekturfehler",
+    "retry": "Erneut versuchen",
+    "see_results": "Ergebnisse ansehen"
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "subtitle": "Verwalte deine persönlichen Daten",
+    "email_verified": "E-Mail verifiziert",
+    "email_not_verified": "E-Mail nicht verifiziert",
+    "member_since": "Mitglied seit",
+    "status": "Status",
+    "admin": "Administrator",
+    "user": "Benutzer",
+    "personal_info": "Persönliche Daten",
+    "full_name": "Vollständiger Name",
+    "email": "E-Mail",
+    "email_readonly": "E-Mail kann nicht geändert werden",
+    "phone": "Telefon",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "success_update": "Profil erfolgreich aktualisiert!",
+    "error_update": "Fehler beim Aktualisieren des Profils",
+    "change_password": "Passwort ändern",
+    "current_password": "Aktuelles Passwort",
+    "new_password": "Neues Passwort",
+    "confirm_password": "Passwort bestätigen",
+    "change_password_btn": "Passwort ändern",
+    "success_password": "Passwort erfolgreich geändert!",
+    "error_password": "Fehler beim Ändern des Passworts",
+    "error_fields": "Bitte fülle alle Felder aus",
+    "error_match": "Passwörter stimmen nicht überein",
+    "error_length": "Das Passwort muss mindestens 8 Zeichen lang sein",
+    "stats_exams": "Abgeschlossene Prüfungen",
+    "stats_score": "Durchschnittspunktzahl",
+    "stats_time": "Lernzeit",
+    "danger_zone": "Gefahrenzone",
+    "delete_account": "Mein Konto löschen",
+    "delete_desc": "Sobald dein Konto gelöscht ist, gehen alle deine Daten dauerhaft verloren.",
+    "delete_btn": "Konto löschen",
+    "delete_dialog_title": "Dein Konto löschen?",
+    "delete_warning": "Diese Aktion ist unwiderruflich!",
+    "delete_confirm_text": "Bist du absolut sicher, dass du dein Konto löschen möchtest? Alle deine Daten, einschließlich deiner Prüfungsergebnisse, werden dauerhaft gelöscht.",
+    "delete_type": "Gib \"LÖSCHEN\" ein, um zu bestätigen",
+    "delete_placeholder": "LÖSCHEN",
+    "delete_confirm_btn": "Dauerhaft löschen",
+    "delete_confirm_word": "LÖSCHEN"
+  },
+  "faq": {
+    "badge": "Hilfezentrum",
+    "title": "Häufig gestellte Fragen",
+    "subtitle": "Finde schnell Antworten auf deine Fragen zu DeutschTest",
+    "categories": {
+      "all": "Alle",
+      "exams": "Prüfungen",
+      "account": "Konto",
+      "technical": "Technisch"
+    },
+    "cta_title": "Keine Antwort gefunden?",
+    "cta_desc": "Unser Team ist für dich da. Kontaktiere uns und wir melden uns so schnell wie möglich.",
+    "cta_btn": "Kontaktiere uns",
+    "page_title": "FAQ — DeutschTest",
+    "page_desc": "Häufig gestellte Fragen zu DeutschTest: Prüfungen, Preise, Anmeldung, Vorbereitung und technischer Support.",
+    "questions": {
+      "exams_1": {
+        "q": "Welche Deutschprüfungen sind auf DeutschTest verfügbar?",
+        "a": "Wir bieten derzeit vollständige Simulationen für <strong>Goethe B1</strong> und <strong>Goethe B2</strong>-Prüfungen an. Wir decken auch <strong>ÖSD</strong>- und <strong>TELC</strong>-Formate ab, die ähnliche Strukturen aufweisen. A1-, A2- und C1-Niveaus werden bald hinzugefügt."
+      },
+      "exams_2": {
+        "q": "Entsprechen die Simulationen den offiziellen Prüfungen?",
+        "a": "Ja, absolut! Unsere Simulationen folgen strikt dem Format, der Dauer und den Bewertungskriterien der offiziellen Goethe-Institut-, ÖSD- und TELC-Prüfungen. Unsere Inhalte werden von zertifizierten Prüfern mit echter Prüfungserfahrung erstellt."
+      },
+      "exams_3": {
+        "q": "Wie funktioniert die KI-Korrektur?",
+        "a": "Unser KI-System analysiert deine schriftlichen und mündlichen Produktionen nach <strong>offiziellen Kriterien</strong> (Inhalt, Kohärenz, Grammatik, Wortschatz, Aussprache). Du erhältst <strong>detailliertes Feedback</strong> mit deinen Stärken, Verbesserungsbereichen und einer Schätzung deiner möglichen Punktzahl."
+      },
+      "exams_4": {
+        "q": "Wie viele Tests kann ich machen?",
+        "a": "Mit dem <strong>Single</strong>-Zugang machst du eine vollständige Probeprüfung. Mit dem <strong>Unbegrenzt 30-Tage</strong>-Zugang kannst du 30 Tage lang so viele Tests machen, wie du möchtest. Ideal für intensive Vorbereitung vor deiner offiziellen Prüfung."
+      },
+      "exams_5": {
+        "q": "Entsprechen die Audioaufnahmen echten Prüfungsbedingungen?",
+        "a": "Ja, unsere Audioaufnahmen verwenden <strong>Muttersprachler</strong> mit Standardakzenten (Deutsch, Österreichisch, Schweizerdeutsch). Die Qualität und Geschwindigkeit entsprechen genau den offiziellen Prüfungsbedingungen."
+      },
+      "account_1": {
+        "q": "Wie erstelle ich ein Konto?",
+        "a": "Klicke oben auf der Seite auf <strong>\"Kostenlos starten\"</strong>. Gib deine E-Mail ein, erstelle ein Passwort und bestätige. Du erhältst eine Bestätigungs-E-Mail. Das war's! Keine Kreditkarte erforderlich."
+      },
+      "account_2": {
+        "q": "Welche Zahlungsmethoden werden akzeptiert?",
+        "a": "Wir akzeptieren Zahlungen per <strong>Bankkarte</strong> (Visa, Mastercard), <strong>Mobile Money</strong> (MTN, Orange) und <strong>PayPal</strong>. Alle Zahlungen sind gesichert und verschlüsselt."
+      },
+      "account_3": {
+        "q": "Kann ich meinen Plan nach der Anmeldung ändern?",
+        "a": "Ja, du kannst jederzeit von <strong>Single</strong>- auf <strong>Unbegrenzt</strong>-Zugang umsteigen. Der Preisunterschied wird automatisch berechnet."
+      },
+      "account_4": {
+        "q": "Wie kann ich mein Passwort zurücksetzen?",
+        "a": "Klicke auf der Anmeldeseite auf <strong>\"Passwort vergessen?\"</strong>. Gib deine E-Mail ein und du erhältst einen 24 Stunden gültigen Reset-Link. Falls du die E-Mail nicht erhältst, überprüfe deinen Spam-Ordner oder kontaktiere uns."
+      },
+      "technical_1": {
+        "q": "Auf welchen Geräten kann ich DeutschTest nutzen?",
+        "a": "DeutschTest funktioniert auf <strong>Computern</strong> (Windows, Mac, Linux), <strong>Tablets</strong> und <strong>Smartphones</strong> (iOS, Android). Wir empfehlen einen Computer mit Mikrofon für mündliche Abschnitte, aber du kannst auch dein Handy nutzen."
+      },
+      "technical_2": {
+        "q": "Brauche ich eine Internetverbindung?",
+        "a": "Ja, eine stabile Internetverbindung ist erforderlich, um Prüfungen abzulegen, Audio zu laden und Korrekturen zu erhalten. Wir empfehlen eine Verbindung von mindestens <strong>2 Mbit/s</strong> für das beste Erlebnis."
+      },
+      "technical_3": {
+        "q": "Was soll ich tun, wenn ich während einer Prüfung ein technisches Problem habe?",
+        "a": "Dein Fortschritt wird <strong>automatisch gespeichert</strong>. Bei einem Problem (Internetausfall, Fehler) kannst du genau dort weitermachen, wo du aufgehört hast. Wenn das Problem weiterhin besteht, kontaktiere unseren Support per Live-Chat oder E-Mail an <strong>lfogouang39{'@'}gmail.com</strong>."
+      }
+    }
+  }
+}

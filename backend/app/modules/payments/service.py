@@ -1,10 +1,10 @@
 """
 app/modules/payments/service.py
 
-Flow My-CoolPay :
-  1. initiate_payment() → crée Payment(PENDING) → appelle payin My-CoolPay
-  2. Webhook → handle_webhook() → update COMPLETED/FAILED
-  3. Si COMPLETED → _grant_exam_access() → ExamAccess créé avec expires_at
+Flow pawaPay :
+  1. initiate_payment() → crée Payment(PENDING) → appelle pawaPay deposit
+  2. Callback → handle_callback() → update COMPLETED/FAILED
+  3. Si COMPLETED → _grant_level_access() → ExamAccess créé avec expires_at
   4. Facture PDF générée automatiquement
 """
 import logging
@@ -14,9 +14,9 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.payments.models import Payment
-from app.modules.payments.mycoolpay import MyCoolPayClient
+from app.modules.payments.pawapay import PawapayClient
 from app.modules.payments.repository import PaymentRepository
-from app.modules.payments.schemas import ManualPaymentRequest, PaymentInitiateRequest, WebhookPayload
+from app.modules.payments.schemas import ManualPaymentRequest, PawapayCallbackPayload, PaymentInitiateRequest
 from app.modules.users.models import User
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 
@@ -28,7 +28,7 @@ class PaymentService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = PaymentRepository(db)
-        self.mycoolpay = MyCoolPayClient()
+        self.pawapay = PawapayClient()
 
     # ── Initiation ───────────────────────────────────────
 
@@ -38,22 +38,22 @@ class PaymentService:
         current_user: User,
     ) -> dict:
         """
-        Initie un paiement mobile money pour l'accès à un exam.
+        Initie un paiement mobile money pour l'accès à un level.
 
         Steps :
-          1. Charger Exam + Plan
+          1. Charger Level + Plan
           2. Vérifier code promo si fourni → calculer réduction + commission
           3. Créer Payment(PENDING)
-          4. Appeler My-CoolPay payin
-          5. Stocker mycoolpay_ref + operator
+          4. Appeler pawaPay deposit
+          5. Stocker pawapay_deposit_id
         """
-        from app.modules.exams.models import Exam
+        from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
 
-        # 1. Vérifier exam
-        exam = await self.db.get(Exam, data.exam_id)
-        if not exam or not exam.is_active:
-            raise NotFoundException(resource="Exam", identifier=str(data.exam_id))
+        # 1. Vérifier level
+        level = await self.db.get(Level, data.level_id)
+        if not level:
+            raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
         # 2. Vérifier plan
         plan = await self.db.get(Plan, data.plan_id)
@@ -79,12 +79,10 @@ class PaymentService:
         # 4. Générer référence interne
         transaction_reference = await self.repo.generate_transaction_reference()
 
-        reason = f"Accès {exam.name} — {plan.name}"
-
         # 5. Créer Payment PENDING
         payment = await self.repo.create(
             user_id=current_user.id,
-            exam_id=data.exam_id,
+            level_id=data.level_id,
             plan_id=data.plan_id,
             promo_code_id=promo_code_id,
             amount_gross=amount_gross,
@@ -96,25 +94,29 @@ class PaymentService:
             operator=data.operator,
         )
 
-        # 6. Appeler My-CoolPay payin
+        # 6. Appeler pawaPay
         try:
-            mycoolpay_response = await self.mycoolpay.create_payin(
-                transaction_amount=amount_paid,
-                customer_phone_number=data.phone_number,
-                app_transaction_ref=transaction_reference,
-                transaction_reason=reason,
-                customer_name=current_user.full_name,
-                customer_email=current_user.email,
+            pawapay_response = await self.pawapay.initiate_deposit(
+                deposit_id=str(payment.id),
+                amount=amount_paid,
+                phone_number=data.phone_number,
+                provider="MTN_MOMO_CMR" if data.operator == "MTN" else "ORANGE_CMR",
+                client_reference_id=transaction_reference,
+                customer_message="GoToGermany",
             )
         except Exception as e:
-            # Annuler le paiement si My-CoolPay échoue
             await self.repo.update(payment.id, payment_status="FAILED")
             raise BadRequestException(detail=f"Erreur paiement : {str(e)}")
 
-        # 7. Stocker mycoolpay_ref
-        mycoolpay_ref = mycoolpay_response.get("transaction_ref")
-        if mycoolpay_ref:
-            await self.repo.update(payment.id, mycoolpay_ref=mycoolpay_ref)
+        pawapay_status = pawapay_response.get("status")
+        if pawapay_status == "REJECTED":
+            failure = pawapay_response.get("failureReason", {})
+            await self.repo.update(payment.id, payment_status="FAILED")
+            raise BadRequestException(
+                detail=f"Paiement rejeté : {failure.get('failureMessage', 'Erreur inconnue')}"
+            )
+
+        await self.repo.update(payment.id, pawapay_deposit_id=str(payment.id))
 
         return {
             "payment_id": payment.id,
@@ -123,76 +125,56 @@ class PaymentService:
             "amount_paid": amount_paid,
             "discount_amount": amount_gross - amount_paid,
             "currency": "XAF",
-            "ussd_code": mycoolpay_response.get("ussd"),
-            "message": mycoolpay_response.get("message", "Composez le code USSD pour confirmer le paiement."),
+            "message": "Confirmez le paiement sur votre téléphone mobile.",
         }
 
-    # ── Webhook ──────────────────────────────────────────
+    # ── Callback pawaPay ─────────────────────────────────
 
-    async def handle_webhook(self, webhook_data: WebhookPayload) -> bool:
+    async def handle_callback(self, payload: PawapayCallbackPayload) -> bool:
         """
-        Traite le callback My-CoolPay.
-        Vérification signature → update statut → grant ExamAccess si succès.
+        Traite le callback pawaPay.
+        COMPLETED → grant level access + facture
+        FAILED → marque comme échoué
         """
-        # 1. Vérifier signature MD5
-        is_valid = self.mycoolpay.verify_webhook_signature(
-            transaction_ref=webhook_data.transaction_ref,
-            transaction_type=webhook_data.transaction_type,
-            transaction_amount=webhook_data.transaction_amount,
-            transaction_currency=webhook_data.transaction_currency,
-            transaction_operator=webhook_data.transaction_operator,
-            signature=webhook_data.signature,
-        )
-        if not is_valid:
-            logger.warning(f"Webhook signature invalide pour {webhook_data.transaction_ref}")
-            raise BadRequestException(detail="Signature invalide")
-
-        # 2. Trouver le paiement via notre transaction_reference
-        payment = await self.repo.find_by_transaction_ref(webhook_data.app_transaction_ref)
+        payment = await self.repo.get_by_id(UUID(payload.depositId))
         if not payment:
-            logger.error(f"Payment introuvable pour ref: {webhook_data.app_transaction_ref}")
-            raise NotFoundException(resource="Payment", identifier=webhook_data.app_transaction_ref)
+            logger.error(f"Payment introuvable pour depositId: {payload.depositId}")
+            raise NotFoundException(resource="Payment", identifier=payload.depositId)
 
-        # 3. Ignorer si déjà traité
         if payment.payment_status == "COMPLETED":
             logger.info(f"Payment {payment.id} déjà COMPLETED — ignoré")
             return True
 
-        # 4. Update statut
-        if webhook_data.transaction_status == "SUCCESS":
+        if payload.status == "COMPLETED":
             await self.repo.update(
                 payment.id,
                 payment_status="COMPLETED",
-                mycoolpay_ref=webhook_data.transaction_ref,
-                operator=webhook_data.transaction_operator,
+                pawapay_deposit_id=payload.depositId,
                 completed_at=datetime.now(timezone.utc),
-                webhook_payload=webhook_data.model_dump(),
+                webhook_payload=payload.model_dump(),
             )
-            # 5. Créer ExamAccess
-            await self._grant_exam_access(payment)
-            # 6. Générer facture
+            await self._grant_level_access(payment)
             await self._generate_invoice(payment)
 
-        elif webhook_data.transaction_status in ("FAILED", "CANCELED"):
+        elif payload.status == "FAILED":
             await self.repo.update(
                 payment.id,
                 payment_status="FAILED",
-                webhook_payload=webhook_data.model_dump(),
+                webhook_payload=payload.model_dump(),
             )
 
         return True
 
-    # ── Grant ExamAccess ─────────────────────────────────
+    # ── Grant Level Access ───────────────────────────────
 
-    async def _grant_exam_access(self, payment: Payment) -> None:
+    async def _grant_level_access(self, payment: Payment) -> None:
         """
-        Crée ou renouvelle l'ExamAccess après paiement réussi.
+        Crée ou renouvelle l'ExamAccess (sur level_id) après paiement réussi.
         expires_at = now + plan.duration_days
         """
         from app.modules.exam_access.models import ExamAccess
         from app.modules.exam_access.repository import ExamAccessRepository
         from app.modules.plans.models import Plan
-        from sqlalchemy import select
 
         plan = await self.db.get(Plan, payment.plan_id)
         if not plan:
@@ -202,23 +184,22 @@ class PaymentService:
         expires_at = datetime.now(timezone.utc) + timedelta(days=plan.duration_days)
         repo = ExamAccessRepository(self.db)
 
-        # Vérifier si accès existant → renouveler
-        existing = await repo.find_by_user_and_exam(payment.user_id, payment.exam_id)
-
+        existing = await repo.find_by_user_and_level(payment.user_id, payment.level_id)
         if existing:
-            # Renouvellement — prolonger depuis maintenant
             await repo.update(
                 existing.id,
                 expires_at=expires_at,
                 payment_id=payment.id,
                 access_type="paid",
             )
-            logger.info(f"ExamAccess renouvelé pour user {payment.user_id} — expires {expires_at}")
+            logger.info(
+                f"ExamAccess renouvelé — user {payment.user_id} "
+                f"level {payment.level_id} — expires {expires_at}"
+            )
         else:
-            # Nouvel accès
             access = ExamAccess(
                 user_id=payment.user_id,
-                exam_id=payment.exam_id,
+                level_id=payment.level_id,
                 access_type="paid",
                 payment_id=payment.id,
                 expires_at=expires_at,
@@ -226,7 +207,10 @@ class PaymentService:
             )
             self.db.add(access)
             await self.db.flush()
-            logger.info(f"ExamAccess créé pour user {payment.user_id} — expires {expires_at}")
+            logger.info(
+                f"ExamAccess créé — user {payment.user_id} "
+                f"level {payment.level_id} — expires {expires_at}"
+            )
 
         await self.db.commit()
 
@@ -242,11 +226,6 @@ class PaymentService:
     # ── Code promo ───────────────────────────────────────
 
     async def _apply_promo_code(self, code: str, amount: int) -> dict | None:
-        """
-        Vérifie et applique un code promo.
-        Retourne dict avec promo_code_id, amount_paid, commission_due.
-        Retourne None si code invalide.
-        """
         from app.modules.promo_codes.models import PromoCode
         from sqlalchemy import select
 
@@ -261,11 +240,8 @@ class PaymentService:
         if not promo:
             raise BadRequestException(detail=f"Code promo '{code}' invalide ou expiré.")
 
-        # Calculer réduction
         discount = int(amount * promo.discount_rate / 100)
         amount_paid = amount - discount
-
-        # Calculer commission partenaire sur montant payé
         commission_due = round(amount_paid * promo.commission_rate / 100, 2)
 
         return {
@@ -290,7 +266,7 @@ class PaymentService:
 
         from app.modules.exam_access.repository import ExamAccessRepository
         repo = ExamAccessRepository(self.db)
-        exam_access_granted = await repo.user_has_access(payment.user_id, payment.exam_id)
+        level_access_granted = await repo.user_has_access(payment.user_id, payment.level_id)
 
         return {
             "payment_id": payment.id,
@@ -300,56 +276,47 @@ class PaymentService:
             "currency": payment.currency,
             "operator": payment.operator,
             "completed_at": payment.completed_at,
-            "exam_access_granted": exam_access_granted,
+            "exam_access_granted": level_access_granted,
         }
 
     async def get_my_payments(self, current_user: User) -> list[Payment]:
         return await self.repo.get_by_user(current_user.id)
-    
 
-
+    # ── Paiement manuel ──────────────────────────────────
 
     async def create_manual_payment(
         self,
-        data: "ManualPaymentRequest",
+        data: ManualPaymentRequest,
         admin: User,
     ) -> dict:
         """
         Admin crée un paiement validé manuellement.
-        Utilisé quand My-CoolPay est indisponible (virement, cash, bon).
-
-        Steps :
-          1. Vérifier exam + plan
-          2. Créer Payment(COMPLETED, operator="MANUAL")
-          3. Appeler _grant_exam_access() directement
-          4. Générer facture
+        Virement, cash, bon, correction admin.
         """
-        from datetime import datetime, timedelta, timezone
-        from app.modules.exams.models import Exam
+        from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
 
-        # 1. Vérifier exam
-        exam = await self.db.get(Exam, data.exam_id)
-        if not exam or not exam.is_active:
-            raise NotFoundException(resource="Exam", identifier=str(data.exam_id))
+        # 1. Vérifier level
+        level = await self.db.get(Level, data.level_id)
+        if not level:
+            raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
         # 2. Vérifier plan
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
 
-        # 3. Générer référence (même pattern que MyCoolPay)
+        # 3. Générer référence manuelle
         transaction_reference = await self.repo.generate_transaction_reference()
-        # Remplacer le préfixe pour identifier les paiements manuels
         transaction_reference = transaction_reference.replace("GTG-", "GTG-M-", 1)
 
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(days=plan.duration_days)
 
-        # 4. Créer Payment COMPLETED directement
+        # 4. Créer Payment COMPLETED
         payment = await self.repo.create(
             user_id=data.user_id,
-            exam_id=data.exam_id,
+            level_id=data.level_id,
             plan_id=data.plan_id,
             promo_code_id=None,
             amount_gross=plan.price,
@@ -360,20 +327,18 @@ class PaymentService:
             transaction_reference=transaction_reference,
             operator="MANUAL",
             completed_at=now,
-            # Note admin stockée dans mycoolpay_ref (champ nullable existant)
-            # — ou mieux : ajouter un champ `note` sur le modèle (voir PATCH 3)
-            mycoolpay_ref=None,
+            pawapay_deposit_id=None,
         )
 
-        # 5. Accorder l'accès exam (même méthode que le webhook)
-        await self._grant_exam_access(payment)
+        # 5. Accorder l'accès level
+        await self._grant_level_access(payment)
 
         # 6. Générer facture
         await self._generate_invoice(payment)
 
         logger.info(
             f"Paiement manuel créé par admin {admin.id} "
-            f"pour user {data.user_id} — exam {data.exam_id} "
+            f"pour user {data.user_id} — level {data.level_id} "
             f"— ref {transaction_reference}"
             + (f" — note: {data.note}" if data.note else "")
         )
@@ -382,12 +347,12 @@ class PaymentService:
             "payment_id": payment.id,
             "transaction_reference": transaction_reference,
             "user_id": data.user_id,
-            "exam_id": data.exam_id,
+            "level_id": data.level_id,
             "amount_paid": plan.price,
             "expires_at": expires_at,
             "note": data.note,
         }
-        
+
     async def get_manual_payments(self, limit: int = 20) -> list[Payment]:
-            """Liste les paiements manuels d'exam pour l'admin."""
-            return await self.repo.get_manual_payments(limit=limit)
+        """Liste les paiements manuels pour l'admin."""
+        return await self.repo.get_manual_payments(limit=limit)

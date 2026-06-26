@@ -1,24 +1,28 @@
 """
 app/modules/exam_access/service.py
+
+Logique d'accès :
+  - Sujets 1, 2, 3 de chaque level → libres pour tous
+  - Sujet 4+ → réservé aux abonnés du level
+  - L'achat cible un Level précis (ex: B1 OSD, B2 Goethe)
 """
 from datetime import datetime, timezone
 from uuid import UUID
 
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.exam_access.models import ExamAccess
 from app.modules.exam_access.repository import ExamAccessRepository
 from app.modules.exam_access.schemas import (
     AccessCheckResponse,
-    ExamAccessWithExamResponse,
-    UserExamsResponse,
+    ExamAccessWithLevelResponse,
+    UserLevelsResponse,
 )
-from app.modules.exams.models import Exam
+from app.modules.exams.models import Exam, Level, Subject
 from app.modules.exams.repository import ExamRepository, LevelRepository
 from app.modules.exams.schemas import ExamCatalogResponse, LevelAccessResponse
 from app.shared.exceptions.http import BadRequestException, ForbiddenException
-from sqlalchemy import select, func
-from app.modules.exams.models import Subject
 
 
 class ExamAccessService:
@@ -31,122 +35,102 @@ class ExamAccessService:
 
     # ── Vérification d'accès ─────────────────────────────
 
-    async def check_access(
-        self, user_id: UUID, exam_id: UUID
-    ) -> AccessCheckResponse:
-        """Vérifie si un user a accès à un exam."""
-        access = await self.repo.get_active_by_user_and_exam(user_id, exam_id)
+    async def check_subject_access(
+        self, user_id: UUID, subject: Subject
+    ) -> bool:
+        """
+        Accès libre si subject_number <= 3.
+        Sinon vérifie ExamAccess pour ce level.
+        """
+        if subject.subject_number <= 3:
+            return True
+        return await self.repo.user_has_access(user_id, subject.level_id)
 
+    async def require_subject_access(
+        self, user_id: UUID, subject: Subject
+    ) -> None:
+        """
+        Guard — lève ForbiddenException si pas d'accès au subject.
+        À utiliser dans exam_sessions avant de démarrer une session.
+        """
+        has_access = await self.check_subject_access(user_id, subject)
+        if not has_access:
+            raise ForbiddenException(
+                detail="Accès requis — veuillez souscrire à ce niveau."
+            )
+
+    async def check_level_access(
+        self, user_id: UUID, level_id: UUID
+    ) -> AccessCheckResponse:
+        """Vérifie si un user a un accès payant à un level."""
+        access = await self.repo.get_active_by_user_and_level(user_id, level_id)
         if not access:
             return AccessCheckResponse(
-                exam_id=exam_id,
+                level_id=level_id,
                 has_access=False,
                 access_type=None,
                 expires_at=None,
-                reason="Accès requis — veuillez acheter cet examen.",
+                reason="Accès requis — veuillez souscrire à ce niveau.",
             )
-
         return AccessCheckResponse(
-            exam_id=exam_id,
+            level_id=level_id,
             has_access=True,
             access_type=access.access_type,
             expires_at=access.expires_at,
-            reason="Accès gratuit." if access.access_type == "free" else "Accès payant actif.",
+            reason="Accès payant actif.",
         )
 
-    async def require_access(self, user_id: UUID, exam_id: UUID) -> ExamAccess:
-        """
-        Retourne l'accès ou lève ForbiddenException.
-        À utiliser comme guard dans exam_sessions.
-        """
-        access = await self.repo.get_active_by_user_and_exam(user_id, exam_id)
-        if not access:
-            raise ForbiddenException(
-                detail="Vous n'avez pas accès à cet examen."
-            )
-        return access
-
     # ── Création d'accès ─────────────────────────────────
-
-    async def grant_free_access(self, user_id: UUID) -> list[ExamAccess]:
-        """
-        Crée les accès gratuits pour tous les levels is_free=True.
-        Appelé à l'inscription du user.
-        """
-        free_levels = await self.level_repo.get_free_levels()
-        accesses = []
-
-        for level in free_levels:
-            # Éviter les doublons
-            existing = await self.repo.find_by_user_and_exam(user_id, level.id)
-            if existing:
-                continue
-
-            access = await self.repo.create(
-                user_id=user_id,
-                exam_id=level.id,  # on lie à l'exam via level
-                access_type="free",
-                payment_id=None,
-                expires_at=None,
-                granted_at=datetime.now(timezone.utc),
-            )
-            accesses.append(access)
-
-        return accesses
 
     async def grant_paid_access(
         self,
         user_id: UUID,
-        exam_id: UUID,
+        level_id: UUID,
         payment_id: UUID,
+        expires_at: datetime | None = None,
     ) -> ExamAccess:
         """
-        Crée un accès payant après confirmation du paiement.
-        Appelé depuis le webhook handler My-CoolPay.
+        Crée ou renouvelle un accès payant après confirmation du paiement.
+        Appelé depuis le callback pawaPay.
         """
-        # Vérifier si accès existant — upgrade free → paid si nécessaire
-        existing = await self.repo.find_by_user_and_exam(user_id, exam_id)
+        existing = await self.repo.find_by_user_and_level(user_id, level_id)
         if existing:
-            if existing.access_type == "paid":
-                raise BadRequestException(
-                    detail="L'utilisateur a déjà un accès payant pour cet examen."
-                )
-            # Upgrade free → paid
             return await self.repo.update(
                 existing.id,
                 access_type="paid",
                 payment_id=payment_id,
+                expires_at=expires_at,
                 granted_at=datetime.now(timezone.utc),
             )
 
         return await self.repo.create(
             user_id=user_id,
-            exam_id=exam_id,
+            level_id=level_id,
             access_type="paid",
             payment_id=payment_id,
-            expires_at=None,
+            expires_at=expires_at,
             granted_at=datetime.now(timezone.utc),
         )
 
     async def grant_admin_access(
         self,
         user_id: UUID,
-        exam_id: UUID,
+        level_id: UUID,
     ) -> ExamAccess:
         """
-        Crée un accès manuellement depuis l'admin (pour tests ou cas spéciaux).
+        Accorde manuellement un accès à un level — admin uniquement.
         """
-        existing = await self.repo.find_by_user_and_exam(user_id, exam_id)
+        await self.level_repo.get_by_id_or_404(level_id)
+
+        existing = await self.repo.find_by_user_and_level(user_id, level_id)
         if existing:
             raise BadRequestException(
-                detail="L'utilisateur a déjà un accès pour cet examen."
+                detail="L'utilisateur a déjà un accès pour ce niveau."
             )
-
-        await self.exam_repo.get_by_id_or_404(exam_id)
 
         return await self.repo.create(
             user_id=user_id,
-            exam_id=exam_id,
+            level_id=level_id,
             access_type="paid",
             payment_id=None,
             expires_at=None,
@@ -155,48 +139,46 @@ class ExamAccessService:
 
     # ── Listing ──────────────────────────────────────────
 
-    async def get_user_exams(self, user_id: UUID) -> UserExamsResponse:
-        """Tous les examens accessibles d'un user, séparés free/paid."""
+    async def get_user_levels(self, user_id: UUID) -> UserLevelsResponse:
+        """Tous les levels accessibles d'un user."""
         accesses = await self.repo.get_all_by_user(user_id)
 
-        free_exams = []
-        paid_exams = []
-
+        paid_levels = []
         for access in accesses:
-            item = ExamAccessWithExamResponse(
-                id=access.id,
-                exam_id=access.exam_id,
-                access_type=access.access_type,
-                granted_at=access.granted_at,
-                expires_at=access.expires_at,
-                is_active=access.is_active,
-                exam_name=access.exam.name if access.exam else "",
-                exam_slug=access.exam.slug if access.exam else "",
-                exam_provider=access.exam.provider if access.exam else "",
-                cefr_code="",  # TODO: charger via level si besoin
+            paid_levels.append(
+                ExamAccessWithLevelResponse(
+                    id=access.id,
+                    level_id=access.level_id,
+                    access_type=access.access_type,
+                    granted_at=access.granted_at,
+                    expires_at=access.expires_at,
+                    is_active=access.is_active,
+                    cefr_code=access.level.cefr_code if access.level else "",
+                    exam_name=access.level.exam.name if access.level and access.level.exam else "",
+                    exam_provider=access.level.exam.provider if access.level and access.level.exam else "",
+                )
             )
-            if access.access_type == "free":
-                free_exams.append(item)
-            else:
-                paid_exams.append(item)
 
-        return UserExamsResponse(
-            free_exams=free_exams,
-            paid_exams=paid_exams,
+        return UserLevelsResponse(
+            paid_levels=paid_levels,
             total=len(accesses),
         )
 
     # ── Catalogue enrichi ────────────────────────────────
 
-
-
     async def enrich_catalog(
         self, exams: list[Exam], user_id: UUID
     ) -> list[ExamCatalogResponse]:
+        """
+        Enrichit le catalogue avec :
+        - has_access : user a un ExamAccess pour ce level
+        - subject_count : nb de sujets disponibles
+        """
         user_accesses = await self.repo.get_all_by_user(user_id)
-        accessible_exam_ids = {a.exam_id for a in user_accesses}
+        # Indexer par level_id
+        accessible_level_ids = {a.level_id for a in user_accesses}
 
-        # Compter les subjects par level en une seule requête
+        # Compter les subjects actifs par level
         level_ids = [
             level.id
             for exam in exams
@@ -211,11 +193,12 @@ class ExamAccessService:
             )
             subject_counts = {row[0]: row[1] for row in result.all()}
 
-        result = []
+        catalog = []
         for exam in exams:
             levels = []
             for level in exam.levels:
-                has_access = level.is_free or exam.id in accessible_exam_ids
+                # Accès si level payé — les 3 premiers sujets sont libres par défaut
+                has_access = level.id in accessible_level_ids
                 levels.append(
                     LevelAccessResponse(
                         id=level.id,
@@ -224,11 +207,11 @@ class ExamAccessService:
                         display_order=level.display_order,
                         is_free=level.is_free,
                         has_access=has_access,
-                        subject_count=subject_counts.get(level.id, 0),  # ← ajouter
+                        subject_count=subject_counts.get(level.id, 0),
                         price=None,
                     )
                 )
-            result.append(
+            catalog.append(
                 ExamCatalogResponse(
                     id=exam.id,
                     provider=exam.provider,
@@ -238,4 +221,4 @@ class ExamAccessService:
                     levels=levels,
                 )
             )
-        return result
+        return catalog

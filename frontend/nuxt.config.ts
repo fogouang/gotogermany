@@ -76,19 +76,21 @@ export default defineNuxtConfig({
     sitemap: "https://prep-telc-osd.com/sitemap.xml",
   },
 
-  // ── i18n ────────────────────────────────────────────────
   i18n: {
     locales: [
       { code: "en", name: "English", file: "en.json" },
       { code: "fr", name: "Français", file: "fr.json" },
+      { code: "de", name: "Deutsch", file: "de.json" },
     ],
     defaultLocale: "en",
     langDir: "locales/",
     strategy: "prefix_except_default",
     compilation: {
-      strictMessage: false, // ← désactive l'erreur HTML
+      strictMessage: false,
       escapeHtml: false,
     },
+
+    detectBrowserLanguage: false,
   },
 
   primevue: {

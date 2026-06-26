@@ -5,21 +5,21 @@
 import type { AccessCheckResponse } from '../models/AccessCheckResponse';
 import type { ExamAccessResponse } from '../models/ExamAccessResponse';
 import type { SuccessResponse } from '../models/SuccessResponse';
-import type { UserExamsResponse } from '../models/UserExamsResponse';
+import type { UserLevelsResponse } from '../models/UserLevelsResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class ExamAccessService {
     /**
-     * Get My Exams
-     * Liste tous les examens accessibles de l'utilisateur connecté.
+     * Get My Levels
+     * Liste tous les levels accessibles de l'utilisateur connecté.
      * @param accessToken
-     * @returns UserExamsResponse Successful Response
+     * @returns UserLevelsResponse Successful Response
      * @throws ApiError
      */
-    public static getMyExamsApiV1AccessMeGet(
+    public static getMyLevelsApiV1AccessMeGet(
         accessToken?: (string | null),
-    ): CancelablePromise<UserExamsResponse> {
+    ): CancelablePromise<UserLevelsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/access/me',
@@ -33,22 +33,22 @@ export class ExamAccessService {
     }
     /**
      * Check Access
-     * Vérifie si l'utilisateur a accès à un exam.
+     * Vérifie si l'utilisateur a accès à un level.
      * Appelé avant le démarrage d'une session.
-     * @param examId
+     * @param levelId
      * @param accessToken
      * @returns AccessCheckResponse Successful Response
      * @throws ApiError
      */
-    public static checkAccessApiV1AccessCheckExamIdGet(
-        examId: string,
+    public static checkAccessApiV1AccessCheckLevelIdGet(
+        levelId: string,
         accessToken?: (string | null),
     ): CancelablePromise<AccessCheckResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/access/check/{exam_id}',
+            url: '/api/v1/access/check/{level_id}',
             path: {
-                'exam_id': examId,
+                'level_id': levelId,
             },
             cookies: {
                 'access_token': accessToken,
@@ -60,17 +60,16 @@ export class ExamAccessService {
     }
     /**
      * Admin Grant Access
-     * Accorde manuellement un accès à un utilisateur — admin uniquement.
-     * Utile pour les tests et les cas spéciaux.
+     * Accorde manuellement un accès à un level — admin uniquement.
      * @param userId
-     * @param examId
+     * @param levelId
      * @param accessToken
      * @returns ExamAccessResponse Successful Response
      * @throws ApiError
      */
     public static adminGrantAccessApiV1AccessAdminGrantPost(
         userId: string,
-        examId: string,
+        levelId: string,
         accessToken?: (string | null),
     ): CancelablePromise<ExamAccessResponse> {
         return __request(OpenAPI, {
@@ -81,7 +80,7 @@ export class ExamAccessService {
             },
             query: {
                 'user_id': userId,
-                'exam_id': examId,
+                'level_id': levelId,
             },
             errors: {
                 422: `Validation Error`,
@@ -90,16 +89,16 @@ export class ExamAccessService {
     }
     /**
      * Admin Revoke Access
-     * Révoque l'accès d'un utilisateur à un exam — admin uniquement.
+     * Révoque l'accès d'un utilisateur à un level — admin uniquement.
      * @param userId
-     * @param examId
+     * @param levelId
      * @param accessToken
      * @returns SuccessResponse Successful Response
      * @throws ApiError
      */
     public static adminRevokeAccessApiV1AccessAdminRevokeDelete(
         userId: string,
-        examId: string,
+        levelId: string,
         accessToken?: (string | null),
     ): CancelablePromise<SuccessResponse> {
         return __request(OpenAPI, {
@@ -110,7 +109,7 @@ export class ExamAccessService {
             },
             query: {
                 'user_id': userId,
-                'exam_id': examId,
+                'level_id': levelId,
             },
             errors: {
                 422: `Validation Error`,
@@ -118,20 +117,47 @@ export class ExamAccessService {
         });
     }
     /**
-     * Admin Get User Exams
-     * Liste les examens accessibles d'un utilisateur — admin uniquement.
+     * Admin Get User Levels
+     * Liste les levels accessibles d'un utilisateur — admin uniquement.
      * @param userId
      * @param accessToken
-     * @returns UserExamsResponse Successful Response
+     * @returns UserLevelsResponse Successful Response
      * @throws ApiError
      */
-    public static adminGetUserExamsApiV1AccessAdminUsersUserIdGet(
+    public static adminGetUserLevelsApiV1AccessAdminUsersUserIdGet(
         userId: string,
         accessToken?: (string | null),
-    ): CancelablePromise<UserExamsResponse> {
+    ): CancelablePromise<UserLevelsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/access/admin/users/{user_id}',
+            path: {
+                'user_id': userId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Admin Grant All Levels
+     * Donne accès à tous les levels actifs à un user.
+     * Utile pour les tests ou les cas spéciaux.
+     * @param userId
+     * @param accessToken
+     * @returns SuccessResponse Successful Response
+     * @throws ApiError
+     */
+    public static adminGrantAllLevelsApiV1AccessAdminGrantAllUserIdPost(
+        userId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<SuccessResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/access/admin/grant-all/{user_id}',
             path: {
                 'user_id': userId,
             },

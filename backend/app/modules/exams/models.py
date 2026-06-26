@@ -44,12 +44,7 @@ class Exam(Base, UUIDMixin, TimestampMixin):
     levels: Mapped[list["Level"]] = relationship(
         "Level", back_populates="exam", lazy="noload", cascade="all, delete-orphan"
     )
-    exam_accesses: Mapped[list["ExamAccess"]] = relationship(
-        "ExamAccess", back_populates="exam", lazy="noload"
-    )
-    payments: Mapped[list["Payment"]] = relationship(
-        "Payment", back_populates="exam", lazy="noload"
-    )
+   
 
     def __repr__(self) -> str:
         return f"<Exam {self.slug}>"
@@ -81,6 +76,15 @@ class Level(Base, UUIDMixin, TimestampMixin):
 
     # Relations
     exam: Mapped["Exam"] = relationship("Exam", back_populates="levels", lazy="noload")
+ 
+    exam_accesses: Mapped[list["ExamAccess"]] = relationship(
+        "ExamAccess", back_populates="level", lazy="noload"
+    )
+    
+    payments: Mapped[list["Payment"]] = relationship(
+        "Payment", back_populates="level", lazy="noload"
+    )
+    
     subjects: Mapped[list["Subject"]] = relationship(
         "Subject", back_populates="level", lazy="noload", cascade="all, delete-orphan"
     )

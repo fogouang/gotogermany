@@ -294,6 +294,41 @@
     "premium": "Premium",
     "see_subjects": "See subjects"
   },
+  "dashboard": {
+    "greeting": "Hello",
+    "subtitle": "What would you like to do today?",
+    "quick_actions": {
+      "exam": "Take an exam",
+      "exam_sub": "Goethe, TELC, ÖSD",
+      "simulator": "Schreiben Simulator",
+      "simulator_sub": "Instant AI correction",
+      "results": "My results",
+      "results_sub": "Progress tracking"
+    },
+    "choose_exam": "Choose an exam",
+    "see_all": "See all →",
+    "no_exams": "No exams available",
+    "start": "Start",
+    "recent_sessions": "Recent sessions",
+    "no_sessions": "No sessions yet",
+    "start_exam": "Start an exam →",
+    "subject": "Subject",
+    "pages": {
+      "dashboard": "Dashboard",
+      "examens": "Exams",
+      "simulateur": "Simulator",
+      "methodologie": "Methodology",
+      "resultats": "Results",
+      "profil": "Profile",
+      "factures": "Invoices",
+      "credits": "Credits"
+    }
+  },
+  "sidebar": {
+    "main": "Main",
+    "account": "Account",
+    "logout": "Logout"
+  },
   "session": {
     "loading": "Loading session...",
     "error": "Error",
@@ -326,7 +361,14 @@
     "your_answer": "Your answer",
     "correct_answer": "Correct answer",
     "another_module": "Try another module",
-    "my_results": "My results"
+    "my_results": "My results",
+    "module": "module",
+"modules": "modules",
+"module_passed": "Passed",
+"module_failed": "Failed",
+"why_failed": "Why did you fail?",
+"global_score_insufficient": "Insufficient global score: {score}/100 (threshold: {threshold})",
+"module_score_insufficient": "{module}: {score}/100 (module threshold: 60)"
   },
   "exam_detail": {
     "not_found": "Exam not found",
@@ -341,6 +383,8 @@
     "free": "Free",
     "premium": "Premium",
     "available": "Available",
+    "subscribe": "Buy",
+    "free_per_level": "Free subjects",
     "subject_default": "Subject",
     "modules": "modules",
     "level_names": {
@@ -416,6 +460,12 @@
     "back": "Back to exams",
     "title": "Finalize your access",
     "subtitle": "Access all GoToGermany exams",
+    "level": "Level not found.",
+    "subjet": "available subjects",
+    "message": "A notification has been sent to your phone",
+    "pin": "Confirm with your PIN",
+    "ref": "Transaction reference",
+    "polling": "Checking every 5 seconds...",
     "choose_duration": "Choose your duration",
     "per_day": "FCFA/day",
     "included": "Included in your access",
@@ -546,7 +596,29 @@
     "retry": "Retry",
     "see_results": "View results",
     "back": "Back",
-    "page_title": "Simulator  DeutschTest"
+    "page_title": "Simulator  DeutschTest",
+    "credit": "AI credit available",
+    "credits": "AI credits available",
+    "no_credits": "Insufficient credits",
+    "no_credits_hint": "You have no more AI credits.",
+    "buy_credits": "Buy credits"
+  },
+  "schreiben": {
+    "comment": "Comment",
+    "task": "Task",
+    "approx": "Approx.",
+    "words": "words",
+    "formal_required": "Formal register required",
+    "placeholder": "Write your text here...",
+    "word_count": "word(s)",
+    "download_pdf": "Download my work as PDF",
+    "correct_btn": "Correct with AI",
+    "correct_hint": "Write at least one answer to start correction",
+    "correcting": "Correction in progress…",
+    "correcting_sub": "The AI is analyzing your text, this may take a few seconds.",
+    "error_title": "Correction error",
+    "retry": "Retry",
+    "see_results": "View results"
   },
   "profile": {
     "title": "My profile",

@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.modules.exams.models import Exam, Level, Subject, Module, Teil
 from app.shared.database.repository import BaseRepository
+from app.shared.exceptions.base import DatabaseException
 
 
 class ExamRepository(BaseRepository[Exam]):
@@ -108,6 +109,11 @@ class LevelRepository(BaseRepository[Level]):
         )
         return result.scalar_one_or_none()
 
+    async def get_all_active(self) -> list[Level]:
+        result = await self.db.execute(
+            select(Level)
+        )
+        return list(result.scalars().all())
 
 class SubjectRepository(BaseRepository[Subject]):
 
@@ -138,6 +144,22 @@ class SubjectRepository(BaseRepository[Subject]):
             .where(Subject.id == subject_id)
         )
         return result.scalar_one_or_none()
+    
+    async def delete(self, id: UUID) -> bool:
+        """Supprime un Subject et toute sa hiérarchie via DELETE SQL direct (PostgreSQL CASCADE)."""
+        from sqlalchemy import delete as sql_delete
+        try:
+            result = await self.db.execute(
+                sql_delete(Subject).where(Subject.id == id)
+            )
+            await self.db.commit()
+            return result.rowcount > 0
+        except Exception as e:
+            await self.db.rollback()
+            raise DatabaseException(
+                message="Erreur lors de la suppression de Subject",
+                original_error=e,
+            )
 
 
 class ModuleRepository(BaseRepository[Module]):

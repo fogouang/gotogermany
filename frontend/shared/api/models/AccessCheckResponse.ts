@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Vérification rapide d'accès avant démarrage d'une session.
- * Retourné par GET /exams/{exam_id}/access.
+ * Vérification rapide d'accès à un level.
+ * Retourné par GET /exam-access/check/{level_id}.
  */
 export type AccessCheckResponse = {
-    exam_id: string;
+    level_id: string;
     has_access: boolean;
     access_type: (string | null);
     expires_at: (string | null);

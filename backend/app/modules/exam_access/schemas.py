@@ -4,8 +4,9 @@ app/modules/exam_access/schemas.py
 ExamAccess est rarement exposé seul — il est surtout
 utilisé en interne pour vérifier les droits d'accès.
 On expose uniquement ce dont le frontend a besoin :
-  - savoir si l'user a accès à un exam donné
-  - lister les examens accessibles de l'user
+  - savoir si l'user a accès à un level donné
+  - lister les levels accessibles de l'user
+  - les 3 premiers sujets sont toujours libres (logique backend)
 """
 import uuid
 from datetime import datetime
@@ -17,43 +18,42 @@ from app.shared.schemas.base import BaseSchema
 # ─────────────────────────────────────────────
 
 class ExamAccessResponse(BaseSchema):
-    """Accès à un exam — retourné après paiement ou inscription."""
+    """Accès à un level — retourné après grant admin ou paiement."""
     id: uuid.UUID
-    exam_id: uuid.UUID
-    access_type: str            # "free" | "paid"
+    level_id: uuid.UUID         # remplace exam_id
+    access_type: str            # "paid"
     granted_at: datetime
     expires_at: datetime | None
     is_active: bool
 
 
-class ExamAccessWithExamResponse(ExamAccessResponse):
+class ExamAccessWithLevelResponse(ExamAccessResponse):
     """
-    Accès enrichi avec infos de l'exam — pour la liste
-    des examens accessibles de l'user (GET /users/me/exams).
+    Accès enrichi avec infos du level et de l'exam parent.
+    Pour la liste des levels accessibles de l'user.
     """
-    exam_name: str
-    exam_slug: str
-    exam_provider: str
-    cefr_code: str
+    cefr_code: str              # "B1", "B2"...
+    exam_name: str              # "Goethe-ÖSD Zertifikat B1"
+    exam_provider: str          # "Goethe", "TELC"...
 
 
-class UserExamsResponse(BaseSchema):
+class UserLevelsResponse(BaseSchema):
     """
-    Tous les examens d'un user avec leur statut d'accès.
-    Retourné par GET /users/me/exams.
+    Tous les levels payants accessibles d'un user.
+    Les 3 premiers sujets de chaque level sont libres par défaut
+    et ne figurent pas ici — ils sont gérés côté backend.
     """
-    free_exams: list[ExamAccessWithExamResponse] = []
-    paid_exams: list[ExamAccessWithExamResponse] = []
+    paid_levels: list[ExamAccessWithLevelResponse] = []
     total: int
 
 
 class AccessCheckResponse(BaseSchema):
     """
-    Vérification rapide d'accès avant démarrage d'une session.
-    Retourné par GET /exams/{exam_id}/access.
+    Vérification rapide d'accès à un level.
+    Retourné par GET /exam-access/check/{level_id}.
     """
-    exam_id: uuid.UUID
+    level_id: uuid.UUID         # remplace exam_id
     has_access: bool
-    access_type: str | None     # "free" | "paid" | None si pas d'accès
+    access_type: str | None     # "paid" | None si pas d'accès
     expires_at: datetime | None
-    reason: str | None          # "Accès gratuit", "Accès payant actif", "Accès requis"
+    reason: str | None          # "Accès payant actif" | "Accès requis"

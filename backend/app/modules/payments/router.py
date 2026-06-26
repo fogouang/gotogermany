@@ -20,13 +20,13 @@ from app.modules.auth.dependencies import CurrentAdmin, CurrentUser
 from app.modules.payments.schemas import (
     ManualPaymentRequest,
     ManualPaymentResponse,
+    PawapayCallbackPayload,
     PaymentAdminResponse,
     PaymentInitiateRequest,
     PaymentInitiateResponse,
     PaymentResponse,
     PaymentStatusResponse,
     PaymentSummaryResponse,
-    WebhookPayload,
 )
 from app.modules.payments.service import PaymentService
 from app.shared.database.session import get_db
@@ -99,24 +99,20 @@ async def get_payment(
 # URL obfusquée — ne pas documenter publiquement
 _WEBHOOK_SECRET = "jkdKo0Lp8lsdfjk4j0HJhskfak93d"
 
-@router.post(f"/webhook/{_WEBHOOK_SECRET}", include_in_schema=False)
-async def payment_webhook(
+# Remplacer tout le bloc webhook par :
+@router.post(f"/callback/{_WEBHOOK_SECRET}", include_in_schema=False)
+async def payment_callback(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Callback My-CoolPay — appelé après confirmation paiement.
-    ⚠️  Pas d'auth — sécurisé par signature MD5 + URL secrète.
-    """
     try:
         body = await request.json()
-        webhook_data = WebhookPayload(**body)
-        await PaymentService(db).handle_webhook(webhook_data)
+        payload = PawapayCallbackPayload(**body)
+        await PaymentService(db).handle_callback(payload)
         return {"status": "OK"}
     except Exception as e:
-        logger.error(f"Webhook error: {e}")
+        logger.error(f"Callback error: {e}")
         return {"status": "KO"}
-
 
 # ── Admin ─────────────────────────────────────────────────
 

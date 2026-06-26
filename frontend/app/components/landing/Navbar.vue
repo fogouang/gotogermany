@@ -45,7 +45,7 @@
                   ? 'bg-[#076152] text-white'
                   : 'text-gray-400 hover:text-gray-600',
               ]"
-              @click="setLocale(loc.code)"
+              @click="changeLocale(loc.code)"
             >
               {{ loc.code }}
             </button>
@@ -138,7 +138,7 @@
                   ? 'bg-[#076152] text-white border-[#076152]'
                   : 'text-gray-400 border-gray-200 hover:text-gray-600',
               ]"
-              @click="setLocale(loc.code)"
+              @click="changeLocale(loc.code)"
             >
               {{ loc.code }}
             </button>
@@ -359,6 +359,15 @@ const mainItems = computed(() => [
   },
 ]);
 
+const localeCookie = useCookie("app_locale", { maxAge: 60 * 60 * 24 * 365 });
+
+type AppLocale = "en" | "fr" | "de";
+
+const changeLocale = async (code: string) => {
+  localeCookie.value = code;
+  await setLocale(code as AppLocale);
+};
+
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value;
 };
@@ -368,6 +377,7 @@ const closeMobileMenu = () => {
 
 const handleLogin = async () => {
   loginError.value = "";
+  const savedLocale = locale.value; // ← sauvegarder avant navigation
   const result = await authStore.login(
     loginForm.value.email,
     loginForm.value.password,
@@ -375,6 +385,7 @@ const handleLogin = async () => {
   if (result.success) {
     loginVisible.value = false;
     loginForm.value = { email: "", password: "" };
+    await setLocale(savedLocale); // ← restaurer après login
     navigateTo(authStore.isAdmin ? "/admin" : "/dashboard");
   } else {
     loginError.value = result.error || t("auth.login_error");
@@ -383,6 +394,7 @@ const handleLogin = async () => {
 
 const handleSignup = async () => {
   signupError.value = "";
+  const savedLocale = locale.value; // ← sauvegarder avant navigation
   const result = await authStore.register(
     signupForm.value.email,
     signupForm.value.password,
@@ -392,15 +404,17 @@ const handleSignup = async () => {
   if (result.success) {
     signupVisible.value = false;
     signupForm.value = { email: "", password: "", fullName: "", phone: "" };
+    await setLocale(savedLocale); // ← restaurer après signup
     navigateTo("/dashboard");
   } else {
     signupError.value = result.error || t("auth.signup_error");
   }
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
   authStore.logout();
   closeMobileMenu();
+  await navigateTo("/");
 };
 </script>
 

@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-/**
- * Retourné après création du payin My-CoolPay.
- */
 export type PaymentInitiateResponse = {
     payment_id: string;
     transaction_reference: string;
@@ -12,7 +9,6 @@ export type PaymentInitiateResponse = {
     amount_paid: number;
     discount_amount: number;
     currency: string;
-    ussd_code: (string | null);
     message: string;
 };
 
