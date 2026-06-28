@@ -1,24 +1,22 @@
 """
-app/modules/payments/pawapay_client.py
+app/modules/payments/pawapay.py
 """
 import httpx
 import logging
 from app.config import get_settings
 
-settings = get_settings()
 logger = logging.getLogger(__name__)
 
-PAWAPAY_BASE_URL = (
-    "https://api.sandbox.pawapay.io"
-    if settings.PAWAPAY_SANDBOX
-    else "https://api.pawapay.io"
-)
+PAWAPAY_BASE_URL = "https://api.pawapay.io"
+
 
 class PawapayClient:
 
     def __init__(self):
+        settings = get_settings()
         self.base_url = PAWAPAY_BASE_URL
         self.token = settings.PAWAPAY_API_TOKEN
+        logger.info(f"PawapayClient init: base_url={self.base_url}, token_prefix={self.token[:20]}...")
 
     def _headers(self) -> dict:
         return {
@@ -31,7 +29,7 @@ class PawapayClient:
         deposit_id: str,
         amount: int,
         phone_number: str,
-        provider: str,          # "MTN_MOMO_CMR" | "ORANGE_CMR"
+        provider: str,
         client_reference_id: str,
         customer_message: str = "GoToGermany",
     ) -> dict:
@@ -49,12 +47,14 @@ class PawapayClient:
             "clientReferenceId": client_reference_id,
             "customerMessage": customer_message,
         }
+        logger.info(f"pawaPay initiate_deposit payload: {payload}")
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
                 f"{self.base_url}/v2/deposits",
                 json=payload,
                 headers=self._headers(),
             )
+            logger.info(f"pawaPay response: {response.status_code} {response.text}")
             response.raise_for_status()
             return response.json()
 
