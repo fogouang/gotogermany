@@ -20,5 +20,6 @@ export type PaymentResponse = {
     operator: (string | null);
     completed_at: (string | null);
     created_at: string;
+    invoice_url?: (string | null);
 };
 

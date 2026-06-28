@@ -16,6 +16,8 @@ from app.config import get_settings
 from app.modules.payments.models import Payment
 from app.modules.payments.repository import PaymentRepository
 from app.shared.database.session import AsyncSession
+from reportlab.platypus import Image
+import os
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -133,9 +135,16 @@ class InvoiceService:
         story = []
 
         # ── En-tête ──────────────────────────────────────
+        logo_path = "storage/logo.png"  # ← place ton logo ici
+        if os.path.exists(logo_path):
+            logo = Image(logo_path, width=4*cm, height=1.5*cm)
+            logo.hAlign = 'LEFT'
+            story.append(logo)
+            story.append(Spacer(1, 0.3 * cm))
+
         story.append(Paragraph("GoToGermany", title_style))
         story.append(Paragraph("Plateforme de préparation aux examens d'allemand", subtitle_style))
-        story.append(Paragraph("Douala, Cameroun | gotogermany.cm", subtitle_style))
+        story.append(Paragraph("Dschang, Cameroun | www.prep-telc-osd.com", subtitle_style))
         story.append(Spacer(1, 0.8 * cm))
 
         # ── Infos facture ─────────────────────────────────
@@ -240,21 +249,25 @@ class InvoiceService:
 
         # ── Footer ────────────────────────────────────────
         story.append(Spacer(1, 1.5 * cm))
-        story.append(Paragraph("GoToGermany — ITIA Solutions", footer_style))
+        story.append(Paragraph("GoToGermany - ITIA Solutions", footer_style))
         story.append(Paragraph("Merci pour votre confiance !", footer_style))
 
         doc.build(story)
 
     async def _get_product_description(self, payment: Payment) -> str:
-        """Description : Accès à l'exam + durée du plan."""
         try:
-            from app.modules.exams.models import Exam
+            from app.modules.exams.models import Level, Exam
             from app.modules.plans.models import Plan
 
-            exam = await self.db.get(Exam, payment.exam_id)
+            level = await self.db.get(Level, payment.level_id)
             plan = await self.db.get(Plan, payment.plan_id)
 
-            exam_name = exam.name if exam else "Examen"
+            if level:
+                exam = await self.db.get(Exam, level.exam_id)
+                exam_name = f"{exam.name} — {level.cefr_code}" if exam else f"Niveau {level.cefr_code}"
+            else:
+                exam_name = "Examen"
+
             plan_name = plan.name if plan else "Accès"
             duration = f"{plan.duration_days} jours" if plan else ""
 

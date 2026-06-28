@@ -94,6 +94,8 @@ class Payment(Base, UUIDMixin, TimestampMixin):
         String(100), unique=True, nullable=False, index=True
     )
 
+    invoice_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
     pawapay_deposit_id: Mapped[str | None] = mapped_column(String(36), nullable=True)  # UUID pawaPay
     
     # Opérateur utilisé : "MTN", "ORANGE", etc.

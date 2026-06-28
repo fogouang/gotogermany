@@ -80,6 +80,7 @@ class PaymentResponse(BaseSchema):
     operator: str | None
     completed_at: datetime | None
     created_at: datetime
+    invoice_url: str | None = None
 
 class PaymentAdminResponse(PaymentResponse):
     user_id: uuid.UUID
