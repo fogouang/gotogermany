@@ -504,7 +504,17 @@
       "ref": "Ref.",
       "retry": "Retry",
       "go_to_exams": "Access exams"
-    }
+    },"confirm": {
+  "title": "Payment confirmation",
+  "pending_title": "Waiting for confirmation...",
+  "pending_desc": "Please confirm the payment on your phone.",
+  "success_title": "Payment confirmed!",
+  "success_desc": "Your access has been activated.",
+  "failed_title": "Payment failed",
+  "failed_desc": "Please try again.",
+  "retry": "Retry",
+  "go_to_exams": "Access exams"
+}
   },
   "my_results": {
     "title": "My results",

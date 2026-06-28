@@ -366,8 +366,8 @@
     "module_passed": "Bestanden",
     "module_failed": "Nicht bestanden",
     "why_failed": "Warum haben Sie nicht bestanden?",
-"global_score_insufficient": "Gesamtpunktzahl unzureichend: {score}/100 (Schwelle: {threshold})",
-"module_score_insufficient": "{module}: {score}/100 (Modulschwelle: 60)"
+    "global_score_insufficient": "Gesamtpunktzahl unzureichend: {score}/100 (Schwelle: {threshold})",
+    "module_score_insufficient": "{module}: {score}/100 (Modulschwelle: 60)"
   },
   "exam_detail": {
     "not_found": "Prüfung nicht gefunden",
@@ -501,6 +501,17 @@
       "completed": "Zahlung bestätigt!",
       "failed": "Zahlung fehlgeschlagen",
       "ref": "Ref.",
+      "retry": "Erneut versuchen",
+      "go_to_exams": "Zu den Prüfungen"
+    },
+    "confirm": {
+      "title": "Zahlungsbestätigung",
+      "pending_title": "Warte auf Bestätigung...",
+      "pending_desc": "Bitte bestätigen Sie die Zahlung auf Ihrem Telefon.",
+      "success_title": "Zahlung bestätigt!",
+      "success_desc": "Ihr Zugang wurde aktiviert.",
+      "failed_title": "Zahlung fehlgeschlagen",
+      "failed_desc": "Bitte versuchen Sie es erneut.",
       "retry": "Erneut versuchen",
       "go_to_exams": "Zu den Prüfungen"
     }

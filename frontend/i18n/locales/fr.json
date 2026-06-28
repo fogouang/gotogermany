@@ -493,7 +493,18 @@
       "ref": "Réf.",
       "retry": "Réessayer",
       "go_to_exams": "Accéder aux examens"
-    }
+    },
+    "confirm": {
+  "title": "Confirmation du paiement",
+  "pending_title": "En attente de confirmation...",
+  "pending_desc": "Veuillez confirmer le paiement sur votre téléphone.",
+  "success_title": "Paiement confirmé !",
+  "success_desc": "Votre accès a été activé.",
+  "failed_title": "Paiement échoué",
+  "failed_desc": "Veuillez réessayer.",
+  "retry": "Réessayer",
+  "go_to_exams": "Accéder aux examens"
+}
   },
   "my_results": {
     "title": "Mes résultats",
