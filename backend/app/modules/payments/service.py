@@ -95,11 +95,15 @@ class PaymentService:
         )
 
         # 6. Appeler pawaPay
+        phone = data.phone_number.strip()
+        if not phone.startswith('237'):
+            phone = f'237{phone}'
+            
         try:
             pawapay_response = await self.pawapay.initiate_deposit(
                 deposit_id=str(payment.id),
                 amount=amount_paid,
-                phone_number=data.phone_number,
+                phone_number=phone,
                 provider="MTN_MOMO_CMR" if data.operator == "MTN" else "ORANGE_CMR",
                 client_reference_id=transaction_reference,
                 customer_message="GoToGermany",

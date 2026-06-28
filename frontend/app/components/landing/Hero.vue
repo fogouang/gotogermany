@@ -1,5 +1,5 @@
 <template>
-  <section class="relative transition-all pt-20 pb-10">
+  <section class="relative transition-all pt-8 pb-10">
     <div
       class="relative transition-all max-w-7xl mx-auto w-full px-6 flex flex-col items-center justify-between gap-12 md:flex-row md:gap-3"
     >

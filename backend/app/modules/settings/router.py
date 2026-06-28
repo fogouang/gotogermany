@@ -2,7 +2,7 @@
 from fastapi.routing import APIRouter
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.modules.auth.dependencies import CurrentAdmin
+from app.modules.auth.dependencies import CurrentAdmin, CurrentUser
 from app.modules.settings.service import AppSettingsService
 from app.shared.database.session import get_db
 from app.shared.schemas.responses import SuccessResponse
@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.get("/free-access")
 async def get_free_access_mode(
-    _: CurrentAdmin,
+    _: CurrentUser,  # ← tous les users connectés peuvent lire
     db: AsyncSession = Depends(get_db),
 ):
     is_free = await AppSettingsService(db).is_free_access_mode()
@@ -19,7 +19,7 @@ async def get_free_access_mode(
 
 @router.post("/free-access/toggle", response_model=SuccessResponse)
 async def toggle_free_access_mode(
-    _: CurrentAdmin,
+    _: CurrentAdmin,  # ← admin uniquement
     db: AsyncSession = Depends(get_db),
 ):
     service = AppSettingsService(db)
