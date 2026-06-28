@@ -95,6 +95,7 @@ class PaymentService:
         )
 
         # 6. Appeler pawaPay
+        logger.info(f"pawaPay deposit_id: '{str(payment.id)}' len={len(str(payment.id))}")
         phone = data.phone_number.strip()
         if not phone.startswith('237'):
             phone = f'237{phone}'
