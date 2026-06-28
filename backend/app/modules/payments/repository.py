@@ -100,17 +100,17 @@ class PaymentRepository(BaseRepository[Payment]):
         
     async def get_manual_payments(self, limit: int = 20) -> list[dict]:
         from app.modules.users.models import User
-        from app.modules.exams.models import Exam
+        from app.modules.exams.models import Level, Exam
         from app.modules.exam_access.models import ExamAccess
 
         result = await self.db.execute(
-            select(Payment, User, Exam, ExamAccess)
+            select(Payment, User, Level, Exam)
             .join(User, Payment.user_id == User.id)
-            .join(Exam, Payment.exam_id == Exam.id)
-            .outerjoin(ExamAccess, (ExamAccess.user_id == Payment.user_id) & (ExamAccess.exam_id == Payment.exam_id))
+            .join(Level, Payment.level_id == Level.id)
+            .join(Exam, Level.exam_id == Exam.id)
             .where(
                 Payment.operator == "MANUAL",
-                Payment.exam_id.is_not(None),
+                Payment.level_id.is_not(None),
             )
             .order_by(Payment.created_at.desc())
             .limit(limit)
@@ -118,12 +118,14 @@ class PaymentRepository(BaseRepository[Payment]):
         rows = result.all()
         return [
             {
-                **PaymentResponse.model_validate(payment).model_dump(),
                 "user_id": str(payment.user_id),
                 "user_email": user.email,
                 "user_name": user.full_name,
-                "exam_name": exam.name,
-                "expires_at": access.expires_at.isoformat() if access else None,
+                "level_name": f"{exam.name} — {level.cefr_code}",
+                "payment_status": payment.payment_status,
+                "amount_paid": payment.amount_paid,
+                "transaction_reference": payment.transaction_reference,
+                "created_at": payment.created_at.isoformat(),
             }
-            for payment, user, exam, access in rows
+            for payment, user, level, exam in rows
         ]

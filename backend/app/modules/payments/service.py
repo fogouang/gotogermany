@@ -7,6 +7,7 @@ Flow pawaPay :
   3. Si COMPLETED → _grant_level_access() → ExamAccess créé avec expires_at
   4. Facture PDF générée automatiquement
 """
+import json
 import logging
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
@@ -23,6 +24,11 @@ from app.shared.exceptions.http import BadRequestException, NotFoundException
 logger = logging.getLogger(__name__)
 
 
+def _serialize_payload(data: dict) -> dict:
+    """Sérialise un dict pour stockage JSONB — convertit datetime en str."""
+    return json.loads(json.dumps(data, default=str))
+
+
 class PaymentService:
 
     def __init__(self, db: AsyncSession):
@@ -37,30 +43,17 @@ class PaymentService:
         data: PaymentInitiateRequest,
         current_user: User,
     ) -> dict:
-        """
-        Initie un paiement mobile money pour l'accès à un level.
-
-        Steps :
-          1. Charger Level + Plan
-          2. Vérifier code promo si fourni → calculer réduction + commission
-          3. Créer Payment(PENDING)
-          4. Appeler pawaPay deposit
-          5. Stocker pawapay_deposit_id
-        """
         from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
 
-        # 1. Vérifier level
         level = await self.db.get(Level, data.level_id)
         if not level:
             raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
-        # 2. Vérifier plan
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
 
-        # 3. Code promo (optionnel)
         promo_code_id = None
         amount_gross = plan.price
         amount_paid = plan.price
@@ -76,10 +69,8 @@ class PaymentService:
                 amount_paid = promo_result["amount_paid"]
                 commission_due = promo_result["commission_due"]
 
-        # 4. Générer référence interne
         transaction_reference = await self.repo.generate_transaction_reference()
 
-        # 5. Créer Payment PENDING
         payment = await self.repo.create(
             user_id=current_user.id,
             level_id=data.level_id,
@@ -94,12 +85,12 @@ class PaymentService:
             operator=data.operator,
         )
 
-        # 6. Appeler pawaPay
         logger.info(f"pawaPay deposit_id: '{str(payment.id)}' len={len(str(payment.id))}")
+
         phone = data.phone_number.strip()
         if not phone.startswith('237'):
             phone = f'237{phone}'
-            
+
         try:
             pawapay_response = await self.pawapay.initiate_deposit(
                 deposit_id=str(payment.id),
@@ -141,6 +132,8 @@ class PaymentService:
         COMPLETED → grant level access + facture
         FAILED → marque comme échoué
         """
+        logger.info(f"Callback reçu — depositId={payload.depositId} status={payload.status}")
+
         payment = await self.repo.get_by_id(UUID(payload.depositId))
         if not payment:
             logger.error(f"Payment introuvable pour depositId: {payload.depositId}")
@@ -156,8 +149,9 @@ class PaymentService:
                 payment_status="COMPLETED",
                 pawapay_deposit_id=payload.depositId,
                 completed_at=datetime.now(timezone.utc),
-                webhook_payload=payload.model_dump(),
+                webhook_payload=_serialize_payload(payload.model_dump()),
             )
+            logger.info(f"Payment {payment.id} → COMPLETED")
             await self._grant_level_access(payment)
             await self._generate_invoice(payment)
 
@@ -165,18 +159,15 @@ class PaymentService:
             await self.repo.update(
                 payment.id,
                 payment_status="FAILED",
-                webhook_payload=payload.model_dump(),
+                webhook_payload=_serialize_payload(payload.model_dump()),
             )
+            logger.info(f"Payment {payment.id} → FAILED")
 
         return True
 
     # ── Grant Level Access ───────────────────────────────
 
     async def _grant_level_access(self, payment: Payment) -> None:
-        """
-        Crée ou renouvelle l'ExamAccess (sur level_id) après paiement réussi.
-        expires_at = now + plan.duration_days
-        """
         from app.modules.exam_access.models import ExamAccess
         from app.modules.exam_access.repository import ExamAccessRepository
         from app.modules.plans.models import Plan
@@ -264,7 +255,6 @@ class PaymentService:
         return payment
 
     async def get_status(self, transaction_reference: str, current_user: User) -> dict:
-        """Polling statut — appelé par le frontend toutes les 5s."""
         payment = await self.repo.find_by_transaction_ref(transaction_reference)
         if not payment or payment.user_id != current_user.id:
             raise NotFoundException(resource="Payment", identifier=transaction_reference)
@@ -294,31 +284,23 @@ class PaymentService:
         data: ManualPaymentRequest,
         admin: User,
     ) -> dict:
-        """
-        Admin crée un paiement validé manuellement.
-        Virement, cash, bon, correction admin.
-        """
         from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
 
-        # 1. Vérifier level
         level = await self.db.get(Level, data.level_id)
         if not level:
             raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
-        # 2. Vérifier plan
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
 
-        # 3. Générer référence manuelle
         transaction_reference = await self.repo.generate_transaction_reference()
         transaction_reference = transaction_reference.replace("GTG-", "GTG-M-", 1)
 
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(days=plan.duration_days)
 
-        # 4. Créer Payment COMPLETED
         payment = await self.repo.create(
             user_id=data.user_id,
             level_id=data.level_id,
@@ -335,10 +317,7 @@ class PaymentService:
             pawapay_deposit_id=None,
         )
 
-        # 5. Accorder l'accès level
         await self._grant_level_access(payment)
-
-        # 6. Générer facture
         await self._generate_invoice(payment)
 
         logger.info(
@@ -359,5 +338,4 @@ class PaymentService:
         }
 
     async def get_manual_payments(self, limit: int = 20) -> list[Payment]:
-        """Liste les paiements manuels pour l'admin."""
         return await self.repo.get_manual_payments(limit=limit)
