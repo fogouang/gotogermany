@@ -126,6 +126,7 @@
                     :id="`teil-img-${teil.id}`"
                     type="file"
                     accept=".png,.jpg,.jpeg,.webp"
+                    multiple
                     class="hidden"
                     @change="(e) => handleUploadTeilImage(mod, teil, e)"
                   />
@@ -250,7 +251,84 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Audio images (Hören Teil 1/3 — une image par audio) -->
+                  <div
+                    v-if="teil.config?.audio_images"
+                    class="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                  >
+                    <div
+                      v-for="(imgPath, num) in teil.config.audio_images"
+                      :key="num"
+                      class="space-y-1"
+                    >
+                      <p
+                        class="text-xs font-medium text-gray-500 flex items-center gap-1"
+                      >
+                        <span class="bg-gray-100 px-1.5 rounded font-mono"
+                          >Audio {{ num }}</span
+                        >
+                      </p>
+                      <div v-if="imgPath">
+                        <img
+                          :src="`${apiBase}/images/${imgPath}`"
+                          :alt="`Audio ${num}`"
+                          class="w-full h-28 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          class="text-xs text-red-400 hover:text-red-600 mt-1 flex items-center gap-1"
+                          @click="
+                            removeConfigImage(teil, 'audio_images', String(num))
+                          "
+                        >
+                          <i class="pi pi-trash text-xs"></i> Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
+                  <!-- Anzeigen (Lesen matching/selektives_matching — texte + image par annonce) -->
+                  <div
+                    v-if="teil.config?.anzeigen"
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                  >
+                    <div
+                      v-for="(anzeige, key) in teil.config.anzeigen"
+                      :key="key"
+                      class="space-y-1"
+                    >
+                      <p
+                        class="text-xs font-medium text-gray-500 flex items-center gap-1"
+                      >
+                        <span class="bg-gray-100 px-1.5 rounded font-mono">{{
+                          String(key).toUpperCase()
+                        }}</span>
+                        <span class="truncate">{{
+                          getAnzeigeTitle(anzeige)
+                        }}</span>
+                      </p>
+                      <div v-if="getAnzeigeImage(anzeige)">
+                        <img
+                          :src="`${apiBase}/images/${getAnzeigeImage(anzeige)}`"
+                          :alt="`Annonce ${key}`"
+                          class="w-full h-28 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          class="text-xs text-red-400 hover:text-red-600 mt-1 flex items-center gap-1"
+                          @click="
+                            removeConfigImage(teil, 'anzeigen', String(key))
+                          "
+                        >
+                          <i class="pi pi-trash text-xs"></i> Supprimer
+                        </button>
+                      </div>
+                      <div
+                        v-else
+                        class="h-28 rounded-lg border-2 border-dashed border-gray-100 flex items-center justify-center"
+                      >
+                        <span class="text-xs text-gray-300">Aucune image</span>
+                      </div>
+                    </div>
+                  </div>
                   <!-- Article image -->
                   <div
                     v-if="teil.config?.article_image !== undefined"
@@ -501,6 +579,11 @@ const getTeilConfigImageCount = (teil: any): number => {
     count += Object.values(c.speakers).filter(
       (s: any) => typeof s === "object" && s?.image,
     ).length;
+  if (c.audio_images) count += Object.keys(c.audio_images).length;
+  if (c.anzeigen)
+    count += Object.values(c.anzeigen).filter(
+      (a: any) => typeof a === "object" && a?.image,
+    ).length; // ← ajouté
   if (c.article_image) count++;
   if (c.topic_image) count++;
   if (c.image) count++;
@@ -513,6 +596,8 @@ const hasConfigImages = (teil: any): boolean => {
   return !!(
     c.persons ||
     c.speakers ||
+    c.audio_images ||
+    c.anzeigen || // ← ajouté
     c.article_image !== undefined ||
     c.topic_image !== undefined ||
     c.image !== undefined
@@ -531,10 +616,16 @@ const toggleTeil = (teilId: string) => {
   else expandedTeile.value.add(teilId);
 };
 
+const getAnzeigeImage = (anzeige: any): string | null =>
+  typeof anzeige === "object" ? (anzeige?.image ?? null) : null;
+
+const getAnzeigeTitle = (anzeige: any): string =>
+  typeof anzeige === "object" ? (anzeige?.title ?? "") : "";
+
 // ── Upload image config Teil ─────────────────────────────
 const handleUploadTeilImage = async (mod: any, teil: any, e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
+  const files = (e.target as HTMLInputElement).files;
+  if (!files || files.length === 0) return;
 
   uploadingTeilImage.value = teil.id;
   try {
@@ -542,8 +633,11 @@ const handleUploadTeilImage = async (mod: any, teil: any, e: Event) => {
     const { OpenAPI, ExamsService } = await import("#shared/api");
 
     const formData = new FormData();
-    formData.append("files", file);
+    for (const file of Array.from(files)) {
+      formData.append("files", file); // même clé "files" pour chaque fichier sélectionné
+    }
     formData.append("subject_number", String(subject.value.subject_number));
+    formData.append("teil_id", teil.id); // ← le fix : on dit explicitement quel Teil cibler
 
     const response = await fetch(
       `${OpenAPI.BASE}/api/v1/exams/admin/${examId}/teil-images`,
@@ -578,6 +672,15 @@ const handleUploadTeilImage = async (mod: any, teil: any, e: Event) => {
       summary: `${result.updated ?? 0} image(s) associée(s)`,
       life: 3000,
     });
+
+    if (result.not_found?.length) {
+      toast.add({
+        severity: "warn",
+        summary: `${result.not_found.length} fichier(s) ignoré(s)`,
+        detail: result.not_found.join(", "),
+        life: 5000,
+      });
+    }
   } catch (err: any) {
     toast.add({
       severity: "error",
@@ -605,6 +708,19 @@ const removeConfigImage = async (teil: any, type: string, key?: string) => {
       config.speakers = { ...config.speakers };
       if (typeof config.speakers[key] === "object") {
         delete config.speakers[key].image;
+      }
+    } else if (type === "audio_images" && key) {
+      // ← ajouté
+      config.audio_images = { ...config.audio_images };
+      delete config.audio_images[key];
+      if (Object.keys(config.audio_images).length === 0) {
+        delete config.audio_images;
+      }
+    } else if (type === "anzeigen" && key) {
+      // ← ajouté
+      config.anzeigen = { ...config.anzeigen };
+      if (typeof config.anzeigen[key] === "object") {
+        delete config.anzeigen[key].image;
       }
     } else {
       delete config[type];

@@ -104,7 +104,7 @@
             <div class="flex-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <p class="font-bold text-gray-900">
-                  {{ t("exam_detail.level_prefix") }} {{ level.cefr_code }} —
+                  {{ t("exam_detail.level_prefix") }} {{ level.cefr_code }} -
                   {{ getLevelName(level.cefr_code) }}
                 </p>
                 <!-- Badge accès -->

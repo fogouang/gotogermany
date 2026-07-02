@@ -8,6 +8,18 @@
     <!-- ── Cas 1 : Multi-audio (Teil 1 et Teil 3) ──────────────────
          Les questions sont groupées par audio_file via audioGroups     -->
     <div v-if="isMultiAudio" class="space-y-8">
+      <!-- ✅ Image de scène générique (fallback si pas d'image par audio) -->
+      <div
+        v-if="!hasAudioImages && sceneImage"
+        class="bg-white border border-gray-200 rounded-xl p-4"
+      >
+        <img
+          :src="`${apiBase}/images/${sceneImage}`"
+          alt="Illustration"
+          class="w-full rounded-lg object-contain max-h-72"
+        />
+      </div>
+
       <div
         v-if="teil.format_type === 'zuordnung_speaker' && teil.config?.speakers"
         class="bg-white border border-gray-200 rounded-xl p-5"
@@ -24,7 +36,7 @@
             :key="key"
             class="flex flex-col items-center gap-2 w-32"
           >
-            <!-- Image grande -->
+            <!-- Image grande (portrait individuel si fourni) -->
             <img
               v-if="getSpeakerImage(speaker)"
               :src="`${apiBase}/images/${getSpeakerImage(speaker)}`"
@@ -80,6 +92,15 @@
         </div>
 
         <div class="p-5 space-y-4">
+          <!-- ✅ Image spécifique à ce groupe audio (ex: horen_teil1_audio1.png) -->
+          <div v-if="getAudioImage(group, gi)" class="mb-2">
+            <img
+              :src="`${apiBase}/images/${getAudioImage(group, gi)}`"
+              alt="Illustration audio"
+              class="w-full rounded-lg border border-gray-200 object-contain max-h-56"
+            />
+          </div>
+
           <!-- Conseil lecture -->
           <div
             class="flex items-center gap-2 text-amber-700 bg-amber-50 px-3 py-2 rounded-lg text-xs"
@@ -130,6 +151,18 @@
     <!-- ── Cas 2 : Audio unique (Teil 2) ───────────────────────────
          1 seul audio long + toutes les questions dessous            -->
     <div v-else class="space-y-4">
+      <!-- ✅ Image de scène générique (illustration du contexte, ex: horen_teil2.png) -->
+      <div
+        v-if="sceneImage"
+        class="bg-white border border-gray-200 rounded-xl p-4"
+      >
+        <img
+          :src="`${apiBase}/images/${sceneImage}`"
+          alt="Illustration"
+          class="w-full rounded-lg object-contain max-h-72"
+        />
+      </div>
+
       <!-- Player audio unique -->
       <div
         v-if="singleAudioFile"
@@ -194,6 +227,28 @@ const getSpeakerImage = (speaker: any): string | null =>
 
 const getSpeakerName = (speaker: any): string =>
   typeof speaker === "object" ? (speaker?.name ?? "") : String(speaker);
+
+// ── Image de scène générique ──────────────────────────
+// Couvre les fichiers uploadés sans suffixe (ex: horen_teil2.png)
+// stockés en config.image, ainsi que config.stimulus_image si utilisé.
+const sceneImage = computed(
+  () => props.teil.config?.image || props.teil.config?.stimulus_image || "",
+);
+
+// ── Images par groupe audio (Teil 1/3) ────────────────
+// config.audio_images = { "1": "path...", "2": "path...", ... }
+// alimenté par des fichiers du type horen_teil1_audio1.png, _audio2.png...
+const hasAudioImages = computed(() => {
+  const images = props.teil.config?.audio_images;
+  return !!images && Object.keys(images).length > 0;
+});
+
+const getAudioImage = (group: any, gi: number): string => {
+  const images = props.teil.config?.audio_images;
+  if (!images) return "";
+  const num = group.audio_number || gi + 1;
+  return images[String(num)] || "";
+};
 
 // ── URL audio ────────────────────────────────────────
 const audioUrl = (path: string): string => {

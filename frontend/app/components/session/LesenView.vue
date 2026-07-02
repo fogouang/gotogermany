@@ -21,6 +21,14 @@
             class="w-full rounded-lg border border-gray-200 object-contain"
           />
         </div>
+        <!-- Image générique (fichiers uploadés sans suffixe key, ex: lesen_teil2.png) -->
+        <div v-else-if="teil.config?.image" class="mb-4">
+          <img
+            :src="`${apiBase}/images/${teil.config.image}`"
+            alt="Illustration"
+            class="w-full rounded-lg border border-gray-200 object-contain"
+          />
+        </div>
         <!-- Titre article si présent (qcm_abc) -->
         <h3
           v-if="
@@ -48,7 +56,9 @@
             :key="`stimulus-${q.id}`"
             class="bg-white border border-gray-200 rounded-lg p-4"
           >
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <p
+              class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"
+            >
               Text {{ q.question_number }}
             </p>
             <div
@@ -142,7 +152,7 @@
                 }}</span>
               </div>
               <div class="font-bold text-primary-700">
-                {{ String(key).toUpperCase() }} — {{ opinion.author }}
+                {{ String(key).toUpperCase() }}-{{ opinion.author }}
               </div>
             </div>
             <p class="text-sm text-gray-700 leading-relaxed">
@@ -181,21 +191,50 @@
           class="space-y-3 mt-4"
         >
           <div
-            v-for="(text, key) in teil.config?.anzeigen"
+            v-for="(anzeige, key) in teil.config?.anzeigen"
             :key="key"
             class="p-3 bg-white border border-gray-200 rounded-lg"
           >
-            <span class="font-bold text-primary-700 mr-2">{{
-              String(key).toUpperCase()
-            }}</span>
-            <span class="text-sm text-gray-700">{{ text }}</span>
+            <div class="flex items-start gap-2">
+              <span class="font-bold text-primary-700 shrink-0">{{
+                String(key).toUpperCase()
+              }}</span>
+              <div class="flex-1 min-w-0">
+                <p
+                  v-if="getAnzeigeTitle(anzeige)"
+                  class="font-semibold text-gray-900 text-sm mb-0.5"
+                >
+                  {{ getAnzeigeTitle(anzeige) }}
+                </p>
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  {{ getAnzeigeText(anzeige) }}
+                </p>
+                <p
+                  v-if="getAnzeigeContact(anzeige)"
+                  class="text-xs text-gray-500 italic mt-1"
+                >
+                  {{ getAnzeigeContact(anzeige) }}
+                </p>
+              </div>
+              <img
+                v-if="getAnzeigeImage(anzeige)"
+                :src="`${apiBase}/images/${getAnzeigeImage(anzeige)}`"
+                :alt="`Annonce ${key}`"
+                class="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0"
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Colonne droite : questions -->
-    <div :class="['overflow-y-auto lg:min-h-0', hasStimulus ? 'lg:w-1/2' : 'w-full']">
+    <div
+      :class="[
+        'overflow-y-auto lg:min-h-0',
+        hasStimulus ? 'lg:w-1/2' : 'w-full',
+      ]"
+    >
       <div class="p-6 max-w-2xl mx-auto space-y-6">
         <!-- Instructions si pas de stimulus -->
         <div
@@ -256,7 +295,9 @@
             :id="`question-${q.id}`"
           >
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              <span
+                class="text-xs font-semibold text-gray-400 uppercase tracking-wide"
+              >
                 Text {{ q.question_number }}
               </span>
               <span class="text-xs text-gray-400">{{ q.points }} pt(s)</span>
@@ -346,12 +387,13 @@ const hasStimulus = computed(() => {
     !!t.config?.stimulus_text ||
     !!t.config?.stimulus_image ||
     !!t.config?.article_text ||
+    !!t.config?.image || // ← ajouté
     t.format_type === "matching" ||
     t.format_type === "selektives_matching" ||
     t.format_type === "zuordnung_personen" ||
     t.format_type === "zuordnung_meinungen" ||
     t.format_type === "zuordnung_paragraphen" ||
-    t.format_type === "zuordnung_titre" || // ✅ ajouté — active la colonne gauche
+    t.format_type === "zuordnung_titre" ||
     t.format_type === "lueckentext_saetze"
   );
 });
@@ -375,4 +417,15 @@ const formatText = (text: string) => {
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\n/g, "<br>");
 };
+const getAnzeigeText = (anzeige: any): string =>
+  typeof anzeige === "object" ? (anzeige?.text ?? "") : String(anzeige);
+
+const getAnzeigeTitle = (anzeige: any): string =>
+  typeof anzeige === "object" ? (anzeige?.title ?? "") : "";
+
+const getAnzeigeContact = (anzeige: any): string =>
+  typeof anzeige === "object" ? (anzeige?.contact ?? "") : "";
+
+const getAnzeigeImage = (anzeige: any): string | null =>
+  typeof anzeige === "object" ? (anzeige?.image ?? null) : null;
 </script>

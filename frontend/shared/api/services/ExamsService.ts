@@ -539,6 +539,9 @@ export class ExamsService {
      * horen_teil3_speaker_a.png → Hören Teil 3, speakers.a.image
      * schreiben_teil1_topic.png → Schreiben Teil 1, topic_image
      * sprechen_teil2_image.png  → Sprechen Teil 2, image
+     *
+     * Si teil_id est fourni, il prime sur le nom du fichier pour localiser
+     * le Teil cible (le nom du fichier ne sert alors qu'à déterminer le key).
      * @param examId
      * @param formData
      * @param accessToken

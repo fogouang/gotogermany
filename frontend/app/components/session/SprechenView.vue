@@ -15,6 +15,17 @@
       </span>
     </div>
 
+    <div
+      v-if="teil.config?.image"
+      class="rounded-xl overflow-hidden border border-gray-200"
+    >
+      <img
+        :src="`${apiBase}/images/${teil.config.image}`"
+        alt="Illustration"
+        class="w-full object-contain max-h-64"
+      />
+    </div>
+
     <!-- oral_kennenlernen — TELC Teil 1 -->
     <div v-if="teil.format_type === 'oral_kennenlernen'" class="space-y-5">
       <div class="bg-white border border-gray-200 rounded-xl p-5">
@@ -418,8 +429,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
 
-const runtimeConfig = useRuntimeConfig()
-const apiBase = (runtimeConfig.public.apiBaseUrl as string) || 'http://localhost:8001'
+const runtimeConfig = useRuntimeConfig();
+const apiBase =
+  (runtimeConfig.public.apiBaseUrl as string) || "http://localhost:8001";
 
 const selectedTheme = ref<string | null>(null);
 const activeSlide = ref(0);

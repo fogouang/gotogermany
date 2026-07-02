@@ -209,6 +209,7 @@ async def import_teil_images(
     exam_id: UUID,
     files: list[UploadFile] = File(...),
     subject_number: int = Form(...),
+    teil_id: UUID | None = Form(None),  # ← ajouté
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -219,6 +220,9 @@ async def import_teil_images(
       horen_teil3_speaker_a.png → Hören Teil 3, speakers.a.image
       schreiben_teil1_topic.png → Schreiben Teil 1, topic_image
       sprechen_teil2_image.png  → Sprechen Teil 2, image
+
+    Si teil_id est fourni, il prime sur le nom du fichier pour localiser
+    le Teil cible (le nom du fichier ne sert alors qu'à déterminer le key).
     """
     from app.modules.exams.image_import_service import TeilImageImportService
     img_files = [f for f in files if f.filename and
@@ -229,6 +233,7 @@ async def import_teil_images(
         exam_id=exam_id,
         files=img_files,
         subject_number=subject_number,
+        teil_id=teil_id,  # ← ajouté
     )
     
 @router.delete("/teile/{teil_id}", response_model=SuccessResponse)

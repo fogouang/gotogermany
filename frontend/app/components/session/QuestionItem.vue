@@ -189,7 +189,7 @@
         ></span>
       </div>
       <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Lacune {{ question.content.gap_number }} — Choisissez la bonne réponse :
+        Lacune {{ question.content.gap_number }} - Choisissez la bonne réponse :
       </p>
       <div class="flex gap-3">
         <button
@@ -224,7 +224,7 @@
         ></span>
       </div>
       <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Lacune {{ question.content.gap_number }} — Choisissez le mot :
+        Lacune {{ question.content.gap_number }} - Choisissez le mot :
       </p>
       <div class="flex flex-wrap gap-2">
         <button
@@ -264,7 +264,7 @@
           @click="$emit('answer', { answer: String(key) })"
         >
           <div class="font-bold text-primary-700 mb-1">
-            {{ String(key).toUpperCase() }} — {{ person.name }}
+            {{ String(key).toUpperCase() }} - {{ person.name }}
           </div>
           <p class="text-xs text-gray-600 line-clamp-2">{{ person.text }}</p>
         </button>
@@ -274,7 +274,7 @@
     <!-- lueckentext_saetze — Goethe B2 Lesen Teil 2 -->
     <div v-else-if="question.question_type === 'lueckentext_saetze'">
       <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Lacune [{{ question.content.gap_number }}] — Choisissez la phrase :
+        Lacune [{{ question.content.gap_number }}] - Choisissez la phrase :
       </p>
       <div class="space-y-2">
         <button
