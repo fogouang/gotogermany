@@ -8,7 +8,7 @@ from uuid import UUID
 
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func
+from sqlalchemy import select, delete, func, or_
 
 from app.modules.exams.models import Exam, Level, Subject, Module, Teil
 from app.modules.questions.models import Question
@@ -126,7 +126,30 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
         config["context"] = teil_data["context"]
     if "audio_file" in teil_data and "audio_file" not in config:
         config["audio_file"] = teil_data["audio_file"]
+        
+    if format_type == "gap_fill_letters":
+        config["beispiele"] = teil_data.get("beispiele", [])
+        config["thema"] = teil_data.get("thema", "")
 
+    if format_type == "gap_fill_words":
+        config["text_with_gaps"] = teil_data.get("text_with_gaps", "")
+        config["beispiel"] = teil_data.get("beispiel", {})
+
+    if format_type == "tableau_mixed":
+        config["spalten"] = teil_data.get("spalten", [])
+        config["zeilen"] = teil_data.get("zeilen", [])
+        config["thema"] = teil_data.get("thema", "")
+        config["transcription"] = teil_data.get("transcription", "")
+
+    if format_type == "bildbeschreibung":
+        config["kandidat_a"] = teil_data.get("kandidat_a", {})
+        config["kandidat_b"] = teil_data.get("kandidat_b", {})
+
+    if format_type == "oral_meinungsaustausch":
+        config["thema"] = teil_data.get("thema", "")
+        config["person1"] = teil_data.get("person1", {})
+        config["person2"] = teil_data.get("person2", {})
+    
     return config or None
 
 
@@ -258,7 +281,7 @@ class ExamImportService:
                         format_type=format_type,
                         instructions=teil_data.get("instructions"),
                         max_score=teil_data.get("max_score", 0),
-                        time_minutes=teil_data.get("time_minutes"),
+                        time_minutes=teil_data.get("time_minutes") or teil_data.get("duration_minutes"),
                         config=teil_config,
                     )
                     self.db.add(teil)
@@ -340,8 +363,13 @@ class ExamImportService:
         result = await self.db.execute(
             select(Module).where(
                 Module.subject_id == subject.id,
+                or_(
                 Module.slug.ilike("%horen%"),
+                Module.slug.ilike("%hören%"),
+                Module.slug.ilike("%hoerverstehen%"),
+                Module.slug.ilike("%hörverstehen%"),
             )
+            ),
         )
         horen_module = result.scalar_one_or_none()
         if not horen_module:

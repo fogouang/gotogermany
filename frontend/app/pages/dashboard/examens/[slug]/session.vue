@@ -217,10 +217,16 @@ const isLastModule = computed(
 // Vue à afficher selon le slug du module
 const currentView = computed(() => {
   const slug = currentModule.value?.slug?.toLowerCase() || "";
-  if (slug.includes("lesen")) return LesenView;
-  if (slug.includes("horen") || slug.includes("hören")) return HorenView;
-  if (slug.includes("schreiben")) return SchreibenView;
-  if (slug.includes("sprechen")) return SprechenView;
+  if (slug.includes("lese")) return LesenView;
+  if (slug.includes("hoer") || slug.includes("hör")) return HorenView;
+  if (slug.includes("schreib") || slug.includes("schriftlich"))
+    return SchreibenView;
+  if (
+    slug.includes("sprech") ||
+    slug.includes("muendlich") ||
+    slug.includes("mündlich")
+  )
+    return SprechenView;
   return LesenView;
 });
 
@@ -283,11 +289,13 @@ const handleSubmit = async () => {
   if (result.success) {
     const slug = route.params.slug as string;
     const moduleSlug = route.query.moduleSlug as string | undefined;
+    const moduleSlugs = route.query.moduleSlugs as string | undefined; // ← ajouté
     navigateTo({
       path: `/dashboard/examens/${slug}/result`,
       query: {
         sessionId: sessionStore.sessionId,
         ...(moduleSlug ? { moduleSlug } : {}),
+        ...(moduleSlugs ? { moduleSlugs } : {}), // ← ajouté
       },
     });
   }
@@ -316,10 +324,15 @@ const stopTimer = () => {
 
 const initialized = ref(false);
 
-onMounted(async () => {
+const loadSession = async () => {
+  initialized.value = false;
+  stopTimer();
+  sessionStore.resetSession(); // vide l'ancien état avant de recharger
+
   const examId = route.query.examId as string;
   const subjectId = route.query.subjectId as string | undefined;
   const moduleSlug = route.query.moduleSlug as string | undefined;
+  const moduleSlugs = route.query.moduleSlugs as string | undefined;
 
   if (!examId) {
     navigateTo("/dashboard/examens");
@@ -328,19 +341,45 @@ onMounted(async () => {
 
   const result = await session.startSession(examId, subjectId);
 
-  if (result.success && moduleSlug) {
+  if (result.success && (moduleSlug || moduleSlugs)) {
+    const targetSlugs = moduleSlugs
+      ? moduleSlugs.split(",").map((s) => s.trim().toLowerCase())
+      : [moduleSlug!.toLowerCase()];
+
     sessionStore.modules = sessionStore.modules.filter((m) =>
-      m.slug.toLowerCase().includes(moduleSlug.toLowerCase()),
+      targetSlugs.some((slug) => m.slug.toLowerCase().includes(slug)),
     );
     sessionStore.questions = sessionStore.questions.filter((q) =>
       sessionStore.modules.some((m) =>
         m.teile?.some((t: any) => t.id === q.teil_id),
       ),
     );
-    sessionStore.timeRemaining =
-      (sessionStore.modules[0]?.time_limit_minutes ?? 30) * 60;
+    const combinedMinutes = sessionStore.modules.reduce(
+      (sum: number, m: any) => sum + (m.time_limit_minutes || 0),
+      0,
+    );
+    sessionStore.timeRemaining = (combinedMinutes || 30) * 60;
   }
 
+  currentModuleIndex.value = 0;
+  currentTeilIndex.value = 0;
   initialized.value = true;
-});
+  startTimer();
+};
+
+onMounted(loadSession);
+
+// ✅ Recharge la session si l'utilisateur navigue vers un autre sujet/module
+// SANS rechargement complet de page (query change, même route).
+watch(
+  () => [
+    route.query.subjectId,
+    route.query.examId,
+    route.query.moduleSlug,
+    route.query.moduleSlugs,
+  ],
+  () => {
+    loadSession();
+  },
+);
 </script>

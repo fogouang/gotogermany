@@ -41,12 +41,11 @@ class ExamSessionService:
         self.access_service = ExamAccessService(db)
 
     # ── Démarrage ────────────────────────────────────────
-
     async def start_session(
         self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None
     ) -> SessionStartResponse:
 
-        # Vérifier accès selon le subject
+        # 1. Déterminer le subject cible (explicite ou auto-pick)
         if subject_id:
             subject_obj = await self._get_subject(subject_id)
             if not subject_obj:
@@ -56,8 +55,8 @@ class ExamSessionService:
             subject_obj = await self._pick_subject(user_id, exam_id, None)
             await self.access_service.require_subject_access(user_id, subject_obj)
 
-        # Session active existante ?
-        active = await self.repo.get_active_session(user_id, exam_id)
+        # 2. Réutiliser la session active SEULEMENT si elle porte sur ce subject précis
+        active = await self.repo.get_active_session(user_id, exam_id, subject_obj.id)
         if active:
             subject = await self._load_subject_full(active.subject_id)
             exam = await self._load_exam_by_subject(active.subject_id)
@@ -80,7 +79,9 @@ class ExamSessionService:
                 existing_answers=existing,
             )
 
-        # ← Utiliser subject_obj déjà chargé, pas refaire _pick_subject
+        # 3. Nouvelle session sur le subject demandé
+        #    (que ce soit parce qu'il n'y avait pas de session active,
+        #    ou parce que la session active portait sur un AUTRE subject)
         subject = await self._load_subject_full(subject_obj.id)
         exam = await self.exam_repo.get_by_id(exam_id)
         if not exam:
@@ -106,7 +107,7 @@ class ExamSessionService:
             started_at=session.started_at,
             modules=modules_data,
         )
-
+        
     # ── Réponses ─────────────────────────────────────────
 
     async def submit_answer(

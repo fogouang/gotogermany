@@ -130,34 +130,103 @@ def parse_zuordnung_speaker(teil_data: dict) -> list[dict]:
 
 
 def parse_free_text(teil_data: dict) -> list[dict]:
+    content = {
+        "word_count_target": teil_data.get("word_count_target", 80),
+        "text_type": teil_data.get("text_type", ""),
+        "register": teil_data.get("register", "informell"),
+    }
+
+    # TELC — réponse à un e-mail reçu
+    if teil_data.get("stimulus_email"):
+        content["stimulus_email"] = teil_data["stimulus_email"]
+
+    # Goethe — commentaire d'une citation de forum
+    if teil_data.get("stimulus"):
+        content["stimulus"] = teil_data["stimulus"]
+        content["stimulus_author"] = teil_data.get("stimulus_author", "")
+
+    # Sujet simple : topic (Goethe forum) ou scenario (Goethe/TELC message)
+    if teil_data.get("topic"):
+        content["topic"] = teil_data["topic"]
+
+    # "scenario" (Goethe/TELC) ou "situation" (Goethe-ÖSD B1) — même rôle
+    if teil_data.get("scenario"):
+        content["scenario"] = teil_data["scenario"]
+    elif teil_data.get("situation"):
+        content["scenario"] = teil_data["situation"]
+
+    if teil_data.get("recipient"):
+        content["recipient"] = teil_data["recipient"]
+
+    # Détecte en amont si on est dans le cas "variantes d'opinion" (ÖSD B2),
+    # qui gère prompts/leitpunkte lui-même plus bas — évite un double
+    # remplissage de content["prompts"] à partir des mêmes leitpunkte.
+    has_opinion_variants = bool(
+        teil_data.get("variante_a") or teil_data.get("variante_b")
+    )
+
+    # "prompts" (Goethe/TELC) ou "leitpunkte" (Goethe-ÖSD B1) — même rôle
+    if teil_data.get("prompts"):
+        content["prompts"] = teil_data["prompts"]
+    elif teil_data.get("leitpunkte") and not has_opinion_variants:
+        content["prompts"] = teil_data["leitpunkte"]
+
+    # TELC/ÖSD B2 — choix entre 2 thèmes de lettre ("themen" liste)
+    if teil_data.get("themen"):
+        content["themes"] = {
+            str(th["nummer"]): {
+                "titel": th.get("titel", ""),
+                "stimulus": th.get("stimulus", ""),
+                "prompts": th.get("prompts", []),
+            }
+            for th in teil_data["themen"]
+        }
+
+    # ÖSD — e-mail de réclamation structurée (promesses vs réalité)
+    if teil_data.get("versprechen") or teil_data.get("probleme"):
+        content["info_comparison"] = {
+            "anbieter": teil_data.get("anbieter", ""),
+            "situation": teil_data.get("situation", ""),
+            "versprechen": teil_data.get("versprechen", []),
+            "probleme": teil_data.get("probleme", []),
+            "kontakt": teil_data.get("kontakt", ""),
+        }
+
+    # ÖSD — choix entre 2 variantes d'opinion + leitpunkte communs
+    if has_opinion_variants:
+        variants = {}
+        for key in ("a", "b"):
+            v = teil_data.get(f"variante_{key}")
+            if v:
+                variants[key] = {
+                    "thema": v.get("thema", ""),
+                    "aussagen": v.get("aeusserungen") or v.get("schlagzeilen") or [],
+                }
+        content["opinion_variants"] = variants
+        content["leitpunkte"] = teil_data.get("leitpunkte", [])
+
     return [{
         "question_number": 1,
         "question_type": "free_text",
-        "content": {
-            "scenario": teil_data.get("scenario", ""),
-            "prompts": teil_data.get("prompts", []),
-            "word_count_target": teil_data.get("word_count_target", 80),
-            "text_type": teil_data.get("text_type", ""),
-            "register": teil_data.get("register", "informell"),
-            "stimulus": teil_data.get("stimulus", ""),
-            "stimulus_author": teil_data.get("stimulus_author", ""),
-            "stimulus_email": teil_data.get("stimulus_email", {}),
-        },
+        "content": content,
         "correct_answer": {
-            "musterlösung": teil_data.get("musterlösung", ""),
+            "musterlösung": teil_data.get("musterlösung", "") or teil_data.get("musterloesung", ""),
+            "musterloesung_thema1": teil_data.get("musterloesung_thema1", ""),
+            "musterloesung_thema2": teil_data.get("musterloesung_thema2", ""),
             "scoring_criteria": teil_data.get("scoring_criteria", {}),
         },
         "points": teil_data.get("max_score", 40),
         "audio_file": None,
     }]
 
-
 def parse_oral(teil_data: dict, question_type: str) -> list[dict]:
     content = {
         "scenario": teil_data.get("scenario", ""),
-        "prompts": teil_data.get("prompts", []),
+        "prompts": teil_data.get("prompts") or teil_data.get("leitpunkte", []),
         "tasks": teil_data.get("tasks", []),
     }
+    if "titel" in teil_data:
+        content["titel"] = teil_data["titel"]
     if "themes" in teil_data:
         content["themes"] = teil_data["themes"]
     return [{
@@ -169,16 +238,32 @@ def parse_oral(teil_data: dict, question_type: str) -> list[dict]:
         "audio_file": None,
     }]
 
-
 def parse_zuordnung_titre(teil_data: dict) -> list[dict]:
     titres = teil_data.get("titres", {})
-    return [{
-        "question_number": q["number"],
-        "question_type": "zuordnung_titre",
-        "content": {"stimulus_text": q["stimulus_text"], "titres": titres},
-        "correct_answer": {"answer": q["answer"]},
-        "points": 5, "audio_file": None,
-    } for q in teil_data.get("questions", [])]
+
+    # Structure Goethe/TELC : "questions" avec number/stimulus_text/answer
+    if teil_data.get("questions"):
+        return [{
+            "question_number": q["number"],
+            "question_type": "zuordnung_titre",
+            "content": {"stimulus_text": q["stimulus_text"], "titres": titres},
+            "correct_answer": {"answer": q["answer"]},
+            "points": 5,
+            "audio_file": None,
+        } for q in teil_data["questions"]]
+
+    # Structure ÖSD B2 : "texte" avec text_number/content/answer
+    if teil_data.get("texte"):
+        return [{
+            "question_number": q["text_number"],
+            "question_type": "zuordnung_titre",
+            "content": {"stimulus_text": q["content"], "titres": titres},
+            "correct_answer": {"answer": q["answer"]},
+            "points": 5,
+            "audio_file": None,
+        } for q in teil_data["texte"]]
+
+    return []
 
 
 def parse_selektives_matching(teil_data: dict) -> list[dict]:
@@ -319,7 +404,90 @@ def parse_zuordnung_paragraphen(teil_data: dict) -> list[dict]:
         "audio_file": None,
     } for q in teil_data.get("questions", [])]
     
+def parse_gap_fill_letters(teil_data: dict) -> list[dict]:
+    """Lesen ÖSD Teil 3 — texte continu, lacunes de quelques lettres."""
+    return [{
+        "question_number": q["number"],
+        "question_type": "gap_fill_letters",
+        "content": {"visible_text": q["visible_text"]},
+        "correct_answer": {"answer": q["answer"]},
+        "points": 1,
+        "audio_file": None,
+    } for q in teil_data.get("questions", [])]
 
+
+def parse_gap_fill_words(teil_data: dict) -> list[dict]:
+    """Lesen ÖSD Teil 4 — texte à trous, réponse libre (pas de choix)."""
+    text_with_gaps = teil_data.get("text_with_gaps", "")
+    return [{
+        "question_number": q["number"],
+        "question_type": "gap_fill_words",
+        "content": {"text_with_gaps": text_with_gaps, "gap_number": q["number"]},
+        "correct_answer": {"answer": q["answer"]},
+        "points": 1,
+        "audio_file": None,
+    } for q in teil_data.get("questions", [])]
+
+
+def parse_tableau_mixed(teil_data: dict) -> list[dict]:
+    """Hören ÖSD Teil 2 — tableau comparatif, une question par ligne (zeile)."""
+    spalten = teil_data.get("spalten", [])
+    audio_file = (teil_data.get("audio_file") or "").replace("\\", "/")
+    questions = []
+    for row in teil_data.get("tableau", []):
+        questions.append({
+            "question_number": row["zeile_number"],
+            "question_type": "tableau_mixed",
+            "content": {
+                "zeile_name": row["zeile_name"],
+                "type": row["type"],
+                "spalten": spalten,
+                "options": row.get("options", []),
+            },
+            "correct_answer": {"answers": row["answers"]},
+            "points": 1,
+            "audio_file": audio_file or None,
+        })
+    return questions
+
+
+def parse_bildbeschreibung(teil_data: dict) -> list[dict]:
+    """Sprechen — description/interprétation d'image, choix parmi 3 par candidat."""
+    content = {
+        "kandidat_a": teil_data.get("kandidat_a", {}),
+        "kandidat_b": teil_data.get("kandidat_b", {}),
+        "sprachliche_mittel": teil_data.get("sprachliche_mittel", []),
+        "instructions": teil_data.get("instructions", ""),
+        "hinweis": teil_data.get("hinweis", ""),
+    }
+    return [{
+        "question_number": 1,
+        "question_type": "bildbeschreibung",
+        "content": content,
+        "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
+        "points": teil_data.get("max_score", 10),
+        "audio_file": None,
+    }]
+
+
+def parse_oral_meinungsaustausch(teil_data: dict) -> list[dict]:
+    """Sprechen — échange d'opinions, deux positions contradictoires à défendre."""
+    content = {
+        "thema": teil_data.get("thema", ""),
+        "person1": teil_data.get("person1", {}),
+        "person2": teil_data.get("person2", {}),
+        "sprachliche_mittel": teil_data.get("sprachliche_mittel", []),
+        "instructions": teil_data.get("instructions", ""),
+    }
+    return [{
+        "question_number": 1,
+        "question_type": "oral_meinungsaustausch",
+        "content": content,
+        "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
+        "points": teil_data.get("max_score", 10),
+        "audio_file": None,
+    }]
+    
 PARSERS = {
     "richtig_falsch":           parse_richtig_falsch,
     "ja_nein":                  parse_ja_nein,
@@ -337,9 +505,14 @@ PARSERS = {
     "word_bank_gap_fill":       parse_word_bank_gap_fill,
     "oral_kennenlernen":        parse_oral_kennenlernen,
     "oral_thema":               parse_oral_thema,
-    "zuordnung_personen":    parse_zuordnung_personen,
-    "lueckentext_saetze":    parse_lueckentext_saetze,
-    "zuordnung_meinungen":   parse_zuordnung_meinungen,
-    "zuordnung_paragraphen": parse_zuordnung_paragraphen,
-    "oral_discussion":       lambda d: parse_oral(d, "oral_discussion"),
+    "zuordnung_personen":       parse_zuordnung_personen,
+    "lueckentext_saetze":       parse_lueckentext_saetze,
+    "zuordnung_meinungen":      parse_zuordnung_meinungen,
+    "zuordnung_paragraphen":    parse_zuordnung_paragraphen,
+    "oral_discussion":          lambda d: parse_oral(d, "oral_discussion"),
+    "gap_fill_letters":         parse_gap_fill_letters,        
+    "gap_fill_words":           parse_gap_fill_words,         
+    "tableau_mixed":            parse_tableau_mixed,          
+    "bildbeschreibung":         parse_bildbeschreibung,        
+    "oral_meinungsaustausch":   parse_oral_meinungsaustausch,  
 }

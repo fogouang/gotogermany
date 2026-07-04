@@ -15,16 +15,19 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
         super().__init__(ExamSession, db)
 
     async def get_active_session(
-        self, user_id: UUID, exam_id: UUID
+        self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None
     ) -> ExamSession | None:
         """Retourne la session IN_PROGRESS si elle existe."""
+        conditions = [
+            ExamSession.user_id == user_id,
+            ExamSession.exam_id == exam_id,
+            ExamSession.status == "IN_PROGRESS",
+        ]
+        if subject_id:
+            conditions.append(ExamSession.subject_id == subject_id)
+
         result = await self.db.execute(
-            select(ExamSession)
-            .where(
-                ExamSession.user_id == user_id,
-                ExamSession.exam_id == exam_id,
-                ExamSession.status == "IN_PROGRESS",
-            )
+            select(ExamSession).where(*conditions)
         )
         return result.scalar_one_or_none()
 

@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Numéro + points -->
-    <div class="flex items-center  justify-between mb-3">
+    <div class="flex items-center justify-between mb-3">
       <span class="text-xs font-semibold text-gray-900 uppercase tracking-wide">
         Question {{ question.question_number }}
       </span>
@@ -112,40 +112,48 @@
     </div>
 
     <!-- zuordnung_titre -->
-<div v-else-if="question.question_type === 'zuordnung_titre'">
-  <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed">
-    {{ question.content.stimulus_text }}
-  </div>
-  <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-    Choisissez le titre correspondant :
-  </p>
-  <div class="grid grid-cols-1 gap-2">
-    <button
-      v-for="(titre, key) in question.content.titres"
-      :key="key"
-      :class="[
-        'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
-        answer?.answer === String(key)
-          ? 'border-primary-500 bg-primary-50'
-          : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
-      ]"
-      @click="$emit('answer', { answer: String(key) })"
-    >
-      <span
-        :class="[
-          'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
-          answer?.answer === String(key)
-            ? 'bg-primary-600 text-white'
-            : 'bg-white border-2 border-gray-300 text-gray-500',
-        ]"
-        >{{ String(key).toUpperCase() }}</span
+    <div v-else-if="question.question_type === 'zuordnung_titre'">
+      <div
+        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
       >
-      <span :class="answer?.answer === String(key) ? 'font-medium text-primary-900' : 'text-gray-700'">
-        {{ titre }}
-      </span>
-    </button>
-  </div>
-</div>
+        {{ question.content.stimulus_text }}
+      </div>
+      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
+        Choisissez le titre correspondant :
+      </p>
+      <div class="grid grid-cols-1 gap-2">
+        <button
+          v-for="(titre, key) in question.content.titres"
+          :key="key"
+          :class="[
+            'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
+            answer?.answer === String(key)
+              ? 'border-primary-500 bg-primary-50'
+              : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
+          ]"
+          @click="$emit('answer', { answer: String(key) })"
+        >
+          <span
+            :class="[
+              'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
+              answer?.answer === String(key)
+                ? 'bg-primary-600 text-white'
+                : 'bg-white border-2 border-gray-300 text-gray-500',
+            ]"
+            >{{ String(key).toUpperCase() }}</span
+          >
+          <span
+            :class="
+              answer?.answer === String(key)
+                ? 'font-medium text-primary-900'
+                : 'text-gray-700'
+            "
+          >
+            {{ titre }}
+          </span>
+        </button>
+      </div>
+    </div>
 
     <!-- selektives_matching -->
     <div v-else-if="question.question_type === 'selektives_matching'">
@@ -384,6 +392,112 @@
       </div>
     </div>
 
+    <!-- gap_fill_letters — ÖSD Lesen Teil 3 : compléter avec quelques lettres -->
+    <div v-else-if="question.question_type === 'gap_fill_letters'">
+      <div
+        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
+      >
+        {{ question.content.visible_text }}
+        <span
+          class="inline-block bg-primary-100 border-b-2 border-primary-400 px-2 py-0.5 rounded mx-1 font-bold text-primary-700"
+        >
+          {{ answer?.answer || "___" }}
+        </span>
+      </div>
+      <p class="text-xs font-semibold text-gray-500 uppercase mb-2">
+        Complétez (max. 3 lettres) :
+      </p>
+      <input
+        type="text"
+        maxlength="3"
+        :value="answer?.answer || ''"
+        class="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none uppercase"
+        @input="
+          $emit('answer', {
+            answer: ($event.target as HTMLInputElement).value.toLowerCase(),
+          })
+        "
+      />
+    </div>
+
+    <!-- gap_fill_words — ÖSD Lesen Teil 4 : compléter avec un mot -->
+    <div v-else-if="question.question_type === 'gap_fill_words'">
+      <div
+        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
+        v-html="
+          highlightGap(
+            question.content.text_with_gaps,
+            question.content.gap_number,
+          )
+        "
+      ></div>
+      <p class="text-xs font-semibold text-gray-500 uppercase mb-2">
+        Lacune {{ question.content.gap_number }} - Complétez avec un mot :
+      </p>
+      <input
+        type="text"
+        :value="answer?.answer || ''"
+        placeholder="Votre réponse..."
+        class="w-full max-w-xs px-3 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none"
+        @input="
+          $emit('answer', {
+            answer: ($event.target as HTMLInputElement).value,
+          })
+        "
+      />
+    </div>
+
+    <!-- tableau_mixed — ÖSD Hören Teil 2 : tableau comparatif (checkbox ou texte par ligne) -->
+    <div v-else-if="question.question_type === 'tableau_mixed'">
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">
+          {{ question.content.zeile_name }}
+        </p>
+      </div>
+
+      <!-- Type checkbox : sélection multiple d'options -->
+      <div v-if="question.content.type === 'checkbox'" class="space-y-4">
+        <div
+          v-for="col in question.content.spalten"
+          :key="col"
+          class="border border-gray-100 rounded-lg p-3"
+        >
+          <p class="text-xs font-bold text-gray-600 mb-2">{{ col }}</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="opt in question.content.options"
+              :key="opt"
+              :class="[
+                'px-3 py-1.5 rounded-lg border-2 text-xs font-medium transition-all',
+                (answer?.answers?.[col] || []).includes(opt)
+                  ? 'border-primary-500 bg-primary-50 text-primary-800'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300',
+              ]"
+              @click="toggleTableauOption(col, opt)"
+            >
+              {{ opt }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type texte : réponse libre par colonne -->
+      <div v-else class="space-y-3">
+        <div v-for="col in question.content.spalten" :key="col">
+          <p class="text-xs font-bold text-gray-600 mb-1">{{ col }}</p>
+          <input
+            type="text"
+            :value="answer?.answers?.[col] || ''"
+            placeholder="Votre réponse..."
+            class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-primary-500 focus:outline-none"
+            @input="
+              setTableauText(col, ($event.target as HTMLInputElement).value)
+            "
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Fallback -->
     <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
       <p class="text-yellow-700 text-sm">
@@ -400,7 +514,8 @@ const props = defineProps<{
   teilAnzeigen?: Record<string, string>;
 }>();
 
-defineEmits<{ answer: [value: any] }>();
+// defineEmits<{ answer: [value: any] }>();
+const emit = defineEmits<{ answer: [value: any] }>();
 
 const rfOptions = computed(() => {
   const isJaNein = props.question.question_type === "ja_nein";
@@ -432,5 +547,20 @@ const highlightGap = (text: string, gapNumber: number): string => {
     marker,
     `<span class="inline-block bg-primary-200 text-primary-900 font-bold px-2 py-0.5 rounded mx-1">[${gapNumber}]</span>`,
   );
+};
+
+const toggleTableauOption = (col: string, opt: string) => {
+  const current = { ...(props.answer?.answers || {}) };
+  const colValues: string[] = current[col] || [];
+  current[col] = colValues.includes(opt)
+    ? colValues.filter((v) => v !== opt)
+    : [...colValues, opt];
+  emit("answer", { answers: current });
+};
+
+const setTableauText = (col: string, value: string) => {
+  const current = { ...(props.answer?.answers || {}) };
+  current[col] = value;
+  emit("answer", { answers: current });
 };
 </script>

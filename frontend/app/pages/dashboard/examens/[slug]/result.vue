@@ -231,7 +231,11 @@
 
             <!-- Bouton correction Schreiben -->
             <Button
-              v-if="module.slug.includes('schreiben') && module.is_corrected"
+              v-if="
+                (module.slug.includes('schreiben') ||
+                  module.slug.includes('schriftlich')) &&
+                module.is_corrected
+              "
               :label="t('result.see_correction')"
               icon="pi pi-eye"
               size="small"
@@ -278,7 +282,8 @@
       <!-- ── Détail réponses par module ── -->
       <div
         v-for="module in displayedModules.filter(
-          (m) => !m.slug.includes('schreiben'),
+          (m) =>
+            !m.slug.includes('schreiben') && !m.slug.includes('schriftlich'),
         )"
         :key="`detail-${module.slug}`"
         class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
@@ -437,17 +442,33 @@ const loading = ref(true);
 const result = ref<SessionResultResponse | null>(null);
 const expandedModules = ref<Set<string>>(new Set());
 
-// ── Mode module seul ─────────────────────────────────────
+// ── Mode module seul / modules combinés ──────────────────
 const moduleSlug = computed(() => route.query.moduleSlug as string | undefined);
-const isSingleModule = computed(() => !!moduleSlug.value);
+const moduleSlugs = computed(
+  () => route.query.moduleSlugs as string | undefined,
+);
+const isSingleModule = computed(
+  () => !!moduleSlug.value || !!moduleSlugs.value,
+);
 
 const displayedModules = computed(() => {
   if (!result.value?.modules) return [];
-  if (isSingleModule.value) {
+
+  if (moduleSlugs.value) {
+    const targetSlugs = moduleSlugs.value
+      .split(",")
+      .map((s) => s.trim().toLowerCase());
+    return result.value.modules.filter((m) =>
+      targetSlugs.some((slug) => m.slug.toLowerCase().includes(slug)),
+    );
+  }
+
+  if (moduleSlug.value) {
     return result.value.modules.filter((m) =>
       m.slug.toLowerCase().includes(moduleSlug.value!.toLowerCase()),
     );
   }
+
   return result.value.modules;
 });
 
@@ -535,26 +556,50 @@ const formatAnswer = (answer: Record<string, any> | null): string => {
 };
 
 const getModuleIcon = (s: string) => {
-  if (s.includes("lesen")) return "pi-book";
-  if (s.includes("horen") || s.includes("hören")) return "pi-volume-up";
-  if (s.includes("schreiben")) return "pi-pencil";
-  if (s.includes("sprechen")) return "pi-microphone";
+  const slug = (s || "").toLowerCase();
+  if (slug.includes("lese")) return "pi-book";
+  if (slug.includes("hoer") || slug.includes("hör")) return "pi-volume-up";
+  if (slug.includes("schreib") || slug.includes("schriftlich"))
+    return "pi-pencil";
+  if (
+    slug.includes("sprech") ||
+    slug.includes("muendlich") ||
+    slug.includes("mündlich")
+  )
+    return "pi-microphone";
+  if (slug.includes("sprachbaustein")) return "pi-language";
   return "pi-file";
 };
 
 const getModuleBg = (s: string) => {
-  if (s.includes("lesen")) return "bg-blue-50";
-  if (s.includes("horen") || s.includes("hören")) return "bg-purple-50";
-  if (s.includes("schreiben")) return "bg-green-50";
-  if (s.includes("sprechen")) return "bg-orange-50";
+  const slug = (s || "").toLowerCase();
+  if (slug.includes("lese")) return "bg-blue-50";
+  if (slug.includes("hoer") || slug.includes("hör")) return "bg-purple-50";
+  if (slug.includes("schreib") || slug.includes("schriftlich"))
+    return "bg-green-50";
+  if (
+    slug.includes("sprech") ||
+    slug.includes("muendlich") ||
+    slug.includes("mündlich")
+  )
+    return "bg-orange-50";
+  if (slug.includes("sprachbaustein")) return "bg-pink-50";
   return "bg-gray-50";
 };
 
 const getModuleIconColor = (s: string) => {
-  if (s.includes("lesen")) return "text-blue-500";
-  if (s.includes("horen") || s.includes("hören")) return "text-purple-500";
-  if (s.includes("schreiben")) return "text-green-500";
-  if (s.includes("sprechen")) return "text-orange-500";
+  const slug = (s || "").toLowerCase();
+  if (slug.includes("lese")) return "text-blue-500";
+  if (slug.includes("hoer") || slug.includes("hör")) return "text-purple-500";
+  if (slug.includes("schreib") || slug.includes("schriftlich"))
+    return "text-green-500";
+  if (
+    slug.includes("sprech") ||
+    slug.includes("muendlich") ||
+    slug.includes("mündlich")
+  )
+    return "text-orange-500";
+  if (slug.includes("sprachbaustein")) return "text-pink-500";
   return "text-gray-500";
 };
 

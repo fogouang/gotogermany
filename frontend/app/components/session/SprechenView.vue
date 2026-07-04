@@ -15,6 +15,11 @@
       </span>
     </div>
 
+    <!-- ✅ Sprachliche Mittel — banque d'expressions utiles, se met à jour
+         automatiquement selon le format_type (et la Folie active pour
+         Goethe/ÖSD B1) -->
+    <SprachlicheMittelPanel :mittel-key="mittelKey" />
+
     <div
       v-if="teil.config?.image"
       class="rounded-xl overflow-hidden border border-gray-200"
@@ -208,7 +213,7 @@
             >
               <p class="font-semibold text-gray-900">{{ theme.title }}</p>
               <p class="text-xs text-gray-500 mt-1">
-                {{ theme.slides?.length }} point(s)
+                {{ (theme.folien || theme.slides)?.length }} point(s)
               </p>
             </button>
           </div>
@@ -254,9 +259,20 @@
               >
                 {{ activeSlide + 1 }}
               </span>
-              <p class="text-base text-gray-800 font-medium">
-                {{ currentSlides[activeSlide] }}
-              </p>
+              <div class="flex-1">
+                <p
+                  v-if="currentSlides[activeSlide]?.titel"
+                  class="font-semibold text-gray-900 mb-1"
+                >
+                  {{ currentSlides[activeSlide].titel }}
+                </p>
+                <p class="text-base text-gray-800 font-medium">
+                  {{
+                    currentSlides[activeSlide]?.konsigne ||
+                    currentSlides[activeSlide]
+                  }}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -278,6 +294,106 @@
           </div>
         </div>
       </template>
+    </div>
+
+    <!-- bildbeschreibung — ÖSD B2 : choix d'image parmi 3, description + interprétation -->
+    <div v-else-if="teil.format_type === 'bildbeschreibung'" class="space-y-5">
+      <div v-if="!selectedImage" class="space-y-3">
+        <p class="text-sm font-semibold text-gray-700">
+          Choisissez une image :
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            v-for="bild in bildbeschreibungImages"
+            :key="bild.nummer"
+            class="p-4 bg-white border-2 border-gray-200 rounded-xl text-center hover:border-primary-400 transition-colors"
+            @click="selectedImage = bild.nummer"
+          >
+            <div
+              class="w-full h-24 rounded-lg bg-gray-100 flex items-center justify-center mb-2 text-gray-400 text-xs"
+            >
+              <i class="pi pi-image text-2xl"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-800">{{ bild.titel }}</p>
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="space-y-5">
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold text-gray-900">
+            {{ selectedBildTitle }}
+          </h3>
+          <button
+            class="text-xs text-gray-400 hover:text-gray-600"
+            @click="selectedImage = null"
+          >
+            Changer d'image
+          </button>
+        </div>
+
+        <NotesArea
+          :question="question"
+          :answer="answers[question?.id]?.user_answer"
+          @answer="onNotes"
+        />
+
+        <div>
+          <p class="text-sm font-semibold text-gray-700 mb-3">
+            <i class="pi pi-microphone mr-2"></i>Enregistrez votre description :
+          </p>
+          <AudioRecorder
+            :teil-number="teil.teil_number"
+            @recorded="onRecorded"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- oral_meinungsaustausch — ÖSD B2 : échange d'opinions, 2 positions contradictoires -->
+    <div
+      v-else-if="teil.format_type === 'oral_meinungsaustausch'"
+      class="space-y-5"
+    >
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+        <p class="text-sm font-semibold text-amber-800 mb-2">Thème :</p>
+        <p class="text-base font-bold text-amber-900">
+          {{ question?.content?.thema }}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <p class="text-xs font-bold text-gray-500 uppercase mb-2">
+            {{ question?.content?.person1?.name }}
+          </p>
+          <p class="text-sm text-gray-700 italic">
+            {{ question?.content?.person1?.position }}
+          </p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <p class="text-xs font-bold text-gray-500 uppercase mb-2">
+            {{ question?.content?.person2?.name }}
+          </p>
+          <p class="text-sm text-gray-700 italic">
+            {{ question?.content?.person2?.position }}
+          </p>
+        </div>
+      </div>
+
+      <NotesArea
+        :question="question"
+        :answer="answers[question?.id]?.user_answer"
+        @answer="onNotes"
+      />
+
+      <div>
+        <p class="text-sm font-semibold text-gray-700 mb-3">
+          <i class="pi pi-microphone mr-2"></i>Enregistrez votre prise de
+          position :
+        </p>
+        <AudioRecorder :teil-number="teil.teil_number" @recorded="onRecorded" />
+      </div>
     </div>
 
     <!-- oral_thema — TELC B1 Teil 2 -->
@@ -380,7 +496,7 @@
       </div>
     </div>
 
-    <!-- oral_feedback — Goethe B1 Teil 3 -->
+    <!-- oral_feedback — Goethe B1/B2 : commenter, poser une question, répondre -->
     <div v-else-if="teil.format_type === 'oral_feedback'" class="space-y-5">
       <div class="bg-white border border-gray-200 rounded-xl p-5">
         <p class="text-sm font-semibold text-gray-700 mb-3">Tâches :</p>
@@ -419,12 +535,18 @@
 <script setup lang="ts">
 import AudioRecorder from "~/components/session/AudioRecorder.vue";
 import NotesArea from "~/components/session/NotesArea.vue";
+import SprachlicheMittelPanel from "~/components/session/SprachlicheMittelPanel.vue";
+import {
+  resolveMittelKey,
+  resolveMittelKeyForFolie,
+} from "#shared/sprachlicheMittel";
 
 const props = defineProps<{
   teil: any;
   questions: any[];
   answers: Record<string, any>;
   sessionId?: string;
+  examName?: string;
 }>();
 
 const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
@@ -435,6 +557,7 @@ const apiBase =
 
 const selectedTheme = ref<string | null>(null);
 const activeSlide = ref(0);
+const selectedImage = ref<number | null>(null);
 
 const question = computed(() => props.questions[0]);
 
@@ -464,7 +587,60 @@ const goetheThemes = computed(() => {
 
 const currentSlides = computed(() => {
   if (!selectedTheme.value) return [];
-  return question.value?.content?.themes?.[selectedTheme.value]?.slides || [];
+  const theme = question.value?.content?.themes?.[selectedTheme.value];
+  return theme?.folien || theme?.slides || [];
+});
+
+// ── bildbeschreibung — fusionne kandidat_a et kandidat_b en une liste
+// unique de 3 images (candidat_a par défaut pour l'instant).
+const bildbeschreibungImages = computed(() => {
+  const content = question.value?.content;
+  return content?.kandidat_a?.bilder || content?.kandidat_b?.bilder || [];
+});
+
+const selectedBildTitle = computed(() => {
+  const bild = bildbeschreibungImages.value.find(
+    (b: any) => b.nummer === selectedImage.value,
+  );
+  return bild?.titel || "";
+});
+
+// ── Sprachliche Mittel ─────────────────────────────────
+// Déduit provider/cefr depuis examName (ex: "Goethe-Zertifikat B2",
+// "TELC Deutsch B1", "OSD Zertifikat B2/J") puisque ces infos ne sont
+// pas exposées séparément par le store aujourd'hui.
+function parseExamInfo(name?: string) {
+  const n = (name || "").toLowerCase();
+  let provider = "";
+  if (n.includes("ösd") || n.includes("osd")) provider = "ÖSD";
+  else if (n.includes("goethe")) provider = "Goethe";
+  else if (n.includes("telc")) provider = "TELC";
+  const cefrMatch = n.match(/b1|b2/);
+  const cefrCode = cefrMatch ? cefrMatch[0].toUpperCase() : "";
+  return { provider, cefrCode };
+}
+
+const examInfo = computed(() => parseExamInfo(props.examName));
+
+const mittelKey = computed(() => {
+  // Cas spécial : Folien Goethe/ÖSD B1 (Teil 2, sans candidate_a/b,
+  // une fois un thème sélectionné) — une banque différente par Folie.
+  const isFolieBranch =
+    props.teil?.format_type === "oral_monologue" &&
+    !hasGoetheThemes.value &&
+    !!selectedTheme.value;
+
+  if (isFolieBranch) {
+    return resolveMittelKeyForFolie(activeSlide.value + 1);
+  }
+
+  return resolveMittelKey({
+    provider: examInfo.value.provider,
+    cefrCode: examInfo.value.cefrCode,
+    moduleSlug: "sprechen",
+    formatType: props.teil?.format_type,
+    teilNumber: props.teil?.teil_number,
+  });
 });
 
 const onNotes = (val: any) => {

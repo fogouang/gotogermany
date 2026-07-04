@@ -98,4 +98,5 @@ const handleComplete = (value: boolean) => {
 watch(() => props.userAnswer, (newVal) => {
   isCompleted.value = newVal || false
 })
+
 </script>
