@@ -229,6 +229,11 @@ def parse_oral(teil_data: dict, question_type: str) -> list[dict]:
         content["titel"] = teil_data["titel"]
     if "themes" in teil_data:
         content["themes"] = teil_data["themes"]
+    #  Diskussion (TELC B2 Teil 2) — titre + thème résumé
+    if "diskussion_titel" in teil_data:
+        content["diskussion_titel"] = teil_data["diskussion_titel"]
+    if "diskussion_thema" in teil_data:
+        content["diskussion_thema"] = teil_data["diskussion_thema"]
     return [{
         "question_number": 1,
         "question_type": question_type,
@@ -301,15 +306,64 @@ def parse_word_bank_gap_fill(teil_data: dict) -> list[dict]:
 
 
 def parse_oral_kennenlernen(teil_data: dict) -> list[dict]:
+    content = {
+        "topics": teil_data.get("topics", []),
+        "instructions": teil_data.get("instructions", ""),
+    }
+    # ÖSD — variante avec situation/thema/hinweis/leitfragen
+    if teil_data.get("situation"):
+        content["situation"] = teil_data["situation"]
+        content["thema"] = teil_data.get("thema", "")
+        content["hinweis"] = teil_data.get("hinweis", "")
+        content["leitfragen"] = teil_data.get("leitfragen", [])
     return [{
         "question_number": 1,
         "question_type": "oral_kennenlernen",
-        "content": {"topics": teil_data.get("topics", []), "instructions": teil_data.get("instructions", "")},
+        "content": content,
         "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
         "points": teil_data.get("max_score", 15),
         "audio_file": None,
     }]
 
+
+def parse_oral_monologue(teil_data: dict) -> list[dict]:
+    content = {}
+    # Goethe B2 — choix candidat_a/candidat_b (thema1/thema2 + leitpunkte)
+    if teil_data.get("kandidat_a") or teil_data.get("kandidat_b"):
+        content["kandidat_a"] = teil_data.get("kandidat_a", {})
+        content["kandidat_b"] = teil_data.get("kandidat_b", {})
+    # TELC B2 / Goethe B1 — thèmes avec Folien/slides
+    if teil_data.get("themes"):
+        content["themes"] = teil_data["themes"]
+    if teil_data.get("titel"):
+        content["titel"] = teil_data["titel"]
+    if teil_data.get("sprachliche_mittel"):
+        content["sprachliche_mittel"] = teil_data["sprachliche_mittel"]
+    return [{
+        "question_number": 1,
+        "question_type": "oral_monologue",
+        "content": content,
+        "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
+        "points": teil_data.get("max_score", 32),
+        "audio_file": None,
+    }]
+
+
+
+def parse_oral_discussion(teil_data: dict) -> list[dict]:
+    content = {
+        "question": teil_data.get("question", ""),
+        "tasks": teil_data.get("tasks", []),
+        "hints": teil_data.get("hints", []),
+    }
+    return [{
+        "question_number": 1,
+        "question_type": "oral_discussion",
+        "content": content,
+        "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
+        "points": teil_data.get("max_score", 32),
+        "audio_file": None,
+    }]
 
 def parse_oral_thema(teil_data: dict) -> list[dict]:
     return [{
@@ -317,8 +371,8 @@ def parse_oral_thema(teil_data: dict) -> list[dict]:
         "question_type": "oral_thema",
         "content": {
             "topic": teil_data.get("topic", ""),
-            "opinion_a": teil_data.get("opinion_a", {}),
-            "opinion_b": teil_data.get("opinion_b", {}),
+            "person_a": teil_data.get("person_a", {}),
+            "person_b": teil_data.get("person_b", {}),
             "instructions": teil_data.get("instructions", ""),
         },
         "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
@@ -497,7 +551,7 @@ PARSERS = {
     "zuordnung_speaker":        parse_zuordnung_speaker,
     "free_text":                parse_free_text,
     "oral_interaction":         lambda d: parse_oral(d, "oral_interaction"),
-    "oral_monologue":           lambda d: parse_oral(d, "oral_monologue"),
+    "oral_monologue":           parse_oral_monologue,
     "oral_feedback":            lambda d: parse_oral(d, "oral_feedback"),
     "zuordnung_titre":          parse_zuordnung_titre,
     "selektives_matching":      parse_selektives_matching,
@@ -509,7 +563,7 @@ PARSERS = {
     "lueckentext_saetze":       parse_lueckentext_saetze,
     "zuordnung_meinungen":      parse_zuordnung_meinungen,
     "zuordnung_paragraphen":    parse_zuordnung_paragraphen,
-    "oral_discussion":          lambda d: parse_oral(d, "oral_discussion"),
+    "oral_discussion":          parse_oral_discussion,
     "gap_fill_letters":         parse_gap_fill_letters,        
     "gap_fill_words":           parse_gap_fill_words,         
     "tableau_mixed":            parse_tableau_mixed,          

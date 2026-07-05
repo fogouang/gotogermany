@@ -1,7 +1,10 @@
 <template>
   <div class="max-w-3xl mx-auto p-6 space-y-6">
     <!-- Instructions -->
-    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <div
+      v-if="teil.instructions"
+      class="p-4 bg-blue-50 border border-blue-200 rounded-lg"
+    >
       <p class="text-sm text-blue-800 font-medium">{{ teil.instructions }}</p>
     </div>
 
@@ -11,7 +14,8 @@
     >
       <i class="pi pi-clock text-amber-600"></i>
       <span class="text-sm text-amber-800 font-medium">
-        Vous avez {{ teil.time_minutes }} minutes pour cette partie
+        Vous avez {{ teil.time_minutes || teil.duration_minutes }} minutes pour
+        cette partie
       </span>
     </div>
 
@@ -31,15 +35,41 @@
       />
     </div>
 
-    <!-- oral_kennenlernen — TELC Teil 1 -->
+    <!-- oral_kennenlernen — TELC Teil 1 (topics) / ÖSD Teil 1 (situation + leitfragen) -->
     <div v-if="teil.format_type === 'oral_kennenlernen'" class="space-y-5">
-      <div class="bg-white border border-gray-200 rounded-xl p-5">
+      <!-- ✅ Situation ÖSD — thème + mise en situation + indice -->
+      <div
+        v-if="question?.content?.situation"
+        class="bg-amber-50 border border-amber-200 rounded-xl p-5"
+      >
+        <p
+          v-if="question?.content?.thema"
+          class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2"
+        >
+          {{ question.content.thema }}
+        </p>
+        <p class="text-sm text-amber-900 leading-relaxed">
+          {{ question.content.situation }}
+        </p>
+        <p
+          v-if="question?.content?.hinweis"
+          class="text-xs text-amber-600 italic mt-3"
+        >
+          {{ question.content.hinweis }}
+        </p>
+      </div>
+
+      <!-- Thèmes de conversation (TELC — liste simple) -->
+      <div
+        v-if="question?.content?.topics?.length"
+        class="bg-white border border-gray-200 rounded-xl p-5"
+      >
         <p class="text-sm font-semibold text-gray-700 mb-4">
           Thèmes de conversation :
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
-            v-for="(topic, i) in question?.content?.topics"
+            v-for="(topic, i) in question.content.topics"
             :key="i"
             class="flex items-center gap-3 p-3 bg-primary-50 border border-primary-100 rounded-lg"
           >
@@ -51,6 +81,30 @@
             <span class="text-sm text-gray-800 font-medium">{{ topic }}</span>
           </div>
         </div>
+      </div>
+
+      <!-- ✅ Questions guides (ÖSD — leitfragen) -->
+      <div
+        v-if="question?.content?.leitfragen?.length"
+        class="bg-white border border-gray-200 rounded-xl p-5"
+      >
+        <p class="text-sm font-semibold text-gray-700 mb-4">
+          Questions guides :
+        </p>
+        <ul class="space-y-3">
+          <li
+            v-for="(frage, i) in question.content.leitfragen"
+            :key="i"
+            class="flex gap-3 text-sm text-gray-700"
+          >
+            <span
+              class="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+            >
+              {{ (i as number) + 1 }}
+            </span>
+            {{ frage }}
+          </li>
+        </ul>
       </div>
 
       <NotesArea
@@ -69,6 +123,22 @@
 
     <!-- oral_interaction — planification commune -->
     <div v-else-if="teil.format_type === 'oral_interaction'" class="space-y-5">
+      <!-- Diskussion — titre + thème (TELC B2 Teil 2) -->
+      <div
+        v-if="question?.content?.diskussion_titel"
+        class="bg-amber-50 border border-amber-200 rounded-xl p-5"
+      >
+        <p class="text-sm font-semibold text-amber-800 mb-2">
+          {{ question.content.diskussion_titel }}
+        </p>
+        <p
+          v-if="question?.content?.diskussion_thema"
+          class="text-sm text-amber-900"
+        >
+          {{ question.content.diskussion_thema }}
+        </p>
+      </div>
+
       <div
         v-if="question?.content?.scenario"
         class="bg-amber-50 border border-amber-200 rounded-xl p-5"
@@ -128,7 +198,7 @@
         />
       </div>
 
-      <!-- Goethe B2 : candidate_a / candidate_b -->
+      <!-- Goethe B2 : candidate_a/candidate_b (EN) ou kandidat_a/kandidat_b (DE) -->
       <template v-if="hasGoetheThemes">
         <div v-if="!selectedTheme" class="space-y-3">
           <p class="text-sm font-semibold text-gray-700">
@@ -142,7 +212,9 @@
               @click="selectedTheme = key as string"
             >
               <p class="font-semibold text-gray-900 mb-2">{{ theme.title }}</p>
-              <p class="text-xs text-gray-500 line-clamp-3">{{ theme.task }}</p>
+              <p class="text-xs text-gray-500 line-clamp-3">
+                {{ theme.task || theme.leitpunkte?.[0] }}
+              </p>
             </button>
           </div>
         </div>
@@ -160,10 +232,32 @@
             </button>
           </div>
 
+          <!-- Consigne en texte libre (format historique : task) -->
           <div
+            v-if="goetheThemes?.[selectedTheme]?.task"
             class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900"
           >
-            {{ goetheThemes?.[selectedTheme]?.task }}
+            {{ goetheThemes[selectedTheme].task }}
+          </div>
+
+          <!-- ✅ Consigne en liste de points (leitpunkte — Goethe B2) -->
+          <div
+            v-if="goetheThemes?.[selectedTheme]?.leitpunkte?.length"
+            class="bg-amber-50 border border-amber-200 rounded-xl p-5"
+          >
+            <p class="text-sm font-semibold text-amber-800 mb-3">
+              Leitpunkte :
+            </p>
+            <ul class="space-y-2">
+              <li
+                v-for="(punkt, i) in goetheThemes[selectedTheme].leitpunkte"
+                :key="i"
+                class="flex gap-2 text-sm text-amber-900"
+              >
+                <span class="font-bold shrink-0">–</span>
+                <span>{{ punkt }}</span>
+              </li>
+            </ul>
           </div>
 
           <div
@@ -406,20 +500,26 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-white border border-gray-200 rounded-xl p-4">
-          <p class="text-xs font-bold text-gray-500 uppercase mb-2">
-            {{ question?.content?.opinion_a?.person }}
+        <div
+          v-for="key in ['person_a', 'person_b']"
+          :key="key"
+          class="bg-white border border-gray-200 rounded-xl p-4"
+        >
+          <p class="text-xs font-bold text-gray-500 uppercase mb-1">
+            {{ question?.content?.[key]?.name }}
+          </p>
+          <p
+            v-if="
+              question?.content?.[key]?.alter || question?.content?.[key]?.beruf
+            "
+            class="text-xs text-gray-400 mb-2"
+          >
+            {{ question?.content?.[key]?.alter }}
+            {{ question?.content?.[key]?.alter ? "·" : "" }}
+            {{ question?.content?.[key]?.beruf }}
           </p>
           <p class="text-sm text-gray-700 italic">
-            {{ question?.content?.opinion_a?.text }}
-          </p>
-        </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-4">
-          <p class="text-xs font-bold text-gray-500 uppercase mb-2">
-            {{ question?.content?.opinion_b?.person }}
-          </p>
-          <p class="text-sm text-gray-700 italic">
-            {{ question?.content?.opinion_b?.text }}
+            {{ question?.content?.[key]?.meinung }}
           </p>
         </div>
       </div>
@@ -446,7 +546,7 @@
           Question à débattre :
         </p>
         <p class="text-base font-bold text-gray-900">
-          {{ question?.content?.question }}
+          {{ question?.content?.question || teil?.question }}
         </p>
       </div>
 
@@ -561,24 +661,33 @@ const selectedImage = ref<number | null>(null);
 
 const question = computed(() => props.questions[0]);
 
-// ✅ Détecte le format Goethe B2 (candidate_a / candidate_b)
+// ✅ Détecte le format Goethe/ÖSD à choix de candidat, en tolérant
+// les deux orthographes utilisées selon le provider :
+// "candidate_a"/"candidate_b" (EN) ou "kandidat_a"/"kandidat_b" (DE).
 const hasGoetheThemes = computed(() => {
   const content = question.value?.content;
-  return !!(content?.candidate_a || content?.candidate_b);
+  return !!(
+    content?.candidate_a ||
+    content?.candidate_b ||
+    content?.kandidat_a ||
+    content?.kandidat_b
+  );
 });
 
-// ✅ Fusionne candidate_a et candidate_b en un objet de thèmes
+// ✅ Fusionne candidate_a/b (ou kandidat_a/b) en un objet de thèmes
 const goetheThemes = computed(() => {
   const content = question.value?.content;
   if (!content) return {};
   const themes: Record<string, any> = {};
-  if (content.candidate_a) {
-    Object.entries(content.candidate_a).forEach(([key, val]) => {
+  const a = content.candidate_a || content.kandidat_a;
+  const b = content.candidate_b || content.kandidat_b;
+  if (a) {
+    Object.entries(a).forEach(([key, val]) => {
       themes[`a_${key}`] = val;
     });
   }
-  if (content.candidate_b) {
-    Object.entries(content.candidate_b).forEach(([key, val]) => {
+  if (b) {
+    Object.entries(b).forEach(([key, val]) => {
       themes[`b_${key}`] = val;
     });
   }
@@ -588,7 +697,7 @@ const goetheThemes = computed(() => {
 const currentSlides = computed(() => {
   if (!selectedTheme.value) return [];
   const theme = question.value?.content?.themes?.[selectedTheme.value];
-  return theme?.folien || theme?.slides || [];
+  return theme?.folien || theme?.slides || theme?.punkte || [];
 });
 
 // ── bildbeschreibung — fusionne kandidat_a et kandidat_b en une liste
@@ -606,9 +715,6 @@ const selectedBildTitle = computed(() => {
 });
 
 // ── Sprachliche Mittel ─────────────────────────────────
-// Déduit provider/cefr depuis examName (ex: "Goethe-Zertifikat B2",
-// "TELC Deutsch B1", "OSD Zertifikat B2/J") puisque ces infos ne sont
-// pas exposées séparément par le store aujourd'hui.
 function parseExamInfo(name?: string) {
   const n = (name || "").toLowerCase();
   let provider = "";
@@ -623,8 +729,6 @@ function parseExamInfo(name?: string) {
 const examInfo = computed(() => parseExamInfo(props.examName));
 
 const mittelKey = computed(() => {
-  // Cas spécial : Folien Goethe/ÖSD B1 (Teil 2, sans candidate_a/b,
-  // une fois un thème sélectionné) — une banque différente par Folie.
   const isFolieBranch =
     props.teil?.format_type === "oral_monologue" &&
     !hasGoetheThemes.value &&
