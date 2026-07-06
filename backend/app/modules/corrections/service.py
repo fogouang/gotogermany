@@ -33,9 +33,10 @@ from app.modules.corrections.prompts import (
     TaskData,
 )
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
-from app.modules.exams.models import Subject, Level, Exam, Module, Teil
+from app.modules.exams.models import Subject, Level
 
 from app.config import get_settings
+from app.modules.questions.models import Question
 settings = get_settings()
 
 logger = logging.getLogger(__name__)
@@ -200,23 +201,16 @@ class CorrectionService:
         provider: str,
         level: str,
     ) -> list[TaskPayload]:
-        """
-        Extraire les réponses free_text de la session, triées par teil_number.
-
-        Chaque réponse est enrichie avec les métadonnées de la question
-        (instruction, bullet_points, topic, context_ad, opinion_quote).
-        """
         result = await self.db.execute(
             select(ExamSessionAnswer)
             .where(ExamSessionAnswer.session_id == session_id)
             .options(
                 selectinload(ExamSessionAnswer.question)
-                .selectinload("teil")
+                .selectinload(Question.teil)
             )
         )
         all_answers = result.scalars().all()
 
-        # Filtrer uniquement les free_text
         free_text_answers = [
             a for a in all_answers
             if a.question.question_type == "free_text"
@@ -227,18 +221,29 @@ class CorrectionService:
                 f"Aucune réponse free_text trouvée pour la session {session_id}."
             )
 
-        # Trier par teil_number
         free_text_answers.sort(key=lambda a: a.question.teil.teil_number)
 
         tasks = []
         for answer in free_text_answers:
             question = answer.question
-            content  = question.content  # JSONB
+            teil = question.teil
+            content = question.content
+
+            # ✅ La consigne peut venir de plusieurs endroits selon le format :
+            # - scenario / instruction : cas général (Goethe, TELC message unique)
+            # - teil.instructions : cas "réponse à un e-mail reçu" (stimulus_email),
+            #   où la vraie consigne est au niveau du Teil, pas de la question
+            instruction = (
+                content.get("scenario")
+                or content.get("instruction")
+                or teil.instructions
+                or ""
+            )
 
             task = TaskPayload(
-                teil_number=question.teil.teil_number,
+                teil_number=teil.teil_number,
                 text=answer.user_answer.get("text", ""),
-                instruction=content.get("scenario", content.get("instruction", "")),
+                instruction=instruction,
                 bullet_points=content.get("prompts", []),
                 opinion_quote=content.get("opinion_quote", ""),
                 topic=content.get("topic", ""),

@@ -226,7 +226,7 @@
           </div>
         </div>
 
-        <!-- ✅ NOUVEAU : Sprachbausteine — texte avec lacunes numérotées
+        <!-- Sprachbausteine — texte avec lacunes numérotées
              (qcm_gap_fill / word_bank_gap_fill) -->
         <div
           v-else-if="
@@ -389,6 +389,7 @@
 
         <!-- ✅ NOUVEAU : Sprachbausteine — une carte par lacune,
              sans réafficher le texte (déjà à gauche) -->
+        <!-- Sprachbausteine : une carte par lacune, sans réafficher le texte -->
         <template
           v-else-if="
             teil.format_type === 'qcm_gap_fill' ||
@@ -415,7 +416,33 @@
             <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
               Choisissez la bonne réponse :
             </p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+
+            <!-- ✅ word_bank_gap_fill — menu déroulant compact, la banque de mots
+         est déjà affichée une seule fois à gauche, pas besoin de la
+         répéter en grille pour chaque lacune -->
+            <select
+              v-if="teil.format_type === 'word_bank_gap_fill'"
+              :value="answers[q.id]?.user_answer?.answer || ''"
+              class="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 focus:border-primary-400 outline-none transition-colors"
+              @change="
+                (e) =>
+                  $emit('answer', q.id, {
+                    answer: (e.target as HTMLSelectElement).value,
+                  })
+              "
+            >
+              <option value="" disabled>-- Wählen --</option>
+              <option
+                v-for="(label, key) in gapOptions(q)"
+                :key="key"
+                :value="key"
+              >
+                {{ String(key).toUpperCase() }}-{{ label }}
+              </option>
+            </select>
+
+            <!-- qcm_gap_fill — 3 options propres à chaque lacune, pas de répétition -->
+            <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 v-for="(label, key) in gapOptions(q)"
                 :key="key"
@@ -437,6 +464,63 @@
                   >{{ String(key).toUpperCase() }}</span
                 >
                 {{ label }}
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <!-- zuordnung_paragraphen : une carte par paragraphe, choix du titre correspondant -->
+        <template v-else-if="teil.format_type === 'zuordnung_paragraphen'">
+          <div
+            v-for="q in questions"
+            :key="q.id"
+            :class="[
+              'bg-white border rounded-xl p-5 transition-all scroll-mt-4',
+              answers[q.id] ? 'border-primary-300' : 'border-gray-200',
+            ]"
+            :id="`question-${q.id}`"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span
+                class="text-xs font-semibold text-gray-400 uppercase tracking-wide"
+              >
+                Paragraph {{ q.content?.paragraph_number }}
+              </span>
+              <span class="text-xs text-gray-400">{{ q.points }} pt(s)</span>
+            </div>
+            <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
+              Choisissez le titre correspondant :
+            </p>
+            <div class="grid grid-cols-1 gap-2">
+              <button
+                v-for="(heading, key) in q.content?.headings"
+                :key="key"
+                :class="[
+                  'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
+                  answers[q.id]?.user_answer?.answer === String(key)
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
+                ]"
+                @click="$emit('answer', q.id, { answer: String(key) })"
+              >
+                <span
+                  :class="[
+                    'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
+                    answers[q.id]?.user_answer?.answer === String(key)
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white border-2 border-gray-300 text-gray-500',
+                  ]"
+                  >{{ String(key).toUpperCase() }}</span
+                >
+                <span
+                  :class="
+                    answers[q.id]?.user_answer?.answer === String(key)
+                      ? 'font-medium text-primary-900'
+                      : 'text-gray-700'
+                  "
+                >
+                  {{ heading }}
+                </span>
               </button>
             </div>
           </div>

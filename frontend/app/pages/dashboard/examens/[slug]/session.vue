@@ -150,7 +150,7 @@
         <Button
           :label="t('session.submit')"
           severity="success"
-          :loading="sessionStore.isSubmitting"
+          :loading="sessionStore.isSubmitting || correctionStore.loading"
           @click="handleSubmit"
         />
       </template>
@@ -165,6 +165,7 @@ import SchreibenView from "~/components/session/SchreibenView.vue";
 import SprechenView from "~/components/session/SprechenView.vue";
 import SessionHeader from "~/components/session/SessionHeader.vue";
 import SessionFooter from "~/components/session/SessionFooter.vue";
+import { useCorrectionStore } from "~/stores/correction";
 
 definePageMeta({ layout: false, middleware: "auth" });
 
@@ -282,25 +283,55 @@ const exitSession = () => {
   navigateTo("/dashboard/examens");
 };
 
+const correctionStore = useCorrectionStore();
+
+const hasSchreibenModule = computed(() =>
+  sessionStore.modules.some(
+    (m) =>
+      m.slug?.toLowerCase().includes("schreib") ||
+      m.slug?.toLowerCase().includes("schriftlich"),
+  ),
+);
+
 const handleSubmit = async () => {
   submitDialogVisible.value = false;
   stopTimer();
-  const result = await sessionStore.submitSession();
-  if (result.success) {
-    const slug = route.params.slug as string;
-    const moduleSlug = route.query.moduleSlug as string | undefined;
-    const moduleSlugs = route.query.moduleSlugs as string | undefined; // ← ajouté
-    navigateTo({
-      path: `/dashboard/examens/${slug}/result`,
-      query: {
-        sessionId: sessionStore.sessionId,
-        ...(moduleSlug ? { moduleSlug } : {}),
-        ...(moduleSlugs ? { moduleSlugs } : {}), // ← ajouté
-      },
-    });
-  }
-};
 
+  const result = await sessionStore.submitSession();
+  if (!result.success) return;
+
+  const sessionId = sessionStore.sessionId;
+
+  console.log(
+    "DEBUG hasSchreibenModule:",
+    hasSchreibenModule.value,
+    "sessionId:",
+    sessionId,
+    "modules:",
+    sessionStore.modules,
+  );
+
+  if (hasSchreibenModule.value && sessionId) {
+    try {
+      await correctionStore.correct(sessionId);
+    } catch (err) {
+      console.error("Erreur correction Schreiben:", err);
+    }
+    console.log("DEBUG correctionStore.error:", correctionStore.error);
+  }
+
+  const slug = route.params.slug as string;
+  const moduleSlug = route.query.moduleSlug as string | undefined;
+  const moduleSlugs = route.query.moduleSlugs as string | undefined;
+  navigateTo({
+    path: `/dashboard/examens/${slug}/result`,
+    query: {
+      sessionId,
+      ...(moduleSlug ? { moduleSlug } : {}),
+      ...(moduleSlugs ? { moduleSlugs } : {}),
+    },
+  });
+};
 // ── Timer ─────────────────────────────────────────────
 
 const startTimer = () => {

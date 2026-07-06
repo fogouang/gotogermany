@@ -16,14 +16,17 @@ from app.shared.exceptions.http import BadRequestException, NotFoundException
 
 
 def _extract_provider(data: dict) -> str:
+    provider = data.get("provider", "").lower().strip()
+    if provider in ("telc", "goethe", "ösd", "osd"):
+        return {"telc": "TELC", "goethe": "Goethe", "ösd": "ÖSD", "osd": "ÖSD"}[provider]
+
     name = data.get("name", "").lower()
-    provider = data.get("provider", "").lower()
-    if "telc" in name or "telc" in provider:
+    if "telc" in name:
         return "TELC"
-    if "goethe" in name:
-        return "Goethe"
     if "ösd" in name or "osd" in name:
         return "ÖSD"
+    if "goethe" in name:
+        return "Goethe"
     return "Unknown"
 
 

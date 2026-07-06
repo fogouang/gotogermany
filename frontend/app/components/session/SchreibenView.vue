@@ -361,7 +361,7 @@
       </div>
     </div>
 
-    <!-- ── Colonne droite : rédaction + correction ─── -->
+    <!-- ── Colonne droite : rédaction ─── -->
     <div class="lg:w-[55%] overflow-y-auto bg-gray-50">
       <div class="p-6 space-y-4 max-w-2xl mx-auto">
         <div v-for="q in questions" :key="`input-${q.id}`" class="space-y-4">
@@ -431,117 +431,12 @@
             </div>
           </div>
         </div>
-
-        <!-- ─── Bouton correction IA ──────────────────────── -->
-        <div class="pt-2">
-          <!-- État : pas encore soumis -->
-          <div v-if="!correctionStore.current && !correctionStore.loading">
-            <Button
-              :label="t('schreiben.correct_btn')"
-              icon="pi pi-sparkles"
-              :disabled="!canCorrect"
-              class="w-full"
-              size="large"
-              @click="launchCorrection"
-            />
-            <p
-              v-if="!canCorrect"
-              class="text-center text-xs text-gray-400 mt-2"
-            >
-              {{ t("schreiben.correct_hint") }}
-            </p>
-          </div>
-
-          <!-- État : chargement IA -->
-          <div
-            v-else-if="correctionStore.loading"
-            class="flex flex-col items-center gap-3 py-6 bg-teal-50 border border-teal-200 rounded-xl"
-          >
-            <i class="pi pi-spin pi-spinner text-teal-600 text-2xl"></i>
-            <p class="text-sm font-medium text-teal-700">
-              {{ t("schreiben.correcting") }}
-            </p>
-            <p class="text-xs text-teal-500">
-              {{ t("schreiben.correcting_sub") }}
-            </p>
-          </div>
-
-          <!-- État : erreur -->
-          <div
-            v-else-if="correctionStore.error"
-            class="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
-          >
-            <i class="pi pi-exclamation-circle text-red-500 mt-0.5"></i>
-            <div class="flex-1">
-              <p class="text-sm font-medium text-red-700">
-                {{ t("schreiben.error_title") }}
-              </p>
-              <p class="text-xs text-red-500 mt-1">
-                {{ correctionStore.error }}
-              </p>
-            </div>
-            <Button
-              :label="t('schreiben.retry')"
-              size="small"
-              outlined
-              severity="danger"
-              @click="launchCorrection"
-            />
-          </div>
-
-          <!-- État : correction disponible -->
-          <div
-            v-else-if="correctionStore.current"
-            class="p-5 bg-white border-2 rounded-xl"
-            :class="
-              correctionStore.current.passed
-                ? 'border-green-400'
-                : 'border-orange-400'
-            "
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                  :class="
-                    correctionStore.current.passed
-                      ? 'bg-green-500'
-                      : 'bg-orange-500'
-                  "
-                >
-                  {{ correctionStore.scorePercentage }}%
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-gray-800">
-                    {{
-                      correctionStore.current.passed
-                        ? "Prüfung bestanden ✓"
-                        : "Nicht bestanden"
-                    }}
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    {{ correctionStore.current.overall_score }} /
-                    {{ correctionStore.current.max_score }} points
-                  </p>
-                </div>
-              </div>
-              <Button
-                :label="t('schreiben.see_results')"
-                icon="pi pi-arrow-right"
-                iconPos="right"
-                size="small"
-                @click="goToResults"
-              />
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useCorrectionStore } from "~/stores/correction";
 import SprachlicheMittelPanel from "~/components/session/SprachlicheMittelPanel.vue";
 import { resolveMittelKey } from "#shared/sprachlicheMittel";
 
@@ -556,14 +451,9 @@ const props = defineProps<{
 const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
 
 const { t } = useI18n();
-const router = useRouter();
-const correctionStore = useCorrectionStore();
 const downloading = ref(false);
 
 // ── Sprachliche Mittel ─────────────────────────────────
-// Déduit provider/cefr depuis examName (ex: "Goethe-Zertifikat B2",
-// "TELC Deutsch B1", "OSD Zertifikat B2/J") — même logique que côté
-// SessionSprechen.vue pour rester cohérent.
 function parseExamInfo(name?: string) {
   const n = (name || "").toLowerCase();
   let provider = "";
@@ -599,10 +489,6 @@ const onInput = (q: any, val: string) => {
   emit("answer", q.id, { text: val });
 };
 
-const canCorrect = computed(() =>
-  props.questions.some((q) => getWordCount(q) > 0),
-);
-
 // ── Choix de thème (TELC/ÖSD B2 — "themen") ───────────────────────
 const selectedThemes = ref<Record<string, string | null>>({});
 const selectTheme = (questionId: string, key: string) => {
@@ -622,20 +508,6 @@ const isWritingUnlocked = (q: any): boolean => {
   if (q.content.themes) return !!selectedThemes.value[id];
   if (q.content.opinion_variants) return !!selectedVariants.value[id];
   return true;
-};
-
-const launchCorrection = async () => {
-  correctionStore.clearCurrent();
-  await correctionStore.correct(props.sessionId);
-};
-
-const goToResults = () => {
-  const route = useRoute();
-  const slug = route.params.slug as string;
-  router.push({
-    path: `/dashboard/examens/correction/${props.sessionId}`,
-    query: { examId: route.query.examId as string, slug },
-  });
 };
 
 const downloadPDF = async (q: any) => {

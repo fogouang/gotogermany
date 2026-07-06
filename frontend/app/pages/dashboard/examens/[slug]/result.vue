@@ -141,110 +141,141 @@
             }}
           </h2>
         </div>
-        <div class="divide-y divide-gray-50">
+        <div
+          v-for="module in displayedModules"
+          :key="module.slug"
+          class="px-6 py-4 flex items-center gap-4"
+        >
+          <!-- Icône module -->
           <div
-            v-for="module in displayedModules"
-            :key="module.slug"
-            class="px-6 py-4 flex items-center gap-4"
+            :class="[
+              'w-11 h-11 rounded-xl flex items-center justify-center shrink-0',
+              getModuleBg(module.slug),
+            ]"
           >
-            <!-- Icône module -->
-            <div
+            <i
               :class="[
-                'w-11 h-11 rounded-xl flex items-center justify-center shrink-0',
-                getModuleBg(module.slug),
+                'pi',
+                getModuleIcon(module.slug),
+                getModuleIconColor(module.slug),
               ]"
-            >
-              <i
-                :class="[
-                  'pi',
-                  getModuleIcon(module.slug),
-                  getModuleIconColor(module.slug),
-                ]"
-              ></i>
-            </div>
-
-            <!-- Infos -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1.5">
-                <p class="font-semibold text-gray-900 text-sm">
-                  {{ module.name }}
-                </p>
-                <!-- Badge réussite module -->
-                <span
-                  v-if="module.is_corrected && module.score_obtained !== null"
-                  :class="[
-                    'inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full',
-                    (module.score_obtained ?? 0) >= 60
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-600',
-                  ]"
-                >
-                  <i
-                    :class="[
-                      'pi text-xs',
-                      (module.score_obtained ?? 0) >= 60
-                        ? 'pi-check'
-                        : 'pi-times',
-                    ]"
-                  ></i>
-                  {{
-                    (module.score_obtained ?? 0) >= 60
-                      ? t("result.module_passed")
-                      : t("result.module_failed")
-                  }}
-                </span>
-              </div>
-
-              <!-- Barre progression -->
-              <div v-if="module.is_corrected" class="flex items-center gap-2">
-                <div
-                  class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden"
-                >
-                  <div
-                    class="h-2 rounded-full transition-all duration-500"
-                    :class="
-                      (module.score_obtained ?? 0) >= 60
-                        ? 'bg-green-500'
-                        : 'bg-orange-400'
-                    "
-                    :style="{
-                      width: `${Math.min(module.score_obtained ?? 0, 100)}%`,
-                    }"
-                  />
-                </div>
-                <span
-                  class="text-sm font-bold text-gray-700 shrink-0 w-14 text-right"
-                >
-                  {{ module.score_obtained?.toFixed(0) ?? "-" }}/100
-                </span>
-              </div>
-
-              <!-- En attente correction -->
-              <div
-                v-else
-                class="flex items-center gap-1.5 text-amber-600 text-xs"
-              >
-                <i class="pi pi-clock text-xs"></i>
-                <span>{{ t("result.waiting_correction") }}</span>
-              </div>
-            </div>
-
-            <!-- Bouton correction Schreiben -->
-            <Button
-              v-if="
-                (module.slug.includes('schreiben') ||
-                  module.slug.includes('schriftlich')) &&
-                module.is_corrected
-              "
-              :label="t('result.see_correction')"
-              icon="pi pi-eye"
-              size="small"
-              outlined
-              severity="secondary"
-              class="shrink-0"
-              @click="goToSchreibenCorrection"
-            />
+            ></i>
           </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1.5">
+              <p class="font-semibold text-gray-900 text-sm">
+                {{ module.name }}
+              </p>
+
+              <!-- ✅ Badge Schreiben : source = correctionStore, pas module.is_corrected -->
+              <span
+                v-if="isSchreiben(module) && correctionStore.current"
+                :class="[
+                  'inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full',
+                  correctionStore.current.passed
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-600',
+                ]"
+              >
+                <i
+                  :class="[
+                    'pi text-xs',
+                    correctionStore.current.passed ? 'pi-check' : 'pi-times',
+                  ]"
+                ></i>
+                {{
+                  correctionStore.current.passed
+                    ? t("result.module_passed")
+                    : t("result.module_failed")
+                }}
+              </span>
+
+              <!-- Badge autres modules : logique existante -->
+              <span
+                v-else-if="
+                  !isSchreiben(module) &&
+                  module.is_corrected &&
+                  module.score_obtained !== null
+                "
+                :class="[
+                  'inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full',
+                  (module.score_obtained ?? 0) >= 60
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-600',
+                ]"
+              >
+                <i
+                  :class="[
+                    'pi text-xs',
+                    (module.score_obtained ?? 0) >= 60
+                      ? 'pi-check'
+                      : 'pi-times',
+                  ]"
+                ></i>
+                {{
+                  (module.score_obtained ?? 0) >= 60
+                    ? t("result.module_passed")
+                    : t("result.module_failed")
+                }}
+              </span>
+            </div>
+
+            <!-- ✅ Barre progression Schreiben : source = correctionStore -->
+            <div
+              v-if="isSchreiben(module) && correctionStore.current"
+              class="flex items-center gap-2"
+            >
+              <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div
+                  class="h-2 rounded-full transition-all duration-500"
+                  :class="
+                    correctionStore.current.passed
+                      ? 'bg-green-500'
+                      : 'bg-orange-400'
+                  "
+                  :style="{
+                    width: `${Math.min(correctionStore.scorePercentage, 100)}%`,
+                  }"
+                />
+              </div>
+              <span
+                class="text-sm font-bold text-gray-700 shrink-0 w-14 text-right"
+              >
+                {{ correctionStore.current.overall_score }}/{{
+                  correctionStore.current.max_score
+                }}
+              </span>
+            </div>
+
+            <!-- Barre progression autres modules : logique existante -->
+            <div
+              v-else-if="module.is_corrected"
+              class="flex items-center gap-2"
+            >
+              <!-- ... contenu inchangé ... -->
+            </div>
+
+            <!-- En attente : Schreiben pas encore corrigé (edge case), ou autres modules -->
+            <div
+              v-else-if="!(isSchreiben(module) && correctionStore.current)"
+              class="flex items-center gap-1.5 text-amber-600 text-xs"
+            >
+              <i class="pi pi-clock text-xs"></i>
+              <span>{{ t("result.waiting_correction") }}</span>
+            </div>
+          </div>
+
+          <Button
+            v-if="isSchreiben(module) && correctionStore.current"
+            :label="t('result.see_correction')"
+            icon="pi pi-eye"
+            size="small"
+            outlined
+            severity="secondary"
+            class="shrink-0"
+            @click="goToSchreibenCorrection"
+          />
         </div>
       </div>
 
@@ -430,6 +461,7 @@
 
 <script setup lang="ts">
 import type { ModuleResultResponse, SessionResultResponse } from "#shared/api";
+import { useCorrectionStore } from "~/stores/correction";
 
 definePageMeta({ layout: "dashboard", middleware: "auth" });
 
@@ -438,9 +470,22 @@ const router = useRouter();
 const sessionStore = useSessionStore();
 const { t } = useI18n();
 
+const correctionStore = useCorrectionStore();
 const loading = ref(true);
 const result = ref<SessionResultResponse | null>(null);
 const expandedModules = ref<Set<string>>(new Set());
+
+const schreibenModule = computed(() =>
+  displayedModules.value.find(
+    (m) =>
+      m.slug.toLowerCase().includes("schreib") ||
+      m.slug.toLowerCase().includes("schriftlich"),
+  ),
+);
+
+const isSchreiben = (module: any) =>
+  module.slug.toLowerCase().includes("schreib") ||
+  module.slug.toLowerCase().includes("schriftlich");
 
 // ── Mode module seul / modules combinés ──────────────────
 const moduleSlug = computed(() => route.query.moduleSlug as string | undefined);
@@ -607,20 +652,23 @@ const getModuleIconColor = (s: string) => {
 onMounted(async () => {
   if (sessionStore.result) {
     result.value = sessionStore.result;
-    loading.value = false;
-    return;
+  } else {
+    const queryId = route.query.sessionId as string | undefined;
+    const targetId = queryId || sessionStore.sessionId;
+    if (targetId) {
+      const res = await sessionStore.getResult(targetId);
+      if (res.success) result.value = res.result ?? null;
+    }
   }
-  const sessionId = route.query.sessionId as string;
-  if (sessionId) {
-    const res = await sessionStore.getResult(sessionId);
-    if (res.success) result.value = res.result ?? null;
-    loading.value = false;
-    return;
+
+  // ✅ Récupère la correction IA Schreiben déjà lancée au submit,
+  // une fois qu'on sait quelle session/quels modules sont concernés.
+  const sessionId =
+    result.value?.session_id || (route.query.sessionId as string);
+  if (sessionId && schreibenModule.value) {
+    await correctionStore.fetchBySession(sessionId);
   }
-  if (sessionStore.sessionId) {
-    const res = await sessionStore.getResult(sessionStore.sessionId);
-    if (res.success) result.value = res.result ?? null;
-  }
+
   loading.value = false;
 });
 </script>

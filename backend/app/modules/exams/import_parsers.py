@@ -448,9 +448,8 @@ def parse_zuordnung_paragraphen(teil_data: dict) -> list[dict]:
         "question_number": q["number"],
         "question_type": "zuordnung_paragraphen",
         "content": {
-            "paragraph_key": q.get("paragraph", ""),
-            "paragraph_text": paragraphs.get(f"p{q['number']}", {}).get("text", ""),
-            "paragraph_title": paragraphs.get(f"p{q['number']}", {}).get("title", ""),
+            "paragraph_number": q.get("paragraph", ""),
+            "paragraph_text": paragraphs.get(f"p{q['paragraph']}", {}).get("text", ""),
             "headings": headings,
         },
         "correct_answer": {"answer": q["answer"]},
