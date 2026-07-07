@@ -4,6 +4,7 @@ app/modules/auth/schemas.py
 from uuid import UUID
 from pydantic import EmailStr, Field
 from app.shared.schemas.base import BaseSchema
+from app.modules.users.models import UserRole
 
 
 class RegisterRequest(BaseSchema):
@@ -16,6 +17,11 @@ class RegisterRequest(BaseSchema):
 class LoginRequest(BaseSchema):
     email: EmailStr
     password: str
+    device_fingerprint: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Identifiant stable de l'appareil, généré côté client (ex: FingerprintJS ou UUID stocké localement).",
+    )
 
 
 class TokenResponse(BaseSchema):
@@ -30,6 +36,9 @@ class AuthUserResponse(BaseSchema):
     full_name: str
     is_admin: bool
     is_verified: bool
+    role: UserRole
+    center_id: UUID | None = None
+    branch_id: UUID | None = None
 
 
 class AuthResponse(BaseSchema):

@@ -39,12 +39,21 @@ class ExamAccessService:
         self, user_id: UUID, subject: Subject
     ) -> bool:
         """
+        Accès libre si free_access_mode actif.
         Accès libre si subject_number <= 3.
-        Sinon vérifie ExamAccess pour ce level.
+        Sinon : accès individuel payant (ExamAccess) OU licence de centre active.
         """
+        from app.modules.settings.service import AppSettingsService
+        if await AppSettingsService(self.db).is_free_access_mode():
+            return True
+
         if subject.subject_number <= 3:
             return True
-        return await self.repo.user_has_access(user_id, subject.level_id)
+
+        if await self.repo.user_has_access(user_id, subject.level_id):
+            return True
+
+        return await self._check_center_license_access(user_id, subject.level_id)
 
     async def require_subject_access(
         self, user_id: UUID, subject: Subject
@@ -166,23 +175,54 @@ class ExamAccessService:
 
     # ── Catalogue enrichi ────────────────────────────────
 
+    async def _get_center_licensed_level_id(self, user_id: UUID) -> UUID | None:
+        """
+        Retourne le level_id auquel un student a accès via la licence de son centre,
+        ou None si aucune des conditions n'est remplie (pas de centre, licence expirée,
+        fenêtre de 2 mois dépassée, etc.).
+        """
+        from app.modules.users.repository import UserRepository
+        from app.modules.users.models import UserRole
+        from app.modules.centers.repository import BranchRepository, CenterLicenseRepository
+
+        user = await UserRepository(self.db).get_by_id(user_id)
+        if not user or user.role != UserRole.student or not user.branch_id:
+            return None
+
+        if not user.access_expires_at or user.access_expires_at < datetime.now(timezone.utc):
+            return None
+
+        if not user.target_level_id:
+            return None
+
+        branch = await BranchRepository(self.db).get_by_id_or_404(user.branch_id)
+        license_ = await CenterLicenseRepository(self.db).get_active_for_center(branch.center_id)
+        if not license_:
+            return None
+
+        return user.target_level_id
+
+    async def _check_center_license_access(self, user_id: UUID, level_id: UUID) -> bool:
+        """Accès via licence de centre — délègue au calcul centralisé."""
+        licensed_level_id = await self._get_center_licensed_level_id(user_id)
+        return licensed_level_id == level_id
+
     async def enrich_catalog(
         self, exams: list[Exam], user_id: UUID
     ) -> list[ExamCatalogResponse]:
         """
         Enrichit le catalogue avec :
-        - has_access : user a un ExamAccess pour ce level
+        - has_access : user a un ExamAccess pour ce level, OU accès via licence de centre
         - subject_count : nb de sujets disponibles
         """
-        # Vérifier le mode accès libre
         from app.modules.settings.service import AppSettingsService
         free_access_mode = await AppSettingsService(self.db).is_free_access_mode()
 
         user_accesses = await self.repo.get_all_by_user(user_id)
-        # Indexer par level_id
         accessible_level_ids = {a.level_id for a in user_accesses}
 
-        # Compter les subjects actifs par level
+        center_licensed_level_id = await self._get_center_licensed_level_id(user_id)
+
         level_ids = [
             level.id
             for exam in exams
@@ -201,8 +241,11 @@ class ExamAccessService:
         for exam in exams:
             levels = []
             for level in exam.levels:
-                # Si free_access_mode → tout le monde a accès complet
-                has_access = free_access_mode or (level.id in accessible_level_ids)
+                has_access = (
+                    free_access_mode
+                    or (level.id in accessible_level_ids)
+                    or (level.id == center_licensed_level_id)
+                )
                 levels.append(
                     LevelAccessResponse(
                         id=level.id,
@@ -226,16 +269,3 @@ class ExamAccessService:
                 )
             )
         return catalog
-    
-    
-    async def check_subject_access(
-        self, user_id: UUID, subject: Subject
-    ) -> bool:
-        # Vérifier le mode accès libre
-        from app.modules.settings.service import AppSettingsService
-        if await AppSettingsService(self.db).is_free_access_mode():
-            return True
-        # Logique normale
-        if subject.subject_number <= 3:
-            return True
-        return await self.repo.user_has_access(user_id, subject.level_id)

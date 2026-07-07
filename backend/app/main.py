@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
         raise
 
     # Créer dossiers storage si absents
-    for folder in ["storage/audio", "storage/images", "storage/temp"]:
+    for folder in ["storage/audio", "storage/images", "storage/temp", "storage/certificates"]:
         Path(folder).mkdir(parents=True, exist_ok=True)
 
     logger.info("🎉 Startup complete")
@@ -78,6 +78,11 @@ app.mount("/audio", StaticFiles(directory=str(audio_path)), name="audio")
 image_path = Path("storage/images")
 image_path.mkdir(parents=True, exist_ok=True)
 app.mount("/images", StaticFiles(directory=str(image_path)), name="images")
+
+# Attestations de licence de centre (PDF)
+certificates_path = Path("storage/certificates")
+certificates_path.mkdir(parents=True, exist_ok=True)
+app.mount("/certificates", StaticFiles(directory=str(certificates_path)), name="certificates")
 
 # ── CORS ─────────────────────────────────────
 app.add_middleware(
@@ -133,6 +138,7 @@ from app.modules.corrections.router import router as corrections_router
 from app.modules.schreiben_simulator.router import router as simulator_router
 from app.modules.ai_credit_purchases.router import router as ai_credits_router
 from app.modules.settings.router import router as settings_router
+from app.modules.centers.router import router as centers_router
 
 
 
@@ -151,6 +157,7 @@ app.include_router(corrections_router, prefix="/api/v1/corrections", tags=["corr
 app.include_router( simulator_router,  prefix="/api/v1/schreiben-simulator",  tags=["Schreiben Simulator"])
 app.include_router(ai_credits_router, prefix="/api/v1")
 app.include_router(settings_router, prefix="/api/v1/settings", tags=["Settings"])
+app.include_router(centers_router, prefix="/api/v1/centers", tags=["centers"])
 
 
 

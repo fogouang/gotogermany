@@ -3,6 +3,11 @@ import app.modules.users.models          # noqa: F401
 import app.modules.partners.models       # noqa: F401
 import app.modules.settings.models
 
+# Niveau 0bis — dépendance circulaire avec users (User.center_id/branch_id ↔
+# CenterLicense.activated_by → users.id). Sans impact car les FK sont résolues
+# par nom de table sur Base.metadata, pas par ordre d'import de classes.
+import app.modules.centers.models        # noqa: F401
+
 # Niveau 1 — dépend de partners
 import app.modules.promo_codes.models    # noqa: F401
 

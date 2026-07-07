@@ -4,13 +4,14 @@ app/modules/auth/service.py
 import secrets
 from uuid import UUID
 from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.schemas import AuthResponse, AuthUserResponse, LoginRequest, RegisterRequest
 from app.modules.users.models import User
-from app.modules.users.repository import UserRepository
+from app.modules.users.repository import UserRepository, UserDeviceRepository
 from app.shared.exceptions.http import BadRequestException, UnauthorizedException
 from app.shared.security.jwt import create_access_token, decode_access_token
 from app.shared.security.password import hash_password, verify_password
@@ -21,6 +22,7 @@ class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = UserRepository(db)
+        self.device_repo = UserDeviceRepository(db)
 
     async def register(self, data: RegisterRequest) -> AuthResponse:
         # Email unique
@@ -57,6 +59,26 @@ class AuthService:
 
         if not user.is_active:
             raise UnauthorizedException(detail="Compte désactivé.")
+
+        # Accès expiré (fenêtre de 2 mois) — pertinent surtout pour les students de centre
+        if user.access_expires_at and user.access_expires_at < datetime.now(timezone.utc):
+            raise UnauthorizedException(detail="Cet accès n'est plus disponible.")
+
+        # Gestion des appareils — max 2 par compte
+        if data.device_fingerprint:
+            await self.device_repo.register_device_or_raise(
+                user_id=user.id,
+                fingerprint=data.device_fingerprint,
+            )
+
+        # Déclenchement de la fenêtre de 2 mois à la toute première connexion
+        if user.first_login_at is None:
+            now = datetime.now(timezone.utc)
+            user = await self.repo.update(
+                user.id,
+                first_login_at=now,
+                access_expires_at=now + relativedelta(months=2),
+            )
 
         access_token = create_access_token({"sub": str(user.id)})
         return AuthResponse(

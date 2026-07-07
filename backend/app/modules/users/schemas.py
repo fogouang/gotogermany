@@ -5,12 +5,12 @@ import uuid
 from datetime import datetime
 from pydantic import EmailStr, Field, field_validator
 from app.shared.schemas.base import BaseSchema
+from app.modules.users.models import UserRole
 
 
 # ─────────────────────────────────────────────
 # Requests
 # ─────────────────────────────────────────────
-
 class UserRegisterRequest(BaseSchema):
     email: EmailStr
     password: str = Field(min_length=8, max_length=100)
@@ -67,10 +67,58 @@ class PasswordResetConfirmSchema(BaseSchema):
     new_password: str = Field(min_length=8, max_length=100)
 
 
+# ── Licence de centre ────────────────────────
+
+class DirectorCreateRequest(BaseSchema):
+    """Création d'un compte center_director — admin ITIA uniquement."""
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=100)
+    full_name: str = Field(min_length=2, max_length=150)
+    phone: str | None = Field(default=None, max_length=20)
+    center_id: uuid.UUID
+
+    @field_validator("full_name")
+    @classmethod
+    def full_name_strip(cls, v: str) -> str:
+        return v.strip()
+
+
+class SecretaryCreateRequest(BaseSchema):
+    """Création d'un compte branch_secretary — par le directeur de centre."""
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=100)
+    full_name: str = Field(min_length=2, max_length=150)
+    phone: str | None = Field(default=None, max_length=20)
+    branch_id: uuid.UUID
+
+    @field_validator("full_name")
+    @classmethod
+    def full_name_strip(cls, v: str) -> str:
+        return v.strip()
+
+
+class StudentCreateRequest(BaseSchema):
+    """Création d'un compte student rattaché à un centre — par la secrétaire."""
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=100)
+    full_name: str = Field(min_length=2, max_length=150)
+    phone: str | None = Field(default=None, max_length=20)
+    target_level_id: uuid.UUID
+
+    @field_validator("full_name")
+    @classmethod
+    def full_name_strip(cls, v: str) -> str:
+        return v.strip()
+
+
+class StudentTargetUpdateRequest(BaseSchema):
+    """Modification du level ciblé — par la secrétaire, sans consommer le quota."""
+    target_level_id: uuid.UUID
+
+
 # ─────────────────────────────────────────────
 # Responses
 # ─────────────────────────────────────────────
-
 class UserResponse(BaseSchema):
     """Réponse publique — pas de données sensibles."""
     id: uuid.UUID
@@ -81,14 +129,32 @@ class UserResponse(BaseSchema):
     is_verified: bool
     created_at: datetime
     ai_credits: int = 0
+    role: UserRole
 
 
 class UserAdminResponse(UserResponse):
     """Réponse étendue pour l'admin."""
     is_admin: bool
     updated_at: datetime
+    center_id: uuid.UUID | None
+    branch_id: uuid.UUID | None
 
 
 class UserMeResponse(UserResponse):
-    """Réponse pour /users/me — idem public pour l'instant."""
-    pass
+    """Réponse pour /users/me — inclut le contexte centre/branch si applicable."""
+    center_id: uuid.UUID | None
+    branch_id: uuid.UUID | None
+    target_level_id: uuid.UUID | None
+    access_expires_at: datetime | None
+
+
+class StudentResponse(BaseSchema):
+    """Réponse pour la liste des étudiants d'une succursale (vue secrétaire/directeur)."""
+    id: uuid.UUID
+    email: str
+    full_name: str
+    is_active: bool
+    target_level_id: uuid.UUID | None
+    first_login_at: datetime | None
+    access_expires_at: datetime | None
+    created_at: datetime
