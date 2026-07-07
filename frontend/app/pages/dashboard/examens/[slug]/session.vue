@@ -219,7 +219,7 @@ const isLastModule = computed(
 const currentView = computed(() => {
   const slug = currentModule.value?.slug?.toLowerCase() || "";
   if (slug.includes("lese")) return LesenView;
-  if (slug.includes("hoer") || slug.includes("hör")) return HorenView;
+  if (slug.includes("hor") || slug.includes("hoer") || slug.includes("hör")) return HorenView;
   if (slug.includes("schreib") || slug.includes("schriftlich"))
     return SchreibenView;
   if (

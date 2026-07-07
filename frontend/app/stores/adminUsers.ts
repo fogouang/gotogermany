@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { UsersService, ExamAccessService, OpenAPI } from "#shared/api";
-import type { UserAdminResponse } from "#shared/api";
+import type { UserAdminResponse, DirectorCreateRequest } from "#shared/api";
 
 interface AdminUsersState {
   users: UserAdminResponse[];
@@ -14,7 +14,6 @@ export const useAdminUsersStore = defineStore("adminUsers", {
     loading: false,
     error: null,
   }),
-
   actions: {
     _ensureApiConfig() {
       const config = useRuntimeConfig();
@@ -22,7 +21,6 @@ export const useAdminUsersStore = defineStore("adminUsers", {
       const tokenCookie = useCookie("access_token");
       OpenAPI.TOKEN = tokenCookie.value ?? undefined;
     },
-
     async fetchUsers() {
       this._ensureApiConfig();
       this.loading = true;
@@ -38,7 +36,6 @@ export const useAdminUsersStore = defineStore("adminUsers", {
         this.loading = false;
       }
     },
-
     async toggleActive(userId: string) {
       this._ensureApiConfig();
       try {
@@ -53,7 +50,6 @@ export const useAdminUsersStore = defineStore("adminUsers", {
         return { success: false, error: error.body?.detail };
       }
     },
-
     async deleteUser(userId: string) {
       this._ensureApiConfig();
       try {
@@ -64,20 +60,18 @@ export const useAdminUsersStore = defineStore("adminUsers", {
         return { success: false, error: error.body?.detail };
       }
     },
-
     async grantAccess(userId: string, levelId: string) {
       this._ensureApiConfig();
       try {
         await ExamAccessService.adminGrantAccessApiV1AccessAdminGrantPost(
           userId,
-          levelId, 
+          levelId,
         );
         return { success: true };
       } catch (error: any) {
         return { success: false, error: error.body?.detail };
       }
     },
-
     async grantAllAccess(userId: string) {
       this._ensureApiConfig();
       try {
@@ -87,6 +81,21 @@ export const useAdminUsersStore = defineStore("adminUsers", {
         return { success: true };
       } catch (error: any) {
         return { success: false, error: error.body?.detail };
+      }
+    },
+    async createDirector(data: DirectorCreateRequest) {
+      this._ensureApiConfig();
+      try {
+        const director =
+          await UsersService.createDirectorApiV1UsersDirectorsPost(data);
+        this.users.push(director);
+        return { success: true, director };
+      } catch (error: any) {
+        console.error("ERREUR CREATE DIRECTOR:", error); // ← ajout temporaire
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur création directeur",
+        };
       }
     },
   },

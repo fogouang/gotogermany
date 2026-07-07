@@ -1,0 +1,225 @@
+// stores/centerStaff.ts
+import { defineStore } from "pinia";
+import { UsersService, CentersService, OpenAPI } from "#shared/api";
+import type {
+  StudentResponse,
+  StudentCreateRequest,
+  StudentTargetUpdateRequest,
+  SecretaryCreateRequest,
+  UserAdminResponse,
+  BranchCreateRequest,
+  LicenseUsageResponse,
+  BranchResponse,
+} from "#shared/api";
+
+interface CenterStaffState {
+  students: StudentResponse[];
+  loading: boolean;
+  error: string | null;
+}
+
+export const useCenterStaffStore = defineStore("centerStaff", {
+  state: (): CenterStaffState => ({
+    students: [],
+    loading: false,
+    error: null,
+  }),
+  actions: {
+    _ensureApiConfig() {
+      const config = useRuntimeConfig();
+      OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
+      const tokenCookie = useCookie("access_token");
+      OpenAPI.TOKEN = tokenCookie.value ?? undefined;
+    },
+
+    // ── Directeur ──────────────────────────
+    async createSecretary(data: SecretaryCreateRequest): Promise<{
+      success: boolean;
+      secretary?: UserAdminResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const secretary =
+          await UsersService.createSecretaryApiV1UsersSecretariesPost(data);
+        return { success: true, secretary };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur création secrétaire",
+        };
+      }
+    },
+
+    async fetchStudentsByCenter(): Promise<{
+      success: boolean;
+      students?: StudentResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      this.loading = true;
+      this.error = null;
+      try {
+        const students =
+          await UsersService.listStudentsByCenterApiV1UsersStudentsByCenterGet();
+        this.students = students;
+        return { success: true, students };
+      } catch (error: any) {
+        this.error = error.body?.detail || "Erreur chargement étudiants";
+        return { success: false, error: this.error ?? undefined };
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async fetchMyUsage(): Promise<{
+      success: boolean;
+      usage?: LicenseUsageResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      this.loading = true;
+      this.error = null;
+      try {
+        const usage =
+          await CentersService.getMyCenterUsageApiV1CentersMeUsageGet();
+        return { success: true, usage };
+      } catch (error: any) {
+        this.error = error.body?.detail || "Erreur chargement licence";
+        return { success: false, error: this.error ?? undefined };
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async fetchMyBranches(): Promise<{
+      success: boolean;
+      branches?: BranchResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const branches =
+          await CentersService.listMyBranchesApiV1CentersMeBranchesGet();
+        return { success: true, branches };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement succursales",
+        };
+      }
+    },
+
+    async fetchSecretaries(): Promise<{
+      success: boolean;
+      secretaries?: UserAdminResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const secretaries =
+          await UsersService.listSecretariesApiV1UsersSecretariesGet();
+        return { success: true, secretaries };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement secrétaires",
+        };
+      }
+    },
+
+    async createMyBranch(data: BranchCreateRequest) {
+      this._ensureApiConfig();
+      try {
+        const branch =
+          await CentersService.createMyBranchApiV1CentersMeBranchesPost(data);
+        return { success: true, branch };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur création succursale",
+        };
+      }
+    },
+
+    async fetchMyCertificate(): Promise<{
+      success: boolean;
+      certificateUrl?: string;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const result =
+          await CentersService.getMyLicenseCertificateApiV1CentersMeLicenseCertificateGet();
+        const relativeUrl = (result as any).certificate_url as string;
+        const config = useRuntimeConfig();
+        const base = config.public.apiBaseUrl || "http://localhost:8001";
+        return { success: true, certificateUrl: `${base}${relativeUrl}` };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur génération attestation",
+        };
+      }
+    },
+
+    // ── Secrétaire ─────────────────────────
+    async createStudent(data: StudentCreateRequest) {
+      this._ensureApiConfig();
+      try {
+        const student =
+          await UsersService.createStudentApiV1UsersStudentsPost(data);
+        this.students.push(student);
+        return { success: true, student };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur création étudiant",
+        };
+      }
+    },
+
+    async fetchStudentsByBranch(): Promise<{
+      success: boolean;
+      students?: StudentResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      this.loading = true;
+      this.error = null;
+      try {
+        const students =
+          await UsersService.listStudentsByBranchApiV1UsersStudentsByBranchGet();
+        this.students = students;
+        return { success: true, students };
+      } catch (error: any) {
+        this.error = error.body?.detail || "Erreur chargement étudiants";
+        return { success: false, error: this.error ?? undefined };
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async updateStudentTarget(
+      studentId: string,
+      data: StudentTargetUpdateRequest,
+    ) {
+      this._ensureApiConfig();
+      try {
+        const updated =
+          await UsersService.updateStudentTargetApiV1UsersStudentsStudentIdTargetPatch(
+            studentId,
+            data,
+          );
+        const index = this.students.findIndex((s) => s.id === studentId);
+        if (index !== -1) this.students[index] = updated;
+        return { success: true, student: updated };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur mise à jour cible",
+        };
+      }
+    },
+  },
+});

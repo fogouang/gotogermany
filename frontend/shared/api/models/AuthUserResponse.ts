@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { UserRole } from './UserRole';
 /**
  * Infos user retournées dans la response auth.
  */
@@ -11,5 +12,8 @@ export type AuthUserResponse = {
     full_name: string;
     is_admin: boolean;
     is_verified: boolean;
+    role: UserRole;
+    center_id?: (string | null);
+    branch_id?: (string | null);
 };
 

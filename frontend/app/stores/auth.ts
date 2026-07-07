@@ -21,6 +21,13 @@ export const useAuthStore = defineStore("auth", {
     isAuthenticated: (state) => !!state.token && !!state.user,
     isAdmin: (state) =>
       state.user && "is_admin" in state.user ? state.user.is_admin : false,
+    isDirector: (state) => state.user?.role === "center_director",
+    isSecretary: (state) => state.user?.role === "branch_secretary",
+    isStudent: (state) => state.user?.role === "student",
+    centerId: (state) =>
+      state.user && "center_id" in state.user ? state.user.center_id : null,
+    branchId: (state) =>
+      state.user && "branch_id" in state.user ? state.user.branch_id : null,
     isVerified: (state) => state.user?.is_verified || false,
     userName: (state) => state.user?.full_name || "",
     userEmail: (state) => state.user?.email || "",
@@ -37,14 +44,28 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
+    _getOrCreateDeviceFingerprint(): string {
+      if (!import.meta.client) return "";
+      const key = "gtg_device_id";
+      let id = localStorage.getItem(key);
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(key, id);
+      }
+      return id;
+    },
+
     async login(email: string, password: string) {
       this._ensureApiConfig();
       this.loading = true;
 
       try {
+        const deviceFingerprint = this._getOrCreateDeviceFingerprint();
+
         const response = await AuthService.loginApiV1AuthLoginPost({
           email,
           password,
+          device_fingerprint: deviceFingerprint,
         });
 
         const tokenCookie = useCookie("access_token", {

@@ -2,8 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { UserRole } from './UserRole';
 /**
- * Réponse pour /users/me — idem public pour l'instant.
+ * Réponse pour /users/me — inclut le contexte centre/branch si applicable.
  */
 export type UserMeResponse = {
     id: string;
@@ -14,5 +15,10 @@ export type UserMeResponse = {
     is_verified: boolean;
     created_at: string;
     ai_credits?: number;
+    role: UserRole;
+    center_id: (string | null);
+    branch_id: (string | null);
+    target_level_id: (string | null);
+    access_expires_at: (string | null);
 };
 

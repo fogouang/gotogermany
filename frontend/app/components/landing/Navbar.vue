@@ -377,7 +377,7 @@ const closeMobileMenu = () => {
 
 const handleLogin = async () => {
   loginError.value = "";
-  const savedLocale = locale.value; // ← sauvegarder avant navigation
+  const savedLocale = locale.value;
   const result = await authStore.login(
     loginForm.value.email,
     loginForm.value.password,
@@ -385,8 +385,17 @@ const handleLogin = async () => {
   if (result.success) {
     loginVisible.value = false;
     loginForm.value = { email: "", password: "" };
-    await setLocale(savedLocale); // ← restaurer après login
-    navigateTo(authStore.isAdmin ? "/admin" : "/dashboard");
+    await setLocale(savedLocale);
+
+    if (authStore.isAdmin) {
+      navigateTo("/admin");
+    } else if (authStore.isDirector) {
+      navigateTo("/centre/dashboard");
+    } else if (authStore.isSecretary) {
+      navigateTo("/centre/etudiants");
+    } else {
+      navigateTo("/dashboard");
+    }
   } else {
     loginError.value = result.error || t("auth.login_error");
   }

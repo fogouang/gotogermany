@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { UserRole } from './UserRole';
 /**
  * Réponse étendue pour l'admin.
  */
@@ -14,7 +15,10 @@ export type UserAdminResponse = {
     is_verified: boolean;
     created_at: string;
     ai_credits?: number;
+    role: UserRole;
     is_admin: boolean;
     updated_at: string;
+    center_id: (string | null);
+    branch_id: (string | null);
 };
 

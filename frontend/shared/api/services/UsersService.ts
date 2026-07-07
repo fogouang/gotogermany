@@ -2,6 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DirectorCreateRequest } from '../models/DirectorCreateRequest';
+import type { SecretaryCreateRequest } from '../models/SecretaryCreateRequest';
+import type { StudentCreateRequest } from '../models/StudentCreateRequest';
+import type { StudentResponse } from '../models/StudentResponse';
+import type { StudentTargetUpdateRequest } from '../models/StudentTargetUpdateRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
 import type { UserAdminResponse } from '../models/UserAdminResponse';
 import type { UserChangePasswordRequest } from '../models/UserChangePasswordRequest';
@@ -93,6 +98,52 @@ export class UsersService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/users/me/change-password',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Secretaries
+     * Liste les secrétaires du centre du directeur connecté.
+     * @param accessToken
+     * @returns UserAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static listSecretariesApiV1UsersSecretariesGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<UserAdminResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/secretaries',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Create Secretary
+     * Le directeur crée un compte secrétaire pour une de ses succursales.
+     * @param requestBody
+     * @param accessToken
+     * @returns UserAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static createSecretaryApiV1UsersSecretariesPost(
+        requestBody: SecretaryCreateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<UserAdminResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/secretaries',
             cookies: {
                 'access_token': accessToken,
             },
@@ -202,6 +253,128 @@ export class UsersService {
             path: {
                 'user_id': userId,
             },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Create Director
+     * Créer un compte center_director — admin ITIA, après paiement/activation licence.
+     * @param requestBody
+     * @param accessToken
+     * @returns UserAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static createDirectorApiV1UsersDirectorsPost(
+        requestBody: DirectorCreateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<UserAdminResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/directors',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Students By Center
+     * Vue consolidée de tous les étudiants du centre, toutes succursales confondues.
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static listStudentsByCenterApiV1UsersStudentsByCenterGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<StudentResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/students/by-center',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Create Student
+     * La secrétaire crée un compte étudiant — bloqué si quota licence atteint.
+     * @param requestBody
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static createStudentApiV1UsersStudentsPost(
+        requestBody: StudentCreateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/students',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Update Student Target
+     * Modifie l'examen/niveau ciblé d'un étudiant — sans consommer une nouvelle place.
+     * @param studentId
+     * @param requestBody
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static updateStudentTargetApiV1UsersStudentsStudentIdTargetPatch(
+        studentId: string,
+        requestBody: StudentTargetUpdateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/students/{student_id}/target',
+            path: {
+                'student_id': studentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Students By Branch
+     * Liste des étudiants de la succursale de la secrétaire connectée.
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static listStudentsByBranchApiV1UsersStudentsByBranchGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<StudentResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/students/by-branch',
             cookies: {
                 'access_token': accessToken,
             },
