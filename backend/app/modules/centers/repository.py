@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.centers.models import Center, Branch, LicenseFormula, CenterLicense, LicenseStatus
 from app.modules.users.models import User, UserRole
 from app.shared.database.repository import BaseRepository
+from app.modules.centers.models import CenterCreditTransaction
+from sqlalchemy.orm import selectinload
 
 
 class CenterRepository(BaseRepository[Center]):
@@ -80,5 +82,36 @@ class CenterLicenseRepository(BaseRepository[CenterLicense]):
                 Branch.center_id == center_id,
                 User.role == UserRole.branch_secretary,
             )
+        )
+        return list(result.scalars().all())
+    
+
+class CenterCreditTransactionRepository(BaseRepository[CenterCreditTransaction]):
+    def __init__(self, db: AsyncSession):
+        super().__init__(CenterCreditTransaction, db)
+
+    async def find_by_center(self, center_id: UUID) -> list[CenterCreditTransaction]:
+        """Vue directeur — tout l'historique du centre."""
+        result = await self.db.execute(
+            select(CenterCreditTransaction)
+            .options(
+                selectinload(CenterCreditTransaction.student),
+                selectinload(CenterCreditTransaction.performer),
+            )
+            .where(CenterCreditTransaction.center_id == center_id)
+            .order_by(CenterCreditTransaction.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def find_by_performer(self, performer_id: UUID) -> list[CenterCreditTransaction]:
+        """Vue secrétaire — uniquement ses propres actions."""
+        result = await self.db.execute(
+            select(CenterCreditTransaction)
+            .options(
+                selectinload(CenterCreditTransaction.student),
+                selectinload(CenterCreditTransaction.performer),
+            )
+            .where(CenterCreditTransaction.performed_by == performer_id)
+            .order_by(CenterCreditTransaction.created_at.desc())
         )
         return list(result.scalars().all())

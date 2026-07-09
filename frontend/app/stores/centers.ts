@@ -5,15 +5,22 @@ import type {
   StudentResponse,
   StudentCreateRequest,
   StudentTargetUpdateRequest,
+  StudentCreditAdjustRequest,
+  StudentAccessDatesUpdateRequest,
+  StudentProgressResponse,
   SecretaryCreateRequest,
   UserAdminResponse,
   BranchCreateRequest,
   LicenseUsageResponse,
   BranchResponse,
+  CenterPoolResponse,
+  CenterCreditTransactionResponse,
+  StudentDetailedProgressResponse,
 } from "#shared/api";
 
 interface CenterStaffState {
   students: StudentResponse[];
+  progress: StudentProgressResponse[];
   loading: boolean;
   error: string | null;
 }
@@ -21,6 +28,7 @@ interface CenterStaffState {
 export const useCenterStaffStore = defineStore("centerStaff", {
   state: (): CenterStaffState => ({
     students: [],
+    progress: [],
     loading: false,
     error: null,
   }),
@@ -159,6 +167,201 @@ export const useCenterStaffStore = defineStore("centerStaff", {
         return {
           success: false,
           error: error.body?.detail || "Erreur génération attestation",
+        };
+      }
+    },
+
+    // ── Directeur : activation/désactivation d'un étudiant ──
+    async toggleStudentActivation(studentId: string): Promise<{
+      success: boolean;
+      student?: StudentResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const updated =
+          await UsersService.toggleStudentActivationApiV1UsersStudentsStudentIdActivationPatch(
+            studentId,
+          );
+        const index = this.students.findIndex((s) => s.id === studentId);
+        if (index !== -1) this.students[index] = updated;
+        return { success: true, student: updated };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur activation/désactivation",
+        };
+      }
+    },
+
+    // ── Directeur : ajustement de la fenêtre d'accès ────────
+    async updateStudentAccessDates(
+      studentId: string,
+      data: StudentAccessDatesUpdateRequest,
+    ): Promise<{
+      success: boolean;
+      student?: StudentResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const updated =
+          await UsersService.updateStudentAccessDatesApiV1UsersStudentsStudentIdAccessDatesPatch(
+            studentId,
+            data,
+          );
+        const index = this.students.findIndex((s) => s.id === studentId);
+        if (index !== -1) this.students[index] = updated;
+        return { success: true, student: updated };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur mise à jour des dates",
+        };
+      }
+    },
+
+    // ── Directeur + Secrétaire : ajustement de crédits ──────
+    async adjustStudentCredits(
+      studentId: string,
+      data: StudentCreditAdjustRequest,
+    ): Promise<{
+      success: boolean;
+      student?: StudentResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const updated =
+          await UsersService.adjustStudentCreditsApiV1UsersStudentsStudentIdCreditsPatch(
+            studentId,
+            data,
+          );
+        const index = this.students.findIndex((s) => s.id === studentId);
+        if (index !== -1) this.students[index] = updated;
+        return { success: true, student: updated };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur ajustement des crédits",
+        };
+      }
+    },
+
+    // ── Directeur + Secrétaire : progression des étudiants ──
+    async fetchStudentProgress(): Promise<{
+      success: boolean;
+      progress?: StudentProgressResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      this.loading = true;
+      this.error = null;
+      try {
+        const progress =
+          await UsersService.getStudentProgressApiV1UsersStudentsProgressGet();
+        this.progress = progress;
+        return { success: true, progress };
+      } catch (error: any) {
+        this.error = error.body?.detail || "Erreur chargement progression";
+        return { success: false, error: this.error ?? undefined };
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async fetchMyPool(): Promise<{
+      success: boolean;
+      pool?: CenterPoolResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const pool =
+          await CentersService.getMyCenterPoolApiV1CentersMePoolGet();
+        return { success: true, pool };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement du pool",
+        };
+      }
+    },
+
+    async updateDefaultCredits(defaultCredits: number): Promise<{
+      success: boolean;
+      pool?: CenterPoolResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const pool =
+          await CentersService.updateDefaultCreditsApiV1CentersMeDefaultCreditsPatch(
+            {
+              default_credits_per_student: defaultCredits,
+            },
+          );
+        return { success: true, pool };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur mise à jour du défaut",
+        };
+      }
+    },
+
+    async fetchCreditTransactions(): Promise<{
+      success: boolean;
+      transactions?: CenterCreditTransactionResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const transactions =
+          await CentersService.getMyCenterCreditTransactionsApiV1CentersMeCreditTransactionsGet();
+        return { success: true, transactions };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement historique",
+        };
+      }
+    },
+
+    async fetchMyCreditTransactions(): Promise<{
+      success: boolean;
+      transactions?: CenterCreditTransactionResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const transactions =
+          await CentersService.getMyCreditTransactionsApiV1CentersMeCreditTransactionsMineGet();
+        return { success: true, transactions };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement historique",
+        };
+      }
+    },
+
+    async fetchStudentProgressDetail(studentId: string): Promise<{
+      success: boolean;
+      detail?: StudentDetailedProgressResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const detail =
+          await UsersService.getStudentProgressDetailApiV1UsersStudentsStudentIdProgressDetailGet(
+            studentId,
+          );
+        return { success: true, detail };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement du détail",
         };
       }
     },

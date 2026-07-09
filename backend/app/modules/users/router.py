@@ -11,8 +11,13 @@ from app.modules.auth.dependencies import (
     CurrentUser,
     CurrentDirector,
     CurrentSecretary,
+    CurrentCenterStaff,
 )
+from app.modules.users.models import UserRole
+# En haut du fichier, avec les autres imports de schemas
 from app.modules.users.schemas import (
+    StudentProgressResponse,
+    StudentDetailedProgressResponse,
     UserAdminResponse,
     UserChangePasswordRequest,
     UserMeResponse,
@@ -22,6 +27,8 @@ from app.modules.users.schemas import (
     StudentCreateRequest,
     StudentTargetUpdateRequest,
     StudentResponse,
+    StudentCreditAdjustRequest,
+    StudentAccessDatesUpdateRequest,
 )
 from app.modules.users.service import UserService
 from app.shared.database.session import get_db
@@ -77,6 +84,7 @@ async def list_secretaries(
 ):
     """Liste les secrétaires du centre du directeur connecté."""
     return await UserService(db).list_secretaries_for_director(current_director)
+
 
 # ── Admin ────────────────────────────────────
 @router.get("", response_model=list[UserAdminResponse])
@@ -151,6 +159,30 @@ async def list_students_by_center(
     return await UserService(db).list_students_for_director(current_director)
 
 
+@router.patch("/students/{student_id}/activation", response_model=StudentResponse)
+async def toggle_student_activation(
+    student_id: UUID,
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Le directeur active/désactive un compte étudiant de son centre.
+    Ne libère jamais le quota consommé (règle permanente/cumulative)."""
+    return await UserService(db).toggle_student_active(student_id, current_director)
+
+
+@router.patch("/students/{student_id}/access-dates", response_model=StudentResponse)
+async def update_student_access_dates(
+    student_id: UUID,
+    data: StudentAccessDatesUpdateRequest,
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Le directeur ajuste manuellement la fenêtre d'accès d'un étudiant précis."""
+    return await UserService(db).update_student_access_dates(
+        student_id, data, current_director
+    )
+
+
 # ── Secrétaire ────────────────────────────────
 @router.post("/students", response_model=StudentResponse, status_code=201)
 async def create_student(
@@ -158,7 +190,8 @@ async def create_student(
     current_secretary: CurrentSecretary,
     db: AsyncSession = Depends(get_db),
 ):
-    """La secrétaire crée un compte étudiant — bloqué si quota licence atteint."""
+    """La secrétaire crée un compte étudiant — bloqué si quota licence atteint,
+    ou si le pool de crédits IA du centre est insuffisant."""
     return await UserService(db).create_student(data, current_secretary)
 
 
@@ -180,3 +213,43 @@ async def list_students_by_branch(
 ):
     """Liste des étudiants de la succursale de la secrétaire connectée."""
     return await UserService(db).list_students_for_secretary(current_secretary)
+
+
+# ── Directeur ET Secrétaire (staff de centre) ─
+@router.patch("/students/{student_id}/credits", response_model=StudentResponse)
+async def adjust_student_credits(
+    student_id: UUID,
+    data: StudentCreditAdjustRequest,
+    current_user: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Recharge individuelle d'un étudiant, prélevée du pool de crédits du
+    centre. Secrétaire limitée à sa succursale, directeur à tout son centre
+    (vérifié dans le service). Chaque action est journalisée pour audit."""
+    return await UserService(db).adjust_student_credits(student_id, data, current_user)
+
+
+@router.get("/students/progress", response_model=list[StudentProgressResponse])
+async def get_student_progress(
+    current_user: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Progression/scores des étudiants. Secrétaire : sa succursale
+    uniquement. Directeur : tout le centre, toutes succursales."""
+    service = UserService(db)
+    if current_user.role == UserRole.center_director:
+        return await service.get_student_progress_for_director(current_user)
+    return await service.get_student_progress_for_secretary(current_user)
+
+
+from app.modules.users.schemas import StudentDetailedProgressResponse
+
+@router.get("/students/{student_id}/progress/detail", response_model=StudentDetailedProgressResponse)
+async def get_student_progress_detail(
+    student_id: UUID,
+    current_user: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Progression détaillée d'un étudiant précis — ventilation par examen/
+    module et historique de scores pour graphes."""
+    return await UserService(db).get_student_progress_detail(student_id, current_user)

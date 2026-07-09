@@ -25,7 +25,6 @@ class PaymentMethod(str, enum.Enum):
     mobile_money = "mobile_money"
     bank_transfer = "bank_transfer"
 
-
 class Center(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "centers"
 
@@ -34,11 +33,26 @@ class Center(Base, UUIDMixin, TimestampMixin):
     contact_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    # Pool de crédits IA du centre — alimenté manuellement par l'admin ITIA
+    # à l'achat/rechargement de licence, décompté à chaque attribution/ajustement
+    # de crédits à un étudiant.
+    ai_credit_pool_balance: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
+    # Nombre de crédits attribués par défaut à chaque nouvel étudiant créé —
+    # paramétrable par le directeur, prélevé du pool à chaque création.
+    default_credits_per_student: Mapped[int] = mapped_column(
+        Integer, default=2, nullable=False, server_default="2"
+    )
+
     branches: Mapped[list["Branch"]] = relationship(
         "Branch", back_populates="center", lazy="noload"
     )
     licenses: Mapped[list["CenterLicense"]] = relationship(
         "CenterLicense", back_populates="center", lazy="noload"
+    )
+    credit_transactions: Mapped[list["CenterCreditTransaction"]] = relationship(
+        "CenterCreditTransaction", back_populates="center", lazy="noload"
     )
     director: Mapped["User | None"] = relationship(
         "User",
@@ -50,6 +64,44 @@ class Center(Base, UUIDMixin, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<Center {self.name}>"
+
+class CenterCreditTransaction(Base, UUIDMixin, TimestampMixin):
+    """
+    Journal d'audit de chaque ajustement individuel de crédits IA fait à
+    un étudiant par une secrétaire ou le directeur. Permet au directeur
+    de voir tout l'historique de son centre, et à chaque secrétaire de
+    voir son propre historique.
+    """
+    __tablename__ = "center_credit_transactions"
+
+    center_id: Mapped[UUID] = mapped_column(
+        ForeignKey("centers.id"), nullable=False, index=True
+    )
+    student_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    # Qui a fait l'ajustement (secrétaire ou directeur)
+    performed_by: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    # Peut être positif (attribution/rechargement) ou négatif (retrait, rare)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Solde du pool du centre juste après cette transaction — facilite l'audit
+    pool_balance_after: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    center: Mapped["Center"] = relationship(
+        "Center", back_populates="credit_transactions", lazy="noload"
+    )
+    student: Mapped["User"] = relationship(
+        "User", foreign_keys=[student_id], lazy="noload"
+    )
+    performer: Mapped["User"] = relationship(
+        "User", foreign_keys=[performed_by], lazy="noload"
+    )
+
+    def __repr__(self) -> str:
+        return f"<CenterCreditTransaction id={self.id}>"
 
 
 class Branch(Base, UUIDMixin, TimestampMixin):

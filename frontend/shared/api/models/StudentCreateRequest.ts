@@ -11,5 +11,6 @@ export type StudentCreateRequest = {
     full_name: string;
     phone?: (string | null);
     target_level_id: string;
+    access_duration_days?: (number | null);
 };
 

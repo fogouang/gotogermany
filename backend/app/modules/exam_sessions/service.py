@@ -564,7 +564,7 @@ class ExamSessionService:
                 else:
                     result_message = "Vous n'avez pas atteint le score requis. Continuez à vous entraîner !"
             elif session.status == "PENDING_REVIEW":
-                result_message = "Résultat partiel — certaines parties sont en attente de correction."
+                result_message = "Résultat partiel, certaines parties sont en attente de correction."
 
         return SessionResultResponse(
             session_id=session.id,

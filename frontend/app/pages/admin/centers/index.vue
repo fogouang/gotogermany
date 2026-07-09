@@ -37,63 +37,96 @@
             v-else
             class="bg-white rounded-xl border border-gray-200 overflow-hidden"
           >
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                    Nom
-                  </th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                    Contact
-                  </th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                    Statut
-                  </th>
-                  <th class="text-right px-4 py-3 font-semibold text-gray-600">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="center in adminCenters.centers"
-                  :key="center.id"
-                  class="border-b border-gray-100 last:border-0"
-                >
-                  <td class="px-4 py-3 text-gray-900 font-medium">
-                    {{ center.name }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-500">
-                    <div>{{ center.contact_email || "—" }}</div>
-                    <div class="text-xs text-gray-400">
-                      {{ center.contact_phone || "" }}
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <Tag
-                      :value="center.is_active ? 'Actif' : 'Inactif'"
-                      :severity="center.is_active ? 'success' : 'danger'"
-                    />
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    <Button
-                      label="Gérer la licence"
-                      icon="pi pi-verified"
-                      text
-                      size="small"
-                      @click="openLicenseDialog(center)"
-                    />
-                    <Button
-                      label="Créer directeur"
-                      icon="pi pi-user-plus"
-                      text
-                      size="small"
-                      @click="openDirectorDialog(center)"
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-600">
+                      Nom
+                    </th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-600">
+                      Contact
+                    </th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-600">
+                      Pool crédits IA
+                    </th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-600">
+                      Statut
+                    </th>
+                    <th
+                      class="text-right px-4 py-3 font-semibold text-gray-600"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="center in adminCenters.centers"
+                    :key="center.id"
+                    class="border-b border-gray-100 last:border-0"
+                  >
+                    <td
+                      class="px-4 py-3 text-gray-900 font-medium whitespace-nowrap"
+                    >
+                      {{ center.name }}
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      <div>{{ center.contact_email || "—" }}</div>
+                      <div class="text-xs text-gray-400">
+                        {{ center.contact_phone || "" }}
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <span
+                        class="font-semibold"
+                        :class="
+                          center.ai_credit_pool_balance <
+                          center.default_credits_per_student
+                            ? 'text-red-600'
+                            : 'text-gray-900'
+                        "
+                      >
+                        {{ center.ai_credit_pool_balance }}
+                      </span>
+                      <span class="text-xs text-gray-400 ml-1">
+                        (défaut:
+                        {{ center.default_credits_per_student }}/étudiant)
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <Tag
+                        :value="center.is_active ? 'Actif' : 'Inactif'"
+                        :severity="center.is_active ? 'success' : 'danger'"
+                      />
+                    </td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                      <Button
+                        label="Licence"
+                        icon="pi pi-verified"
+                        text
+                        size="small"
+                        @click="openLicenseDialog(center)"
+                      />
+                      <Button
+                        label="Directeur"
+                        icon="pi pi-user-plus"
+                        text
+                        size="small"
+                        @click="openDirectorDialog(center)"
+                      />
+                      <Button
+                        label="Recharger crédits"
+                        icon="pi pi-sparkles"
+                        text
+                        size="small"
+                        @click="openRechargeDialog(center)"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </TabPanel>
 
@@ -497,6 +530,63 @@
         />
       </template>
     </Dialog>
+
+    <!-- Dialog rechargement du pool de crédits IA -->
+    <Dialog
+      v-model:visible="showRechargeDialog"
+      header="Recharger le pool de crédits IA"
+      modal
+      :style="{ width: '28rem' }"
+    >
+      <div v-if="selectedCenter" class="space-y-4">
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <p class="font-semibold text-gray-900">{{ selectedCenter.name }}</p>
+          <p class="text-xs text-gray-500 mt-1">
+            Solde actuel :
+            <strong>{{ selectedCenter.ai_credit_pool_balance }}</strong> crédits
+          </p>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-1 block"
+            >Quantité à ajouter</label
+          >
+          <InputNumber
+            v-model="rechargeForm.amount"
+            class="w-full"
+            :min="1"
+            showButtons
+          />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-1 block"
+            >Motif / référence (optionnel)</label
+          >
+          <InputText
+            v-model="rechargeForm.reason"
+            class="w-full"
+            placeholder="ex: Rechargement négocié le 09/07 — 20000 FCFA"
+          />
+        </div>
+
+        <Message v-if="rechargeFormError" severity="error" :closable="false">{{
+          rechargeFormError
+        }}</Message>
+        <Message v-if="rechargeSuccess" severity="success" :closable="false">{{
+          rechargeSuccess
+        }}</Message>
+      </div>
+      <template #footer>
+        <Button label="Fermer" text @click="showRechargeDialog = false" />
+        <Button
+          v-if="!rechargeSuccess"
+          label="Recharger"
+          icon="pi pi-sparkles"
+          :loading="recharging"
+          @click="handleRechargePool"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -684,6 +774,59 @@ async function handleActivateLicense() {
       "Licence activée avec succès. Vous pouvez maintenant créer le compte directeur.";
   } else {
     licenseFormError.value = result.error || "Erreur lors de l'activation.";
+  }
+}
+
+// ── Rechargement du pool de crédits IA ──
+const showRechargeDialog = ref(false);
+const recharging = ref(false);
+const rechargeFormError = ref<string | null>(null);
+const rechargeSuccess = ref<string | null>(null);
+const rechargeForm = ref({ amount: 50, reason: "" });
+
+function openRechargeDialog(center: CenterResponse) {
+  selectedCenter.value = center;
+  rechargeForm.value = { amount: 50, reason: "" };
+  rechargeFormError.value = null;
+  rechargeSuccess.value = null;
+  showRechargeDialog.value = true;
+}
+
+async function handleRechargePool() {
+  if (!selectedCenter.value || !rechargeForm.value.amount) {
+    rechargeFormError.value = "La quantité est requise.";
+    return;
+  }
+
+  const center = selectedCenter.value;
+
+  recharging.value = true;
+  rechargeFormError.value = null;
+
+  const result = await adminCenters.rechargeCreditPool(center.id, {
+    amount: rechargeForm.value.amount,
+    reason: rechargeForm.value.reason.trim() || null,
+  });
+
+  recharging.value = false;
+
+  if (result.success && result.pool) {
+    rechargeSuccess.value = `Pool rechargé avec succès. Nouveau solde : ${result.pool.ai_credit_pool_balance} crédits.`;
+
+    const index = adminCenters.centers.findIndex((c) => c.id === center.id);
+    if (index !== -1) {
+      adminCenters.centers[index] = {
+        ...center,
+        ai_credit_pool_balance: result.pool.ai_credit_pool_balance,
+      };
+    }
+
+    selectedCenter.value = {
+      ...center,
+      ai_credit_pool_balance: result.pool.ai_credit_pool_balance,
+    };
+  } else {
+    rechargeFormError.value = result.error || "Erreur lors du rechargement.";
   }
 }
 

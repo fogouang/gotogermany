@@ -6,7 +6,7 @@ from fastapi import Depends
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.auth.dependencies import CurrentAdmin, CurrentDirector
+from app.modules.auth.dependencies import CurrentAdmin, CurrentDirector, CurrentCenterStaff
 from app.modules.centers.schemas import (
     CenterCreateRequest,
     CenterResponse,
@@ -19,6 +19,10 @@ from app.modules.centers.schemas import (
     CenterLicenseExtendRequest,
     CenterLicenseResponse,
     LicenseUsageResponse,
+    CenterCreditPoolRechargeRequest,
+    CenterDefaultCreditsUpdateRequest,
+    CenterCreditTransactionResponse,
+    CenterPoolResponse,
 )
 from app.modules.centers.service import CenterService
 from app.shared.database.session import get_db
@@ -70,6 +74,53 @@ async def get_my_license_certificate(
         raise BadRequestException(detail="Aucune licence active pour votre centre.")
     url = await CenterLicenseCertificateService(db).generate_for_license(license_.id)
     return {"certificate_url": url}
+
+
+@router.get("/me/pool", response_model=CenterPoolResponse)
+async def get_my_center_pool(
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Le directeur consulte le solde du pool et le défaut par étudiant de son centre."""
+    center = await CenterService(db).center_repo.get_by_id_or_404(current_director.center_id)
+    return center
+
+
+@router.patch("/me/default-credits", response_model=CenterPoolResponse)
+async def update_default_credits(
+    data: CenterDefaultCreditsUpdateRequest,
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Le directeur fixe le nombre de crédits attribués par défaut à chaque
+    nouvel étudiant créé dans son centre."""
+    return await CenterService(db).update_default_credits(
+        current_director.center_id, data.default_credits_per_student, current_director
+    )
+
+
+@router.get("/me/credit-transactions", response_model=list[CenterCreditTransactionResponse])
+async def get_my_center_credit_transactions(
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Vue d'audit complète pour le directeur — tout l'historique des
+    ajustements de crédits de son centre, toutes secrétaires confondues."""
+    return await CenterService(db).get_credit_transactions_for_director(
+        current_director.center_id
+    )
+
+
+@router.get("/me/credit-transactions/mine", response_model=list[CenterCreditTransactionResponse])
+async def get_my_credit_transactions(
+    current_user: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Historique restreint aux propres actions de l'utilisateur connecté
+    (secrétaire : ses ajustements uniquement). Un directeur qui appelle cette
+    route ne voit également que ses propres actions — pour la vue complète
+    du centre, utiliser /me/credit-transactions."""
+    return await CenterService(db).get_credit_transactions_for_secretary(current_user)
 
 
 # ── Admin ITIA ────────────────────────────────
@@ -159,3 +210,17 @@ async def get_license_certificate_admin(
         raise BadRequestException(detail="Aucune licence active pour ce centre.")
     url = await CenterLicenseCertificateService(db).generate_for_license(license_.id)
     return {"certificate_url": url}
+
+
+@router.post("/{center_id}/credit-pool/recharge", response_model=CenterPoolResponse)
+async def recharge_credit_pool(
+    center_id: UUID,
+    data: CenterCreditPoolRechargeRequest,
+    current_admin: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """Rechargement manuel du pool de crédits IA d'un centre — admin ITIA
+    uniquement, validé après négociation/paiement hors plateforme."""
+    return await CenterService(db).recharge_pool(
+        center_id, data.amount, current_admin, data.reason
+    )

@@ -4,7 +4,11 @@
 /* eslint-disable */
 import type { DirectorCreateRequest } from '../models/DirectorCreateRequest';
 import type { SecretaryCreateRequest } from '../models/SecretaryCreateRequest';
+import type { StudentAccessDatesUpdateRequest } from '../models/StudentAccessDatesUpdateRequest';
 import type { StudentCreateRequest } from '../models/StudentCreateRequest';
+import type { StudentCreditAdjustRequest } from '../models/StudentCreditAdjustRequest';
+import type { StudentDetailedProgressResponse } from '../models/StudentDetailedProgressResponse';
+import type { StudentProgressResponse } from '../models/StudentProgressResponse';
 import type { StudentResponse } from '../models/StudentResponse';
 import type { StudentTargetUpdateRequest } from '../models/StudentTargetUpdateRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
@@ -308,8 +312,66 @@ export class UsersService {
         });
     }
     /**
+     * Toggle Student Activation
+     * Le directeur active/désactive un compte étudiant de son centre.
+     * Ne libère jamais le quota consommé (règle permanente/cumulative).
+     * @param studentId
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static toggleStudentActivationApiV1UsersStudentsStudentIdActivationPatch(
+        studentId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/students/{student_id}/activation',
+            path: {
+                'student_id': studentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Update Student Access Dates
+     * Le directeur ajuste manuellement la fenêtre d'accès d'un étudiant précis.
+     * @param studentId
+     * @param requestBody
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static updateStudentAccessDatesApiV1UsersStudentsStudentIdAccessDatesPatch(
+        studentId: string,
+        requestBody: StudentAccessDatesUpdateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/students/{student_id}/access-dates',
+            path: {
+                'student_id': studentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Create Student
-     * La secrétaire crée un compte étudiant — bloqué si quota licence atteint.
+     * La secrétaire crée un compte étudiant — bloqué si quota licence atteint,
+     * ou si le pool de crédits IA du centre est insuffisant.
      * @param requestBody
      * @param accessToken
      * @returns StudentResponse Successful Response
@@ -375,6 +437,87 @@ export class UsersService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/users/students/by-branch',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Adjust Student Credits
+     * Recharge individuelle d'un étudiant, prélevée du pool de crédits du
+     * centre. Secrétaire limitée à sa succursale, directeur à tout son centre
+     * (vérifié dans le service). Chaque action est journalisée pour audit.
+     * @param studentId
+     * @param requestBody
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static adjustStudentCreditsApiV1UsersStudentsStudentIdCreditsPatch(
+        studentId: string,
+        requestBody: StudentCreditAdjustRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/students/{student_id}/credits',
+            path: {
+                'student_id': studentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Student Progress
+     * Progression/scores des étudiants. Secrétaire : sa succursale
+     * uniquement. Directeur : tout le centre, toutes succursales.
+     * @param accessToken
+     * @returns StudentProgressResponse Successful Response
+     * @throws ApiError
+     */
+    public static getStudentProgressApiV1UsersStudentsProgressGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<StudentProgressResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/students/progress',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Student Progress Detail
+     * Progression détaillée d'un étudiant précis — ventilation par examen/
+     * module et historique de scores pour graphes.
+     * @param studentId
+     * @param accessToken
+     * @returns StudentDetailedProgressResponse Successful Response
+     * @throws ApiError
+     */
+    public static getStudentProgressDetailApiV1UsersStudentsStudentIdProgressDetailGet(
+        studentId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentDetailedProgressResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/students/{student_id}/progress/detail',
+            path: {
+                'student_id': studentId,
+            },
             cookies: {
                 'access_token': accessToken,
             },

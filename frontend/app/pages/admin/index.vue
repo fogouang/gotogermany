@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Stats rapides -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
       <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
         <div class="flex items-center gap-3">
           <div
@@ -63,6 +63,22 @@
           </div>
         </div>
       </div>
+
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center"
+          >
+            <i class="pi pi-graduation-cap text-emerald-600"></i>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-gray-900">
+              {{ centersStore.centers.length || "—" }}
+            </p>
+            <p class="text-xs text-gray-500">Centres</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <FreeAccessToggle />
@@ -77,7 +93,7 @@
     </div>
 
     <!-- Raccourcis -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
       <NuxtLink
         to="/admin/users"
         class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex items-center gap-4"
@@ -122,6 +138,22 @@
         <div>
           <p class="font-semibold text-gray-900">Codes Promo</p>
           <p class="text-xs text-gray-400">Réductions & commissions</p>
+        </div>
+        <i class="pi pi-arrow-right text-gray-300 ml-auto"></i>
+      </NuxtLink>
+
+      <NuxtLink
+        to="/admin/centers"
+        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex items-center gap-4"
+      >
+        <div
+          class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center"
+        >
+          <i class="pi pi-graduation-cap text-emerald-600"></i>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900">Centres</p>
+          <p class="text-xs text-gray-400">Licences & crédits IA</p>
         </div>
         <i class="pi pi-arrow-right text-gray-300 ml-auto"></i>
       </NuxtLink>
@@ -200,6 +232,7 @@ const authStore = useAuthStore();
 const usersStore = useAdminUsersStore();
 const partnersStore = useAdminPartnersStore();
 const promoCodesStore = useAdminPromoCodesStore();
+const centersStore = useAdminCentersStore();
 
 const recentUsers = computed(() =>
   [...usersStore.users]
@@ -225,6 +258,9 @@ onMounted(async () => {
       : Promise.resolve(),
     promoCodesStore.codes.length === 0
       ? promoCodesStore.fetchCodes()
+      : Promise.resolve(),
+    centersStore.centers.length === 0
+      ? centersStore.fetchCenters()
       : Promise.resolve(),
   ]);
 });

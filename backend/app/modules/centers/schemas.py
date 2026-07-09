@@ -93,6 +93,8 @@ class CenterResponse(BaseSchema):
     contact_email: str | None
     contact_phone: str | None
     is_active: bool
+    ai_credit_pool_balance: int  
+    default_credits_per_student: int  
     created_at: datetime
 
 
@@ -109,3 +111,31 @@ class LicenseUsageResponse(BaseSchema):
     students_remaining: int
     days_remaining: int | None
     branches_breakdown: dict[str, int]  
+    
+    
+class CenterCreditPoolRechargeRequest(BaseSchema):
+    """Rechargement manuel du pool — admin ITIA uniquement."""
+    amount: int = Field(gt=0)
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class CenterDefaultCreditsUpdateRequest(BaseSchema):
+    """Le directeur ajuste le nombre de crédits par défaut à la création d'un étudiant."""
+    default_credits_per_student: int = Field(ge=0, le=100)
+
+
+class CenterCreditTransactionResponse(BaseSchema):
+    id: uuid.UUID
+    student_id: uuid.UUID
+    student_name: str
+    performed_by: uuid.UUID
+    performer_name: str
+    amount: int
+    pool_balance_after: int
+    reason: str | None
+    created_at: datetime
+
+
+class CenterPoolResponse(BaseSchema):
+    ai_credit_pool_balance: int
+    default_credits_per_student: int

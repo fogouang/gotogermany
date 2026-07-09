@@ -14,5 +14,6 @@ export type StudentResponse = {
     first_login_at: (string | null);
     access_expires_at: (string | null);
     created_at: string;
+    ai_credits?: number;
 };
 

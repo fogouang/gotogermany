@@ -82,6 +82,72 @@
         </p>
       </div>
 
+      <!-- Pool de crédits IA -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-gray-700">Crédits IA du centre</h3>
+          <NuxtLink
+            to="/centre/credits-historique"
+            class="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+          >
+            Voir l'historique
+            <i class="pi pi-arrow-right text-xs"></i>
+          </NuxtLink>
+        </div>
+
+        <div v-if="poolLoading" class="flex justify-center py-6">
+          <i class="pi pi-spin pi-spinner text-2xl text-emerald-600"></i>
+        </div>
+
+        <div v-else-if="pool" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <p class="text-xs text-gray-400 mb-1">Solde du pool</p>
+              <p class="text-2xl font-bold text-gray-900">{{ pool.ai_credit_pool_balance }}</p>
+              <p class="text-xs text-gray-400 mt-1">crédits disponibles</p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <p class="text-xs text-gray-400 mb-1">Défaut par étudiant</p>
+              <p class="text-2xl font-bold text-gray-900">{{ pool.default_credits_per_student }}</p>
+              <p class="text-xs text-gray-400 mt-1">crédits à la création d'un compte</p>
+            </div>
+          </div>
+
+          <div
+            v-if="pool.ai_credit_pool_balance < pool.default_credits_per_student"
+            class="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2"
+          >
+            <i class="pi pi-exclamation-circle text-red-500 text-sm"></i>
+            <p class="text-xs text-red-700">
+              Pool insuffisant pour créer un nouvel étudiant. Contactez ITIA pour un rechargement.
+            </p>
+          </div>
+
+          <div class="flex items-end gap-2 pt-2 border-t border-gray-100">
+            <div class="flex-1">
+              <label class="text-xs font-medium text-gray-600 mb-1 block">
+                Modifier le défaut par étudiant
+              </label>
+              <InputNumber
+                v-model="defaultCreditsForm"
+                class="w-full"
+                :min="0"
+                :max="100"
+                showButtons
+              />
+            </div>
+            <Button
+              label="Enregistrer"
+              size="small"
+              :loading="savingDefault"
+              :disabled="defaultCreditsForm === pool.default_credits_per_student"
+              @click="handleUpdateDefault"
+            />
+          </div>
+          <p v-if="defaultError" class="text-sm text-red-600">{{ defaultError }}</p>
+        </div>
+      </div>
+
       <!-- Répartition par succursale -->
       <div class="bg-white rounded-xl border border-gray-200 p-5">
         <h3 class="text-sm font-semibold text-gray-700 mb-4">Répartition par succursale</h3>
@@ -124,7 +190,7 @@ definePageMeta({
   middleware: 'director',
 })
 
-import type { LicenseUsageResponse } from '#shared/api'
+import type { LicenseUsageResponse, CenterPoolResponse } from '#shared/api'
 
 const centerStaffStore = useCenterStaffStore()
 
@@ -132,6 +198,12 @@ const loading = ref(true)
 const usage = ref<LicenseUsageResponse | null>(null)
 const errorMessage = ref<string | null>(null)
 const downloadingCertificate = ref(false)
+
+const poolLoading = ref(true)
+const pool = ref<CenterPoolResponse | null>(null)
+const defaultCreditsForm = ref(0)
+const savingDefault = ref(false)
+const defaultError = ref<string | null>(null)
 
 const quotaPercent = computed(() => {
   if (!usage.value?.license?.max_students) return 0
@@ -169,6 +241,28 @@ async function downloadCertificate() {
   }
 }
 
+async function loadPool() {
+  poolLoading.value = true
+  const result = await centerStaffStore.fetchMyPool()
+  if (result.success && result.pool) {
+    pool.value = result.pool
+    defaultCreditsForm.value = result.pool.default_credits_per_student
+  }
+  poolLoading.value = false
+}
+
+async function handleUpdateDefault() {
+  savingDefault.value = true
+  defaultError.value = null
+  const result = await centerStaffStore.updateDefaultCredits(defaultCreditsForm.value)
+  savingDefault.value = false
+  if (result.success && result.pool) {
+    pool.value = result.pool
+  } else {
+    defaultError.value = result.error || "Erreur lors de la mise à jour."
+  }
+}
+
 onMounted(async () => {
   const result = await centerStaffStore.fetchMyUsage()
   if (result.success) {
@@ -177,5 +271,7 @@ onMounted(async () => {
     errorMessage.value = result.error || 'Erreur de chargement de votre licence.'
   }
   loading.value = false
+
+  await loadPool()
 })
 </script>

@@ -74,6 +74,10 @@ class User(Base, UUIDMixin, TimestampMixin):
     access_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    
+    access_duration_days: Mapped[int] = mapped_column(
+        Integer, default=30, nullable=False, server_default="30"
+    )
 
     ai_credits: Mapped[int] = mapped_column(
         Integer,

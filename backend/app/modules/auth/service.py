@@ -71,13 +71,17 @@ class AuthService:
                 fingerprint=data.device_fingerprint,
             )
 
-        # Déclenchement de la fenêtre de 2 mois à la toute première connexion
+        # ── Déclenchement de la fenêtre d'accès à la toute première connexion
         if user.first_login_at is None:
             now = datetime.now(timezone.utc)
             user = await self.repo.update(
                 user.id,
                 first_login_at=now,
-                access_expires_at=now + relativedelta(months=2),
+                # Utilise access_duration_days (30 par défaut) au lieu des
+                # 2 mois fixes précédents. Le directeur peut aussi écraser
+                # access_expires_at directement après coup, indépendamment
+                # de cette valeur - cf. update_student_access_dates().
+                access_expires_at=now + timedelta(days=user.access_duration_days),
             )
 
         access_token = create_access_token({"sub": str(user.id)})

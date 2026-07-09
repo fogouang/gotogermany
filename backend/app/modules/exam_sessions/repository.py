@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.shared.database.repository import BaseRepository
+from sqlalchemy import func
 
 
 class ExamSessionRepository(BaseRepository[ExamSession]):
@@ -68,6 +69,53 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
         )
         return list(result.scalars().all())
 
+    async def get_stats_for_user(self, user_id: UUID) -> dict:
+        """Statistiques agrégées pour la vue 'progression étudiant' (centre)."""
+        result = await self.db.execute(
+            select(
+                func.count(ExamSession.id).label("total_sessions"),
+                func.avg(ExamSession.score).label("average_score"),
+                func.max(ExamSession.submitted_at).label("last_session_at"),
+            ).where(
+                ExamSession.user_id == user_id,
+                ExamSession.status.in_(["COMPLETED", "PENDING_REVIEW"]),
+            )
+        )
+        row = result.one()
+        return {
+            "total_sessions": row.total_sessions or 0,
+            "average_score": float(row.average_score) if row.average_score is not None else None,
+            "last_session_at": row.last_session_at,
+        }
+
+    async def get_detailed_sessions_for_user(self, user_id: UUID) -> list[dict]:
+        """
+        Sessions complétées d'un utilisateur, enrichies du nom de l'examen,
+        triées chronologiquement — base pour la vue de progression détaillée
+        (ventilation par examen/module + historique pour graphes).
+        """
+        from app.modules.exams.models import Exam
+
+        result = await self.db.execute(
+            select(ExamSession, Exam.name)
+            .join(Exam, Exam.id == ExamSession.exam_id)
+            .where(
+                ExamSession.user_id == user_id,
+                ExamSession.status.in_(["COMPLETED", "PENDING_REVIEW"]),
+            )
+            .order_by(ExamSession.submitted_at.asc())
+        )
+
+        rows = []
+        for session, exam_name in result.all():
+            rows.append({
+                "exam_id": session.exam_id,
+                "exam_name": exam_name,
+                "score": session.score,
+                "score_breakdown": session.score_breakdown or {},
+                "submitted_at": session.submitted_at,
+            })
+        return rows
 
 class ExamSessionAnswerRepository(BaseRepository[ExamSessionAnswer]):
 
@@ -109,3 +157,5 @@ class ExamSessionAnswerRepository(BaseRepository[ExamSessionAnswer]):
             question_id=question_id,
             user_answer=user_answer,
         )
+        
+    

@@ -5,7 +5,9 @@
       <div class="h-full px-4 py-6 overflow-y-auto pb-32">
         <!-- Logo -->
         <div class="flex items-center gap-3 mb-8">
-          <div class="w-10 h-10 bg-linear-to-br from-teal-600 to-teal-800 rounded-xl flex items-center justify-center">
+          <div
+            class="w-10 h-10 bg-linear-to-br from-teal-600 to-teal-800 rounded-xl flex items-center justify-center"
+          >
             <i class="pi pi-shield text-white text-xl"></i>
           </div>
           <div>
@@ -16,7 +18,9 @@
 
         <!-- Navigation -->
         <nav class="space-y-1">
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+          <p
+            class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2"
+          >
             Général
           </p>
           <NuxtLink
@@ -30,7 +34,9 @@
             <span class="text-sm font-medium">{{ item.name }}</span>
           </NuxtLink>
 
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mt-5 mb-2">
+          <p
+            class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mt-5 mb-2"
+          >
             Partenariat
           </p>
           <NuxtLink
@@ -44,7 +50,9 @@
             <span class="text-sm font-medium">{{ item.name }}</span>
           </NuxtLink>
 
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mt-5 mb-2">
+          <p
+            class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mt-5 mb-2"
+          >
             Configuration
           </p>
           <NuxtLink
@@ -61,15 +69,23 @@
       </div>
 
       <!-- Admin info -->
-      <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800">
+      <div
+        class="absolute bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800"
+      >
         <div class="p-3 bg-gray-800 rounded-lg">
           <div class="flex items-center gap-3 mb-3">
-            <div class="w-9 h-9 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
+            <div
+              class="w-9 h-9 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+            >
               {{ adminInitial }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold truncate">{{ authStore.userName || 'Admin' }}</p>
-              <p class="text-xs text-gray-400 truncate">{{ authStore.userEmail }}</p>
+              <p class="text-sm font-semibold truncate">
+                {{ authStore.userName || "Admin" }}
+              </p>
+              <p class="text-xs text-gray-400 truncate">
+                {{ authStore.userEmail }}
+              </p>
             </div>
           </div>
           <div class="flex gap-2">
@@ -87,7 +103,7 @@
               text
               size="small"
               class="flex-1 justify-center! text-red-400! text-xs!"
-              @click="authStore.logout()"
+              @click="handleLogout"
             />
           </div>
         </div>
@@ -97,7 +113,9 @@
     <!-- Main content -->
     <div class="ml-64 min-h-screen flex flex-col">
       <!-- Top bar -->
-      <header class="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-4">
+      <header
+        class="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-4"
+      >
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-xl font-bold text-gray-900">{{ pageTitle }}</h1>
@@ -116,44 +134,72 @@
 </template>
 
 <script setup lang="ts">
-const route = useRoute()
-const authStore = useAuthStore()
+const route = useRoute();
+const authStore = useAuthStore();
 
 const mainNav = [
-  { name: 'Dashboard',          href: '/admin',                   icon: 'pi-chart-bar'   },
-  { name: 'Utilisateurs',       href: '/admin/users',             icon: 'pi-users'       },
-  { name: 'Examens',            href: '/admin/exams',             icon: 'pi-book'        },
-  { name: 'Centres',            href: '/admin/centers',           icon: 'pi-building'    },
-  { name: 'Simulateur',         href: '/admin/simulateur',        icon: 'pi-desktop'     },
-  { name: 'Plans',              href: '/admin/plans',             icon: 'pi-tag'         },
-  { name: 'Paiements',          href: '/admin/paiements',         icon: 'pi-credit-card' },
-  { name: 'Paiements manuels',  href: '/admin/paiements-manuels', icon: 'pi-money-bill'  },
-]
+  { name: "Dashboard", href: "/admin", icon: "pi-chart-bar" },
+  { name: "Utilisateurs", href: "/admin/users", icon: "pi-users" },
+  { name: "Examens", href: "/admin/exams", icon: "pi-book" },
+  { name: "Centres", href: "/admin/centers", icon: "pi-building" },
+  { name: "Simulateur", href: "/admin/simulateur", icon: "pi-desktop" },
+  { name: "Plans", href: "/admin/plans", icon: "pi-tag" },
+  { name: "Paiements", href: "/admin/paiements", icon: "pi-credit-card" },
+  {
+    name: "Paiements manuels",
+    href: "/admin/paiements-manuels",
+    icon: "pi-money-bill",
+  },
+];
 
 const partnerNav = [
-  { name: 'Partenaires',  href: '/admin/partners',   icon: 'pi-building' },
-  { name: 'Codes Promo',  href: '/admin/promo-code', icon: 'pi-ticket'   },
-]
+  { name: "Partenaires", href: "/admin/partners", icon: "pi-building" },
+  { name: "Codes Promo", href: "/admin/promo-code", icon: "pi-ticket" },
+];
 
 const configNav = [
-  { name: 'Paramètres', href: '/admin/settings', icon: 'pi-cog' },
-]
+  { name: "Paramètres", href: "/admin/settings", icon: "pi-cog" },
+];
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
-  '/admin':                    { title: 'Dashboard',          subtitle: "Vue d'ensemble de la plateforme"      },
-  '/admin/users':              { title: 'Utilisateurs',       subtitle: 'Gestion des comptes et accès'         },
-  '/admin/exams':              { title: 'Examens',            subtitle: 'Gestion du contenu'                   },
-  '/admin/centers':            { title: 'Centres',            subtitle: 'Gestion des centres de formation partenaires' },
-  '/admin/simulateur':         { title: 'Simulateur',         subtitle: 'Simulateur des examens'               },
-  '/admin/partners':           { title: 'Partenaires',        subtitle: 'Centres et affiliés'                  },
-  '/admin/promo-code':         { title: 'Codes Promo',        subtitle: 'Gestion des réductions et commissions'},
-  '/admin/settings':           { title: 'Paramètres',         subtitle: 'Configuration de la plateforme'       },
-  '/admin/plans':              { title: 'Plans',              subtitle: 'Configuration des prix'                },
-  '/admin/paiements':          { title: 'Paiements',          subtitle: 'Gestion des factures'                 },
-  '/admin/paiements-manuels':  { title: 'Paiements manuels',  subtitle: 'Accès exam et crédits IA hors plateforme' },
-}
+  "/admin": { title: "Dashboard", subtitle: "Vue d'ensemble de la plateforme" },
+  "/admin/users": {
+    title: "Utilisateurs",
+    subtitle: "Gestion des comptes et accès",
+  },
+  "/admin/exams": { title: "Examens", subtitle: "Gestion du contenu" },
+  "/admin/centers": {
+    title: "Centres",
+    subtitle: "Gestion des centres de formation partenaires",
+  },
+  "/admin/simulateur": {
+    title: "Simulateur",
+    subtitle: "Simulateur des examens",
+  },
+  "/admin/partners": { title: "Partenaires", subtitle: "Centres et affiliés" },
+  "/admin/promo-code": {
+    title: "Codes Promo",
+    subtitle: "Gestion des réductions et commissions",
+  },
+  "/admin/settings": {
+    title: "Paramètres",
+    subtitle: "Configuration de la plateforme",
+  },
+  "/admin/plans": { title: "Plans", subtitle: "Configuration des prix" },
+  "/admin/paiements": { title: "Paiements", subtitle: "Gestion des factures" },
+  "/admin/paiements-manuels": {
+    title: "Paiements manuels",
+    subtitle: "Accès exam et crédits IA hors plateforme",
+  },
+};
 
-const pageTitle    = computed(() => pageMeta[route.path]?.title    || 'Admin')
-const pageSubtitle = computed(() => pageMeta[route.path]?.subtitle || '')
-const adminInitial = computed(() => (authStore.userName || 'A').charAt(0).toUpperCase())
+const pageTitle = computed(() => pageMeta[route.path]?.title || "Admin");
+const pageSubtitle = computed(() => pageMeta[route.path]?.subtitle || "");
+const adminInitial = computed(() =>
+  (authStore.userName || "A").charAt(0).toUpperCase(),
+);
+const handleLogout = async () => {
+  authStore.logout();
+  await navigateTo("/");
+};
 </script>

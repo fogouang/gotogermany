@@ -9,6 +9,8 @@ import type {
   LicenseFormulaResponse,
   CenterLicenseActivateRequest,
   CenterLicenseExtendRequest,
+  CenterCreditPoolRechargeRequest,
+  CenterPoolResponse,
 } from "#shared/api";
 
 interface AdminCentersState {
@@ -165,6 +167,31 @@ export const useAdminCentersStore = defineStore("adminCenters", {
         return {
           success: false,
           error: error.body?.detail || "Erreur génération attestation",
+        };
+      }
+    },
+
+    // ── Rechargement du pool de crédits IA d'un centre ──────
+    async rechargeCreditPool(
+      centerId: string,
+      data: CenterCreditPoolRechargeRequest,
+    ): Promise<{
+      success: boolean;
+      pool?: CenterPoolResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const pool =
+          await CentersService.rechargeCreditPoolApiV1CentersCenterIdCreditPoolRechargePost(
+            centerId,
+            data,
+          );
+        return { success: true, pool };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur rechargement du pool",
         };
       }
     },

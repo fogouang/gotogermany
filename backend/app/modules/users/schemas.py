@@ -104,6 +104,7 @@ class StudentCreateRequest(BaseSchema):
     full_name: str = Field(min_length=2, max_length=150)
     phone: str | None = Field(default=None, max_length=20)
     target_level_id: uuid.UUID
+    access_duration_days: int | None = Field(default=None, gt=0, le=365)
 
     @field_validator("full_name")
     @classmethod
@@ -158,3 +159,63 @@ class StudentResponse(BaseSchema):
     first_login_at: datetime | None
     access_expires_at: datetime | None
     created_at: datetime
+    ai_credits: int = 0 
+    
+
+class StudentCreditAdjustRequest(BaseSchema):
+    """Secrétaire ou directeur rechargent un étudiant précis — prélevé du pool du centre."""
+    amount: int = Field(gt=0, le=100)
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class StudentAccessDatesUpdateRequest(BaseSchema):
+    """Directeur ajuste la fenêtre d'accès d'un étudiant précis."""
+    access_expires_at: datetime | None = None
+    access_duration_days: int | None = Field(default=None, gt=0, le=365)
+
+
+class StudentProgressResponse(BaseSchema):
+    """Une ligne de la vue 'évolution des étudiants' — secrétaire (sa branche) ou directeur (tout le centre)."""
+    student_id: uuid.UUID
+    student_name: str
+    branch_name: str
+    total_sessions: int
+    average_score: float | None
+    last_session_at: datetime | None
+    ai_credits_remaining: int
+    
+
+class ModuleScoreBreakdown(BaseSchema):
+    """Score moyen pour un module donné (Lesen, Hören, Schreiben, Sprechen...)."""
+    module_name: str
+    average_score: float | None
+
+
+class ExamProgressResponse(BaseSchema):
+    """Progression détaillée sur un examen précis (ex: Goethe-Zertifikat B2)."""
+    exam_id: uuid.UUID
+    exam_name: str
+    total_sessions: int
+    average_score: float | None
+    last_session_at: datetime | None
+    modules: list[ModuleScoreBreakdown]
+
+
+class ScoreHistoryPoint(BaseSchema):
+    """Un point pour le graphique d'évolution des scores dans le temps."""
+    date: datetime
+    score: float
+    exam_name: str
+
+
+class StudentDetailedProgressResponse(BaseSchema):
+    """Vue détaillée d'un étudiant — ventilation par examen/module + historique pour graphes."""
+    student_id: uuid.UUID
+    student_name: str
+    branch_name: str
+    ai_credits_remaining: int
+    total_sessions: int
+    overall_average_score: float | None
+    last_session_at: datetime | None
+    exams: list[ExamProgressResponse]
+    score_history: list[ScoreHistoryPoint]
