@@ -9,6 +9,7 @@ export type PlanResponse = {
     price: number;
     is_active: boolean;
     description?: (string | null);
+    features?: (Array<string> | null);
     display_order: number;
 };
 

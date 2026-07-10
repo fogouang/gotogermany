@@ -176,6 +176,33 @@
             placeholder="Décrit ce plan sur la page tarifs"
           />
         </div>
+
+        <!-- Features cochées -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Fonctionnalités affichées</label
+          >
+          <div class="space-y-2">
+            <div
+              v-for="feat in featureOptions"
+              :key="feat.key"
+              class="flex items-center gap-2"
+            >
+              <Checkbox
+                v-model="form.features"
+                :inputId="feat.key"
+                :value="feat.key"
+              />
+              <label
+                :for="feat.key"
+                class="text-sm text-gray-700 cursor-pointer"
+              >
+                {{ feat.label }}
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1"
@@ -270,6 +297,20 @@ const {
   formatPrice,
 } = usePlans();
 
+// Options de features disponibles — clés alignées avec pricing.features.* (i18n)
+const featureOptions = [
+  { key: "full_access", label: "Accès complet à l'examen et niveau choisi" },
+  { key: "all_modules", label: "Lesen, Hören, Schreiben, Sprechen inclus" },
+  { key: "multi_provider", label: "TELC, Goethe ou ÖSD au choix" },
+  { key: "corrections", label: "Corrections automatiques par IA" },
+  { key: "progress", label: "Suivi de votre progression" },
+  {
+    key: "unlimited_attempts",
+    label: "Sujets illimités pendant la durée du plan",
+  },
+  { key: "mobile_access", label: "Accessible sur mobile et ordinateur" },
+];
+
 // ── Form ──────────────────────────────────────────────
 const formDialog = ref(false);
 const editingPlan = ref<PlanResponse | null>(null);
@@ -279,6 +320,7 @@ const defaultForm = () => ({
   duration_days: null as number | null,
   price: null as number | null,
   description: "",
+  features: [] as string[],
   display_order: 0,
   is_active: true,
 });
@@ -298,6 +340,7 @@ const openEdit = (plan: PlanResponse) => {
     duration_days: plan.duration_days,
     price: plan.price,
     description: plan.description ?? "",
+    features: plan.features ?? [],
     display_order: plan.display_order,
     is_active: plan.is_active,
   };
@@ -318,6 +361,7 @@ const handleSave = async () => {
       duration_days: form.value.duration_days,
       price: form.value.price,
       description: form.value.description || null,
+      features: form.value.features,
       display_order: form.value.display_order,
       is_active: form.value.is_active,
     });
@@ -331,6 +375,7 @@ const handleSave = async () => {
       duration_days: form.value.duration_days!,
       price: form.value.price!,
       description: form.value.description || null,
+      features: form.value.features,
       display_order: form.value.display_order,
       is_active: form.value.is_active,
     });

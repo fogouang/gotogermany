@@ -8,6 +8,7 @@ export type PlanUpdate = {
     price?: (number | null);
     is_active?: (boolean | null);
     description?: (string | null);
+    features?: (Array<string> | null);
     display_order?: (number | null);
 };
 

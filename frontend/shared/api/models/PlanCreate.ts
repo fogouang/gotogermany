@@ -11,6 +11,10 @@ export type PlanCreate = {
     price: number;
     is_active?: boolean;
     description?: (string | null);
+    /**
+     * Clés de features cochées, ex: ['unlimited', 'corrections']
+     */
+    features?: (Array<string> | null);
     display_order?: number;
 };
 

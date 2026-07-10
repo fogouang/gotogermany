@@ -129,24 +129,27 @@
     "copyright": "© 2026 GoToGermany. Tous droits réservés.",
     "secure_payment": "Paiement sécurisé"
   },
-  "pricing": {
-    "title": "Tarifs GoToGermany",
-    "subtitle": "Choisissez la durée qui vous convient et accédez à tous les examens disponibles.",
-    "payment_methods": "Moyens de paiement acceptés",
-    "immediate_access": "Accès immédiat après paiement",
-    "no_plans": "Aucun plan disponible pour le moment.",
-    "popular": "⭐ Le plus populaire",
-    "per_day": "soit",
-    "per_day_suffix": "FCFA/jour",
-    "features": {
-      "unlimited": "Accès illimité à tous les examens",
-      "subjects": "Tous les sujets disponibles",
-      "corrections": "Corrections automatiques",
-      "progress": "Suivi de progression"
-    },
-    "cta": "Choisir ce plan",
-    "default_description": "Accès complet à tous les examens pendant"
+ "pricing": {
+  "title": "Tarifs GoToGermany",
+  "subtitle": "Choisissez la durée qui vous convient et préparez l'examen de votre choix.",
+  "payment_methods": "Moyens de paiement acceptés",
+  "immediate_access": "Accès immédiat après paiement",
+  "no_plans": "Aucun plan disponible pour le moment.",
+  "popular": "⭐ Le plus populaire",
+  "per_day": "soit",
+  "per_day_suffix": "FCFA/jour",
+  "features": {
+    "full_access": "Accès complet à l'examen et niveau choisi",
+    "all_modules": "Lesen, Hören, Schreiben, Sprechen inclus",
+    "multi_provider": "TELC, Goethe ou ÖSD au choix",
+    "corrections": "Corrections automatiques par IA",
+    "progress": "Suivi de votre progression",
+    "unlimited_attempts": "Sujets illimités pendant la durée du plan",
+    "mobile_access": "Accessible sur mobile et ordinateur"
   },
+  "cta": "Choisir ce plan",
+  "default_description": "Accès complet à l'examen de votre choix pendant"
+},
   "about": {
     "hero": {
       "badge": "Plateforme officielle de préparation",

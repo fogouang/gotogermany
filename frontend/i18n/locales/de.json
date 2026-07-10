@@ -141,21 +141,24 @@
   },
   "pricing": {
     "title": "GoToGermany Preise",
-    "subtitle": "Wähle die Laufzeit, die zu dir passt, und greife auf alle verfügbaren Prüfungen zu.",
+    "subtitle": "Wählen Sie die passende Laufzeit und bereiten Sie sich auf die Prüfung Ihrer Wahl vor.",
     "payment_methods": "Akzeptierte Zahlungsmethoden",
     "immediate_access": "Sofortiger Zugang nach der Zahlung",
-    "no_plans": "Derzeit keine Pläne verfügbar.",
+    "no_plans": "Derzeit sind keine Pläne verfügbar.",
     "popular": "⭐ Am beliebtesten",
     "per_day": "d. h.",
     "per_day_suffix": "FCFA/Tag",
     "features": {
-      "unlimited": "Unbegrenzter Zugang zu allen Prüfungen",
-      "subjects": "Alle verfügbaren Themen",
-      "corrections": "Automatische Korrekturen",
-      "progress": "Fortschrittsverfolgung"
+      "full_access": "Voller Zugang zur gewählten Prüfung und Niveau",
+      "all_modules": "Lesen, Hören, Schreiben, Sprechen inklusive",
+      "multi_provider": "Wahl zwischen TELC, Goethe oder ÖSD",
+      "corrections": "Automatische KI-Korrekturen",
+      "progress": "Fortschrittsverfolgung",
+      "unlimited_attempts": "Unbegrenzte Themen während der Laufzeit",
+      "mobile_access": "Verfügbar auf Mobilgerät und Computer"
     },
     "cta": "Diesen Plan wählen",
-    "default_description": "Vollständiger Zugang zu allen Prüfungen für"
+    "default_description": "Voller Zugang zur gewählten Prüfung für"
   },
   "about": {
     "hero": {
