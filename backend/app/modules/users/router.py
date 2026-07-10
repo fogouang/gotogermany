@@ -90,7 +90,7 @@ async def list_secretaries(
 @router.get("", response_model=list[UserAdminResponse])
 async def list_users(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 2000,
     _: CurrentAdmin = None,
     db: AsyncSession = Depends(get_db),
 ):

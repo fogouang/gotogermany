@@ -169,7 +169,7 @@ export class UsersService {
      */
     public static listUsersApiV1UsersGet(
         skip?: number,
-        limit: number = 100,
+        limit: number = 2000,
         accessToken?: (string | null),
     ): CancelablePromise<Array<UserAdminResponse>> {
         return __request(OpenAPI, {
