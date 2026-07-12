@@ -139,7 +139,7 @@ from app.modules.schreiben_simulator.router import router as simulator_router
 from app.modules.ai_credit_purchases.router import router as ai_credits_router
 from app.modules.settings.router import router as settings_router
 from app.modules.centers.router import router as centers_router
-
+from app.modules.sprechen_agent.router import router as sprechen_router
 
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
@@ -158,6 +158,8 @@ app.include_router( simulator_router,  prefix="/api/v1/schreiben-simulator",  ta
 app.include_router(ai_credits_router, prefix="/api/v1")
 app.include_router(settings_router, prefix="/api/v1/settings", tags=["Settings"])
 app.include_router(centers_router, prefix="/api/v1/centers", tags=["centers"])
+app.include_router(sprechen_router, prefix="/api/v1/sprechen-simulator", tags=["sprechen-simulator"])
+
 
 
 

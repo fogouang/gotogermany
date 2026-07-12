@@ -5,7 +5,7 @@
       <div class="flex items-center gap-4 mb-4">
         <i class="pi pi-volume-up text-indigo-600 text-2xl"></i>
         <div class="flex-1">
-          <h3 class="font-bold text-gray-900">{{ teil.audio_title || 'Audio' }}</h3>
+          <h3 class="font-bold text-gray-900">{{ teil.audio_title || t('session.audio_fallback_title') }}</h3>
           <p class="text-sm text-gray-600">{{ teil.audio_type || 'Hörtext' }}</p>
         </div>
       </div>
@@ -17,12 +17,12 @@
         @ended="handleAudioEnded"
       >
         <source :src="getAudioPath(teil.audio_file)" type="audio/mpeg">
-        Votre navigateur ne supporte pas l'élément audio.
+        {{ t('session.audio_not_supported') }}
       </audio>
 
       <div class="mt-4 flex items-center gap-2 text-sm text-gray-600">
         <i class="pi pi-info-circle"></i>
-        <span>Vous pouvez écouter l'audio {{ audioPlayCount }}/2 fois</span>
+        <span>{{ t('session.audio_play_count', { count: audioPlayCount }) }}</span>
       </div>
     </div>
 
@@ -84,6 +84,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 const props = defineProps<{
   teil: any;
   questionIndex: number;

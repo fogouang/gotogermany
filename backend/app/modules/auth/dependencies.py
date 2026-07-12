@@ -11,6 +11,7 @@ from app.shared.database.session import get_db
 from app.shared.exceptions.http import ForbiddenException, UnauthorizedException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.users.models import UserRole
+from fastapi import WebSocket, WebSocketDisconnect
 
 
 security = HTTPBearer(auto_error=False)
@@ -73,6 +74,28 @@ async def get_current_director_or_secretary(
     return current_user
 
 
+async def get_current_user_ws(
+    websocket: WebSocket,
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Variante WebSocket de get_current_user — lit uniquement le
+    cookie, jamais HTTPBearer (qui exige un objet Request classique
+    et casse sur les routes WebSocket avec un TypeError au moment de
+    la résolution des dépendances). Un client WebSocket navigateur ne
+    peut de toute façon pas fixer de header Authorization personnalisé
+    à la connexion, donc le cookie est la seule voie viable ici."""
+    from app.modules.auth.service import AuthService
+
+    token = websocket.cookies.get("access_token")
+    if not token:
+        await websocket.close(code=4401)
+        raise WebSocketDisconnect(code=4401)
+
+    try:
+        return await AuthService(db).get_current_user(token)
+    except UnauthorizedException:
+        await websocket.close(code=4401)
+        raise WebSocketDisconnect(code=4401)
 
 # Annotations pratiques pour les routers
 CurrentUser = Annotated[User, Depends(get_current_user)]

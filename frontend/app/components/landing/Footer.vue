@@ -118,8 +118,7 @@
       >
         <p class="text-sm text-gray-500">
           © {{ new Date().getFullYear() }}
-          <span class="font-semibold text-white"> {{ t("footer.copyright") }}</span>. Tous droits
-          réservés.
+          <span class="font-semibold text-white"> {{ t("footer.copyright") }}</span>
         </p>
         <div class="flex items-center gap-4 text-sm text-gray-500">
           <span class="flex items-center gap-1">

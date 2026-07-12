@@ -20,12 +20,12 @@
         @ended="handleAudioEnded"
       >
         <source :src="getAudioPath(teil.audio_file)" type="audio/mpeg" />
-        Votre navigateur ne supporte pas l'élément audio.
+        {{ t('session.audio_not_supported') }}
       </audio>
 
       <div class="mt-4 flex items-center gap-2 text-sm text-gray-600">
         <i class="pi pi-info-circle"></i>
-        <span>Vous pouvez écouter l'audio {{ audioPlayCount }}/2 fois</span>
+        <span>{{ t('session.audio_play_count', { count: audioPlayCount }) }}</span>
       </div>
     </div>
 
@@ -87,6 +87,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 const props = defineProps<{
   teil: any;
   questionIndex: number;

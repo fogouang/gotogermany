@@ -69,11 +69,11 @@
       <div class="flex items-start gap-3">
         <i class="pi pi-info-circle text-yellow-600 mt-1"></i>
         <div class="text-sm text-gray-700">
-          <p class="font-semibold mb-1">Rappel :</p>
+          <p class="font-semibold mb-1">{{ t('session.zuordnung.reminder_title') }}</p>
           <ul class="list-disc list-inside space-y-1">
-            <li>Chaque annonce (a-j) peut être utilisée une seule fois</li>
-            <li>Si aucune annonce ne correspond, écrivez <strong>0</strong></li>
-            <li>Quatre annonces resteront inutilisées</li>
+            <li>{{ t('session.zuordnung.rule_once') }}</li>
+            <li>{{ t('session.zuordnung.rule_zero') }} <strong>{{ t('session.zuordnung.rule_zero_value') }}</strong></li>
+            <li>{{ t('session.zuordnung.rule_unused') }}</li>
           </ul>
         </div>
       </div>
@@ -82,6 +82,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 const props = defineProps<{
   teil: any
   questionIndex: number
@@ -101,7 +103,6 @@ const getCurrentQuestions = computed(() => {
 const handleInput = (questionNumber: number) => {
   const value = userAnswers.value[questionNumber]?.toLowerCase()
   
-  // Valide seulement a-j ou 0
   if (value && !/^[a-j0]$/.test(value)) {
     userAnswers.value[questionNumber] = ''
     return
@@ -119,7 +120,6 @@ const emitAnswers = () => {
   emit('answer', { ...userAnswers.value })
 }
 
-// Initialiser depuis userAnswer
 watch(() => props.userAnswer, (newVal) => {
   if (newVal && typeof newVal === 'object') {
     userAnswers.value = { ...newVal }

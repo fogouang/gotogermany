@@ -140,6 +140,11 @@ const mainItems = computed(() => [
     to: "/dashboard/simulateur",
   },
   {
+    label: t("dashboard.pages.sprechen"),
+    icon: "pi-microphone",
+    to: "/dashboard/sprechen",
+  },
+  {
     label: t("dashboard.pages.methodologie"),
     icon: "pi-book",
     to: "/dashboard/methodologie",

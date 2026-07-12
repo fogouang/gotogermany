@@ -9,7 +9,7 @@
         <i class="pi pi-volume-up text-indigo-600 text-2xl"></i>
         <div class="flex-1">
           <h3 class="font-bold text-gray-900">
-            Audio {{ currentAudio.audio_number }}
+            {{ t('session.audio_label', { number: currentAudio.audio_number }) }}
           </h3>
           <p class="text-sm text-gray-600">{{ currentAudio.audio_type }}</p>
         </div>
@@ -25,12 +25,12 @@
           :src="getAudioPath(currentAudio.audio_file)"
           type="audio/mpeg"
         />
-        Votre navigateur ne supporte pas l'élément audio.
+        {{ t('session.audio_not_supported') }}
       </audio>
 
       <div class="mt-4 flex items-center gap-2 text-sm text-gray-600">
         <i class="pi pi-info-circle"></i>
-        <span>Vous pouvez écouter l'audio {{ audioPlayCount }}/2 fois</span>
+        <span>{{ t('session.audio_play_count', { count: audioPlayCount }) }}</span>
       </div>
     </div>
 
@@ -128,6 +128,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 const props = defineProps<{
   teil: any;
   questionIndex: number;
@@ -142,7 +144,6 @@ const audioPlayer = ref<HTMLAudioElement | null>(null);
 const audioPlayCount = ref(0);
 const userAnswers = ref<Record<number, any>>({});
 
-// Trouver l'audio actuel basé sur questionIndex
 const currentAudioIndex = computed(() => {
   if (!props.teil.audios) return 0;
 
@@ -168,7 +169,6 @@ const currentQuestions = computed(() => {
 });
 
 const getAudioPath = (audioFile: string) => {
-  // Nettoie le chemin et retourne le bon path
   const cleanPath = audioFile.replace(/\\/g, "/");
   const filename = cleanPath.split("/").pop();
   return `/data/audio/${filename}`;
@@ -177,19 +177,15 @@ const getAudioPath = (audioFile: string) => {
 const handleAudioEnded = () => {
   audioPlayCount.value++;
   if (audioPlayCount.value >= 2) {
-    // Limite de 2 écoutes
     console.log("Limite d'écoute atteinte");
   }
 };
 
 const selectAnswer = (questionNumber: number, answer: any) => {
   userAnswers.value[questionNumber] = answer;
-
-  // Émettre toutes les réponses pour cet audio
   emit("answer", userAnswers.value);
 };
 
-// Initialiser les réponses depuis userAnswer
 watch(
   () => props.userAnswer,
   (newVal) => {
@@ -200,7 +196,6 @@ watch(
   { immediate: true },
 );
 
-// Reset play count quand on change d'audio
 watch(currentAudioIndex, () => {
   audioPlayCount.value = 0;
 });

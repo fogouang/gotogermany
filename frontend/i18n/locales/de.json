@@ -212,7 +212,7 @@
       "b1": {
         "badge": "BELIEBT",
         "name": "Mittelstufe",
-        "desc": "Das Wesentliche in alltäglichen Situationen verstehen — Arbeit, Schule, Reisen. Ideal für Visum- oder Aufenthaltsgenehmigungsanträge in Deutschland."
+        "desc": "Das Wesentliche in alltäglichen Situationen verstehen - Arbeit, Schule, Reisen. Ideal für Visum- oder Aufenthaltsgenehmigungsanträge in Deutschland."
       },
       "b2": {
         "badge": "NEU",
@@ -319,6 +319,7 @@
       "dashboard": "Dashboard",
       "examens": "Prüfungen",
       "simulateur": "Simulator",
+      "sprechen": "Sprechen",
       "methodologie": "Methodik",
       "resultats": "Ergebnisse",
       "profil": "Profil",
@@ -345,7 +346,70 @@
     "questions_of": "Frage(n) von",
     "unanswered_warning": "Einige Fragen sind noch unbeantwortet.",
     "continue": "Weiter",
-    "submit": "Abgeben"
+    "submit": "Abgeben",
+    "prev_teil": "Vorheriger Teil",
+    "next_teil": "Nächster Teil",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "finish": "Beenden",
+    "responses_count": "{answered} / {total} Antworten",
+    "audio_label": "Audio {number}",
+    "audio_not_supported": "Ihr Browser unterstützt das Audio-Element nicht.",
+    "audio_play_count": "Sie können das Audio {count}/2 Mal anhören",
+    "teil_number": "Teil {number}",
+    "zuordnung": {
+      "reminder_title": "Hinweis:",
+      "rule_once": "Jede Anzeige (a-j) darf nur einmal verwendet werden",
+      "rule_zero": "Wenn keine Anzeige passt, schreiben Sie",
+      "rule_zero_value": "0",
+      "rule_unused": "Vier Anzeigen bleiben unbenutzt"
+    },
+    "horen": {
+      "homeoffice_question": "Findet diese Person Homeoffice positiv?"
+    },
+    "result": {
+      "title": "Prüfung abgeschlossen!",
+      "subtitle": "Hier sind Ihre Ergebnisse",
+      "points": "Punkte",
+      "passed": "BESTANDEN",
+      "failed": "NICHT BESTANDEN",
+      "threshold": "Grenzwert: 60%",
+      "module_details": "Ergebnisse nach Modul",
+      "view_answers": "Antworten ansehen",
+      "retake_exam": "Prüfung wiederholen",
+      "go_home": "Zurück zur Startseite",
+      "advice_title": "Tipps zur Verbesserung",
+      "advice_item": "Üben Sie mehr im Modul"
+    },
+    "header": {
+      "time_warning_title": "Zeit fast abgelaufen!",
+      "time_warning_body": "Ihnen bleiben weniger als 5 Minuten, um diesen Abschnitt zu beenden."
+    },
+    "schreiben": {
+      "situation": "Situation",
+      "points_to_cover": "Zu behandelnde Punkte:",
+      "your_answer": "Ihre Antwort",
+      "word_count": "{count} / {target} Wörter (ca.)",
+      "placeholder": "Schreiben Sie hier Ihre Antwort...",
+      "suggested_time": "Empfohlene Zeit: {minutes} Minuten",
+      "too_short": "⚠️ Zu kurz",
+      "length_ok": "✓ Länge OK"
+    },
+    "sprechen": {
+      "oral_section_title": "Mündlicher Teil - Prüfer erforderlich",
+      "oral_section_desc": "Dieser Abschnitt muss mit einem zertifizierten Prüfer durchgeführt werden. Lesen Sie die folgenden Anweisungen zur Vorbereitung.",
+      "preparation_time": "Vorbereitungszeit",
+      "presentation_time": "Präsentationszeit",
+      "confirm_label": "Ich habe die Anweisungen zur Kenntnis genommen und bin bereit, diese Prüfung mit einem Prüfer abzulegen"
+    },
+    "navigator": {
+      "answered": "Beantwortet",
+      "remaining": "Verbleibend",
+      "legend_answered": "Beantwortet",
+      "legend_unanswered": "Nicht beantwortet",
+      "legend_current": "Aktuell"
+    },
+    "audio_fallback_title": "Audio"
   },
   "result": {
     "not_found": "Ergebnis nicht gefunden",
@@ -430,7 +494,7 @@
     "tips": "Verbesserungstipps",
     "back_to_exam": "Zurück zur Prüfung",
     "my_results": "Meine Ergebnisse ansehen",
-    "page_title": "Schreiben-Korrektur — DeutschTest"
+    "page_title": "Schreiben-Korrektur - DeutschTest"
   },
   "invoices": {
     "title": "Meine Zahlungen",
@@ -573,7 +637,7 @@
     "tips": "Tipps",
     "close": "Schließen",
     "redo": "Dieses Thema wiederholen",
-    "page_title": "Schreiben-Simulator — DeutschTest"
+    "page_title": "Schreiben-Simulator - DeutschTest"
   },
   "simulator_result": {
     "no_correction": "Keine Korrektur verfügbar.",
@@ -590,7 +654,7 @@
     "tips": "Verbesserungstipps",
     "redo": "Dieses Thema wiederholen",
     "choose_another": "Anderes Thema wählen",
-    "page_title": "Ergebnisse — DeutschTest"
+    "page_title": "Ergebnisse - DeutschTest"
   },
   "simulator_subject": {
     "words_written": "geschriebene(s) Wort(e)",
@@ -609,7 +673,7 @@
     "retry": "Erneut versuchen",
     "see_results": "Ergebnisse ansehen",
     "back": "Zurück",
-    "page_title": "Simulator — DeutschTest",
+    "page_title": "Simulator - DeutschTest",
     "credit": "KI-Guthaben verfügbar",
     "credits": "KI-Guthaben verfügbar",
     "no_credits": "Guthaben unzureichend",
@@ -689,7 +753,7 @@
     "cta_title": "Keine Antwort gefunden?",
     "cta_desc": "Unser Team ist für dich da. Kontaktiere uns und wir melden uns so schnell wie möglich.",
     "cta_btn": "Kontaktiere uns",
-    "page_title": "FAQ — DeutschTest",
+    "page_title": "FAQ - DeutschTest",
     "page_desc": "Häufig gestellte Fragen zu DeutschTest: Prüfungen, Preise, Anmeldung, Vorbereitung und technischer Support.",
     "questions": {
       "exams_1": {
@@ -741,5 +805,41 @@
         "a": "Dein Fortschritt wird <strong>automatisch gespeichert</strong>. Bei einem Problem (Internetausfall, Fehler) kannst du genau dort weitermachen, wo du aufgehört hast. Wenn das Problem weiterhin besteht, kontaktiere unseren Support per Live-Chat oder E-Mail an <strong>lfogouang39{'@'}gmail.com</strong>."
       }
     }
+  },
+  "sprechen": {
+    "page_title": "Sprechen - Sprechsimulator",
+    "title": "Sprechen",
+    "subtitle": "Übe das Sprechen mit einem KI-Prüfer, unter realen Prüfungsbedingungen.",
+    "tab_subjects": "Themen",
+    "tab_results": "Meine Ergebnisse",
+    "no_subjects_title": "Keine Themen verfügbar",
+    "no_subjects_subtitle": "Versuche einen anderen Filter oder ein anderes Niveau.",
+    "show_all": "Alle anzeigen",
+    "start": "Beginnen",
+    "teil": "Teil",
+    "teile_plural": "Teile",
+    "subject_default": "Thema",
+    "no_results_title": "Noch keine Sitzung",
+    "no_results_subtitle": "Deine bewerteten Sprechsitzungen erscheinen hier.",
+    "see_subjects": "Themen ansehen"
+  },
+  "sprechen_subject": {
+    "page_title": "Sprechen-Sitzung",
+    "connection_error": "Die Verbindung zum Prüfer wurde unterbrochen.",
+    "back": "Zurück",
+    "time_for_part": "{minutes} Minuten für diesen Teil",
+    "points_to_cover": "Zu behandelnde Punkte",
+    "examiner_speaking": "Der Prüfer spricht...",
+    "your_turn": "Du bist dran",
+    "grading_in_progress": "Bewertung läuft...",
+    "passed": "Bestanden",
+    "not_passed": "Nicht bestanden",
+    "points": "Punkte",
+    "detail_by_teil": "Ergebnis pro Teil",
+    "strengths": "Stärken",
+    "to_improve": "Verbesserungspotenzial",
+    "redo": "Wiederholen",
+    "choose_another": "Anderes Thema wählen",
+    "confirm_leave": "Wenn du jetzt gehst, wird diese Sitzung abgebrochen und nicht bewertet. Fortfahren?"
   }
 }

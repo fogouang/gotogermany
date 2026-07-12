@@ -22,7 +22,7 @@
 
       <!-- Question d'interprétation -->
       <p class="text-lg font-medium text-gray-900 mt-6">
-        Cette personne trouve-t-elle le Homeoffice positif ?
+        {{ t('session.horen.homeoffice_question') }}
       </p>
 
       <!-- Options Ja/Nein -->
@@ -68,6 +68,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 const props = defineProps<{
   teil: any
   questionIndex: number

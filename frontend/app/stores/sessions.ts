@@ -58,6 +58,9 @@ interface SessionState {
   subjectId: string | null;
   subjectNumber: number;
   subjectName: string | null;
+  moduleTimeRemaining: Record<string, number>;
+  sharedTimer: boolean;
+  deadline: number | null;
 }
 
 export const useSessionStore = defineStore("session", {
@@ -81,6 +84,9 @@ export const useSessionStore = defineStore("session", {
     subjectId: null,
     subjectNumber: 0,
     subjectName: null,
+    moduleTimeRemaining: {},
+    sharedTimer: false,
+    deadline: null,
   }),
 
   getters: {
@@ -166,10 +172,23 @@ export const useSessionStore = defineStore("session", {
         this.status = response.status;
         this.startTime = new Date(response.started_at);
         this.modules = (response.modules || []) as Module[];
-        console.log('=== STORE modules set ===', this.modules.length, JSON.stringify(response.modules?.map((m: any) => m.slug)))
         this.questions = this._extractQuestions(this.modules);
-        this.timeRemaining = (this.modules[0]?.time_limit_minutes ?? 30) * 60;
 
+        // Un budget de temps indépendant par module
+        this.moduleTimeRemaining = {};
+        this.modules.forEach((m) => {
+          this.moduleTimeRemaining[m.id] = (m.time_limit_minutes || 30) * 60;
+        });
+
+        this.currentModuleIndex = 0;
+        const firstModule = this.modules[0];
+        this.timeRemaining = firstModule
+          ? (this.moduleTimeRemaining[firstModule.id] ??
+            (firstModule.time_limit_minutes || 30) * 60)
+          : 30 * 60;
+
+        this.deadline = Date.now() + this.timeRemaining * 1000;
+        
         // Recharger les réponses existantes si reprise
         if (response.existing_answers) {
           Object.entries(response.existing_answers).forEach(([qId, ans]) => {
@@ -271,8 +290,54 @@ export const useSessionStore = defineStore("session", {
         this.currentQuestionIndex = index;
     },
 
+    // decrementTimer
     decrementTimer() {
-      if (this.timeRemaining > 0) this.timeRemaining--;
+      if (this.timeRemaining <= 0) return;
+      this.timeRemaining--;
+
+      if (this.sharedTimer) {
+        // tous les modules filtrés partagent le même compteur
+        this.modules.forEach(
+          (m) => (this.moduleTimeRemaining[m.id] = this.timeRemaining),
+        );
+      } else {
+        const mod = this.modules[this.currentModuleIndex];
+        if (mod) this.moduleTimeRemaining[mod.id] = this.timeRemaining;
+      }
+    },
+
+    // Recalcule timeRemaining à partir de l'heure réelle, pas d'un compteur
+    tick() {
+      if (this.deadline === null) return;
+      const remaining = Math.max(
+        0,
+        Math.round((this.deadline - Date.now()) / 1000),
+      );
+      this.timeRemaining = remaining;
+
+      if (this.sharedTimer) {
+        this.modules.forEach(
+          (m) => (this.moduleTimeRemaining[m.id] = remaining),
+        );
+      } else {
+        const mod = this.modules[this.currentModuleIndex];
+        if (mod) this.moduleTimeRemaining[mod.id] = remaining;
+      }
+    },
+
+    switchToModule(index: number) {
+      if (index < 0 || index >= this.modules.length) return;
+      this.currentModuleIndex = index;
+      this.currentTeilIndex = 0;
+      if (this.sharedTimer) return;
+
+      const mod = this.modules[index];
+      const remaining = mod
+        ? (this.moduleTimeRemaining[mod.id] ??
+          (mod.time_limit_minutes || 30) * 60)
+        : 0;
+      this.timeRemaining = remaining;
+      this.deadline = Date.now() + remaining * 1000;
     },
 
     async submitSession() {

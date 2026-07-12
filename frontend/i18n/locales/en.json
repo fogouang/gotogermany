@@ -140,27 +140,27 @@
     "copyright": "© 2026 GoToGermany. All rights reserved.",
     "secure_payment": "Secure payment"
   },
- "pricing": {
-  "title": "GoToGermany Pricing",
-  "subtitle": "Choose the duration that suits you and prepare for the exam of your choice.",
-  "payment_methods": "Accepted payment methods",
-  "immediate_access": "Immediate access after payment",
-  "no_plans": "No plans available at the moment.",
-  "popular": "⭐ Most popular",
-  "per_day": "i.e.",
-  "per_day_suffix": "FCFA/day",
-  "features": {
-    "full_access": "Full access to your chosen exam and level",
-    "all_modules": "Lesen, Hören, Schreiben, Sprechen included",
-    "multi_provider": "Choose between TELC, Goethe or ÖSD",
-    "corrections": "Automatic AI-powered corrections",
-    "progress": "Track your progress",
-    "unlimited_attempts": "Unlimited subjects during the plan's duration",
-    "mobile_access": "Accessible on mobile and desktop"
+  "pricing": {
+    "title": "GoToGermany Pricing",
+    "subtitle": "Choose the duration that suits you and prepare for the exam of your choice.",
+    "payment_methods": "Accepted payment methods",
+    "immediate_access": "Immediate access after payment",
+    "no_plans": "No plans available at the moment.",
+    "popular": "⭐ Most popular",
+    "per_day": "i.e.",
+    "per_day_suffix": "FCFA/day",
+    "features": {
+      "full_access": "Full access to your chosen exam and level",
+      "all_modules": "Lesen, Hören, Schreiben, Sprechen included",
+      "multi_provider": "Choose between TELC, Goethe or ÖSD",
+      "corrections": "Automatic AI-powered corrections",
+      "progress": "Track your progress",
+      "unlimited_attempts": "Unlimited subjects during the plan's duration",
+      "mobile_access": "Accessible on mobile and desktop"
+    },
+    "cta": "Choose this plan",
+    "default_description": "Full access to your chosen exam for"
   },
-  "cta": "Choose this plan",
-  "default_description": "Full access to your chosen exam for"
-},
   "about": {
     "hero": {
       "badge": "Official preparation platform",
@@ -213,7 +213,7 @@
       "b1": {
         "badge": "POPULAR",
         "name": "Intermediate",
-        "desc": "Understand the essentials in everyday situations — work, school, travel. Ideal for visa or residence applications in Germany."
+        "desc": "Understand the essentials in everyday situations - work, school, travel. Ideal for visa or residence applications in Germany."
       },
       "b2": {
         "badge": "NEW",
@@ -320,6 +320,7 @@
       "dashboard": "Dashboard",
       "examens": "Exams",
       "simulateur": "Simulator",
+      "sprechen": "Speaking",
       "methodologie": "Methodology",
       "resultats": "Results",
       "profil": "Profile",
@@ -346,7 +347,70 @@
     "questions_of": "question(s) out of",
     "unanswered_warning": "Some questions are unanswered.",
     "continue": "Continue",
-    "submit": "Submit"
+    "submit": "Submit",
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Finish",
+    "responses_count": "{answered} / {total} responses",
+    "prev_teil": "Previous part",
+    "next_teil": "Next part",
+    "audio_label": "Audio {number}",
+    "audio_not_supported": "Your browser does not support the audio element.",
+    "audio_play_count": "You can listen to the audio {count}/2 times",
+    "teil_number": "Teil {number}",
+    "zuordnung": {
+      "reminder_title": "Reminder:",
+      "rule_once": "Each advertisement (a-j) can only be used once",
+      "rule_zero": "If no advertisement matches, write",
+      "rule_zero_value": "0",
+      "rule_unused": "Four advertisements will remain unused"
+    },
+    "horen": {
+      "homeoffice_question": "Does this person find working from home positive?"
+    },
+    "result": {
+      "title": "Exam completed!",
+      "subtitle": "Here are your results",
+      "points": "points",
+      "passed": "PASSED",
+      "failed": "FAILED",
+      "threshold": "Threshold: 60%",
+      "module_details": "Results by module",
+      "view_answers": "View answers",
+      "retake_exam": "Retake exam",
+      "go_home": "Back to home",
+      "advice_title": "Tips to improve",
+      "advice_item": "Practice more on the module"
+    },
+    "header": {
+      "time_warning_title": "Time almost up!",
+      "time_warning_body": "You have less than 5 minutes left to finish this section."
+    },
+    "schreiben": {
+      "situation": "Situation",
+      "points_to_cover": "Points to cover:",
+      "your_answer": "Your answer",
+      "word_count": "{count} / {target} words (approx.)",
+      "placeholder": "Write your answer here...",
+      "suggested_time": "Suggested time: {minutes} minutes",
+      "too_short": "⚠️ Too short",
+      "length_ok": "✓ Length OK"
+    },
+    "sprechen": {
+      "oral_section_title": "Oral section - Examiner required",
+      "oral_section_desc": "This section must be completed with a certified examiner. Read the instructions below to prepare.",
+      "preparation_time": "Preparation time",
+      "presentation_time": "Presentation time",
+      "confirm_label": "I have read the instructions and I am ready to take this test with an examiner"
+    },
+    "navigator": {
+      "answered": "Answered",
+      "remaining": "Remaining",
+      "legend_answered": "Answered",
+      "legend_unanswered": "Unanswered",
+      "legend_current": "Current"
+    },
+    "audio_fallback_title": "Audio"
   },
   "result": {
     "not_found": "Result not found",
@@ -366,12 +430,12 @@
     "another_module": "Try another module",
     "my_results": "My results",
     "module": "module",
-"modules": "modules",
-"module_passed": "Passed",
-"module_failed": "Failed",
-"why_failed": "Why did you fail?",
-"global_score_insufficient": "Insufficient global score: {score}/100 (threshold: {threshold})",
-"module_score_insufficient": "{module}: {score}/100 (module threshold: 60)"
+    "modules": "modules",
+    "module_passed": "Passed",
+    "module_failed": "Failed",
+    "why_failed": "Why did you fail?",
+    "global_score_insufficient": "Insufficient global score: {score}/100 (threshold: {threshold})",
+    "module_score_insufficient": "{module}: {score}/100 (module threshold: 60)"
   },
   "exam_detail": {
     "not_found": "Exam not found",
@@ -507,17 +571,18 @@
       "ref": "Ref.",
       "retry": "Retry",
       "go_to_exams": "Access exams"
-    },"confirm": {
-  "title": "Payment confirmation",
-  "pending_title": "Waiting for confirmation...",
-  "pending_desc": "Please confirm the payment on your phone.",
-  "success_title": "Payment confirmed!",
-  "success_desc": "Your access has been activated.",
-  "failed_title": "Payment failed",
-  "failed_desc": "Please try again.",
-  "retry": "Retry",
-  "go_to_exams": "Access exams"
-}
+    },
+    "confirm": {
+      "title": "Payment confirmation",
+      "pending_title": "Waiting for confirmation...",
+      "pending_desc": "Please confirm the payment on your phone.",
+      "success_title": "Payment confirmed!",
+      "success_desc": "Your access has been activated.",
+      "failed_title": "Payment failed",
+      "failed_desc": "Please try again.",
+      "retry": "Retry",
+      "go_to_exams": "Access exams"
+    }
   },
   "my_results": {
     "title": "My results",
@@ -741,5 +806,41 @@
         "a": "Your progress is <strong>automatically saved</strong>. In case of a problem (Internet outage, bug), you can resume exactly where you left off. If the problem persists, contact our support via live chat or email at <strong>lfogouang39{'@'}gmail.com</strong>."
       }
     }
+  },
+  "sprechen": {
+    "page_title": "Sprechen - Speaking Simulator",
+    "title": "Sprechen",
+    "subtitle": "Practice speaking with an AI examiner, under real exam conditions.",
+    "tab_subjects": "Subjects",
+    "tab_results": "My results",
+    "no_subjects_title": "No subjects available",
+    "no_subjects_subtitle": "Try a different filter or choose another level.",
+    "show_all": "Show all",
+    "start": "Start",
+    "teil": "part",
+    "teile_plural": "parts",
+    "subject_default": "Subject",
+    "no_results_title": "No sessions yet",
+    "no_results_subtitle": "Your graded speaking sessions will show up here.",
+    "see_subjects": "See subjects"
+  },
+  "sprechen_subject": {
+    "page_title": "Sprechen session",
+    "connection_error": "The connection to the examiner was interrupted.",
+    "back": "Back",
+    "time_for_part": "{minutes} minutes for this part",
+    "points_to_cover": "Points to cover",
+    "examiner_speaking": "The examiner is speaking...",
+    "your_turn": "Your turn to speak",
+    "grading_in_progress": "Grading in progress...",
+    "passed": "Passed",
+    "not_passed": "Not passed",
+    "points": "points",
+    "detail_by_teil": "Breakdown by part",
+    "strengths": "Strengths",
+    "to_improve": "To improve",
+    "redo": "Redo",
+    "choose_another": "Choose another subject",
+    "confirm_leave": "Leaving now abandons this session - it won't be graded. Continue?"
   }
 }

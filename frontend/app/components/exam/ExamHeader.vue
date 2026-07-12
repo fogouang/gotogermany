@@ -46,21 +46,23 @@
     <!-- Warning dialog si temps presque écoulé -->
     <Dialog 
       v-model:visible="showTimeWarning" 
-      header="Temps presque écoulé!" 
+      :header="t('session.header.time_warning_title')" 
       :modal="true"
       :closable="false"
     >
       <p class="text-gray-700">
-        Il vous reste moins de 5 minutes pour terminer cette section.
+        {{ t('session.header.time_warning_body') }}
       </p>
       <template #footer>
-        <Button label="Continuer" @click="showTimeWarning = false" />
+        <Button :label="t('session.continue')" @click="showTimeWarning = false" />
       </template>
     </Dialog>
   </header>
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 const props = defineProps<{
   timeRemaining: number
   currentModule?: string
@@ -80,7 +82,6 @@ const toggleMenu = () => {
   // Menu options (pause, quitter, etc.)
 }
 
-// Watcher pour afficher warning à 5min
 watch(() => props.timeRemaining, (newTime) => {
   if (newTime <= 300 && !hasShownWarning.value) {
     showTimeWarning.value = true

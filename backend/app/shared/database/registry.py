@@ -27,3 +27,4 @@ import app.modules.exam_access.models    # noqa: F401
 import app.modules.exam_sessions.models  # noqa: F401
 import app.modules.corrections.models  # noqa: F401
 import app.modules.schreiben_simulator.models  # noqa: F401
+import app.modules.sprechen_agent.models  # noqa: F401

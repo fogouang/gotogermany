@@ -6,8 +6,8 @@
         <div class="mx-auto mb-4 w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
           <i class="pi pi-check text-4xl text-green-600"></i>
         </div>
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">Examen terminé !</h1>
-        <p class="text-lg text-gray-600">Voici vos résultats</p>
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ t('session.result.title') }}</h1>
+        <p class="text-lg text-gray-600">{{ t('session.result.subtitle') }}</p>
       </div>
 
       <!-- Score global -->
@@ -19,18 +19,18 @@
                 {{ Math.round(score.percentage) }}%
               </div>
               <p class="text-gray-600 text-lg">
-                {{ score.totalScore }} / {{ score.maxScore }} points
+                {{ score.totalScore }} / {{ score.maxScore }} {{ t('session.result.points') }}
               </p>
             </div>
 
             <div class="flex justify-center gap-8 mb-6">
               <div class="text-center">
                 <Tag 
-                  :value="isPassed ? 'RÉUSSI' : 'ÉCHOUÉ'" 
+                  :value="isPassed ? t('session.result.passed') : t('session.result.failed')" 
                   :severity="isPassed ? 'success' : 'danger'"
-                  class="!text-lg !px-6 !py-2 !font-bold"
+                  class="text-lg! px-6! py-2! font-bold!"
                 />
-                <p class="text-sm text-gray-500 mt-2">Seuil: 60%</p>
+                <p class="text-sm text-gray-500 mt-2">{{ t('session.result.threshold') }}</p>
               </div>
             </div>
 
@@ -48,7 +48,7 @@
 
       <!-- Résultats par module -->
       <div class="space-y-4 mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Détails par module</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ t('session.result.module_details') }}</h2>
 
         <Card
           v-for="(detail, moduleSlug) in score.details"
@@ -69,12 +69,12 @@
                 </h3>
                 <div class="flex items-center gap-4">
                   <span class="text-sm text-gray-600">
-                    {{ detail.score }} / {{ detail.max }} points
+                    {{ detail.score }} / {{ detail.max }} {{ t('session.result.points') }}
                   </span>
                   <ProgressBar
                     :value="detail.percentage"
                     :showValue="false"
-                    class="flex-1 max-w-xs !h-2 !rounded-full"
+                    class="flex-1 max-w-xs h-2! rounded-full!"
                     :pt="{
                       value: { class: getProgressColor(detail.percentage) }
                     }"
@@ -104,19 +104,19 @@
       <!-- Actions -->
       <div class="flex flex-wrap gap-4 justify-center mb-8">
         <Button
-          label="Voir les réponses"
+          :label="t('session.result.view_answers')"
           icon="pi pi-eye"
           outlined
           @click="$emit('view-answers')"
         />
         <Button
-          label="Refaire l'examen"
+          :label="t('session.result.retake_exam')"
           icon="pi pi-refresh"
           outlined
           @click="$emit('retake-exam')"
         />
         <Button
-          label="Retour à l'accueil"
+          :label="t('session.result.go_home')"
           icon="pi pi-home"
           @click="$emit('go-home')"
         />
@@ -128,7 +128,7 @@
           <div class="flex items-start gap-4">
             <i class="pi pi-info-circle text-orange-600 text-2xl mt-1 shrink-0"></i>
             <div class="flex-1">
-              <h3 class="font-bold text-gray-900 mb-3">Conseils pour progresser</h3>
+              <h3 class="font-bold text-gray-900 mb-3">{{ t('session.result.advice_title') }}</h3>
               <ul class="space-y-2 text-gray-700">
                 <li
                   v-for="module in weakModules"
@@ -137,7 +137,7 @@
                 >
                   <i class="pi pi-arrow-right text-orange-600 mt-1 shrink-0"></i>
                   <span>
-                    Travaillez davantage le module
+                    {{ t('session.result.advice_item') }}
                     <strong>{{ getModuleName(module) }}</strong>
                   </span>
                 </li>
@@ -151,6 +151,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 interface ModuleDetail {
   score: number;
   max: number;

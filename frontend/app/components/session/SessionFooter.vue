@@ -6,7 +6,7 @@
       <div class="flex justify-start shrink-0">
         <Button
           v-if="!isFirstTeil"
-          label="Précédent"
+          :label="t('session.previous')"
           icon="pi pi-arrow-left"
           outlined
           @click="$emit('prev')"
@@ -17,7 +17,7 @@
       <!-- Indicateur central -->
       <div class="text-center flex-1">
         <p class="text-xs text-gray-500">
-          {{ answeredInTeil }} / {{ totalInTeil }} réponses
+          {{ t('session.responses_count', { answered: answeredInTeil, total: totalInTeil }) }}
         </p>
         <ProgressBar
           :value="teilProgress"
@@ -30,14 +30,14 @@
       <div class="flex justify-end shrink-0">
         <Button
           v-if="!isLastTeil"
-          label="Suivant"
+          :label="t('session.next')"
           icon="pi pi-arrow-right"
           iconPos="right"
           @click="$emit('next')"
         />
         <Button
           v-else
-          label="Terminer"
+          :label="t('session.finish')"
           icon="pi pi-check"
           severity="success"
           @click="$emit('submit')"
@@ -49,6 +49,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 defineEmits<{ prev: []; next: []; submit: [] }>()
 
 const props = defineProps<{

@@ -111,6 +111,11 @@ export default defineNuxtConfig({
           ? "https://prep-telc-osd.com"
           : "",
       siteUrl: "https://prep-telc-osd.com",
+      sprechenWsBaseUrl:
+        process.env.NUXT_PUBLIC_SPRECHEN_WS_BASE_URL ??
+        (process.env.NODE_ENV === "production"
+          ? "wss://prep-telc-osd.com/api/v1/sprechen-simulator"
+          : "ws://localhost:8001/api/v1/sprechen-simulator"),
     },
   },
 

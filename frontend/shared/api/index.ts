@@ -99,6 +99,8 @@ export type { SchreibenSubjectResponse } from './models/SchreibenSubjectResponse
 export type { SchreibenSubjectUpdate } from './models/SchreibenSubjectUpdate';
 export type { ScoreHistoryPoint } from './models/ScoreHistoryPoint';
 export type { SecretaryCreateRequest } from './models/SecretaryCreateRequest';
+export type { SessionHistoryItem } from './models/SessionHistoryItem';
+export type { SessionHistoryListResponse } from './models/SessionHistoryListResponse';
 export type { SessionListResponse } from './models/SessionListResponse';
 export type { SessionResultResponse } from './models/SessionResultResponse';
 export type { SessionStartRequest } from './models/SessionStartRequest';
@@ -152,5 +154,6 @@ export { QuestionsService } from './services/QuestionsService';
 export { SchreibenSimulatorService } from './services/SchreibenSimulatorService';
 export { SessionsService } from './services/SessionsService';
 export { SettingsService } from './services/SettingsService';
+export { SprechenSimulatorService } from './services/SprechenSimulatorService';
 export { SystemService } from './services/SystemService';
 export { UsersService } from './services/UsersService';

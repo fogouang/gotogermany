@@ -129,27 +129,27 @@
     "copyright": "© 2026 GoToGermany. Tous droits réservés.",
     "secure_payment": "Paiement sécurisé"
   },
- "pricing": {
-  "title": "Tarifs GoToGermany",
-  "subtitle": "Choisissez la durée qui vous convient et préparez l'examen de votre choix.",
-  "payment_methods": "Moyens de paiement acceptés",
-  "immediate_access": "Accès immédiat après paiement",
-  "no_plans": "Aucun plan disponible pour le moment.",
-  "popular": "⭐ Le plus populaire",
-  "per_day": "soit",
-  "per_day_suffix": "FCFA/jour",
-  "features": {
-    "full_access": "Accès complet à l'examen et niveau choisi",
-    "all_modules": "Lesen, Hören, Schreiben, Sprechen inclus",
-    "multi_provider": "TELC, Goethe ou ÖSD au choix",
-    "corrections": "Corrections automatiques par IA",
-    "progress": "Suivi de votre progression",
-    "unlimited_attempts": "Sujets illimités pendant la durée du plan",
-    "mobile_access": "Accessible sur mobile et ordinateur"
+  "pricing": {
+    "title": "Tarifs GoToGermany",
+    "subtitle": "Choisissez la durée qui vous convient et préparez l'examen de votre choix.",
+    "payment_methods": "Moyens de paiement acceptés",
+    "immediate_access": "Accès immédiat après paiement",
+    "no_plans": "Aucun plan disponible pour le moment.",
+    "popular": "⭐ Le plus populaire",
+    "per_day": "soit",
+    "per_day_suffix": "FCFA/jour",
+    "features": {
+      "full_access": "Accès complet à l'examen et niveau choisi",
+      "all_modules": "Lesen, Hören, Schreiben, Sprechen inclus",
+      "multi_provider": "TELC, Goethe ou ÖSD au choix",
+      "corrections": "Corrections automatiques par IA",
+      "progress": "Suivi de votre progression",
+      "unlimited_attempts": "Sujets illimités pendant la durée du plan",
+      "mobile_access": "Accessible sur mobile et ordinateur"
+    },
+    "cta": "Choisir ce plan",
+    "default_description": "Accès complet à l'examen de votre choix pendant"
   },
-  "cta": "Choisir ce plan",
-  "default_description": "Accès complet à l'examen de votre choix pendant"
-},
   "about": {
     "hero": {
       "badge": "Plateforme officielle de préparation",
@@ -202,7 +202,7 @@
       "b1": {
         "badge": "POPULAIRE",
         "name": "Intermédiaire",
-        "desc": "Comprenez l'essentiel dans des situations courantes — travail, école, voyages. Idéal pour la demande de visa ou de résidence en Allemagne."
+        "desc": "Comprenez l'essentiel dans des situations courantes - travail, école, voyages. Idéal pour la demande de visa ou de résidence en Allemagne."
       },
       "b2": {
         "badge": "NOUVEAU",
@@ -309,6 +309,7 @@
       "dashboard": "Tableau de bord",
       "examens": "Examens",
       "simulateur": "Simulateur",
+      "sprechen": "Expression orale",
       "methodologie": "Méthodologie",
       "resultats": "Résultats",
       "profil": "Profil",
@@ -331,11 +332,74 @@
     "cancel": "Annuler",
     "quit": "Quitter",
     "submit_title": "Terminer l'examen ?",
+    "prev_teil": "Teil précédent",
+    "next_teil": "Teil suivant",
     "answered": "Vous avez répondu à",
     "questions_of": "question(s) sur",
     "unanswered_warning": "Certaines questions sont sans réponse.",
     "continue": "Continuer",
-    "submit": "Soumettre"
+    "submit": "Soumettre",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "responses_count": "{answered} / {total} réponses",
+    "audio_label": "Audio {number}",
+    "audio_not_supported": "Votre navigateur ne supporte pas l'élément audio.",
+    "audio_play_count": "Vous pouvez écouter l'audio {count}/2 fois",
+    "teil_number": "Teil {number}",
+    "zuordnung": {
+      "reminder_title": "Rappel :",
+      "rule_once": "Chaque annonce (a-j) peut être utilisée une seule fois",
+      "rule_zero": "Si aucune annonce ne correspond, écrivez",
+      "rule_zero_value": "0",
+      "rule_unused": "Quatre annonces resteront inutilisées"
+    },
+    "horen": {
+      "homeoffice_question": "Cette personne trouve-t-elle le Homeoffice positif ?"
+    },
+    "result": {
+      "title": "Examen terminé !",
+      "subtitle": "Voici vos résultats",
+      "points": "points",
+      "passed": "RÉUSSI",
+      "failed": "ÉCHOUÉ",
+      "threshold": "Seuil : 60%",
+      "module_details": "Détails par module",
+      "view_answers": "Voir les réponses",
+      "retake_exam": "Refaire l'examen",
+      "go_home": "Retour à l'accueil",
+      "advice_title": "Conseils pour progresser",
+      "advice_item": "Travaillez davantage le module"
+    },
+    "header": {
+      "time_warning_title": "Temps presque écoulé !",
+      "time_warning_body": "Il vous reste moins de 5 minutes pour terminer cette section."
+    },
+    "schreiben": {
+      "situation": "Situation",
+      "points_to_cover": "Points à traiter :",
+      "your_answer": "Votre réponse",
+      "word_count": "{count} / {target} mots (environ)",
+      "placeholder": "Écrivez votre réponse ici...",
+      "suggested_time": "Temps suggéré : {minutes} minutes",
+      "too_short": "⚠️ Trop court",
+      "length_ok": "✓ Longueur OK"
+    },
+    "sprechen": {
+      "oral_section_title": "Section orale - Examinateur requis",
+      "oral_section_desc": "Cette section doit être réalisée avec un examinateur certifié. Lisez les consignes ci-dessous pour vous préparer.",
+      "preparation_time": "Temps de préparation",
+      "presentation_time": "Temps de présentation",
+      "confirm_label": "J'ai pris connaissance des consignes et je suis prêt(e) à passer cette épreuve avec un examinateur"
+    },
+    "navigator": {
+      "answered": "Répondues",
+      "remaining": "Restantes",
+      "legend_answered": "Répondue",
+      "legend_unanswered": "Non répondue",
+      "legend_current": "Actuelle"
+    },
+    "audio_fallback_title": "Audio"
   },
   "result": {
     "not_found": "Résultat introuvable",
@@ -420,7 +484,7 @@
     "tips": "Conseils pour progresser",
     "back_to_exam": "Retour à l'examen",
     "my_results": "Voir mes résultats",
-    "page_title": "Correction Schreiben — DeutschTest"
+    "page_title": "Correction Schreiben - DeutschTest"
   },
   "invoices": {
     "title": "Mes paiements",
@@ -498,16 +562,16 @@
       "go_to_exams": "Accéder aux examens"
     },
     "confirm": {
-  "title": "Confirmation du paiement",
-  "pending_title": "En attente de confirmation...",
-  "pending_desc": "Veuillez confirmer le paiement sur votre téléphone.",
-  "success_title": "Paiement confirmé !",
-  "success_desc": "Votre accès a été activé.",
-  "failed_title": "Paiement échoué",
-  "failed_desc": "Veuillez réessayer.",
-  "retry": "Réessayer",
-  "go_to_exams": "Accéder aux examens"
-}
+      "title": "Confirmation du paiement",
+      "pending_title": "En attente de confirmation...",
+      "pending_desc": "Veuillez confirmer le paiement sur votre téléphone.",
+      "success_title": "Paiement confirmé !",
+      "success_desc": "Votre accès a été activé.",
+      "failed_title": "Paiement échoué",
+      "failed_desc": "Veuillez réessayer.",
+      "retry": "Réessayer",
+      "go_to_exams": "Accéder aux examens"
+    }
   },
   "my_results": {
     "title": "Mes résultats",
@@ -581,7 +645,7 @@
     "tips": "Conseils pour progresser",
     "redo": "Refaire ce sujet",
     "choose_another": "Choisir un autre sujet",
-    "page_title": "Résultats — DeutschTest"
+    "page_title": "Résultats - DeutschTest"
   },
   "simulator_subject": {
     "words_written": "mot(s) rédigé(s)",
@@ -600,7 +664,7 @@
     "retry": "Réessayer",
     "see_results": "Voir les résultats",
     "back": "Retour",
-    "page_title": "Simulateur — DeutschTest",
+    "page_title": "Simulateur - DeutschTest",
     "credit": "crédit IA disponible",
     "credits": "crédits IA disponibles",
     "no_credits": "Crédits insuffisants",
@@ -732,5 +796,41 @@
         "a": "Votre progression est <strong>sauvegardée automatiquement</strong>. En cas de problème (coupure Internet, bug), vous pouvez reprendre exactement où vous vous étiez arrêté. Si le problème persiste, contactez notre support via le chat en direct ou par email à <strong>lfogouang39{'@'}gmail.com</strong>."
       }
     }
+  },
+  "sprechen": {
+    "page_title": "Sprechen - Simulateur de conversation",
+    "title": "Sprechen",
+    "subtitle": "Entraîne-toi à l'oral avec un examinateur IA, en conditions réelles d'examen.",
+    "tab_subjects": "Sujets",
+    "tab_results": "Mes résultats",
+    "no_subjects_title": "Aucun sujet disponible",
+    "no_subjects_subtitle": "Essaie de changer de filtre ou choisis un autre niveau.",
+    "show_all": "Tout afficher",
+    "start": "Commencer",
+    "teil": "partie",
+    "teile_plural": "parties",
+    "subject_default": "Sujet",
+    "no_results_title": "Pas encore de session",
+    "no_results_subtitle": "Tes sessions de speaking notées apparaîtront ici.",
+    "see_subjects": "Voir les sujets"
+  },
+  "sprechen_subject": {
+    "page_title": "Session Sprechen",
+    "connection_error": "La connexion à l'examinateur a été interrompue.",
+    "back": "Retour",
+    "time_for_part": "{minutes} minutes pour cette partie",
+    "points_to_cover": "Points à aborder",
+    "examiner_speaking": "L'examinateur parle...",
+    "your_turn": "À toi de parler",
+    "grading_in_progress": "Correction en cours...",
+    "passed": "Épreuve réussie",
+    "not_passed": "Non atteint",
+    "points": "points",
+    "detail_by_teil": "Détail par partie",
+    "strengths": "Points forts",
+    "to_improve": "À améliorer",
+    "redo": "Refaire",
+    "choose_another": "Choisir un autre sujet",
+    "confirm_leave": "Quitter maintenant abandonne cette session - elle ne sera pas notée. Continuer ?"
   }
 }

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     
     GEMINI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
 
     @property
     def origins(self) -> list[str]:

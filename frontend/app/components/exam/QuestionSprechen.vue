@@ -5,9 +5,9 @@
       <div class="flex items-start gap-3">
         <i class="pi pi-exclamation-triangle text-orange-600 text-2xl"></i>
         <div>
-          <h3 class="font-bold text-gray-900 mb-2">Section orale - Examinateur requis</h3>
+          <h3 class="font-bold text-gray-900 mb-2">{{ t('session.sprechen.oral_section_title') }}</h3>
           <p class="text-gray-700">
-            Cette section doit être réalisée avec un examinateur certifié. Lisez les consignes ci-dessous pour vous préparer.
+            {{ t('session.sprechen.oral_section_desc') }}
           </p>
         </div>
       </div>
@@ -17,7 +17,7 @@
     <div class="bg-white p-6 rounded-lg border-2 border-indigo-500 shadow-lg">
       <div class="flex items-center gap-3 mb-4">
         <i class="pi pi-microphone text-indigo-600 text-3xl"></i>
-        <h3 class="text-2xl font-bold text-gray-900">{{ teil.name || `Teil ${teil.teil_number}` }}</h3>
+        <h3 class="text-2xl font-bold text-gray-900">{{ teil.name || t('session.teil_number', { number: teil.teil_number }) }}</h3>
       </div>
 
       <!-- Instructions -->
@@ -51,11 +51,11 @@
       <!-- Temps de préparation -->
       <div class="flex gap-4 mt-6 p-4 bg-blue-50 rounded-lg">
         <div class="flex-1">
-          <p class="text-sm text-gray-600">Temps de préparation</p>
+          <p class="text-sm text-gray-600">{{ t('session.sprechen.preparation_time') }}</p>
           <p class="text-2xl font-bold text-blue-600">{{ teil.preparation_time || '3' }} min</p>
         </div>
         <div class="flex-1">
-          <p class="text-sm text-gray-600">Temps de présentation</p>
+          <p class="text-sm text-gray-600">{{ t('session.sprechen.presentation_time') }}</p>
           <p class="text-2xl font-bold text-blue-600">{{ teil.time_minutes }} min</p>
         </div>
       </div>
@@ -71,7 +71,7 @@
           @update:modelValue="handleComplete"
         />
         <label for="sprechen-done" class="cursor-pointer text-gray-800">
-          J'ai pris connaissance des consignes et je suis prêt(e) à passer cette épreuve avec un examinateur
+          {{ t('session.sprechen.confirm_label') }}
         </label>
       </div>
     </div>
@@ -79,6 +79,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 const props = defineProps<{
   teil: any
   questionIndex: number
@@ -98,5 +100,4 @@ const handleComplete = (value: boolean) => {
 watch(() => props.userAnswer, (newVal) => {
   isCompleted.value = newVal || false
 })
-
 </script>

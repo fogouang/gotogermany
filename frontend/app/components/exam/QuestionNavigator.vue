@@ -6,13 +6,13 @@
         <div class="text-2xl font-bold text-gray-900">
           {{ sessionStore.answeredQuestions }}
         </div>
-        <div class="text-xs text-gray-500">Répondues</div>
+        <div class="text-xs text-gray-500">{{ t('session.navigator.answered') }}</div>
       </div>
       <div class="bg-gray-50 rounded-lg p-3 text-center">
         <div class="text-2xl font-bold text-gray-900">
           {{ sessionStore.totalQuestions - sessionStore.answeredQuestions }}
         </div>
-        <div class="text-xs text-gray-500">Restantes</div>
+        <div class="text-xs text-gray-500">{{ t('session.navigator.remaining') }}</div>
       </div>
     </div>
 
@@ -20,15 +20,15 @@
     <div class="flex items-center gap-4 text-xs text-gray-500">
       <div class="flex items-center gap-1">
         <div class="w-4 h-4 rounded bg-teal-600"></div>
-        <span>Répondue</span>
+        <span>{{ t('session.navigator.legend_answered') }}</span>
       </div>
       <div class="flex items-center gap-1">
         <div class="w-4 h-4 rounded bg-gray-200"></div>
-        <span>Non répondue</span>
+        <span>{{ t('session.navigator.legend_unanswered') }}</span>
       </div>
       <div class="flex items-center gap-1">
         <div class="w-4 h-4 rounded border-2 border-teal-600 bg-white"></div>
-        <span>Actuelle</span>
+        <span>{{ t('session.navigator.legend_current') }}</span>
       </div>
     </div>
 
@@ -55,7 +55,7 @@
         class="pl-4 space-y-2"
       >
         <p class="text-xs text-gray-500 font-medium">
-          Teil {{ teil.teil_number }}
+          {{ t('session.teil_number', { number: teil.teil_number }) }}
         </p>
 
         <!-- Grille de questions -->
@@ -78,6 +78,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 const emit = defineEmits<{ select: [index: number] }>()
 
 const sessionStore = useSessionStore()

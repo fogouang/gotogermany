@@ -5,7 +5,7 @@
       <div class="flex items-center gap-4 mb-4">
         <i class="pi pi-volume-up text-indigo-600 text-2xl"></i>
         <div class="flex-1">
-          <h3 class="font-bold text-gray-900">{{ teil.audio_title || 'Audio' }}</h3>
+          <h3 class="font-bold text-gray-900">{{ teil.audio_title || t('session.audio_label', { number: '' }).replace('  ', '').trim() || 'Audio' }}</h3>
           <p class="text-sm text-gray-600">{{ teil.audio_type || 'Hörtext' }}</p>
         </div>
       </div>
@@ -17,12 +17,12 @@
         @ended="handleAudioEnded"
       >
         <source :src="getAudioPath(teil.audio_file)" type="audio/mpeg">
-        Votre navigateur ne supporte pas l'élément audio.
+        {{ t('session.audio_not_supported') }}
       </audio>
 
       <div class="mt-4 flex items-center gap-2 text-sm text-gray-600">
         <i class="pi pi-info-circle"></i>
-        <span>Vous pouvez écouter l'audio {{ audioPlayCount }}/2 fois</span>
+        <span>{{ t('session.audio_play_count', { count: audioPlayCount }) }}</span>
       </div>
     </div>
 
@@ -67,6 +67,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 const props = defineProps<{
   teil: any
   questionIndex: number
@@ -81,9 +83,7 @@ const audioPlayer = ref<HTMLAudioElement | null>(null)
 const audioPlayCount = ref(0)
 
 const currentQuestion = computed(() => {
-  // Pour Teil 2 de Lesen, il y a des texts avec questions
   if (props.teil.texts && props.teil.texts.length > 0) {
-    // Trouver la question dans les texts
     for (const text of props.teil.texts) {
       const question = text.questions.find((q: any) => 
         q.number === props.questionIndex + (props.teil.texts[0].questions[0].number)
@@ -92,12 +92,10 @@ const currentQuestion = computed(() => {
     }
   }
   
-  // Pour Teil 5 et autres formats QCM simples, ou Hören Teil 2
   return props.teil.questions?.[props.questionIndex]
 })
 
 const getCurrentStimulus = () => {
-  // Pour Teil 2 avec texts multiples
   if (props.teil.texts && props.teil.texts.length > 0) {
     for (const text of props.teil.texts) {
       const hasQuestion = text.questions.some((q: any) => 
@@ -107,7 +105,6 @@ const getCurrentStimulus = () => {
     }
   }
   
-  // Pour Teil 5 avec stimulus_text global
   return props.teil.stimulus_text
 }
 

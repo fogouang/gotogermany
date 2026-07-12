@@ -219,7 +219,8 @@ const isLastModule = computed(
 const currentView = computed(() => {
   const slug = currentModule.value?.slug?.toLowerCase() || "";
   if (slug.includes("lese")) return LesenView;
-  if (slug.includes("hor") || slug.includes("hoer") || slug.includes("hör")) return HorenView;
+  if (slug.includes("hor") || slug.includes("hoer") || slug.includes("hör"))
+    return HorenView;
   if (slug.includes("schreib") || slug.includes("schriftlich"))
     return SchreibenView;
   if (
@@ -247,6 +248,7 @@ const getModuleIcon = (slug: string) => {
 };
 
 const goToModule = (index: number) => {
+  sessionStore.switchToModule(index);
   currentModuleIndex.value = index;
   currentTeilIndex.value = 0;
 };
@@ -258,6 +260,7 @@ const nextTeil = () => {
   if (currentTeilIndex.value < module.teile.length - 1) {
     currentTeilIndex.value++;
   } else if (currentModuleIndex.value < sessionStore.modules.length - 1) {
+    sessionStore.switchToModule(currentModuleIndex.value + 1);
     currentModuleIndex.value++;
     currentTeilIndex.value = 0;
   }
@@ -267,6 +270,7 @@ const prevTeil = () => {
   if (currentTeilIndex.value > 0) {
     currentTeilIndex.value--;
   } else if (currentModuleIndex.value > 0) {
+    sessionStore.switchToModule(currentModuleIndex.value - 1);
     currentModuleIndex.value--;
     const prevModule = sessionStore.modules[currentModuleIndex.value];
     currentTeilIndex.value = (prevModule?.teile?.length ?? 1) - 1;
@@ -335,9 +339,10 @@ const handleSubmit = async () => {
 // ── Timer ─────────────────────────────────────────────
 
 const startTimer = () => {
+  stopTimer(); // sécurité anti-doublon, même si déjà appelé avant
   timerInterval = setInterval(() => {
-    sessionStore.decrementTimer();
-    if (sessionStore.timeRemaining === 0) {
+    sessionStore.tick(); // remplace decrementTimer
+    if (sessionStore.timeRemaining <= 0) {
       stopTimer();
       handleSubmit();
     }
@@ -390,6 +395,10 @@ const loadSession = async () => {
       0,
     );
     sessionStore.timeRemaining = (combinedMinutes || 30) * 60;
+    sessionStore.deadline = Date.now() + sessionStore.timeRemaining * 1000;
+    sessionStore.sharedTimer = true;
+  } else {
+    sessionStore.sharedTimer = false;
   }
 
   currentModuleIndex.value = 0;
@@ -399,6 +408,10 @@ const loadSession = async () => {
 };
 
 onMounted(loadSession);
+
+onBeforeUnmount(() => {
+  stopTimer();
+});
 
 // ✅ Recharge la session si l'utilisateur navigue vers un autre sujet/module
 // SANS rechargement complet de page (query change, même route).
