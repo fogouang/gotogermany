@@ -55,7 +55,8 @@ from app.shared.database.session import get_db
 # elsewhere (e.g. app/config.py rather than app/core/config.py).
 from app.config import Settings, get_settings
 
-from . import live_client
+from . import live_client, orchestrator
+import websockets
 from .schemas import (
     AbandonSessionMessage,
     AgentSpeakingEvent,
@@ -194,10 +195,14 @@ async def _send_event(websocket: WebSocket, event: OutboundEvent) -> None:
 
 
 async def _send_role_signal(ctx: _ConnectionContext) -> None:
-    step = ctx.session.current_step()
+    """Tells the frontend whose turn it is — mirrors the same decision
+    service.py makes for trigger_agent_turn(), via the shared
+    orchestrator.is_agent_turn_next() helper so the two never drift
+    apart."""
+    agent_turn_next = orchestrator.is_agent_turn_next(ctx.session)
     event = (
         AgentSpeakingEvent(session_id=ctx.session.session_id)
-        if step.agent_opens
+        if agent_turn_next
         else StudentTurnEvent(session_id=ctx.session.session_id)
     )
     await _send_event(ctx.websocket, event)
@@ -222,7 +227,14 @@ async def _relay_client_to_agent(ctx: _ConnectionContext) -> None:
 
         raw_bytes = message.get("bytes")
         if raw_bytes is not None:
-            await ctx.segment.send_audio_chunk(raw_bytes)
+            try:
+                await ctx.segment.send_audio_chunk(raw_bytes)
+            except websockets.exceptions.ConnectionClosed:
+                # Expected race: a mic chunk in flight right as the
+                # Live segment is being swapped/closed for a step
+                # transition. Harmless — drop this stray chunk rather
+                # than tearing down the whole session over it.
+                pass
             continue
 
         raw_text = message.get("text")

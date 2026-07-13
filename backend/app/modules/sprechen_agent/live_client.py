@@ -86,6 +86,16 @@ class LiveSegment(ABC):
         """Stream one chunk of raw PCM16 mic audio to the provider."""
 
     @abstractmethod
+    async def trigger_agent_turn(self) -> None:
+        """Explicitly prompts the agent to speak first, with no prior
+        student audio. Both providers wait for input before responding
+        by default (confirmed in Gemini's Live API best-practices docs:
+        "Live API expects user input before it responds") — without
+        this, a fresh segment where the agent is supposed to open
+        (step.agent_opens / orchestrator.is_agent_turn_next) would just
+        sit silently forever."""
+
+    @abstractmethod
     def events(self) -> AsyncIterator[LiveServerEvent]:
         """Yields server events as they arrive — audio to play back,
         transcript deltas to feed orchestrator.record_turn(), and
@@ -157,6 +167,21 @@ class GeminiLiveSegment(LiveSegment):
                     "data": base64.b64encode(pcm16_bytes).decode("ascii"),
                     "mimeType": f"audio/pcm;rate={GEMINI_INPUT_SAMPLE_RATE}",
                 }
+            }
+        }
+        await self._ws.send(json.dumps(message))
+
+    async def trigger_agent_turn(self) -> None:
+        # Sends a minimal synthetic user turn so the model has
+        # something to react to and proceeds to speak per its system
+        # instructions (which already tell it to open — see
+        # prompt_builder's OPENING_RULE). Empty text alone isn't
+        # reliably enough to prompt a response, so a short neutral
+        # cue is sent instead.
+        message = {
+            "clientContent": {
+                "turns": [{"role": "user", "parts": [{"text": "(Bitte beginne jetzt.)"}]}],
+                "turnComplete": True,
             }
         }
         await self._ws.send(json.dumps(message))
@@ -254,6 +279,11 @@ class OpenAIRealtimeSegment(LiveSegment):
             "type": "input_audio_buffer.append",
             "audio": base64.b64encode(pcm16_bytes).decode("ascii"),
         }))
+
+    async def trigger_agent_turn(self) -> None:
+        # OpenAI Realtime has a purpose-built event for this — no
+        # synthetic user turn needed, unlike Gemini.
+        await self._ws.send(json.dumps({"type": "response.create"}))
 
     async def events(self) -> AsyncIterator[LiveServerEvent]:
         async for raw in self._ws:

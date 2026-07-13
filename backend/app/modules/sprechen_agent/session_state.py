@@ -75,6 +75,15 @@ class SequenceStep(BaseModel):
     content: dict[str, Any] = Field(default_factory=dict)
     # Soft target only — never hard-enforced mid-speech.
     target_duration_seconds: int | None = None
+    # How many speaker turns (agent + student combined) must happen
+    # within this step before it's considered complete. Defaults to 1
+    # for atomic single-speaker steps (the 6-step alternating
+    # sequence, SILENT_LISTENER monologues). Free-dialogue single-role
+    # Teile (PARTNER/EXAMINER/DISCUSSION-type formats) need more than
+    # 1 — see mapping.py's FORMAT_TYPE_BEHAVIOR — otherwise the Teil
+    # advances right after the agent's opening line, before the
+    # student ever gets to speak.
+    min_turns: int = 1
     completed: bool = False
 
 
@@ -130,6 +139,13 @@ class SessionState(BaseModel):
     teile: list[TeilConfig]
     current_teil_index: int = 0
     current_step_index: int = 0
+    # How many turns have happened within the CURRENT step so far —
+    # reset to 0 every time the sequence actually advances. Compared
+    # against current_step().min_turns to decide whether a turn_complete
+    # should move the sequence forward or just reopen a fresh Live
+    # segment for the same ongoing step.
+    current_step_turn_count: int = 0
+    current_step_started_at: datetime | None = None
 
     transcript: list[TranscriptEntry] = Field(default_factory=list)
 
@@ -185,3 +201,4 @@ class GradingResult(BaseModel):
     strengths: list[str] = Field(default_factory=list)
     improvement_areas: list[str] = Field(default_factory=list)
     graded_at: datetime = Field(default_factory=datetime.utcnow)
+    

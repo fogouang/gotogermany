@@ -196,7 +196,40 @@ def start_session(session: SessionState) -> SessionState:
     session.status = SessionStatus.ACTIVE
     session.started_at = datetime.now(timezone.utc)
     session.updated_at = session.started_at
+    session.current_step_started_at = session.started_at
+    session.current_step_turn_count = 0
     return session
+
+
+# Safety cap: even if min_turns hasn't been reached, force-advance a
+# conversational step once elapsed time is this multiple of its
+# target_duration_seconds — prevents a chatty exchange from running
+# indefinitely if the model keeps the conversation going past budget.
+STEP_TIME_SAFETY_MULTIPLIER = 2.0
+
+
+def record_step_turn(session: SessionState) -> None:
+    """Call once per turn_complete signal from live_client.py — every
+    time either the agent or the student finishes speaking."""
+    session.current_step_turn_count += 1
+    session.updated_at = datetime.now(timezone.utc)
+
+
+def is_step_complete(session: SessionState) -> bool:
+    """Whether the CURRENT step has had enough turns to actually move
+    the sequence forward. False means: reopen a fresh Live segment for
+    the same step (still needed for the cost/segmentation strategy)
+    without advancing current_step_index/current_teil_index."""
+    step = session.current_step()
+    if session.current_step_turn_count >= step.min_turns:
+        return True
+
+    if step.target_duration_seconds and session.current_step_started_at:
+        elapsed = (datetime.now(timezone.utc) - session.current_step_started_at).total_seconds()
+        if elapsed >= step.target_duration_seconds * STEP_TIME_SAFETY_MULTIPLIER:
+            return True
+
+    return False
 
 
 @dataclass
@@ -214,15 +247,17 @@ class StepTransition:
 
 
 def advance(session: SessionState) -> StepTransition:
-    """Called whenever the current sub-step is considered done — either
-    a turn-boundary was detected by live_client.py, or a step's
-    target_duration_seconds elapsed. Mutates session in place."""
+    """Called only once is_step_complete(session) is True — moves the
+    sequence position forward and resets the per-step turn/time
+    tracking for whatever step comes next. Mutates session in place."""
     current_teil = session.current_teil()
     current_teil.sequence[session.current_step_index].completed = True
 
     if session.current_step_index < len(current_teil.sequence) - 1:
         session.current_step_index += 1
-        session.updated_at = datetime.now(timezone.utc)
+        session.current_step_turn_count = 0
+        session.current_step_started_at = datetime.now(timezone.utc)
+        session.updated_at = session.current_step_started_at
         return StepTransition(
             teil_changed=False,
             session_ended=False,
@@ -242,8 +277,10 @@ def advance(session: SessionState) -> StepTransition:
 
     session.current_teil_index += 1
     session.current_step_index = 0
+    session.current_step_turn_count = 0
+    session.current_step_started_at = datetime.now(timezone.utc)
     session.status = SessionStatus.BETWEEN_SEGMENTS
-    session.updated_at = datetime.now(timezone.utc)
+    session.updated_at = session.current_step_started_at
     return StepTransition(
         teil_changed=True,
         session_ended=False,
@@ -251,6 +288,30 @@ def advance(session: SessionState) -> StepTransition:
         new_teil=session.current_teil(),
         new_step=session.current_step(),
     )
+
+
+def is_agent_turn_next(session: SessionState) -> bool:
+    """Whether the agent should speak next in the CURRENT step. Falls
+    back to step.agent_opens when the step has no transcript yet (the
+    very first turn); past that, alternates based on who spoke last
+    within this step — required now that a single conversational step
+    can span several back-and-forth turns, where agent_opens alone
+    would keep pointing at the same speaker forever.
+
+    Shared by service.py (decides whether to call
+    LiveSegment.trigger_agent_turn() on a freshly opened segment) and
+    router.py (decides whether to send AgentSpeakingEvent or
+    StudentTurnEvent to the frontend) — same question, two consumers.
+    """
+    step = session.current_step()
+    teil_number = session.current_teil().teil_number
+    step_entries = [
+        e for e in session.transcript
+        if e.teil_number == teil_number and e.step_order == step.order
+    ]
+    if not step_entries:
+        return step.agent_opens
+    return step_entries[-1].speaker == "student"
 
 
 def record_turn(session: SessionState, *, speaker: str, text: str) -> None:

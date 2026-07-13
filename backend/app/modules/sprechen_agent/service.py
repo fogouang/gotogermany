@@ -99,6 +99,9 @@ class SprechenAgentService:
         )
         session.live_provider = segment.provider
 
+        if orchestrator.is_agent_turn_next(session):
+            await segment.trigger_agent_turn()
+
         await _save_session(session)
         return session, segment
 
@@ -113,10 +116,46 @@ class SprechenAgentService:
         gemini_api_key: str,
         openai_api_key: str,
     ) -> tuple[orchestrator.StepTransition, live_client.LiveSegment | None]:
-        """Called once a turn boundary is detected. Advances the
-        sequence and, unless the session just ended, opens a fresh
-        Live segment for the new step — carrying only the text
-        transcript forward, never raw audio history."""
+        """Called once a turn boundary is detected. A fresh Live
+        segment is opened every time regardless (cost/segmentation
+        strategy — never carry raw audio history across turns), but
+        the SEQUENCE only actually advances once
+        orchestrator.is_step_complete() says this step has had enough
+        turns (min_turns) — otherwise a single-role conversational
+        Teil (e.g. oral_interaction) would jump to the next Teil right
+        after the agent's opening line, before the student ever spoke.
+
+        Every freshly opened segment also gets trigger_agent_turn()
+        called on it when orchestrator.is_agent_turn_next() says it's
+        the agent's turn — both providers wait for input before
+        responding by default, so without this the agent would just
+        sit silently on its own turn."""
+        orchestrator.record_step_turn(session)
+
+        if not orchestrator.is_step_complete(session):
+            # Same step continues: reopen the Live segment (carrying
+            # only the text transcript recap forward, per the
+            # validated cost strategy) without moving current_step_index
+            # or current_teil_index.
+            prompt = prompt_builder.build_system_prompt(session)
+            segment = await live_client.open_segment(
+                prompt, gemini_api_key=gemini_api_key, openai_api_key=openai_api_key
+            )
+            session.live_provider = segment.provider
+
+            if orchestrator.is_agent_turn_next(session):
+                await segment.trigger_agent_turn()
+
+            await _save_session(session)
+
+            transition = orchestrator.StepTransition(
+                teil_changed=False,
+                session_ended=False,
+                requires_new_live_segment=True,
+                new_step=session.current_step(),
+            )
+            return transition, segment
+
         transition = orchestrator.advance(session)
         await _save_session(session)
 
@@ -128,6 +167,10 @@ class SprechenAgentService:
             prompt, gemini_api_key=gemini_api_key, openai_api_key=openai_api_key
         )
         session.live_provider = segment.provider
+
+        if orchestrator.is_agent_turn_next(session):
+            await segment.trigger_agent_turn()
+
         await _save_session(session)
 
         return transition, segment
@@ -145,13 +188,13 @@ class SprechenAgentService:
             subject_id=session.subject_id,
             provider=session.provider,
             level=session.level,
-            teile_breakdown=[t.model_dump() for t in result.teile],
+            teile_breakdown=[t.model_dump(mode="json") for t in result.teile],
             total_score=result.total_score,
             total_max_score=result.total_max_score,
             passed=result.passed,
             strengths=result.strengths,
             improvement_areas=result.improvement_areas,
-            transcript=[e.model_dump() for e in session.transcript],
+            transcript=[e.model_dump(mode="json") for e in session.transcript],
             live_provider_used=session.live_provider,
             started_at=session.started_at,
         )

@@ -14,12 +14,12 @@
  * exercised in an actual browser.
  */
 
-import { ref, shallowRef, type Ref } from 'vue';
+import { ref, shallowRef, type Ref } from "vue";
 import type {
   OutboundEvent,
   GradingResultMessage,
   TeilStartedEvent,
-} from '#shared/sprechenWebSocketTypes'; // ADJUST if the real path differs
+} from "#shared/sprechenWebSocketTypes"; // ADJUST if the real path differs
 
 export interface SprechenAudioIO {
   /** Starts streaming mic audio; onChunk is called with each PCM16
@@ -33,16 +33,16 @@ export interface SprechenAudioIO {
 }
 
 export type SprechenConnectionStatus =
-  | 'idle'
-  | 'connecting'
-  | 'active'
-  | 'ended'
-  | 'error';
+  | "idle"
+  | "connecting"
+  | "active"
+  | "ended"
+  | "error";
 
-export type SprechenMicState = 'agent_speaking' | 'student_turn' | null;
+export type SprechenMicState = "agent_speaking" | "student_turn" | null;
 
 export interface TranscriptLine {
-  speaker: 'student' | 'agent';
+  speaker: "student" | "agent";
   text: string;
 }
 
@@ -55,7 +55,7 @@ export interface UseSprechenSessionOptions {
 }
 
 export function useSprechenSession(options: UseSprechenSessionOptions) {
-  const status: Ref<SprechenConnectionStatus> = ref('idle');
+  const status: Ref<SprechenConnectionStatus> = ref("idle");
   const totalTeile = ref(0);
   const currentTeil: Ref<TeilStartedEvent | null> = shallowRef(null);
   const micState: Ref<SprechenMicState> = ref(null);
@@ -63,8 +63,15 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
   const gradingResult: Ref<GradingResultMessage | null> = shallowRef(null);
   const errorMessage = ref<string | null>(null);
 
-  const createWs = options.createWebSocket ?? ((url: string) => new WebSocket(url));
+  const createWs =
+    options.createWebSocket ?? ((url: string) => new WebSocket(url));
   let ws: WebSocket | null = null;
+
+  // Set only when a 'session_ended' text message actually arrives —
+  // lets onclose distinguish a clean server-driven end from a dropped
+  // connection / backend crash, instead of treating every close as
+  // "ended" and silently stranding the user on the grading spinner.
+  let sessionEndedCleanly = false;
 
   function handleTextMessage(raw: string): void {
     let msg: OutboundEvent | GradingResultMessage;
@@ -75,40 +82,48 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     }
 
     switch (msg.type) {
-      case 'session_ready':
+      case "session_ready":
         totalTeile.value = msg.total_teile;
-        status.value = 'active';
+        status.value = "active";
         break;
 
-      case 'teil_started':
+      case "teil_started":
         currentTeil.value = msg;
         break;
 
-      case 'agent_speaking':
-        micState.value = 'agent_speaking';
+      case "agent_speaking":
+        micState.value = "agent_speaking";
         options.audioIO.stopCapture();
         break;
 
-      case 'student_turn':
-        micState.value = 'student_turn';
-        void options.audioIO.startCapture((chunk) => {
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(chunk as BufferSource);
-          }
-        });
+      case "student_turn":
+        micState.value = "student_turn";
+        options.audioIO
+          .startCapture((chunk) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(chunk as BufferSource);
+            }
+          })
+          .catch((err) => {
+            console.error("Mic capture failed:", err);
+            status.value = "error";
+            errorMessage.value =
+              "Impossible d'accéder au microphone. Vérifiez les permissions.";
+          });
         break;
 
-      case 'transcript_update':
+      case "transcript_update":
         transcript.value.push({ speaker: msg.speaker, text: msg.text });
         break;
 
-      case 'session_ended':
-        status.value = 'ended';
+      case "session_ended":
+        sessionEndedCleanly = true;
+        status.value = "ended";
         micState.value = null;
         options.audioIO.stopCapture();
         break;
 
-      case 'grading_result':
+      case "grading_result":
         gradingResult.value = msg;
         break;
     }
@@ -120,14 +135,15 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
 
   function connect(): void {
     if (ws) return; // already connecting/connected — connect() is idempotent
-    status.value = 'connecting';
+    status.value = "connecting";
     errorMessage.value = null;
+    sessionEndedCleanly = false;
 
     const socket = createWs(`${options.wsBaseUrl}/ws/${options.subjectId}`);
-    socket.binaryType = 'arraybuffer';
+    socket.binaryType = "arraybuffer";
 
     socket.onmessage = (event: MessageEvent) => {
-      if (typeof event.data === 'string') {
+      if (typeof event.data === "string") {
         handleTextMessage(event.data);
       } else {
         handleBinaryMessage(event.data as ArrayBuffer);
@@ -135,17 +151,20 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     };
 
     socket.onerror = () => {
-      status.value = 'error';
-      errorMessage.value = 'Connection error';
+      status.value = "error";
+      errorMessage.value = "Connection error";
     };
 
-    socket.onclose = () => {
+    socket.onclose = (event: CloseEvent) => {
       options.audioIO.stopCapture();
       options.audioIO.stopPlayback();
-      if (status.value !== 'ended') {
+      if (!sessionEndedCleanly) {
         // closed before a clean session_ended — treat as an error
-        // state so the UI doesn't sit on a stale "connecting" spinner
-        status.value = status.value === 'error' ? 'error' : 'ended';
+        // state so the UI doesn't sit on a stale spinner or a
+        // grading screen that will never receive its result.
+        status.value = "error";
+        errorMessage.value =
+          errorMessage.value ?? `Connexion interrompue (code ${event.code}).`;
       }
       ws = null;
     };
@@ -157,9 +176,9 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(
       JSON.stringify({
-        type: 'abandon_session',
-        session_id: currentTeil.value?.session_id ?? '',
-      })
+        type: "abandon_session",
+        session_id: currentTeil.value?.session_id ?? "",
+      }),
     );
   }
 

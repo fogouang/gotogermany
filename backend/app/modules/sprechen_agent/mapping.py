@@ -28,6 +28,10 @@ class SingleRoleBehavior:
     role: AgentRole
     agent_opens: bool
     behavior_note: str
+    # Minimum speaker turns (agent + student combined) before this
+    # Teil is considered complete. 1 would mean "done right after the
+    # agent's opening line" — wrong for anything conversational.
+    min_turns: int = 1
 
 
 # ---------------------------------------------------------------------------
@@ -39,36 +43,43 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
         role=AgentRole.PARTNER,
         agent_opens=True,
         behavior_note="Propose, negotiate, and react to the student's ideas. Never correct explicitly.",
+        min_turns=4,  # at least 2 full exchanges — free-flowing planning dialogue
     ),
     "oral_kennenlernen": SingleRoleBehavior(
         role=AgentRole.PARTNER,
         agent_opens=True,
         behavior_note="Informal small talk. Ask simple personal questions (name, origin, hobbies).",
+        min_turns=4,
     ),
     "oral_monologue": SingleRoleBehavior(
         role=AgentRole.SILENT_LISTENER,
         agent_opens=False,
         behavior_note='Do not interrupt. Minimal backchannel only ("Mhm", "Ja").',
+        min_turns=1,  # the student's whole presentation is genuinely one turn
     ),
     "oral_feedback": SingleRoleBehavior(
         role=AgentRole.EXAMINER,
         agent_opens=True,
         behavior_note="Give brief feedback on what was just presented, then ask exactly one question.",
+        min_turns=2,  # agent's question, then the student's answer
     ),
     "oral_discussion": SingleRoleBehavior(
         role=AgentRole.PARTNER,
         agent_opens=True,
         behavior_note="Take a genuine position and argue it honestly, without being complacent.",
+        min_turns=4,
     ),
     "oral_meinungsaustausch": SingleRoleBehavior(
         role=AgentRole.ASSIGNED_POSITION,
         agent_opens=True,
         behavior_note="Defend the assigned position from the subject data, even if it isn't your own genuine opinion.",
+        min_turns=4,
     ),
     "bildbeschreibung": SingleRoleBehavior(
         role=AgentRole.SILENT_LISTENER,
         agent_opens=False,
         behavior_note="Listen to the description/interpretation, then ask one brief clarifying question.",
+        min_turns=3,  # description, agent's question, student's brief answer
     ),
 }
 
@@ -79,6 +90,7 @@ DEFAULT_BEHAVIOR = SingleRoleBehavior(
     role=AgentRole.PARTNER,
     agent_opens=True,
     behavior_note="Generic dialogue partner — react naturally to the student.",
+    min_turns=2,
 )
 
 # Role -> generic instruction, used for steps inside the alternating
@@ -183,6 +195,7 @@ def _build_single_role_sequence(teil_raw: dict[str, Any]) -> list[SequenceStep]:
             agent_opens=behavior.agent_opens,
             content={"behavior_note": behavior.behavior_note, **_content_payload(teil_raw)},
             target_duration_seconds=(duration_minutes * 60) or None,
+            min_turns=behavior.min_turns,
         )
     ]
 
