@@ -81,6 +81,17 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
         behavior_note="Listen to the description/interpretation, then ask one brief clarifying question.",
         min_turns=3,  # description, agent's question, student's brief answer
     ),
+    "oral_thema": SingleRoleBehavior(
+        role=AgentRole.PARTNER,
+        agent_opens=True,
+        behavior_note=(
+            "Briefly report what the two stimulus people (person_a/person_b in the subject "
+            "data) think about the topic — their names and opinions are given in the content "
+            "block below. Then discuss the topic genuinely with the student: ask their opinion, "
+            "react to it, compare it with the two given viewpoints."
+        ),
+        min_turns=4,  # report the stimulus, then a real back-and-forth discussion
+    ),
 }
 
 # Any format_type we haven't seen yet falls back here instead of
@@ -120,11 +131,26 @@ def _extract_content_points(data: dict[str, Any]) -> list[str]:
 
 
 def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
-    return {
+    payload: dict[str, Any] = {
         "instructions": teil_raw.get("instructions", ""),
         "content_points": _extract_content_points(teil_raw),
-        "scenario": teil_raw.get("scenario") or teil_raw.get("situation") or teil_raw.get("thema"),
+        "scenario": (
+            teil_raw.get("scenario")
+            or teil_raw.get("situation")
+            or teil_raw.get("thema")
+            or teil_raw.get("topic")
+            or teil_raw.get("diskussion_titel")
+            or teil_raw.get("question")
+        ),
     }
+    # Stimulus people — different key names across providers for the
+    # same concept (telc's oral_thema uses person_a/person_b; ÖSD's
+    # oral_meinungsaustausch uses person1/person2). Passed through as-is
+    # so prompt_builder.py can render whichever pair is present.
+    for key in ("person_a", "person_b", "person1", "person2"):
+        if key in teil_raw:
+            payload[key] = teil_raw[key]
+    return payload
 
 
 def _has_two_candidate_split(teil_raw: dict[str, Any]) -> bool:

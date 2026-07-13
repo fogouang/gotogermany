@@ -12,6 +12,8 @@ orchestration logic.
 
 from __future__ import annotations
 
+from typing import Any
+
 from .session_state import AgentRole, SessionState, TranscriptEntry
 
 # How many prior transcript lines from the CURRENT Teil to recap when
@@ -53,6 +55,25 @@ def _format_sprachliche_mittel(phrases: list[str]) -> str:
     return "\n".join(f'- "{p}"' for p in phrases)
 
 
+def _format_stimulus_people(content: dict[str, Any]) -> str:
+    """Formats the two stimulus people from oral_thema (telc:
+    person_a/person_b) or oral_meinungsaustausch (ÖSD: person1/
+    person2) — same concept, different provider key names."""
+    pairs = [
+        (content.get("person_a"), content.get("person_b")),
+        (content.get("person1"), content.get("person2")),
+    ]
+    for first, second in pairs:
+        if first and second:
+            lines = []
+            for person in (first, second):
+                name = person.get("name", "?")
+                opinion = person.get("meinung") or person.get("position") or ""
+                lines.append(f'- {name}: "{opinion}"')
+            return "\n".join(lines)
+    return ""
+
+
 def _opening_instruction(agent_opens: bool, role: AgentRole) -> str:
     if agent_opens:
         return "You have the initiative — start speaking first, right now."
@@ -75,6 +96,7 @@ def build_system_prompt(session: SessionState, *, exam_name: str = "") -> str:
     instructions = step.content.get("instructions") or teil.instructions
     content_points = step.content.get("content_points") or teil.content_points
     scenario_or_title = step.content.get("title") or step.content.get("scenario")
+    stimulus_people = _format_stimulus_people(step.content)
 
     recap = _format_transcript_recap(
         [e for e in session.transcript if e.teil_number == teil.teil_number]
@@ -103,6 +125,7 @@ above it, even if the correct answer would use more advanced grammar.
 SUBJECT CONTEXT:
 {instructions}
 {f"Topic/scenario: {scenario_or_title}" if scenario_or_title else ""}
+{f"Two given viewpoints to report and react to:\n{stimulus_people}" if stimulus_people else ""}
 
 CONTENT POINTS TO COVER OR ADDRESS:
 {_format_content_points(content_points)}

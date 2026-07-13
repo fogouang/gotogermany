@@ -135,6 +135,88 @@ def _resolve_sprachliche_mittel(teil_raw: dict[str, Any], subject_raw: dict[str,
 
     return _flatten_sprachliche_mittel(reference)
 
+# ---------------------------------------------------------------------------
+# ablauf_schema-only alternating pairs — some Goethe-style subjects (17 in
+# the current catalog) encode the Kandidat A/B alternation ONLY via a
+# subject-level "ablauf_schema" string, spanning two teil_numbers, with NO
+# kandidat_a/kandidat_b split on the Teile themselves (unlike other Goethe
+# subjects where the split IS present per-Teil — those already work via
+# mapping.py's normal detection). Retrofitting every existing subject's
+# data was judged impractical, so this is detected structurally instead:
+# an oral_monologue Teil immediately followed by an oral_feedback Teil,
+# under a subject that has an ablauf_schema key — never by parsing the
+# schema text itself, which stays fragile free text for humans to read.
+# ---------------------------------------------------------------------------
+
+def _merge_monologue_feedback_pair(
+    monologue_teil: dict[str, Any], feedback_teil: dict[str, Any]
+) -> dict[str, Any]:
+    """Combines the two source Teile into one synthetic Teil carrying
+    a kandidat_a/kandidat_b split, so mapping.py's existing alternating-
+    sequence builder picks it up unchanged — no new sequence logic
+    needed, just the right shape of input data."""
+    themes = monologue_teil.get("themes", {})
+    theme_keys = sorted(themes.keys())
+    # Kandidat A (the real student) picks freely at runtime, whatever
+    # they say. Kandidat B (the AI) is deterministically assigned the
+    # LAST theme in the shared pool as a stable default — with only
+    # two themes this just means "the other one" without needing to
+    # know in advance which one the student will actually choose.
+    kandidat_b_key = theme_keys[-1] if theme_keys else None
+    kandidat_b = {kandidat_b_key: themes[kandidat_b_key]} if kandidat_b_key else {}
+
+    merged_scoring: dict[str, Any] = dict(monologue_teil.get("scoring_criteria", {}))
+    for key, value in feedback_teil.get("scoring_criteria", {}).items():
+        existing = merged_scoring.get(key)
+        if isinstance(existing, dict) and isinstance(value, dict):
+            merged_scoring[key] = {**existing, **value}  # merge sub-criteria, don't overwrite
+        else:
+            merged_scoring[key] = value
+
+    return {
+        "teil_number": monologue_teil["teil_number"],
+        "name": f'{monologue_teil.get("name", "")} + {feedback_teil.get("name", "")}',
+        "format_type": monologue_teil.get("format_type", "oral_monologue"),
+        "instructions": monologue_teil.get("instructions", ""),
+        "duration_minutes": (monologue_teil.get("duration_minutes") or 0)
+        + (feedback_teil.get("duration_minutes") or 0),
+        "max_score": (monologue_teil.get("max_score") or 0) + (feedback_teil.get("max_score") or 0),
+        "themes": themes,
+        "kandidat_a": {},  # presence alone is enough to trigger mapping.py's alternating detector
+        "kandidat_b": kandidat_b,
+        "scoring_criteria": merged_scoring,
+        "sprachliche_mittel": monologue_teil.get("sprachliche_mittel") or feedback_teil.get("sprachliche_mittel"),
+    }
+
+
+def _merge_alternating_teil_pairs(
+    teile_raw: list[dict[str, Any]], subject_raw: dict[str, Any]
+) -> list[dict[str, Any]]:
+    if "ablauf_schema" not in subject_raw:
+        return teile_raw
+
+    merged: list[dict[str, Any]] = []
+    i = 0
+    while i < len(teile_raw):
+        current = teile_raw[i]
+        nxt = teile_raw[i + 1] if i + 1 < len(teile_raw) else None
+
+        is_mergeable_pair = (
+            nxt is not None
+            and current.get("format_type") == "oral_monologue"
+            and nxt.get("format_type") == "oral_feedback"
+            and "kandidat_a" not in current  # only the no-split shape needs this — the other Goethe subjects already work as-is
+        )
+
+        if is_mergeable_pair:
+            merged.append(_merge_monologue_feedback_pair(current, nxt))
+            i += 2
+        else:
+            merged.append(current)
+            i += 1
+
+    return merged
+
 
 # ---------------------------------------------------------------------------
 # TeilConfig construction
@@ -142,7 +224,7 @@ def _resolve_sprachliche_mittel(teil_raw: dict[str, Any], subject_raw: dict[str,
 
 def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilConfig]:
     scoring_system = PROVIDER_SCORING_SYSTEM.get(provider, DEFAULT_SCORING_SYSTEM)
-    teile_raw = subject_raw.get("teile", [])
+    teile_raw = _merge_alternating_teil_pairs(subject_raw.get("teile", []), subject_raw)
 
     configs: list[TeilConfig] = []
     for teil_raw in teile_raw:

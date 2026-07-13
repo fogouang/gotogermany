@@ -97,6 +97,11 @@ async def get_subject_data(
         Teil and take precedence over any duplicate value inside
         config, since the columns are the authoritative/queryable
         source and config is the flexible overflow.
+
+    NOTE: the oral module is named "sprechen" for Goethe/ÖSD imports
+    but "muendlicher_ausdruck" for TELC imports — same content,
+    inconsistent slug from the source JSON. Matched on both until the
+    TELC data is renamed at the source.
     """
     from app.modules.exams.repository import ExamRepository, LevelRepository, SubjectRepository
 
@@ -109,7 +114,10 @@ async def get_subject_data(
     level = await LevelRepository(db).get_by_id_or_404(subject.level_id)
     exam = await ExamRepository(db).get_by_id_or_404(level.exam_id)
 
-    sprechen_module = next((m for m in subject.modules if m.slug == "sprechen"), None)
+    sprechen_module = next(
+        (m for m in subject.modules if m.slug in ("sprechen", "muendlicher_ausdruck")),
+        None,
+    )
     if sprechen_module is None:
         from fastapi import HTTPException
 
