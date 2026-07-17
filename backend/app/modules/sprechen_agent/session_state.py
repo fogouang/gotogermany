@@ -18,7 +18,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-
+from . import schemas 
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -38,13 +38,13 @@ class AgentRole(StrEnum):
 
 
 class SessionStatus(StrEnum):
-    PENDING = "pending"           # created, Live connection not yet opened
-    ACTIVE = "active"              # a Live segment is currently streaming
-    BETWEEN_SEGMENTS = "between_segments"  # Live connection closed, transcript being carried over
-    AWAITING_GRADING = "awaiting_grading"  # session ended, Claude call not yet run
+    PENDING = "pending"
+    PREPARING = "preparing"        
+    ACTIVE = "active"
+    BETWEEN_SEGMENTS = "between_segments"
+    AWAITING_GRADING = "awaiting_grading"
     GRADED = "graded"
-    ABANDONED = "abandoned"        # student disconnected / timed out, cleaned up
-
+    ABANDONED = "abandoned"
 
 class ScoringSystem(StrEnum):
     """The 3 grading styles observed across providers — kept distinct
@@ -89,20 +89,20 @@ class SequenceStep(BaseModel):
 
 class TeilConfig(BaseModel):
     """Normalized view of a single Teil, built once when a session
-    starts by reading the raw subject JSON already stored in DB.
-
-    This is the output of the extraction layer discussed earlier —
-    it does NOT duplicate the DB row, it's a derived, ephemeral view
-    kept only for the lifetime of the session.
-    """
+    starts by reading the raw subject JSON already stored in DB."""
     teil_number: int
     name: str
     format_type: str
     instructions: str
     duration_minutes: int
     preparation_minutes: int = 0
-    # Normalized from leitpunkte / prompts / tasks / leitfragen / hinweis
     content_points: list[str] = Field(default_factory=list)
+    # Free-choice presentation topics, when the Teil offers several
+    # (e.g. telc B2 top-level "themes", Goethe B1/B2 nested
+    # kandidat_a.thema1/thema2). None when the Teil has no such
+    # choice — the frontend renders a flat content_points list in
+    # that case, or a "choose a topic" panel when this is set.
+    themes: dict[str, Any] | None = None
     sprachliche_mittel: list[str] = Field(default_factory=list)
     scoring_system: ScoringSystem
     scoring_criteria_raw: dict[str, Any] = Field(default_factory=dict)
@@ -179,9 +179,14 @@ class CriterionScore(BaseModel):
     criterion_name: str
     score: float
     max_score: float
-    comment: str | None = None
-
-
+    # Replaces the old single `comment` field. Structured the same way
+    # as the improvement blocks students recognize from other tools:
+    # what's wrong, a model phrase to internalize, and a short
+    # actionable tip. All optional — a criterion scored at/near max may
+    # have nothing worth flagging.
+    issue: str | None = None
+    model_phrase: str | None = None
+    tip: str | None = None
 class TeilGrading(BaseModel):
     teil_number: int
     criteria: list[CriterionScore]
@@ -202,3 +207,16 @@ class GradingResult(BaseModel):
     improvement_areas: list[str] = Field(default_factory=list)
     graded_at: datetime = Field(default_factory=datetime.utcnow)
     
+
+@staticmethod
+def to_teil_started_event(session: SessionState) -> schemas.TeilStartedEvent:
+    teil = session.current_teil()
+    return schemas.TeilStartedEvent(
+        session_id=session.session_id,
+        teil_number=teil.teil_number,
+        teil_name=teil.name,
+        instructions=teil.instructions,
+        content_points=teil.content_points,
+        duration_minutes=teil.duration_minutes,
+        preparation_minutes=teil.preparation_minutes,
+    )

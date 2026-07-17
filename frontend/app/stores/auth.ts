@@ -6,7 +6,7 @@ interface AuthState {
   user: AuthUserResponse | UserMeResponse | null;
   token: string | null;
   loading: boolean;
-  aiCredits: number,
+  aiCredits: number;
 }
 
 export const useAuthStore = defineStore("auth", {
@@ -14,7 +14,7 @@ export const useAuthStore = defineStore("auth", {
     user: null,
     token: null,
     loading: false,
-    aiCredits:0
+    aiCredits: 0,
   }),
 
   getters: {
@@ -23,6 +23,10 @@ export const useAuthStore = defineStore("auth", {
       state.user && "is_admin" in state.user ? state.user.is_admin : false,
     isDirector: (state) => state.user?.role === "center_director",
     isSecretary: (state) => state.user?.role === "branch_secretary",
+    isAmbassador: (state) =>
+      state.user && "is_ambassador" in state.user
+        ? state.user.is_ambassador
+        : false,
     isStudent: (state) => state.user?.role === "student",
     centerId: (state) =>
       state.user && "center_id" in state.user ? state.user.center_id : null,
@@ -78,7 +82,7 @@ export const useAuthStore = defineStore("auth", {
         OpenAPI.TOKEN = response.access_token;
         this.token = response.access_token;
         this.user = response.user;
-        this.aiCredits = (response.user as any)?.ai_credits ?? 0 
+        this.aiCredits = (response.user as any)?.ai_credits ?? 0;
 
         return { success: true, user: response.user };
       } catch (error: any) {
@@ -96,6 +100,7 @@ export const useAuthStore = defineStore("auth", {
       password: string,
       fullName: string,
       phone?: string,
+      referralCode?: string,
     ) {
       this._ensureApiConfig();
       this.loading = true;
@@ -106,6 +111,7 @@ export const useAuthStore = defineStore("auth", {
           password,
           full_name: fullName,
           phone: phone || null,
+          referral_code: referralCode || null,
         });
 
         const tokenCookie = useCookie("access_token", {
@@ -118,7 +124,7 @@ export const useAuthStore = defineStore("auth", {
         OpenAPI.TOKEN = response.access_token;
         this.token = response.access_token;
         this.user = response.user;
-        this.aiCredits = (response.user as any)?.ai_credits ?? 2
+        this.aiCredits = (response.user as any)?.ai_credits ?? 2;
 
         return { success: true, user: response.user };
       } catch (error: any) {
@@ -149,7 +155,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const response = await UsersService.getMeApiV1UsersMeGet();
         this.user = response;
-        this.aiCredits = (response as any)?.ai_credits ?? 0
+        this.aiCredits = (response as any)?.ai_credits ?? 0;
         this.token = tokenCookie.value;
       } catch (error) {
         console.error("Fetch user error:", error);
@@ -203,7 +209,7 @@ export const useAuthStore = defineStore("auth", {
       // Vider le state
       this.user = null;
       this.token = null;
-      this.aiCredits = 0
+      this.aiCredits = 0;
       OpenAPI.TOKEN = undefined;
 
       // Cookie côté client uniquement

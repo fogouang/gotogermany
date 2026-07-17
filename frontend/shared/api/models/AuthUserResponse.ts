@@ -12,6 +12,7 @@ export type AuthUserResponse = {
     full_name: string;
     is_admin: boolean;
     is_verified: boolean;
+    is_ambassador: boolean;
     role: UserRole;
     center_id?: (string | null);
     branch_id?: (string | null);

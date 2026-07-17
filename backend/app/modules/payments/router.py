@@ -82,7 +82,22 @@ async def get_my_payments(
     payments = await PaymentService(db).get_my_payments(current_user)
     return [PaymentResponse.model_validate(p) for p in payments]
 
+from app.modules.auth.dependencies import CurrentAmbassador
 
+@router.post("/manual/ambassador", response_model=dict)
+async def create_ambassador_manual_payment(
+    data: ManualPaymentRequest,
+    ambassador: CurrentAmbassador,
+    db: AsyncSession = Depends(get_db),
+):
+    """Permet à un ambassadeur de confirmer manuellement un paiement
+    pour l'un de ses propres filleuls, quand pawaPay est instable —
+    scope volontairement limité à ses filleuls, contrairement à la
+    route admin équivalente."""
+    return await PaymentService(db).create_manual_payment(
+        data, admin=ambassador, require_referral_match=True
+    )
+    
 @router.get("/{payment_id}", response_model=PaymentResponse)
 async def get_payment(
     payment_id: UUID,

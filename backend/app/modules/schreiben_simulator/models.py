@@ -69,11 +69,12 @@ class SimulatorResult(Base, UUIDMixin, TimestampMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, index=True
     )
+    # Plus de ForeignKey — peut pointer vers schreiben_subjects.id (legacy)
+    # OU subjects.id (hiérarchie unifiée), selon la source du sujet corrigé.
+    # L'intégrité référentielle n'est plus garantie par la DB ici — elle
+    # est de la responsabilité du service au moment de save_result().
     subject_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("schreiben_subjects.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        UUID(as_uuid=True), nullable=False, index=True
     )
     provider:         Mapped[str]   = mapped_column(String(20), nullable=False)
     level:            Mapped[str]   = mapped_column(String(5),  nullable=False)
@@ -81,8 +82,6 @@ class SimulatorResult(Base, UUIDMixin, TimestampMixin):
     max_score:        Mapped[int]   = mapped_column(Integer,    default=0)
     passed:           Mapped[bool]  = mapped_column(Boolean,    default=False)
     score_percentage: Mapped[float] = mapped_column(Float,      default=0.0)
-
-    # Tout le résultat complet en JSONB
     result_data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
     def __repr__(self) -> str:

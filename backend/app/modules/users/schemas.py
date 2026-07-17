@@ -130,12 +130,14 @@ class UserResponse(BaseSchema):
     is_verified: bool
     created_at: datetime
     ai_credits: int = 0
+    is_ambassador: bool
     role: UserRole
 
 
 class UserAdminResponse(UserResponse):
     """Réponse étendue pour l'admin."""
     is_admin: bool
+    is_ambassador: bool
     updated_at: datetime
     center_id: uuid.UUID | None
     branch_id: uuid.UUID | None

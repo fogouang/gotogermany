@@ -1,18 +1,12 @@
 """
 sprechen_agent.schemas
 ========================
-API-facing Pydantic contracts — what the frontend sends and receives
-over the Sprechen WebSocket, plus the REST-facing grading response.
-
-Deliberately thinner than session_state.SessionState: the frontend
-never needs live_connection_id, raw scoring_criteria, or internal
-sequence bookkeeping. This is the public surface only.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Literal, Union
+from typing import Annotated, Any, Literal, TypeAlias, Union
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -23,48 +17,42 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 
 class StartSessionRequest(BaseModel):
-    """Sent once, over REST or as the first WebSocket message, to
-    initialize a session for a subject the student picked from the
-    filtered list (provider + level)."""
     student_id: UUID
     subject_id: UUID
 
 
 class AudioChunkMessage(BaseModel):
-    """Streamed repeatedly while the student is speaking. The raw
-    bytes travel as a separate binary WebSocket frame — this message
-    only carries the sequencing metadata."""
     type: Literal["audio_chunk"] = "audio_chunk"
     session_id: UUID
     sequence_number: int
 
 
 class EndTurnMessage(BaseModel):
-    """Sent by the frontend when the student explicitly signals they
-    are done speaking (e.g. releases a push-to-talk button). Optional
-    for formats using pure voice-activity detection, but recommended
-    for predictable turn-taking."""
     type: Literal["end_turn"] = "end_turn"
     session_id: UUID
 
 
 class AbandonSessionMessage(BaseModel):
-    """Sent on graceful exit (student closes the tab intentionally).
-    Distinguishes a clean abandon from a dropped connection detected
-    server-side by heartbeat timeout — both end in ABANDONED, but this
-    one skips the grace-period reconnection window."""
     type: Literal["abandon_session"] = "abandon_session"
     session_id: UUID
 
 
-InboundMessage = Annotated[
-    Union[AudioChunkMessage, EndTurnMessage, AbandonSessionMessage],
+class ReadyToStartMessage(BaseModel):
+    """Sent by the frontend once the student is done reviewing the
+    preparation panel (or the local prep timer runs out) — signals
+    the backend to open the actual Live segment."""
+    type: Literal["ready_to_start"] = "ready_to_start"
+    session_id: UUID
+
+
+InboundMessage: TypeAlias = Annotated[
+    Union[AudioChunkMessage, EndTurnMessage, AbandonSessionMessage, ReadyToStartMessage],
     Field(discriminator="type"),
 ]
 
 
 # ---------------------------------------------------------------------------
-# Outbound — backend -> frontend (pushed as the session progresses)
+# Outbound — backend -> frontend
 # ---------------------------------------------------------------------------
 
 class SessionReadyEvent(BaseModel):
@@ -74,38 +62,45 @@ class SessionReadyEvent(BaseModel):
     first_teil_name: str
 
 
+class PreparationStartedEvent(BaseModel):
+    """Pushed instead of immediately opening a Live segment, whenever
+    the upcoming Teil has preparation_minutes > 0. Frontend shows a
+    notes-taking panel with a countdown; sends ReadyToStartMessage
+    when done (either by timer or an explicit button)."""
+    type: Literal["preparation_started"] = "preparation_started"
+    session_id: UUID
+    teil_number: int
+    teil_name: str
+    instructions: str
+    content_points: list[str]
+    themes: dict[str, Any] | None = None
+    preparation_minutes: int
+
+
 class TeilStartedEvent(BaseModel):
-    """Pushed whenever the orchestrator moves to a new Teil. Frontend
-    uses this to update the "Teil X / Y" header and swap in the
-    relevant instructions/leitpunkte panel — same fields it already
-    displays statically today."""
+    """Pushed whenever the orchestrator moves to a new Teil."""
     type: Literal["teil_started"] = "teil_started"
     session_id: UUID
     teil_number: int
     teil_name: str
     instructions: str
     content_points: list[str]
+    themes: dict[str, Any] | None = None
     duration_minutes: int
+    preparation_minutes: int = 0
 
 
 class AgentSpeakingEvent(BaseModel):
-    """Signals the frontend to show a visual "agent is speaking"
-    state (e.g. waveform / avatar animation) rather than expecting
-    student audio input."""
     type: Literal["agent_speaking"] = "agent_speaking"
     session_id: UUID
 
 
 class StudentTurnEvent(BaseModel):
-    """Signals the frontend it's the student's turn — mic can open."""
     type: Literal["student_turn"] = "student_turn"
     session_id: UUID
 
 
 class TranscriptUpdateEvent(BaseModel):
-    """Incremental transcript line, pushed as soon as it's available
-    from the Live provider — lets the frontend optionally show a
-    live caption, and lets the client confirm audio is being heard."""
     type: Literal["transcript_update"] = "transcript_update"
     session_id: UUID
     speaker: Literal["student", "agent"]
@@ -118,9 +113,10 @@ class SessionEndedEvent(BaseModel):
     reason: Literal["completed", "abandoned", "error"]
 
 
-OutboundEvent = Annotated[
+OutboundEvent: TypeAlias = Annotated[
     Union[
         SessionReadyEvent,
+        PreparationStartedEvent,
         TeilStartedEvent,
         AgentSpeakingEvent,
         StudentTurnEvent,
@@ -139,7 +135,9 @@ class CriterionScoreOut(BaseModel):
     criterion_name: str
     score: float
     max_score: float
-    comment: str | None = None
+    issue: str | None = None
+    model_phrase: str | None = None
+    tip: str | None = None
 
 
 class TeilGradingOut(BaseModel):
@@ -161,10 +159,11 @@ class GradingResponse(BaseModel):
     strengths: list[str]
     improvement_areas: list[str]
     graded_at: datetime
+    previous_score_percent: float | None = None
+    score_delta_percent: float | None = None
 
 
 class SessionHistoryItem(BaseModel):
-    """One row in the student's past-sessions list."""
     session_id: UUID
     provider: str
     level: str
@@ -176,8 +175,5 @@ class SessionHistoryItem(BaseModel):
 
 
 class SessionHistoryListResponse(BaseModel):
-    """response_model for GET /history — matches the typed
-    response_model= convention used throughout the codebase rather
-    than returning a raw dict."""
     items: list[SessionHistoryItem]
     total: int

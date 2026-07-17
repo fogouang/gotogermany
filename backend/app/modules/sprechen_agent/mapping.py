@@ -122,7 +122,7 @@ ROLE_DEFAULT_NOTES: dict[AgentRole, str] = {
 # ---------------------------------------------------------------------------
 
 def _extract_content_points(data: dict[str, Any]) -> list[str]:
-    for key in ("leitpunkte", "prompts", "tasks", "leitfragen"):
+    for key in ("leitpunkte", "prompts", "tasks", "leitfragen", "topics"):
         value = data.get(key)
         if value:
             return list(value)
@@ -143,18 +143,28 @@ def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
             or teil_raw.get("question")
         ),
     }
-    # Stimulus people — different key names across providers for the
-    # same concept (telc's oral_thema uses person_a/person_b; ÖSD's
-    # oral_meinungsaustausch uses person1/person2). Passed through as-is
-    # so prompt_builder.py can render whichever pair is present.
     for key in ("person_a", "person_b", "person1", "person2"):
         if key in teil_raw:
             payload[key] = teil_raw[key]
+
+    if not payload["content_points"] and "themes" in teil_raw:
+        payload["themes"] = teil_raw["themes"]
+
     return payload
 
 
 def _has_two_candidate_split(teil_raw: dict[str, Any]) -> bool:
-    return "kandidat_a" in teil_raw or "kandidat_b" in teil_raw
+    # Scoped to oral_monologue: this is the only format where the AI
+    # genuinely needs to present as Kandidat B in a full alternating
+    # sequence. bildbeschreibung also carries kandidat_a/kandidat_b
+    # (each candidate's own separate set of images to choose from,
+    # not two speakers alternating a presentation+feedback pattern) —
+    # matching on key presence alone previously misrouted it into the
+    # 6-step alternating template it was never meant to use.
+    return (
+        teil_raw.get("format_type") == "oral_monologue"
+        and ("kandidat_a" in teil_raw or "kandidat_b" in teil_raw)
+    )
 
 
 # ---------------------------------------------------------------------------

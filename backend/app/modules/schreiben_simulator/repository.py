@@ -139,3 +139,118 @@ class SchreibenSubjectRepository:
             r.subject_title = title
             results.append(r)
         return results
+    
+    
+    # ── Lecture depuis la hiérarchie unifiée (Subject/Module/Teil/Question) ──
+    # Ajouté en complément de schreiben_subjects — ne remplace rien.
+    # Un sujet "unifié" est identifié par le même id que la ligne Subject
+    # (donc distinct des UUID de schreiben_subjects, mais du même TYPE),
+    # ce qui permet à SchreibenSubjectResponse.id de rester un simple UUID
+    # sans distinguer la source à ce niveau.
+
+    async def get_all_unified(
+        self, provider: str | None = None, level: str | None = None
+    ) -> list[dict]:
+        from sqlalchemy.orm import selectinload
+        from app.modules.exams.models import Exam, Level, Subject, Module, Teil
+
+        q = (
+            select(Subject)
+            .join(Level, Level.id == Subject.level_id)
+            .join(Exam, Exam.id == Level.exam_id)
+            .options(
+                selectinload(Subject.modules).selectinload(Module.teile).selectinload(Teil.questions),
+                selectinload(Subject.level).selectinload(Level.exam),
+            )
+            .where(Subject.is_active == True)
+        )
+        if provider:
+            q = q.where(Exam.provider == provider.lower())
+        if level:
+            q = q.where(Level.cefr_code == level.lower())
+
+        result = await self.db.execute(q)
+        subjects = list(result.scalars().unique().all())
+
+        out: list[dict] = []
+        for subject in subjects:
+            schreiben_module = next(
+                (m for m in subject.modules if m.slug == "schreiben"), None
+            )
+            if schreiben_module is None:
+                continue
+            built = self._build_unified_subject_dict(subject, schreiben_module)
+            if built is not None:
+                out.append(built)
+        return out
+
+
+    async def get_by_id_unified(self, subject_id: uuid.UUID) -> dict | None:
+        from sqlalchemy.orm import selectinload
+        from app.modules.exams.models import Subject, Module, Teil, Level
+
+        result = await self.db.execute(
+            select(Subject)
+            .options(
+                selectinload(Subject.modules).selectinload(Module.teile).selectinload(Teil.questions),
+                selectinload(Subject.level).selectinload(Level.exam),
+            )
+            .where(Subject.id == subject_id)
+        )
+        subject = result.scalar_one_or_none()
+        if subject is None:
+            return None
+
+        schreiben_module = next(
+            (m for m in subject.modules if m.slug == "schreiben"), None
+        )
+        if schreiben_module is None:
+            return None
+
+        return self._build_unified_subject_dict(subject, schreiben_module)
+
+    @staticmethod
+    def _build_unified_subject_dict(subject, schreiben_module) -> dict | None:
+        tasks: list[dict] = []
+        for teil in sorted(schreiben_module.teile, key=lambda t: t.teil_number):
+            question = next(iter(teil.questions), None)
+            content = (question.content if question else {}) or {}
+
+            wct = content.get("word_count_target", 150)
+            tasks.append({
+                "teil": teil.teil_number,
+                "scenario": content.get("scenario") or teil.instructions or "",
+                "prompts": content.get("prompts", []),
+                "topic": content.get("topic", ""),
+                "context_ad": content.get("context_ad", ""),
+                "opinion_quote": "",  # remplacé par "stimulus" ci-dessous
+                "word_count_min": max(wct - 20, 0),
+                "word_count_max": wct + 20,
+                "word_count_target": wct,
+                # Passage direct, sans aplatissement — le frontend sait
+                # déjà interpréter cette forme (voir parseStimulus()).
+                "stimulus": content.get("stimulus"),
+                "stimulus_author": content.get("stimulus_author", ""),
+                "themes": content.get("themes"),
+                "opinion_variants": content.get("opinion_variants"),
+                "stimulus_email": content.get("stimulus_email"),
+                "info_comparison": content.get("info_comparison"),
+                "leitpunkte": content.get("leitpunkte", []),
+                "register": content.get("register", ""),
+                "recipient": content.get("recipient", ""),
+            })
+
+        if not tasks:
+            return None
+
+        return {
+            "id": subject.id,
+            "provider": subject.level.exam.provider if subject.level and subject.level.exam else "",
+            "level": subject.level.cefr_code.lower() if subject.level else "",
+            "title": subject.name or f"Sujet {subject.subject_number}",
+            "description": None,
+            "tasks": tasks,
+            "display_order": 0,
+            "is_active": subject.is_active,
+            "created_at": subject.created_at,
+        }

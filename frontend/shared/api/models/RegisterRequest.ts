@@ -7,5 +7,6 @@ export type RegisterRequest = {
     password: string;
     full_name: string;
     phone?: (string | null);
+    referral_code?: (string | null);
 };
 

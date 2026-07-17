@@ -109,8 +109,17 @@ class Payment(Base, UUIDMixin, TimestampMixin):
         DateTime(timezone=True), nullable=True
     )
 
+    # Renseigné uniquement si ce paiement a été confirmé manuellement
+    # (admin ou ambassadeur) plutôt qu'automatiquement via le webhook
+    # pawaPay — traçabilité et audit.
+    validated_manually_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    
     # Relations
-    user: Mapped["User"] = relationship("User", back_populates="payments", lazy="noload")
+    user: Mapped["User"] = relationship(
+        "User", back_populates="payments", foreign_keys=[user_id], lazy="noload"
+    )
     level: Mapped["Level"] = relationship("Level", back_populates="payments", lazy="noload")
     promo_code: Mapped["PromoCode | None"] = relationship(
         "PromoCode", back_populates="payments", lazy="noload"

@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-/**
- * One row in the student's past-sessions list.
- */
 export type SessionHistoryItem = {
     session_id: string;
     provider: string;

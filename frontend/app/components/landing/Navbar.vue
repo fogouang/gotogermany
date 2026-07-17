@@ -258,65 +258,27 @@
       :style="{ width: '90vw', maxWidth: '420px' }"
       :modal="true"
     >
-      <Message v-if="signupError" severity="error" :closable="false">{{
-        signupError
-      }}</Message>
-      <div class="flex flex-col gap-4 mt-4">
-        <div>
-          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-            t("auth.full_name")
-          }}</label>
-          <InputText
-            v-model="signupForm.fullName"
-            class="w-full"
-            placeholder="Jean Dupont"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-            t("auth.email")
-          }}</label>
-          <InputText
-            v-model="signupForm.email"
-            type="email"
-            class="w-full"
-            placeholder="jean@example.com"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-            t("auth.phone")
-          }}</label>
-          <InputText
-            v-model="signupForm.phone"
-            class="w-full"
-            placeholder="+237 6XX XXX XXX"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-            t("auth.password")
-          }}</label>
-          <Password v-model="signupForm.password" class="w-full" toggleMask />
-        </div>
-        <Button
-          :label="t('auth.signup_btn')"
-          :loading="authStore.loading"
-          class="w-full mt-1"
-          style="background-color: #076152; border: none"
-          @click="handleSignup"
-        />
-        <p class="text-xs text-gray-500 text-center">
-          {{ t("auth.have_account") }}
-          <a
-            href="#"
-            class="text-[#076152] hover:underline font-medium"
-            @click.prevent="openLogin"
-          >
-            {{ t("auth.login_link") }}
-          </a>
-        </p>
-      </div>
+      <SignupForm
+        @success="
+          () => {
+            signupVisible = false;
+            navigateTo('/dashboard');
+          }
+        "
+      >
+        <template #footer>
+          <p class="text-xs text-gray-500 text-center">
+            {{ t("auth.have_account") }}
+            <a
+              href="#"
+              class="text-[#076152] hover:underline font-medium"
+              @click.prevent="openLogin"
+            >
+              {{ t("auth.login_link") }}
+            </a>
+          </p>
+        </template>
+      </SignupForm>
     </Dialog>
   </div>
 
@@ -393,6 +355,8 @@ const handleLogin = async () => {
       navigateTo("/centre/dashboard");
     } else if (authStore.isSecretary) {
       navigateTo("/centre/etudiants");
+    } else if (authStore.isAmbassador) {
+      navigateTo("/referrals");
     } else {
       navigateTo("/dashboard");
     }

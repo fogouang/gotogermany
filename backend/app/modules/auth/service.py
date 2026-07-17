@@ -15,6 +15,7 @@ from app.modules.users.repository import UserRepository, UserDeviceRepository
 from app.shared.exceptions.http import BadRequestException, UnauthorizedException
 from app.shared.security.jwt import create_access_token, decode_access_token
 from app.shared.security.password import hash_password, verify_password
+from app.modules.referrals.service import ReferralService
 
 
 class AuthService:
@@ -23,12 +24,20 @@ class AuthService:
         self.db = db
         self.repo = UserRepository(db)
         self.device_repo = UserDeviceRepository(db)
+        self.referral_service = ReferralService(db)
 
     async def register(self, data: RegisterRequest) -> AuthResponse:
         # Email unique
         existing = await self.repo.find_by_email(data.email)
         if existing:
             raise BadRequestException(detail="Cet email est déjà utilisé.")
+
+        # Résolution du parrainage (silencieuse si code invalide/inexistant)
+        referred_by_user_id = None
+        if data.referral_code:
+            ambassador = await self.referral_service.resolve_referrer(data.referral_code)
+            if ambassador:
+                referred_by_user_id = ambassador.id
 
         # Créer l'utilisateur
         verification_token = secrets.token_urlsafe(32)
@@ -41,6 +50,7 @@ class AuthService:
             is_admin=False,
             is_verified=False,
             verification_token=verification_token,
+            referred_by_user_id=referred_by_user_id,
         )
 
         # TODO: envoyer email de vérification avec verification_token
@@ -51,6 +61,7 @@ class AuthService:
             user=AuthUserResponse.model_validate(user),
         )
 
+        
     async def login(self, data: LoginRequest) -> AuthResponse:
         user = await self.repo.find_by_email(data.email)
 

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { UsersService, ExamAccessService, OpenAPI } from "#shared/api";
+import { UsersService, ExamAccessService, ReferralsService, OpenAPI } from "#shared/api";
 import type { UserAdminResponse, DirectorCreateRequest } from "#shared/api";
 
 interface AdminUsersState {
@@ -50,6 +50,28 @@ export const useAdminUsersStore = defineStore("adminUsers", {
         return { success: false, error: error.body?.detail };
       }
     },
+    async toggleAmbassador(userId: string, currentStatus: boolean) {
+      this._ensureApiConfig();
+      try {
+        await ReferralsService.setAmbassadorStatusApiV1ReferralsAdminSetAmbassadorPost(
+          { user_id: userId, is_ambassador: !currentStatus },
+        );
+        // NOTE: UserAdminResponse doit exposer is_ambassador pour que
+        // cette mise à jour locale ait un effet visible — si le champ
+        // n'existe pas encore dans le schéma users/admin, l'ajouter
+        // côté backend (UserAdminResponse) puis régénérer le client.
+        const index = this.users.findIndex((u) => u.id === userId);
+        if (index !== -1) {
+          (this.users[index] as any).is_ambassador = !currentStatus;
+        }
+        return { success: true };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur mise à jour statut ambassadeur",
+        };
+      }
+    },
     async deleteUser(userId: string) {
       this._ensureApiConfig();
       try {
@@ -91,7 +113,7 @@ export const useAdminUsersStore = defineStore("adminUsers", {
         this.users.push(director);
         return { success: true, director };
       } catch (error: any) {
-        console.error("ERREUR CREATE DIRECTOR:", error); // ← ajout temporaire
+        console.error("ERREUR CREATE DIRECTOR:", error);
         return {
           success: false,
           error: error.body?.detail || "Erreur création directeur",

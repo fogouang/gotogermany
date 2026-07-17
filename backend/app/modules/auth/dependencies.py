@@ -97,6 +97,17 @@ async def get_current_user_ws(
         await websocket.close(code=4401)
         raise WebSocketDisconnect(code=4401)
 
+async def get_current_ambassador(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Restreint l'accès aux ambassadeurs désignés par l'admin."""
+    if not current_user.is_ambassador:
+        raise ForbiddenException(detail="Accès réservé aux ambassadeurs.")
+    return current_user
+
+
+
+
 # Annotations pratiques pour les routers
 CurrentUser = Annotated[User, Depends(get_current_user)]
 CurrentAdmin = Annotated[User, Depends(get_current_admin)]
@@ -105,3 +116,5 @@ CurrentAdmin = Annotated[User, Depends(get_current_admin)]
 CurrentDirector = Annotated[User, Depends(get_current_director)]
 CurrentSecretary = Annotated[User, Depends(get_current_secretary)]
 CurrentCenterStaff = Annotated[User, Depends(get_current_director_or_secretary)]
+
+CurrentAmbassador = Annotated[User, Depends(get_current_ambassador)]

@@ -1,36 +1,5 @@
 """
 app/modules/sprechen_agent/router.py
-
-Matches the convention seen in app/modules/users/router.py:
-CurrentUser-style typed auth dependencies, get_db from
-app.shared.database.session, and a SprechenAgentService(db) instance
-per request/connection rather than free functions.
-
-Two concurrent tasks per WebSocket connection:
-  - _relay_client_to_agent(): reads frames from the frontend, sends
-    audio to the current Live segment, watches for control messages
-    (end_turn, abandon_session).
-  - _relay_agent_to_client(): reads live_client.LiveSegment.events(),
-    forwards audio/transcript to the frontend, and drives session
-    transitions (advance, finalize) whenever the Live provider signals
-    turn_complete — swapping in a fresh segment mid-connection per the
-    segmentation strategy (one Live connection per sequence step).
-
-Resolved against real code shown across this conversation:
-  - get_subject_data(): fully confirmed against the real Exam/Level/
-    Subject/Module/Teil SQLAlchemy models — see its docstring below.
-  - get_live_provider_keys(): confirmed against the real Settings
-    class — see its docstring below. One field (OPENAI_API_KEY) still
-    needs adding to Settings on your side.
-
-Still open:
-  - Settings import path (`app.core.config`) is a guess based on the
-    ".env at backend/ root" comment in the Settings file shown —
-    confirm the actual module path.
-  - Confirm the actual role dependency to use: CurrentUser was assumed
-    (any authenticated user), but if Sprechen sessions should be
-    restricted to students specifically, swap for a CurrentStudent
-    equivalent if one exists alongside CurrentDirector/CurrentSecretary/etc.
 """
 
 from __future__ import annotations
@@ -49,10 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.auth.dependencies import CurrentUser, get_current_user_ws
 from app.modules.users.models import User
 from app.shared.database.session import get_db
-
-# ASSUMPTION: import path guessed from the "backend/.env" comment in
-# the Settings file shown — adjust if config.py actually lives
-# elsewhere (e.g. app/config.py rather than app/core/config.py).
 from app.config import Settings, get_settings
 
 from . import live_client, orchestrator
@@ -62,11 +27,12 @@ from .schemas import (
     AgentSpeakingEvent,
     InboundMessage,
     OutboundEvent,
+    ReadyToStartMessage,
     SessionHistoryListResponse,
     StudentTurnEvent,
 )
 from .service import SprechenAgentService
-from .session_state import SessionState
+from .session_state import SessionState, SessionStatus
 
 router = APIRouter()
 
@@ -74,41 +40,17 @@ _inbound_adapter: TypeAdapter[InboundMessage] = TypeAdapter(InboundMessage)
 
 
 # ---------------------------------------------------------------------------
-# Dependencies still to wire — see module docstring.
+# Dependencies (unchanged from before)
 # ---------------------------------------------------------------------------
 
 async def get_subject_data(
     subject_id: UUID, db: AsyncSession = Depends(get_db)
 ) -> tuple[dict[str, Any], str, str]:
-    """Reconstructs the raw Sprechen subject dict this module expects
-    from the real Exam -> Level -> Subject -> Module -> Teil hierarchy.
-
-    Fully confirmed against app/modules/exams/models.py,
-    repository.py, and service.py — no remaining assumptions:
-      - SubjectRepository(db).get_with_modules(subject_id) eager-loads
-        Subject -> modules -> teile -> questions in one query.
-      - Exam.provider (not .slug) is the "goethe"/"telc"/"oesd" value.
-      - Level.cefr_code (not .name) is the bare "B1"/"B2" value.
-      - Teil.config is the JSONB blob holding everything variable
-        (leitpunkte, scoring_criteria, sprachliche_mittel,
-        kandidat_a/kandidat_b, etc.) — Teil has no `name` column, so
-        that one comes from config alone. teil_number, format_type,
-        instructions, and time_minutes ARE real scalar columns on
-        Teil and take precedence over any duplicate value inside
-        config, since the columns are the authoritative/queryable
-        source and config is the flexible overflow.
-
-    NOTE: the oral module is named "sprechen" for Goethe/ÖSD imports
-    but "muendlicher_ausdruck" for TELC imports — same content,
-    inconsistent slug from the source JSON. Matched on both until the
-    TELC data is renamed at the source.
-    """
     from app.modules.exams.repository import ExamRepository, LevelRepository, SubjectRepository
 
     subject = await SubjectRepository(db).get_with_modules(subject_id)
     if subject is None:
         from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail="Subject not found.")
 
     level = await LevelRepository(db).get_by_id_or_404(subject.level_id)
@@ -120,11 +62,11 @@ async def get_subject_data(
     )
     if sprechen_module is None:
         from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail="No Sprechen module for this subject.")
 
     teile_raw: list[dict[str, Any]] = []
     for teil in sprechen_module.teile:
+        # Scalar Teil columns first — these ARE real and correctly populated.
         teil_dict: dict[str, Any] = dict(teil.config or {})
         teil_dict["teil_number"] = teil.teil_number
         teil_dict["format_type"] = teil.format_type
@@ -133,6 +75,19 @@ async def get_subject_data(
         if teil.time_minutes is not None:
             teil_dict["time_minutes"] = teil.time_minutes
         teil_dict.setdefault("max_score", teil.max_score)
+
+        # The actual variable content (leitpunkte/prompts/tasks/
+        # scenario/themes/kandidat_a/kandidat_b/scoring_criteria) lives
+        # on the Teil's single Question row, NOT on teil.config — that
+        # column is only ever populated for images (see
+        # image_import_service.py), never for the parsed oral content.
+        question = next(iter(teil.questions), None)
+        if question is not None:
+            teil_dict.update(question.content or {})
+            scoring_criteria = (question.correct_answer or {}).get("scoring_criteria")
+            if scoring_criteria:
+                teil_dict["scoring_criteria"] = scoring_criteria
+
         teile_raw.append(teil_dict)
 
     subject_raw: dict[str, Any] = {
@@ -152,29 +107,15 @@ class LiveProviderKeys:
 
 
 def get_live_provider_keys(settings: Settings = Depends(get_settings)) -> LiveProviderKeys:
-    """Confirmed against app/core/config.py's Settings class — GEMINI_API_KEY
-    and ANTHROPIC_API_KEY already exist there.
-
-    ONE THING STILL MISSING ON YOUR SIDE: Settings has no OPENAI_API_KEY
-    field yet (only AI_PROVIDER/GEMINI_API_KEY/ANTHROPIC_API_KEY, which
-    back the *Schreiben* correction provider choice — a separate concern
-    from this module's Gemini-primary/OpenAI-fallback Live strategy).
-    Add one line to Settings:
-        OPENAI_API_KEY: str = ""
-    and the .env entry alongside it. Until then, this will raise
-    AttributeError the first time a Gemini health-check failure
-    actually triggers the OpenAI fallback path in live_client.py.
-    """
     return LiveProviderKeys(
         gemini=settings.GEMINI_API_KEY,
-        openai=getattr(settings, "OPENAI_API_KEY", ""),  # see docstring — add the real field
+        openai=getattr(settings, "OPENAI_API_KEY", ""),
         anthropic=settings.ANTHROPIC_API_KEY,
     )
 
 
 # ---------------------------------------------------------------------------
-# Internal signaling exceptions — used to unwind the task group cleanly,
-# not user-facing errors.
+# Internal signaling exceptions
 # ---------------------------------------------------------------------------
 
 class _SessionEnded(Exception):
@@ -186,16 +127,23 @@ class _LiveProviderError(Exception):
 
 
 # ---------------------------------------------------------------------------
-# Connection context — shared mutable state between the two relay tasks
+# Connection context
 # ---------------------------------------------------------------------------
 
 @dataclass
 class _ConnectionContext:
     websocket: WebSocket
     session: SessionState
-    segment: live_client.LiveSegment
+    segment: live_client.LiveSegment | None  # None while PREPARING
     service: SprechenAgentService
     keys: LiveProviderKeys
+    # Set by _relay_client_to_agent() on ReadyToStartMessage; waited on
+    # by _relay_agent_to_client() whenever a Teil transition leaves the
+    # session in PREPARING with no segment yet open. Recreated (a fresh
+    # Event) each time we enter a new preparation phase, so a stale
+    # "set" from a previous Teil's prep can never be misread as
+    # already-ready for the next one.
+    ready_event: asyncio.Event
 
 
 async def _send_event(websocket: WebSocket, event: OutboundEvent) -> None:
@@ -203,10 +151,6 @@ async def _send_event(websocket: WebSocket, event: OutboundEvent) -> None:
 
 
 async def _send_role_signal(ctx: _ConnectionContext) -> None:
-    """Tells the frontend whose turn it is — mirrors the same decision
-    service.py makes for trigger_agent_turn(), via the shared
-    orchestrator.is_agent_turn_next() helper so the two never drift
-    apart."""
     agent_turn_next = orchestrator.is_agent_turn_next(ctx.session)
     event = (
         AgentSpeakingEvent(session_id=ctx.session.session_id)
@@ -217,9 +161,30 @@ async def _send_role_signal(ctx: _ConnectionContext) -> None:
 
 
 def _transcript_event(session_id: UUID, speaker: str, text: str):
-    from .schemas import TranscriptUpdateEvent  # local import — avoids widening the module-level import list for one small helper
-
+    from .schemas import TranscriptUpdateEvent
     return TranscriptUpdateEvent(session_id=session_id, speaker=speaker, text=text)  # type: ignore[arg-type]
+
+
+async def _open_first_segment_of_teil(ctx: _ConnectionContext) -> None:
+    """Shared by the initial connection and by advance_and_reopen()
+    when a Teil transition leads into ACTIVE without needing a prep
+    wait (preparation_minutes == 0). Opens the Live segment, tells the
+    frontend the Teil has started, signals whose turn it is."""
+    ctx.segment = await ctx.service.begin_live_segment(
+        ctx.session, gemini_api_key=ctx.keys.gemini, openai_api_key=ctx.keys.openai
+    )
+    await _send_event(ctx.websocket, ctx.service.to_teil_started_event(ctx.session))
+    await _send_role_signal(ctx)
+
+
+async def _enter_preparation_phase(ctx: _ConnectionContext) -> None:
+    """Sends PreparationStartedEvent and blocks until the frontend
+    sends ReadyToStartMessage (via _relay_client_to_agent setting
+    ctx.ready_event), then opens the Live segment for this Teil."""
+    ctx.ready_event = asyncio.Event()  # fresh — never reuse a previous Teil's event
+    await _send_event(ctx.websocket, ctx.service.to_preparation_started_event(ctx.session))
+    await ctx.ready_event.wait()
+    await _open_first_segment_of_teil(ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -235,36 +200,50 @@ async def _relay_client_to_agent(ctx: _ConnectionContext) -> None:
 
         raw_bytes = message.get("bytes")
         if raw_bytes is not None:
+            if ctx.segment is None:
+                # Stray audio arriving during a preparation phase —
+                # there's no segment to relay to yet. Drop it silently
+                # rather than erroring; the frontend shouldn't be
+                # streaming mic audio before ready_to_start anyway.
+                continue
             try:
                 await ctx.segment.send_audio_chunk(raw_bytes)
             except websockets.exceptions.ConnectionClosed:
-                # Expected race: a mic chunk in flight right as the
-                # Live segment is being swapped/closed for a step
-                # transition. Harmless — drop this stray chunk rather
-                # than tearing down the whole session over it.
                 pass
             continue
 
         raw_text = message.get("text")
         if raw_text is None:
             continue
+        print(f"DEBUG received raw text: {raw_text!r}")
 
         try:
             inbound = _inbound_adapter.validate_python(json.loads(raw_text))
-        except (ValidationError, json.JSONDecodeError):
-            continue  # ignore malformed control messages rather than killing the session
+        except (ValidationError, json.JSONDecodeError) as e:
+            print(f"DEBUG rejected inbound message: {raw_text!r} -> {e}")
+            continue
 
         if isinstance(inbound, AbandonSessionMessage):
             await ctx.service.abandon_session(ctx.session, ctx.segment)
             await ctx.websocket.close(code=1000)
             raise _SessionEnded()
-        # AudioChunkMessage / EndTurnMessage carry no extra action here —
-        # audio bytes are relayed above via the binary-frame branch, and
-        # end-of-turn is detected server-side by the Live provider's VAD
-        # (turn_complete arrives through _relay_agent_to_client instead).
+
+        if isinstance(inbound, ReadyToStartMessage):
+            # Only meaningful while PREPARING; harmless no-op otherwise
+            # (e.g. a duplicate click on the frontend's "start" button).
+            if ctx.session.status == SessionStatus.PREPARING:
+                ctx.ready_event.set()
+            continue
+        # AudioChunkMessage / EndTurnMessage: no extra action, as before.
 
 
 async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
+    # Entry point: the very first Teil may itself require preparation —
+    # sprechen_session_ws() below leaves ctx.segment as None in that
+    # case and expects this loop to handle it before doing anything else.
+    if ctx.segment is None:
+        await _enter_preparation_phase(ctx)
+
     while True:
         async for event in ctx.segment.events():
             if event.type == "audio_delta" and event.audio_bytes:
@@ -279,13 +258,10 @@ async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
                 await ctx.service.record_turn(ctx.session, speaker=speaker, text=event.text)
 
             elif event.type == "turn_complete":
-                break  # exit the inner loop; advance the sequence below
+                break
 
             elif event.type == "error":
                 raise _LiveProviderError(event.error_message or "unknown Live provider error")
-
-            # "interrupted" (barge-in): no state change needed for V1 —
-            # the provider handles clearing its own audio queue.
 
         transition, new_segment = await ctx.service.advance_and_reopen(
             ctx.session, gemini_api_key=ctx.keys.gemini, openai_api_key=ctx.keys.openai
@@ -305,7 +281,14 @@ async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
             await ctx.websocket.close(code=1000)
             raise _SessionEnded()
 
-        assert new_segment is not None  # guaranteed by advance_and_reopen's contract
+        if new_segment is None:
+            # advance_and_reopen() put the session into PREPARING for
+            # the new Teil instead of opening a segment — wait for the
+            # student, same as the very first Teil.
+            ctx.segment = None
+            await _enter_preparation_phase(ctx)
+            continue
+
         ctx.segment = new_segment
 
         if transition.teil_changed:
@@ -316,7 +299,6 @@ async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
 # ---------------------------------------------------------------------------
 # WebSocket endpoint
 # ---------------------------------------------------------------------------
-
 @router.websocket("/ws/{subject_id}")
 async def sprechen_session_ws(
     websocket: WebSocket,
@@ -326,59 +308,58 @@ async def sprechen_session_ws(
     keys: LiveProviderKeys = Depends(get_live_provider_keys),
     subject_data: tuple[dict[str, Any], str, str] = Depends(get_subject_data),
 ) -> None:
-    """subject_id lives in the URL (not a first WS message) so every
-    dependency — db, the subject lookup — resolves through normal
-    FastAPI DI before the socket is even accepted.
-
-    current_user uses get_current_user_ws, NOT the CurrentUser used
-    everywhere else in this file — CurrentUser is HTTPBearer-based,
-    which requires a Request object and raises
-    TypeError: HTTPBearer.__call__() missing 1 required positional
-    argument: 'request' on WebSocket routes. get_current_user_ws reads
-    the access_token cookie directly off the WebSocket handshake
-    instead (the browser sends cookies automatically on the WS
-    handshake — no way to set a custom Authorization header from
-    browser JS anyway, so cookie-only is correct here, not a
-    workaround)."""
     await websocket.accept()
 
     service = SprechenAgentService(db)
     subject_raw, provider, level = subject_data
 
-    session, segment = await service.start_session(
+    # start_session() now always leaves the session in PREPARING —
+    # every Teil (including the first) goes through a preparation
+    # screen before its Live segment opens, regardless of what
+    # preparation_minutes the subject data has (falls back to a
+    # fixed default when absent — see to_preparation_started_event()).
+    session = await service.start_session(
         student_id=current_user.id,
         subject_id=subject_id,
         subject_raw=subject_raw,
         provider=provider,
         level=level,
-        gemini_api_key=keys.gemini,
-        openai_api_key=keys.openai,
     )
 
-    ctx = _ConnectionContext(websocket=websocket, session=session, segment=segment, service=service, keys=keys)
+    ctx = _ConnectionContext(
+        websocket=websocket,
+        session=session,
+        segment=None,
+        service=service,
+        keys=keys,
+        ready_event=asyncio.Event(),
+    )
 
     await _send_event(websocket, service.to_session_ready_event(session))
-    await _send_event(websocket, service.to_teil_started_event(session))
-    await _send_role_signal(ctx)
+
+    # No more conditional here — ctx.segment stays None, and
+    # _relay_agent_to_client() enters the preparation phase
+    # unconditionally on its first iteration (its own
+    # `if ctx.segment is None:` check), same as it already does for
+    # every subsequent Teil transition.
 
     try:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(_relay_client_to_agent(ctx))
             tg.create_task(_relay_agent_to_client(ctx))
     except* _SessionEnded:
-        pass  # normal completion or explicit abandon — already handled above
+        pass
     except* WebSocketDisconnect:
         await service.abandon_session(ctx.session, ctx.segment)
     except* _LiveProviderError as eg:
         await service.abandon_session(ctx.session, ctx.segment)
         try:
             await ctx.websocket.close(code=1011, reason=str(eg.exceptions[0]))
-        except Exception:  # noqa: BLE001 — best-effort close, connection may already be gone
+        except Exception:  # noqa: BLE001
             pass
 
-
 # ---------------------------------------------------------------------------
-# History — plain REST, no WebSocket involved
+# History — unchanged
 # ---------------------------------------------------------------------------
 
 @router.get("/history", response_model=SessionHistoryListResponse)

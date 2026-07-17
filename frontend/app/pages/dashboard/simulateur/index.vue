@@ -17,7 +17,7 @@
             ? 'border-teal-600 text-teal-700'
             : 'border-transparent text-gray-500 hover:text-gray-700',
         ]"
-        @click="switchTab('sujets')"
+        @click="activeTab = 'sujets'"
       >
         <i class="pi pi-list-check mr-2"></i>{{ t("simulator.tab_subjects") }}
       </button>
@@ -28,7 +28,7 @@
             ? 'border-teal-600 text-teal-700'
             : 'border-transparent text-gray-500 hover:text-gray-700',
         ]"
-        @click="switchTab('resultats')"
+        @click="switchToResults"
       >
         <i class="pi pi-history mr-2"></i>{{ t("simulator.tab_results") }}
         <span
@@ -42,45 +42,45 @@
 
     <!-- TAB : Sujets -->
     <template v-if="activeTab === 'sujets'">
-      <!-- Filtres -->
+      <!-- Filtres provider/level (dérivés du vrai catalogue, pas de liste en dur) -->
       <div class="flex flex-wrap gap-2">
         <button
-          v-for="p in providers"
-          :key="p.value"
+          v-for="p in availableProviders"
+          :key="p"
           :class="[
             'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
-            selectedProvider === p.value
+            selectedProvider === p
               ? 'bg-teal-600 text-white border-teal-600'
               : 'bg-white text-gray-600 border-gray-200 hover:border-teal-300',
           ]"
-          @click="toggleProvider(p.value)"
+          @click="selectedProvider = selectedProvider === p ? '' : p"
         >
-          {{ p.label }}
+          {{ p.toUpperCase() }}
         </button>
         <div class="w-px bg-gray-200 mx-1" />
         <button
-          v-for="l in levels"
-          :key="l.value"
+          v-for="l in availableLevels"
+          :key="l"
           :class="[
             'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
-            selectedLevel === l.value
+            selectedLevel === l
               ? 'bg-indigo-600 text-white border-indigo-600'
               : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300',
           ]"
-          @click="toggleLevel(l.value)"
+          @click="selectedLevel = selectedLevel === l ? '' : l"
         >
-          {{ l.label }}
+          {{ l }}
         </button>
       </div>
 
       <!-- Loading -->
-      <div v-if="store.loading" class="flex justify-center py-12">
+      <div v-if="examsStore.loading" class="flex justify-center py-12">
         <ProgressSpinner style="width: 50px; height: 50px" />
       </div>
 
       <!-- Vide -->
       <div
-        v-else-if="!store.subjects.length"
+        v-else-if="!simulatorSubjects.length"
         class="text-center py-16 bg-white rounded-xl border border-gray-100"
       >
         <i class="pi pi-inbox text-4xl text-gray-300 mb-3 block"></i>
@@ -100,7 +100,7 @@
       <!-- Grille sujets — 1 col mobile, 2 col desktop -->
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <NuxtLink
-          v-for="subject in store.subjects"
+          v-for="subject in simulatorSubjects"
           :key="subject.id"
           :to="`/dashboard/simulateur/${subject.id}`"
           class="group bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-teal-200 transition-all flex flex-col gap-3"
@@ -119,20 +119,15 @@
               >
                 {{ subject.title }}
               </p>
-              <p
-                v-if="subject.description"
-                class="text-xs text-gray-400 mt-0.5 line-clamp-1"
-              >
-                {{ subject.description }}
-              </p>
             </div>
           </div>
 
           <!-- Scénario -->
           <p
+            v-if="subject.preview"
             class="text-xs text-gray-500 line-clamp-2 leading-relaxed bg-gray-50 rounded-lg px-3 py-2"
           >
-            {{ subject.tasks[0]?.scenario }}
+            {{ subject.preview }}
           </p>
 
           <!-- Footer card -->
@@ -144,9 +139,9 @@
               />
               <Tag :value="subject.level.toUpperCase()" severity="info" />
               <span class="text-xs text-gray-400">
-                {{ subject.tasks.length }}
+                {{ subject.taskCount }}
                 {{
-                  subject.tasks.length > 1
+                  subject.taskCount > 1
                     ? t("simulator.tasks_plural")
                     : t("simulator.tasks")
                 }}
@@ -163,7 +158,7 @@
       </div>
     </template>
 
-    <!-- TAB : Mes corrections -->
+    <!-- TAB : Mes corrections (inchangé — reste sur le store dédié) -->
     <template v-else>
       <div v-if="store.loadingResults" class="flex justify-center py-12">
         <ProgressSpinner style="width: 50px; height: 50px" />
@@ -183,7 +178,7 @@
         <Button
           :label="t('simulator.see_subjects')"
           icon="pi pi-list-check"
-          @click="switchTab('sujets')"
+          @click="activeTab = 'sujets'"
         />
       </div>
 
@@ -307,48 +302,115 @@ definePageMeta({ layout: "dashboard", middleware: "auth" });
 const { t } = useI18n();
 useHead({ title: t("simulator.page_title") });
 
-const store = useSimulatorStore();
-const router = useRouter();
+const examsStore = useExamsStore();
+const store = useSimulatorStore(); // reste utilisé pour "Mes corrections" uniquement
 
 const activeTab = ref<"sujets" | "resultats">("sujets");
 const selectedProvider = ref("");
 const selectedLevel = ref("");
 
-const providers = computed(() => [
-  { label: t("simulator.all"), value: "" },
-  { label: "Goethe", value: "goethe" },
-  { label: "TELC", value: "telc" },
-  { label: "ÖSD", value: "osd" },
-]);
+// ---------------------------------------------------------------------
+// Sujets — dérivés de useExamsStore, exactement comme la page Sprechen :
+// fetchExamBySlug() charge l'arbre complet, on filtre ensuite côté
+// client pour ne garder que les sujets qui ont un module "schreiben".
+// ---------------------------------------------------------------------
 
-const levels = computed(() => [
-  { label: t("simulator.all"), value: "" },
-  { label: "B1", value: "b1" },
-  { label: "B2", value: "b2" },
-]);
+const availableProviders = computed(() => {
+  const set = new Set(examsStore.catalog.map((e) => e.provider));
+  return [...set];
+});
 
-const toggleProvider = (val: string) => {
-  selectedProvider.value = selectedProvider.value === val ? "" : val;
-  reloadSubjects();
-};
-const toggleLevel = (val: string) => {
-  selectedLevel.value = selectedLevel.value === val ? "" : val;
-  reloadSubjects();
-};
+const availableLevels = computed(() => {
+  const set = new Set<string>();
+  examsStore.catalog.forEach((e) =>
+    e.levels?.forEach((l) => set.add(l.cefr_code)),
+  );
+  return [...set];
+});
+
+interface SimulatorSubjectCard {
+  id: string;
+  provider: string;
+  level: string;
+  title: string;
+  preview?: string;
+  taskCount: number;
+}
+
+const simulatorSubjects = computed<SimulatorSubjectCard[]>(() => {
+  const exam = examsStore.currentExam;
+  if (!exam) return [];
+
+  const cards: SimulatorSubjectCard[] = [];
+  for (const level of exam.levels ?? []) {
+    if (selectedLevel.value && level.cefr_code !== selectedLevel.value)
+      continue;
+
+    for (const subject of level.subjects ?? []) {
+      const schreibenModule = (subject.modules ?? []).find(
+        (m) => m.slug === "schreiben",
+      );
+      if (!schreibenModule) continue;
+
+      const firstTeil = schreibenModule.teile?.[0];
+      cards.push({
+        id: subject.id,
+        provider: exam.provider,
+        level: level.cefr_code,
+        title:
+          subject.name ||
+          `${t("simulator.subject_default")} ${subject.subject_number}`,
+        preview: firstTeil?.instructions ?? undefined,
+        taskCount: schreibenModule.teile?.length ?? 0,
+      });
+    }
+  }
+  return cards;
+});
+
+// Résout le bon Exam (slug) à charger selon provider ET niveau — un
+// provider peut correspondre à plusieurs Exam distincts en base (un
+// par niveau, selon le slug utilisé à l'import), pas un seul Exam
+// avec plusieurs Level.
+const targetExamSlug = computed(() => {
+  if (!selectedProvider.value) return null;
+
+  const candidates = examsStore.catalog.filter(
+    (e) => e.provider === selectedProvider.value,
+  );
+  if (!candidates.length) return null;
+
+  if (!selectedLevel.value) return candidates[0]!.slug;
+
+  const match = candidates.find((e) =>
+    e.levels?.some((l) => l.cefr_code === selectedLevel.value),
+  );
+  return (match ?? candidates[0]!).slug;
+});
+
+watch(
+  targetExamSlug,
+  async (slug) => {
+    if (!slug) return;
+    await examsStore.fetchExamBySlug(slug);
+  },
+  { immediate: true },
+);
+
 const resetFilters = () => {
   selectedProvider.value = "";
   selectedLevel.value = "";
-  reloadSubjects();
+  examsStore.clearCurrentExam();
 };
-const reloadSubjects = () =>
-  store.fetchSubjects(
-    selectedProvider.value || undefined,
-    selectedLevel.value || undefined,
-  );
 
-const switchTab = (tab: "sujets" | "resultats") => {
-  activeTab.value = tab;
-  if (tab === "resultats" && !store.results.length) store.fetchMyResults();
+// ---------------------------------------------------------------------
+// Historique — reste géré par useSimulatorStore (données de résultats
+// spécifiques, pas du catalogue d'examens)
+// ---------------------------------------------------------------------
+
+const switchToResults = () => {
+  activeTab.value = "resultats";
+  if (!store.results.length) store.fetchMyResults();
 };
 
 const openResult = (result: SimulatorResultResponse) => {
@@ -419,5 +481,5 @@ const providerTagClass = (p: string) =>
     osd: "bg-orange-100 text-orange-700",
   })[p] ?? "bg-gray-100 text-gray-600";
 
-onMounted(() => reloadSubjects());
+const router = useRouter();
 </script>

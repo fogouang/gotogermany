@@ -112,3 +112,21 @@ async def count_student_sessions(
         stmt = stmt.where(SprechenSession.level == level)
 
     return (await db.scalar(stmt)) or 0
+
+
+async def get_latest_session_for_subject(
+    db: AsyncSession, student_id: uuid.UUID, subject_id: uuid.UUID
+) -> SprechenSession | None:
+    """The student's most recent completed attempt on this exact
+    subject, if any — used to compute the before/after score delta
+    shown after grading. Returns None on a first-ever attempt."""
+    stmt = (
+        select(SprechenSession)
+        .where(
+            SprechenSession.student_id == student_id,
+            SprechenSession.subject_id == subject_id,
+        )
+        .order_by(SprechenSession.completed_at.desc())
+        .limit(1)
+    )
+    return await db.scalar(stmt)

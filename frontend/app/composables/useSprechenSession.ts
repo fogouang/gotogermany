@@ -19,6 +19,7 @@ import type {
   OutboundEvent,
   GradingResultMessage,
   TeilStartedEvent,
+  PreparationStartedEvent,
 } from "#shared/sprechenWebSocketTypes"; // ADJUST if the real path differs
 
 export interface SprechenAudioIO {
@@ -35,6 +36,7 @@ export interface SprechenAudioIO {
 export type SprechenConnectionStatus =
   | "idle"
   | "connecting"
+  | "preparing"
   | "active"
   | "ended"
   | "error";
@@ -58,6 +60,7 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
   const status: Ref<SprechenConnectionStatus> = ref("idle");
   const totalTeile = ref(0);
   const currentTeil: Ref<TeilStartedEvent | null> = shallowRef(null);
+  const preparationInfo: Ref<PreparationStartedEvent | null> = shallowRef(null);
   const micState: Ref<SprechenMicState> = ref(null);
   const transcript: Ref<TranscriptLine[]> = ref([]);
   const gradingResult: Ref<GradingResultMessage | null> = shallowRef(null);
@@ -84,11 +87,23 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     switch (msg.type) {
       case "session_ready":
         totalTeile.value = msg.total_teile;
-        status.value = "active";
+        // Do NOT jump to "active" here — the very next message decides
+        // that: either preparation_started (this Teil needs prep) or
+        // teil_started (goes straight live). Forcing "active" now would
+        // flash the call UI for an instant before a preparation screen
+        // that's actually coming.
+        status.value = "connecting";
+        break;
+
+      case "preparation_started":
+        preparationInfo.value = msg;
+        status.value = "preparing";
         break;
 
       case "teil_started":
         currentTeil.value = msg;
+        preparationInfo.value = null; // clear — the live segment is open now
+        status.value = "active";
         break;
 
       case "agent_speaking":
@@ -172,12 +187,31 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     ws = socket;
   }
 
+  /** Sent once the student is done reviewing the preparation panel
+   * (button click, or a local prep timer running out) — tells the
+   * backend to open the Live segment for the Teil currently in
+   * preparationInfo. No-op if we're not actually in "preparing". */
+  function sendReadyToStart(): void {
+      console.log("sendReadyToStart called", { ws: !!ws, readyState: ws?.readyState, prepInfo: preparationInfo.value });
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!preparationInfo.value) return;
+    ws.send(
+      JSON.stringify({
+        type: "ready_to_start",
+        session_id: preparationInfo.value.session_id,
+      }),
+    );
+  }
+
   function abandonSession(): void {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(
       JSON.stringify({
         type: "abandon_session",
-        session_id: currentTeil.value?.session_id ?? "",
+        session_id:
+          currentTeil.value?.session_id ??
+          preparationInfo.value?.session_id ??
+          "",
       }),
     );
   }
@@ -196,12 +230,14 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     status,
     totalTeile,
     currentTeil,
+    preparationInfo,
     micState,
     transcript,
     gradingResult,
     errorMessage,
     // actions
     connect,
+    sendReadyToStart,
     abandonSession,
     disconnect,
   };

@@ -12,6 +12,7 @@ class RegisterRequest(BaseSchema):
     password: str = Field(min_length=8, max_length=100)
     full_name: str = Field(min_length=2, max_length=150)
     phone: str | None = Field(default=None, max_length=20)
+    referral_code: str | None = None
 
 
 class LoginRequest(BaseSchema):
@@ -36,6 +37,7 @@ class AuthUserResponse(BaseSchema):
     full_name: str
     is_admin: bool
     is_verified: bool
+    is_ambassador: bool
     role: UserRole
     center_id: UUID | None = None
     branch_id: UUID | None = None

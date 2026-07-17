@@ -155,6 +155,13 @@ class PaymentService:
             await self._grant_level_access(payment)
             await self._generate_invoice(payment)
 
+            from app.modules.referrals.service import ReferralService
+            await ReferralService(self.db).record_payment_earning(
+                payment_id=payment.id,
+                payer_user_id=payment.user_id,
+                payment_amount=payment.amount_paid,
+            )
+
         elif payload.status == "FAILED":
             await self.repo.update(
                 payment.id,
@@ -283,9 +290,18 @@ class PaymentService:
         self,
         data: ManualPaymentRequest,
         admin: User,
+        *,
+        require_referral_match: bool = False,
     ) -> dict:
         from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
+
+        if require_referral_match:
+            target_user = await self.db.get(User, data.user_id)
+            if target_user is None or target_user.referred_by_user_id != admin.id:
+                raise BadRequestException(
+                    detail="Vous ne pouvez valider que les paiements de vos propres filleuls."
+                )
 
         level = await self.db.get(Level, data.level_id)
         if not level:
@@ -315,15 +331,22 @@ class PaymentService:
             operator="MANUAL",
             completed_at=now,
             pawapay_deposit_id=None,
+            validated_manually_by=admin.id,
         )
 
         await self._grant_level_access(payment)
         await self._generate_invoice(payment)
 
+        # Enregistre le gain de parrainage si le payeur a un parrain —
+        # no-op silencieux sinon.
+        from app.modules.referrals.service import ReferralService
+        await ReferralService(self.db).record_payment_earning(
+            payment_id=payment.id, payer_user_id=data.user_id, payment_amount=plan.price
+        )
+
         logger.info(
-            f"Paiement manuel créé par admin {admin.id} "
-            f"pour user {data.user_id} — level {data.level_id} "
-            f"— ref {transaction_reference}"
+            f"Paiement manuel créé par {admin.id} pour user {data.user_id} "
+            f"— level {data.level_id} — ref {transaction_reference}"
             + (f" — note: {data.note}" if data.note else "")
         )
 

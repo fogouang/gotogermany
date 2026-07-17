@@ -15,6 +15,7 @@ export type UserMeResponse = {
     is_verified: boolean;
     created_at: string;
     ai_credits?: number;
+    is_ambassador: boolean;
     role: UserRole;
     center_id: (string | null);
     branch_id: (string | null);

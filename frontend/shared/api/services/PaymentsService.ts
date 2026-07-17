@@ -97,6 +97,34 @@ export class PaymentsService {
         });
     }
     /**
+     * Create Ambassador Manual Payment
+     * Permet à un ambassadeur de confirmer manuellement un paiement
+     * pour l'un de ses propres filleuls, quand pawaPay est instable —
+     * scope volontairement limité à ses filleuls, contrairement à la
+     * route admin équivalente.
+     * @param requestBody
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static createAmbassadorManualPaymentApiV1PaymentsManualAmbassadorPost(
+        requestBody: ManualPaymentRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<Record<string, any>> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/payments/manual/ambassador',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get Payment
      * Détail d'un paiement.
      * @param paymentId

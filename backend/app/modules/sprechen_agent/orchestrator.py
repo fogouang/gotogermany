@@ -222,6 +222,27 @@ def _merge_alternating_teil_pairs(
 # TeilConfig construction
 # ---------------------------------------------------------------------------
 
+def _resolve_available_themes(teil_raw: dict[str, Any]) -> dict[str, Any] | None:
+    """Surfaces free-choice presentation topics to the frontend, no
+    matter which of the two observed shapes they're stored in:
+      - top-level "themes": {"thema1": {...}, "thema2": {...}}
+        (telc B2 Teil 1, single-role oral_monologue)
+      - nested under "kandidat_a": {"thema1": {...}, "thema2": {...}}
+        (Goethe B1/B2, two-candidate oral_monologue — kandidat_a is
+        always the real student's own set of choices, regardless of
+        which role they end up playing in the sequence)
+    Returns None when the Teil has no theme choice at all (a single
+    fixed scenario/prompt list instead)."""
+    if "themes" in teil_raw:
+        return teil_raw["themes"]
+
+    kandidat_a = teil_raw.get("kandidat_a")
+    if isinstance(kandidat_a, dict) and any(k.startswith("thema") for k in kandidat_a):
+        return kandidat_a
+
+    return None
+
+
 def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilConfig]:
     scoring_system = PROVIDER_SCORING_SYSTEM.get(provider, DEFAULT_SCORING_SYSTEM)
     teile_raw = _merge_alternating_teil_pairs(subject_raw.get("teile", []), subject_raw)
@@ -240,6 +261,7 @@ def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilC
                 duration_minutes=teil_raw.get("duration_minutes") or teil_raw.get("time_minutes") or 0,
                 preparation_minutes=teil_raw.get("preparation_minutes", 0) or 0,
                 content_points=mapping.extract_content_points(teil_raw),
+                themes=_resolve_available_themes(teil_raw),
                 sprachliche_mittel=_resolve_sprachliche_mittel(teil_raw, subject_raw),
                 scoring_system=scoring_system,
                 scoring_criteria_raw=teil_raw.get("scoring_criteria", {}),

@@ -12,17 +12,53 @@ from pydantic import BaseModel, Field
 # Sous-schéma : une tâche dans un sujet
 # ─────────────────────────────────────────────────────────
 
+class ThemeSchema(BaseModel):
+    titel: str = ""
+    stimulus: str = ""
+    prompts: list[str] = Field(default_factory=list)
+
+
+class OpinionVariantSchema(BaseModel):
+    thema: str = ""
+    aussagen: list[str] = Field(default_factory=list)
+
+
+class StimulusEmailSchema(BaseModel):
+    sender: str = ""
+    subject: str = ""
+    body: str = ""
+
+
+class InfoComparisonSchema(BaseModel):
+    anbieter: str = ""
+    situation: str = ""
+    versprechen: list[str] = Field(default_factory=list)
+    probleme: list[str] = Field(default_factory=list)
+    kontakt: str = ""
+
+
 class TaskSchema(BaseModel):
-    teil: int                                    # 1, 2 ou 3
-    scenario: str                                # Consigne principale
-    prompts: list[str] = Field(default_factory=list)   # Points à traiter
-    topic: str = ""                              # Goethe/ÖSD B2 Teil 1
-    context_ad: str = ""                         # Telc B2 / ÖSD B2
-    opinion_quote: str = ""                      # Goethe B1 Teil 2
+    teil: int
+    scenario: str = ""
+    prompts: list[str] = Field(default_factory=list)
+    topic: str = ""
+    context_ad: str = ""
+    opinion_quote: str = ""
     word_count_min: int = 100
     word_count_max: int = 200
-
-
+    # Champs riches, optionnels — présents seulement pour les sujets
+    # venant de la hiérarchie unifiée (Question.content), absents pour
+    # les anciens sujets schreiben_subjects saisis à la main.
+    stimulus: str | dict | None = None
+    stimulus_author: str = ""
+    themes: dict[str, ThemeSchema] | None = None
+    opinion_variants: dict[str, OpinionVariantSchema] | None = None
+    stimulus_email: StimulusEmailSchema | None = None
+    info_comparison: InfoComparisonSchema | None = None
+    leitpunkte: list[str] = Field(default_factory=list)
+    word_count_target: int | None = None
+    register: str = ""
+    recipient: str = ""
 # ─────────────────────────────────────────────────────────
 # CRUD Admin
 # ─────────────────────────────────────────────────────────

@@ -157,13 +157,31 @@ exactly this shape:
     {{
       "teil_number": <int>,
       "criteria": [
-        {{"criterion_name": <str>, "score": <float>, "max_score": <float>, "comment": <str>}}
+        {{
+          "criterion_name": <str>,
+          "score": <float>,
+          "max_score": <float>,
+          "issue": <str or null>,
+          "model_phrase": <str or null>,
+          "tip": <str or null>
+        }}
       ]
     }}
   ],
   "strengths": [<str>, ...],
   "improvement_areas": [<str>, ...]
 }}
+
+For each criterion:
+- "issue": one short sentence naming the concrete gap you observed, grounded \
+  in what the candidate actually said (or didn't say). Use null only if the \
+  score is at or near max and there is genuinely nothing to flag.
+- "model_phrase": a short German sentence or phrase the candidate could have \
+  used instead, illustrating the fix. Use null if not applicable (e.g. a \
+  pronunciation-only issue).
+- "tip": one short, actionable practice suggestion (e.g. "Prepare a 30-60 \
+  second self-introduction you can always reuse"). Use null only alongside \
+  a null issue.
 """
 
 
@@ -202,7 +220,9 @@ def parse_grading_response(raw_text: str, session: SessionState) -> GradingResul
                 criterion_name=c["criterion_name"],
                 score=float(c["score"]),
                 max_score=float(c["max_score"]),
-                comment=c.get("comment"),
+                issue=c.get("issue"),
+                model_phrase=c.get("model_phrase"),
+                tip=c.get("tip"),
             )
             for c in teil_data["criteria"]
         ]

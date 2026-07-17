@@ -26,10 +26,16 @@ export interface AbandonSessionMessage {
   session_id: string;
 }
 
+export interface ReadyToStartMessage {
+  type: 'ready_to_start';
+  session_id: string;
+}
+
 export type InboundMessage =
   | AudioChunkMessage
   | EndTurnMessage
-  | AbandonSessionMessage;
+  | AbandonSessionMessage
+  | ReadyToStartMessage;
 
 // ── Outbound: backend -> frontend (received as WebSocket text frames;
 //    binary frames carry raw PCM16 audio and aren't typed here) ──
@@ -41,6 +47,17 @@ export interface SessionReadyEvent {
   first_teil_name: string;
 }
 
+export interface PreparationStartedEvent {
+  type: 'preparation_started';
+  session_id: string;
+  teil_number: number;
+  teil_name: string;
+  instructions: string;
+  content_points: string[];
+  themes: Record<string, ThemeOption> | null;
+  preparation_minutes: number;
+}
+
 export interface TeilStartedEvent {
   type: 'teil_started';
   session_id: string;
@@ -48,7 +65,21 @@ export interface TeilStartedEvent {
   teil_name: string;
   instructions: string;
   content_points: string[];
+  themes: Record<string, ThemeOption> | null;
   duration_minutes: number;
+  preparation_minutes: number;
+}
+
+// Shape of one theme choice — covers both observed variants:
+// telc-style "titel" + "leitpunkte", and Goethe-style "title" + "leitpunkte".
+// Both field name variants are optional since the backend passes the
+// raw JSON through as-is without renaming keys.
+export interface ThemeOption {
+  title?: string;
+  titel?: string;
+  leitpunkte?: string[];
+  punkte?: string[];
+  accroche?: string;
 }
 
 export interface AgentSpeakingEvent {
@@ -76,6 +107,7 @@ export interface SessionEndedEvent {
 
 export type OutboundEvent =
   | SessionReadyEvent
+  | PreparationStartedEvent
   | TeilStartedEvent
   | AgentSpeakingEvent
   | StudentTurnEvent
@@ -89,7 +121,9 @@ export interface CriterionScoreOut {
   criterion_name: string;
   score: number;
   max_score: number;
-  comment: string | null;
+  issue: string | null;
+  model_phrase: string | null;
+  tip: string | null;
 }
 
 export interface TeilGradingOut {
@@ -112,6 +146,8 @@ export interface GradingResultMessage {
   strengths: string[];
   improvement_areas: string[];
   graded_at: string;
+  previous_score_percent: number | null;
+  score_delta_percent: number | null;
 }
 
 // ── Type guard helper, since every message arrives as unknown JSON ──

@@ -6,6 +6,7 @@ Logique du simulateur :
 - Réutilise exactement les mêmes prompts et provider que le module corrections
 """
 from __future__ import annotations
+from types import SimpleNamespace
 import uuid
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,13 +55,23 @@ class SchreibenSimulatorService:
         active_only: bool = True,
     ) -> list[SchreibenSubjectResponse]:
         subjects = await self.repo.get_all(provider, level, active_only)
-        return [SchreibenSubjectResponse.model_validate(s) for s in subjects]
+        legacy = [SchreibenSubjectResponse.model_validate(s) for s in subjects]
+
+        unified_dicts = await self.repo.get_all_unified(provider, level)
+        unified = [SchreibenSubjectResponse.model_validate(d) for d in unified_dicts]
+
+        return legacy + unified
 
     async def get_subject(self, subject_id: uuid.UUID) -> SchreibenSubjectResponse:
         subject = await self.repo.get_by_id(subject_id)
-        if not subject:
-            raise ValueError(f"Sujet {subject_id} introuvable.")
-        return SchreibenSubjectResponse.model_validate(subject)
+        if subject:
+            return SchreibenSubjectResponse.model_validate(subject)
+
+        unified = await self.repo.get_by_id_unified(subject_id)
+        if unified:
+            return SchreibenSubjectResponse.model_validate(unified)
+
+        raise ValueError(f"Sujet {subject_id} introuvable.")
 
     # ── Admin CRUD ───────────────────────────────────────
 
@@ -119,9 +130,19 @@ class SchreibenSimulatorService:
 
         # ── Correction ────────────────────────────────────────
         subject = await self.repo.get_by_id(request.subject_id)
-        if not subject:
-            await self.db.rollback()
-            raise ValueError(f"Sujet {request.subject_id} introuvable.")
+        if subject is None:
+            unified = await self.repo.get_by_id_unified(request.subject_id)
+            if unified is None:
+                await self.db.rollback()
+                raise ValueError(f"Sujet {request.subject_id} introuvable.")
+            subject = SimpleNamespace(
+                id=unified["id"],
+                provider=unified["provider"],
+                level=unified["level"],
+                tasks=unified["tasks"],
+                is_active=unified["is_active"],
+                title=unified["title"],
+            )
         if not subject.is_active:
             await self.db.rollback()
             raise ValueError("Ce sujet n'est plus disponible.")

@@ -333,14 +333,20 @@ async def open_segment(
     openai_api_key: str,
     preferred_provider: str = "gemini",
 ) -> LiveSegment:
-    """Entry point for service.py: open exactly one Live segment for
-    the current sequence step. Tries Gemini first (primary, per the
-    validated cost comparison), falls back to OpenAI Realtime only on
-    a failed health check or failed setup handshake."""
+    gemini_error: Exception | None = None
+
     if preferred_provider == "gemini" and await _gemini_reachable(gemini_api_key):
         try:
             return await GeminiLiveSegment.open(system_prompt, api_key=gemini_api_key)
-        except LiveConnectionError:
-            pass  # fall through to OpenAI below
+        except LiveConnectionError as exc:
+            gemini_error = exc  # fall through to OpenAI below, if configured
+
+    if not openai_api_key:
+        # No OpenAI fallback configured — surface the real Gemini
+        # failure instead of a confusing "invalid_api_key: ''" from a
+        # provider we never intended to use.
+        raise gemini_error or LiveConnectionError(
+            "Gemini Live unreachable and no OpenAI fallback key configured."
+        )
 
     return await OpenAIRealtimeSegment.open(system_prompt, api_key=openai_api_key)

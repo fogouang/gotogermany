@@ -23,8 +23,9 @@ import app.modules.payments.models       # noqa: F401  ← après plans
 import app.modules.ai_credit_purchases.models  # noqa
 import app.modules.exam_access.models    # noqa: F401
 
-# Niveau 5 — dépend de users + exams + questions
+# Niveau 5 — dépend de users + exams + questions (+ payments pour referrals)
 import app.modules.exam_sessions.models  # noqa: F401
 import app.modules.corrections.models  # noqa: F401
 import app.modules.schreiben_simulator.models  # noqa: F401
 import app.modules.sprechen_agent.models  # noqa: F401
+import app.modules.referrals.models      # noqa: F401  ← dépend de users + payments

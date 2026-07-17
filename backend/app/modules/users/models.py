@@ -35,6 +35,13 @@ class User(Base, UUIDMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_ambassador: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Utilisateur ambassadeur qui a partagé le lien de parrainage ayant
+    # mené à l'inscription — renseigné une seule fois, jamais modifié.
+    referred_by_user_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Token de vérification email (nullable une fois vérifié)
     verification_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -89,7 +96,10 @@ class User(Base, UUIDMixin, TimestampMixin):
 
     # Relations existantes
     payments: Mapped[list["Payment"]] = relationship(
-        "Payment", back_populates="user", lazy="noload"
+        "Payment",
+        back_populates="user",
+        foreign_keys="Payment.user_id",
+        lazy="noload",
     )
     exam_accesses: Mapped[list["ExamAccess"]] = relationship(
         "ExamAccess", back_populates="user", lazy="noload"

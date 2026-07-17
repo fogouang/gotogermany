@@ -15,6 +15,7 @@ export type UserAdminResponse = {
     is_verified: boolean;
     created_at: string;
     ai_credits?: number;
+    is_ambassador: boolean;
     role: UserRole;
     is_admin: boolean;
     updated_at: string;
