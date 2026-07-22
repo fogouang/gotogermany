@@ -20,27 +20,20 @@ class CreditPricingResponse(BaseModel):
 
 
 # ============================================================================
-# PURCHASE — User (MyCoolPay)
+# PURCHASE — User (pawaPay)
 # ============================================================================
 
 class CreditPurchaseRequest(BaseModel):
     credits: int = Field(..., ge=5, le=500)
-    payment_method: str = Field(..., description="mobile_money | card")
-    phone_number: str | None = None
+    phone_number: str = Field(..., description="Numéro Mobile Money")
+    operator: str = Field(..., description="MTN ou ORANGE")
 
-    @field_validator("payment_method")
+    @field_validator("operator")
     @classmethod
-    def validate_method(cls, v: str) -> str:
-        if v not in ("mobile_money", "card"):
-            raise ValueError("payment_method doit être mobile_money ou card")
-        return v
-
-    @field_validator("phone_number")
-    @classmethod
-    def validate_phone(cls, v: str | None, info) -> str | None:
-        if info.data.get("payment_method") == "mobile_money" and not v:
-            raise ValueError("phone_number requis pour mobile_money")
-        return v
+    def validate_operator(cls, v: str) -> str:
+        if v.upper() not in ("MTN", "ORANGE"):
+            raise ValueError("operator doit être MTN ou ORANGE")
+        return v.upper()
 
 
 class CreditPurchaseResponse(BaseModel):
@@ -50,9 +43,6 @@ class CreditPurchaseResponse(BaseModel):
     price_per_credit: float
     total_amount: float
     payment_status: str
-    ussd: str | None = None
-    action: str | None = None
-    redirect_url: str | None = None
     transaction_reference: str | None = None
     model_config = ConfigDict(from_attributes=True)
 

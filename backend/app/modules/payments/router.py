@@ -120,8 +120,23 @@ async def payment_callback(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
+    body = await request.json()
+    app_tag = (body.get("metadata") or {}).get("app")
+
+    if app_tag == "lumina":
+        import httpx
+        async with httpx.AsyncClient(timeout=15) as client:
+            try:
+                await client.post(
+                    "https://lumina-tcf.online/api/v1/payments/callback/jkdKo0Lp8lsdfjk4j0HJhskfak93d",
+                    json=body,
+                )
+                return {"status": "OK"}
+            except Exception as e:
+                logger.error(f"Échec relais vers Lumina: {e}")
+                return {"status": "KO"}
+
     try:
-        body = await request.json()
         payload = PawapayCallbackPayload(**body)
         await PaymentService(db).handle_callback(payload)
         return {"status": "OK"}

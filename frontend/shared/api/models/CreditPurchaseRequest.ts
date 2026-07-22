@@ -5,9 +5,12 @@
 export type CreditPurchaseRequest = {
     credits: number;
     /**
-     * mobile_money | card
+     * Numéro Mobile Money
      */
-    payment_method: string;
-    phone_number?: (string | null);
+    phone_number: string;
+    /**
+     * MTN ou ORANGE
+     */
+    operator: string;
 };
 

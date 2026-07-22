@@ -99,6 +99,7 @@ class PaymentService:
                 provider="MTN_MOMO_CMR" if data.operator == "MTN" else "ORANGE_CMR",
                 client_reference_id=transaction_reference,
                 customer_message="GoToGermany",
+                metadata={"app": "gotogermany"},
             )
         except Exception as e:
             await self.repo.update(payment.id, payment_status="FAILED")
@@ -129,7 +130,7 @@ class PaymentService:
     async def handle_callback(self, payload: PawapayCallbackPayload) -> bool:
         """
         Traite le callback pawaPay.
-        COMPLETED → grant level access + facture
+        COMPLETED → grant level access (ou crédit IA) + facture
         FAILED → marque comme échoué
         """
         logger.info(f"Callback reçu — depositId={payload.depositId} status={payload.status}")
@@ -152,7 +153,14 @@ class PaymentService:
                 webhook_payload=_serialize_payload(payload.model_dump()),
             )
             logger.info(f"Payment {payment.id} → COMPLETED")
-            await self._grant_level_access(payment)
+
+            # Achat de crédits IA — court-circuite l'accès exam si c'est le cas
+            from app.modules.ai_credit_purchases.service import AICreditPurchaseService
+            is_credit_purchase = await AICreditPurchaseService(self.db).on_payment_completed(payment)
+
+            if not is_credit_purchase:
+                await self._grant_level_access(payment)
+
             await self._generate_invoice(payment)
 
             from app.modules.referrals.service import ReferralService
@@ -175,6 +183,10 @@ class PaymentService:
     # ── Grant Level Access ───────────────────────────────
 
     async def _grant_level_access(self, payment: Payment) -> None:
+        if payment.plan_id is None or payment.level_id is None:
+            # Pas un accès exam classique (ex: achat de crédits IA) — rien à faire ici.
+            return
+
         from app.modules.exam_access.models import ExamAccess
         from app.modules.exam_access.repository import ExamAccessRepository
         from app.modules.plans.models import Plan

@@ -9,9 +9,6 @@ export type CreditPurchaseResponse = {
     price_per_credit: number;
     total_amount: number;
     payment_status: string;
-    ussd?: (string | null);
-    action?: (string | null);
-    redirect_url?: (string | null);
     transaction_reference?: (string | null);
 };
 

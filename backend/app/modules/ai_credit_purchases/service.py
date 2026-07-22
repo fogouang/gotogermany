@@ -3,7 +3,7 @@ app/modules/ai_credit_purchases/service.py
 """
 import logging
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,12 +20,13 @@ from app.modules.ai_credit_purchases.schemas import (
     ManualCreditGrantResponse,
 )
 from app.modules.payments.models import Payment
+from app.modules.payments.pawapay import PawapayClient
 from app.modules.users.models import User
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 
 logger = logging.getLogger(__name__)
 
-PRICE_PER_CREDIT: int = 50   # FCFA — ajuster selon ton pricing
+PRICE_PER_CREDIT: int = 50
 MIN_PURCHASE: int = 5
 MAX_PURCHASE: int = 500
 
@@ -35,10 +36,7 @@ class AICreditPurchaseService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = AICreditPurchaseRepository(db)
-
-    # =========================================================================
-    # PRICING
-    # =========================================================================
+        self.pawapay = PawapayClient()
 
     def get_pricing_info(self) -> CreditPricingResponse:
         examples = [
@@ -52,19 +50,18 @@ class AICreditPurchaseService:
             examples=examples,
         )
 
-    # =========================================================================
-    # ACHAT VIA MYCOOLPAY
-    # =========================================================================
-
     async def purchase_credits(self, user_id: UUID, data: CreditPurchaseRequest) -> CreditPurchaseResponse:
-        from app.modules.payments.mycoolpay import MyCoolPayClient
+        if data.credits < MIN_PURCHASE or data.credits > MAX_PURCHASE:
+            raise BadRequestException(
+                detail=f"L'achat doit être compris entre {MIN_PURCHASE} et {MAX_PURCHASE} crédits."
+            )
 
         total = data.credits * PRICE_PER_CREDIT
         ref = self._generate_reference()
 
         payment = Payment(
             user_id=user_id,
-            exam_id=None,
+            level_id=None,
             plan_id=None,
             amount_gross=total,
             amount_paid=total,
@@ -72,7 +69,7 @@ class AICreditPurchaseService:
             currency="XAF",
             payment_status="PENDING",
             transaction_reference=ref,
-            operator=data.payment_method.upper(),
+            operator=data.operator,
         )
         self.db.add(payment)
         await self.db.flush()
@@ -85,57 +82,63 @@ class AICreditPurchaseService:
             total_amount=float(total),
         )
 
+        phone = data.phone_number.strip()
+        if not phone.startswith("237"):
+            phone = f"237{phone}"
+
         try:
-            coolpay = MyCoolPayClient()
-            coolpay_response = await coolpay.create_payin(
-                transaction_amount=total,
-                customer_phone_number=data.phone_number,
-                app_transaction_ref=ref,
-                transaction_reason=f"Achat {data.credits} crédits IA GoToGermany",
+            pawapay_response = await self.pawapay.initiate_deposit(
+                deposit_id=str(payment.id),
+                amount=total,
+                phone_number=phone,
+                provider="MTN_MOMO_CMR" if data.operator == "MTN" else "ORANGE_CMR",
+                client_reference_id=ref,
+                customer_message="Achat crédits IA GoToGermany",
+                metadata={"app": "gotogermany"},
             )
         except Exception as e:
             await self.db.rollback()
             raise BadRequestException(detail=f"Erreur paiement : {e}")
 
-        mycoolpay_ref = coolpay_response.get("transaction_ref")
-        if mycoolpay_ref:
-            payment.mycoolpay_ref = mycoolpay_ref
+        pawapay_status = pawapay_response.get("status")
+        if pawapay_status == "REJECTED":
+            failure = pawapay_response.get("failureReason", {})
+            payment.payment_status = "FAILED"
+            await self.db.commit()
+            raise BadRequestException(
+                detail=f"Paiement rejeté : {failure.get('failureMessage', 'Erreur inconnue')}"
+            )
 
+        payment.pawapay_deposit_id = str(payment.id)
         await self.db.commit()
 
         return CreditPurchaseResponse(
             payment_id=payment.id,
-            invoice_number=ref,          # pas de table invoices séparée ici
+            invoice_number=ref,
             credits=data.credits,
             price_per_credit=float(PRICE_PER_CREDIT),
             total_amount=float(total),
             payment_status="PENDING",
-            ussd=coolpay_response.get("ussd"),
-            action=coolpay_response.get("action"),
-            redirect_url=coolpay_response.get("redirect_url"),
             transaction_reference=ref,
         )
 
-    # =========================================================================
-    # WEBHOOK — appelé depuis PaymentService.handle_webhook()
-    # =========================================================================
-
-    async def on_payment_completed(self, payment: Payment) -> None:
-        """Crédite l'utilisateur après confirmation webhook."""
+    async def on_payment_completed(self, payment: Payment) -> bool:
+        """Crédite l'utilisateur après confirmation callback pawaPay.
+        Retourne True si ce payment_id correspond bien à un achat de
+        crédits (et crédite dans ce cas) — False sinon."""
         purchase = await self.repo.get_by_payment_id(payment.id)
         if not purchase:
-            return
+            return False
 
         result = await self.db.execute(select(User).where(User.id == payment.user_id))
         user = result.scalar_one_or_none()
         if user:
             user.ai_credits += purchase.credits_purchased
             await self.db.flush()
+            await self.db.commit()
             logger.info(f"User {user.id} crédité de {purchase.credits_purchased} crédits IA")
 
-    # =========================================================================
-    # ACCORD MANUEL — Admin
-    # =========================================================================
+        return True
 
     async def grant_manual(self, data: ManualCreditGrantRequest, admin_id: UUID) -> ManualCreditGrantResponse:
         result = await self.db.execute(select(User).where(User.id == data.user_id))
@@ -147,7 +150,7 @@ class AICreditPurchaseService:
 
         payment = Payment(
             user_id=data.user_id,
-            exam_id=None,
+            level_id=None,
             plan_id=None,
             amount_gross=data.credits * PRICE_PER_CREDIT,
             amount_paid=data.credits * PRICE_PER_CREDIT,
@@ -156,7 +159,7 @@ class AICreditPurchaseService:
             payment_status="COMPLETED",
             transaction_reference=ref,
             operator="MANUAL",
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(timezone.utc),
         )
         self.db.add(payment)
         await self.db.flush()
@@ -180,10 +183,6 @@ class AICreditPurchaseService:
             credits_granted=data.credits,
             new_balance=user.ai_credits,
         )
-
-    # =========================================================================
-    # HISTORIQUE & BALANCE
-    # =========================================================================
 
     async def get_purchase_history(self, user_id: UUID) -> CreditPurchaseHistoryResponse:
         rows = await self.repo.get_user_history(user_id)
@@ -221,7 +220,6 @@ class AICreditPurchaseService:
         )
 
     async def get_admin_history(self, limit: int = 20) -> list[CreditPurchaseHistoryItem]:
-        """Historique global des crédits accordés manuellement — pour l'admin."""
         rows = await self.repo.get_all_manual(limit=limit)
         return [
             CreditPurchaseHistoryItem(
@@ -237,10 +235,6 @@ class AICreditPurchaseService:
             )
             for purchase, payment in rows
         ]
-        
-    # =========================================================================
-    # HELPERS
-    # =========================================================================
 
     def _generate_reference(self) -> str:
         year = datetime.now().year
