@@ -84,6 +84,16 @@ certificates_path = Path("storage/certificates")
 certificates_path.mkdir(parents=True, exist_ok=True)
 app.mount("/certificates", StaticFiles(directory=str(certificates_path)), name="certificates")
 
+
+# Reçus/factures PDF (paiements examens + paiements enrollments)
+invoices_path = Path("storage/invoices")
+invoices_path.mkdir(parents=True, exist_ok=True)
+app.mount("/invoices", StaticFiles(directory=str(invoices_path)), name="invoices")
+
+logos_path = Path("storage/center_logos")
+logos_path.mkdir(parents=True, exist_ok=True)
+app.mount("/center-logos", StaticFiles(directory=str(logos_path)), name="center-logos")
+
 # ── CORS ─────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
@@ -114,11 +124,41 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
-    detail = str(exc) if settings.DEBUG else "Une erreur interne est survenue."
+    error_detail = "Erreur interne"
+    try:
+        logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
+        error_detail = str(exc)
+    except Exception:
+        logger.error(
+            f"Unhandled exception on {request.url.path} "
+            f"(type={type(exc).__name__}) — impossible d'afficher le détail complet.",
+            exc_info=True,
+        )
+        # Pour une ResponseValidationError/RequestValidationError, exc.errors()
+        # retourne une liste de dicts (loc/msg/type) — sûre à logger même quand
+        # str(exc) plante à cause d'un objet ORM détaché dans les détails.
+        errors_method = getattr(exc, "errors", None)
+        if callable(errors_method):
+            try:
+                raw_errors = errors_method()
+                safe_errors = []
+                for e in raw_errors:
+                    safe_errors.append({
+                        "loc": e.get("loc"),
+                        "msg": str(e.get("msg"))[:300],
+                        "type": e.get("type"),
+                    })
+                logger.error(f"Détail de validation : {safe_errors}")
+                error_detail = f"Erreur de validation de la réponse : {safe_errors}"
+            except Exception as inner:
+                logger.error(f"Impossible d'extraire exc.errors() non plus : {inner}")
+
     return JSONResponse(
         status_code=500,
-        content=ErrorResponse(message=detail).model_dump(),
+        content=ErrorResponse(
+            message="Erreur interne du serveur",
+            detail=error_detail if settings.DEBUG else None,
+        ).model_dump(),
     )
 
 
@@ -141,6 +181,8 @@ from app.modules.settings.router import router as settings_router
 from app.modules.centers.router import router as centers_router
 from app.modules.sprechen_agent.router import router as sprechen_router
 from app.modules.referrals.router import router as referrals_router
+from app.modules.enrollments.router import router as enrollments_router
+
 
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
@@ -161,6 +203,8 @@ app.include_router(settings_router, prefix="/api/v1/settings", tags=["Settings"]
 app.include_router(centers_router, prefix="/api/v1/centers", tags=["centers"])
 app.include_router(sprechen_router, prefix="/api/v1/sprechen-simulator", tags=["sprechen-simulator"])
 app.include_router(referrals_router, prefix="/api/v1/referrals", tags=["referrals"])
+app.include_router(enrollments_router, prefix="/api/v1/enrollments", tags=["enrollments"])
+
 
 
 

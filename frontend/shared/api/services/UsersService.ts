@@ -9,6 +9,7 @@ import type { StudentCreateRequest } from '../models/StudentCreateRequest';
 import type { StudentCreditAdjustRequest } from '../models/StudentCreditAdjustRequest';
 import type { StudentDetailedProgressResponse } from '../models/StudentDetailedProgressResponse';
 import type { StudentProgressResponse } from '../models/StudentProgressResponse';
+import type { StudentQuickCreateRequest } from '../models/StudentQuickCreateRequest';
 import type { StudentResponse } from '../models/StudentResponse';
 import type { StudentTargetUpdateRequest } from '../models/StudentTargetUpdateRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
@@ -148,6 +149,30 @@ export class UsersService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/users/secretaries',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Create Student Quick
+     * @param requestBody
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static createStudentQuickApiV1UsersStudentsQuickPost(
+        requestBody: StudentQuickCreateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/students/quick',
             cookies: {
                 'access_token': accessToken,
             },

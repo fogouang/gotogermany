@@ -11,6 +11,10 @@ import app.modules.centers.models        # noqa: F401
 # Niveau 1 — dépend de partners
 import app.modules.promo_codes.models    # noqa: F401
 
+# Niveau 1bis — dépend de users + centers (Cursus.student_id → users,
+# Cursus.branch_id → branches, FormationPayment.recorded_by → users)
+import app.modules.enrollments.models    # noqa: F401
+
 # Niveau 2 — pas de dépendances custom
 import app.modules.exams.models          # noqa: F401
 import app.modules.plans.models          # noqa: F401  ← monter ici

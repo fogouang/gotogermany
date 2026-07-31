@@ -34,6 +34,32 @@ export class InvoicesService {
         });
     }
     /**
+     * Generate Formation Invoice
+     * Génère le reçu PDF d'un paiement de frais d'inscription/formation.
+     * @param paymentId
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static generateFormationInvoiceApiV1InvoicesGenerateFormationPaymentIdPost(
+        paymentId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/invoices/generate/formation/{payment_id}',
+            path: {
+                'payment_id': paymentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get Invoice
      * Détails de la facture d'un paiement.
      * @param paymentId

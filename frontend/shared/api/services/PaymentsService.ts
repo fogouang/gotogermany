@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { app__modules__payments__schemas__PaymentResponse } from '../models/app__modules__payments__schemas__PaymentResponse';
 import type { ManualPaymentRequest } from '../models/ManualPaymentRequest';
 import type { ManualPaymentResponse } from '../models/ManualPaymentResponse';
 import type { PaymentAdminResponse } from '../models/PaymentAdminResponse';
 import type { PaymentInitiateRequest } from '../models/PaymentInitiateRequest';
 import type { PaymentInitiateResponse } from '../models/PaymentInitiateResponse';
-import type { PaymentResponse } from '../models/PaymentResponse';
 import type { PaymentStatusResponse } from '../models/PaymentStatusResponse';
 import type { PaymentSummaryResponse } from '../models/PaymentSummaryResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -79,12 +79,12 @@ export class PaymentsService {
      * Get My Payments
      * Historique des paiements de l'utilisateur connecté.
      * @param accessToken
-     * @returns PaymentResponse Successful Response
+     * @returns app__modules__payments__schemas__PaymentResponse Successful Response
      * @throws ApiError
      */
     public static getMyPaymentsApiV1PaymentsMeGet(
         accessToken?: (string | null),
-    ): CancelablePromise<Array<PaymentResponse>> {
+    ): CancelablePromise<Array<app__modules__payments__schemas__PaymentResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/payments/me',
@@ -129,13 +129,13 @@ export class PaymentsService {
      * Détail d'un paiement.
      * @param paymentId
      * @param accessToken
-     * @returns PaymentResponse Successful Response
+     * @returns app__modules__payments__schemas__PaymentResponse Successful Response
      * @throws ApiError
      */
     public static getPaymentApiV1PaymentsPaymentIdGet(
         paymentId: string,
         accessToken?: (string | null),
-    ): CancelablePromise<PaymentResponse> {
+    ): CancelablePromise<app__modules__payments__schemas__PaymentResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/payments/{payment_id}',

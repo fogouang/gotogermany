@@ -11,6 +11,7 @@ from app.modules.users.schemas import (
     StudentAccessDatesUpdateRequest,
     StudentCreditAdjustRequest,
     StudentDetailedProgressResponse,
+    StudentQuickCreateRequest,
     UserChangePasswordRequest,
     UserUpdateRequest,
     DirectorCreateRequest,
@@ -332,8 +333,8 @@ class UserService:
         self, student_id: UUID, requester: User
     ) -> "StudentDetailedProgressResponse":
         """
-        Vue détaillée d'un étudiant, avec ventilation par examen/module et
-        historique pour graphes. Secrétaire limitée à sa succursale,
+        Vue détaillée d'un étudiant, avec ventilation par examen > sujet > module
+        et historique pour graphes. Secrétaire limitée à sa succursale,
         directeur à tout son centre.
         """
         from app.modules.centers.repository import BranchRepository
@@ -341,6 +342,7 @@ class UserService:
         from app.modules.users.schemas import (
             StudentDetailedProgressResponse,
             ExamProgressResponse,
+            SubjectScoreBreakdown,
             ModuleScoreBreakdown,
             ScoreHistoryPoint,
         )
@@ -364,24 +366,31 @@ class UserService:
         session_repo = ExamSessionRepository(self.db)
         rows = await session_repo.get_detailed_sessions_for_user(student.id)
 
+        # ── Regroupement à deux niveaux : exam -> subject -> modules ──
         exams_map: dict = {}
         score_history: list[ScoreHistoryPoint] = []
 
         for row in rows:
             eid = row["exam_id"]
+            sid = row["subject_id"]
+
             if eid not in exams_map:
-                exams_map[eid] = {
-                    "exam_name": row["exam_name"],
+                exams_map[eid] = {"exam_name": row["exam_name"], "subjects": {}}
+
+            subjects = exams_map[eid]["subjects"]
+            if sid not in subjects:
+                subjects[sid] = {
+                    "subject_name": row["subject_name"],
                     "sessions": [],
                     "module_scores": {},
                 }
-            exams_map[eid]["sessions"].append(row)
+            subjects[sid]["sessions"].append(row)
 
             for module_key, score in (row["score_breakdown"] or {}).items():
                 if score is None:
                     continue
                 label = _MODULE_LABELS.get(module_key, module_key.capitalize())
-                exams_map[eid]["module_scores"].setdefault(label, []).append(score)
+                subjects[sid]["module_scores"].setdefault(label, []).append(score)
 
             if row["score"] is not None and row["submitted_at"]:
                 score_history.append(ScoreHistoryPoint(
@@ -390,27 +399,46 @@ class UserService:
                     exam_name=row["exam_name"],
                 ))
 
+        # ── Construction de la réponse à partir du regroupement ──
         exams_list: list[ExamProgressResponse] = []
-        for eid, data in exams_map.items():
-            sessions = data["sessions"]
-            scores = [s["score"] for s in sessions if s["score"] is not None]
-            submitted_dates = [s["submitted_at"] for s in sessions if s["submitted_at"]]
+        for eid, edata in exams_map.items():
+            all_exam_sessions: list[dict] = []
+            subjects_list: list[SubjectScoreBreakdown] = []
 
-            modules = [
-                ModuleScoreBreakdown(
-                    module_name=label,
-                    average_score=sum(vals) / len(vals) if vals else None,
-                )
-                for label, vals in data["module_scores"].items()
-            ]
+            for sid, sdata in edata["subjects"].items():
+                sessions = sdata["sessions"]
+                all_exam_sessions.extend(sessions)
+
+                scores = [s["score"] for s in sessions if s["score"] is not None]
+                dates = [s["submitted_at"] for s in sessions if s["submitted_at"]]
+
+                modules = [
+                    ModuleScoreBreakdown(
+                        module_name=label,
+                        average_score=sum(vals) / len(vals) if vals else None,
+                    )
+                    for label, vals in sdata["module_scores"].items()
+                ]
+
+                subjects_list.append(SubjectScoreBreakdown(
+                    subject_id=sid,
+                    subject_name=sdata["subject_name"],
+                    total_sessions=len(sessions),
+                    average_score=sum(scores) / len(scores) if scores else None,
+                    last_session_at=max(dates) if dates else None,
+                    modules=modules,
+                ))
+
+            exam_scores = [s["score"] for s in all_exam_sessions if s["score"] is not None]
+            exam_dates = [s["submitted_at"] for s in all_exam_sessions if s["submitted_at"]]
 
             exams_list.append(ExamProgressResponse(
                 exam_id=eid,
-                exam_name=data["exam_name"],
-                total_sessions=len(sessions),
-                average_score=sum(scores) / len(scores) if scores else None,
-                last_session_at=max(submitted_dates) if submitted_dates else None,
-                modules=modules,
+                exam_name=edata["exam_name"],
+                total_sessions=len(all_exam_sessions),
+                average_score=sum(exam_scores) / len(exam_scores) if exam_scores else None,
+                last_session_at=max(exam_dates) if exam_dates else None,
+                subjects=subjects_list,
             ))
 
         all_scores = [r["score"] for r in rows if r["score"] is not None]
@@ -426,4 +454,48 @@ class UserService:
             last_session_at=max(all_dates) if all_dates else None,
             exams=exams_list,
             score_history=score_history,
+        )
+        
+    
+    async def create_student_quick(
+        self, data: StudentQuickCreateRequest, staff: User
+    ) -> User:
+        from app.modules.centers.service import CenterService
+        from app.modules.centers.repository import BranchRepository
+        from uuid import uuid4
+        from app.shared.security.password import hash_password
+        import secrets
+
+        branch_repo = BranchRepository(self.db)
+
+        if staff.role == UserRole.center_director:
+            if not data.branch_id:
+                raise BadRequestException(detail="branch_id requis pour un directeur.")
+            branch = await branch_repo.get_by_id_or_404(data.branch_id)
+            if branch.center_id != staff.center_id:
+                raise ForbiddenException(detail="Cette succursale n'appartient pas à votre centre.")
+            target_branch_id = branch.id
+        else:
+            branch = await branch_repo.get_by_id_or_404(staff.branch_id)
+            target_branch_id = staff.branch_id
+
+        center_service = CenterService(self.db)
+        await center_service.check_quota_available(branch.center_id)
+
+        placeholder_email = f"cursus-{uuid4().hex[:12]}@internal.gotogermany"
+        placeholder_password = secrets.token_urlsafe(24)
+
+        return await self.repo.create(
+            email=placeholder_email,
+            hashed_password=hash_password(placeholder_password),
+            full_name=data.full_name,
+            phone=data.phone,
+            is_active=True,
+            is_admin=False,
+            is_verified=False,
+            role=UserRole.student,
+            branch_id=target_branch_id,
+            target_level_id=None,
+            ai_credits=0,
+            access_duration_days=30,
         )

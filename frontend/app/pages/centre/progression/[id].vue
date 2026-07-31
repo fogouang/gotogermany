@@ -24,12 +24,16 @@
       <div class="bg-white rounded-xl border border-gray-200 p-5">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 class="text-lg font-bold text-gray-900">{{ detail.student_name }}</h2>
+            <h2 class="text-lg font-bold text-gray-900">
+              {{ detail.student_name }}
+            </h2>
             <p class="text-sm text-gray-400 mt-0.5">{{ detail.branch_name }}</p>
           </div>
           <div class="flex gap-6 text-sm">
             <div class="text-center">
-              <p class="text-2xl font-bold text-gray-900">{{ detail.total_sessions }}</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ detail.total_sessions }}
+              </p>
               <p class="text-xs text-gray-400">sessions</p>
             </div>
             <div class="text-center">
@@ -37,12 +41,18 @@
                 class="text-2xl font-bold"
                 :class="scoreClass(detail.overall_average_score)"
               >
-                {{ detail.overall_average_score !== null ? detail.overall_average_score.toFixed(0) : '—' }}
+                {{
+                  detail.overall_average_score !== null
+                    ? detail.overall_average_score.toFixed(0)
+                    : "—"
+                }}
               </p>
               <p class="text-xs text-gray-400">score moyen</p>
             </div>
             <div class="text-center">
-              <p class="text-2xl font-bold text-gray-900">{{ detail.ai_credits_remaining }}</p>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ detail.ai_credits_remaining }}
+              </p>
               <p class="text-xs text-gray-400">crédits IA</p>
             </div>
           </div>
@@ -51,7 +61,9 @@
 
       <!-- Graphique évolution des scores -->
       <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 class="text-sm font-semibold text-gray-700 mb-4">Évolution des scores</h3>
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">
+          Évolution des scores
+        </h3>
         <ScoreEvolutionChart :data="detail.score_history" />
       </div>
 
@@ -63,7 +75,9 @@
       >
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="text-sm font-semibold text-gray-900">{{ exam.exam_name }}</h3>
+            <h3 class="text-sm font-semibold text-gray-900">
+              {{ exam.exam_name }}
+            </h3>
             <p class="text-xs text-gray-400 mt-0.5">
               {{ exam.total_sessions }} session(s)
               <span v-if="exam.last_session_at">
@@ -72,14 +86,43 @@
             </p>
           </div>
           <p class="text-xl font-bold" :class="scoreClass(exam.average_score)">
-            {{ exam.average_score !== null ? exam.average_score.toFixed(0) + '/100' : '—' }}
+            {{
+              exam.average_score !== null
+                ? exam.average_score.toFixed(0) + "/100"
+                : "—"
+            }}
           </p>
         </div>
 
-        <ModuleBarChart :modules="exam.modules" />
+        <!-- Un bloc par sujet, avec son propre détail de modules -->
+        <div
+          v-for="subject in exam.subjects"
+          :key="subject.subject_id"
+          class="border-t border-gray-100 pt-4 mt-4 first:border-0 first:pt-0 first:mt-0"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium text-gray-600">
+              {{ subject.subject_name }}
+            </p>
+            <p
+              class="text-sm font-semibold"
+              :class="scoreClass(subject.average_score)"
+            >
+              {{
+                subject.average_score !== null
+                  ? subject.average_score.toFixed(0) + "/100"
+                  : "—"
+              }}
+            </p>
+          </div>
+          <ModuleBarChart :modules="subject.modules" />
+        </div>
       </div>
 
-      <div v-if="detail.exams.length === 0" class="text-center py-8 text-gray-400 text-sm">
+      <div
+        v-if="detail.exams.length === 0"
+        class="text-center py-8 text-gray-400 text-sm"
+      >
         Aucune session complétée pour l'instant.
       </div>
     </div>

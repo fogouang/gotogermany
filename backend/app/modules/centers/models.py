@@ -32,6 +32,8 @@ class Center(Base, UUIDMixin, TimestampMixin):
     contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     contact_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    logo_path: Mapped[str | None] = mapped_column(String(255), nullable=True) 
 
     # Pool de crédits IA du centre — alimenté manuellement par l'admin ITIA
     # à l'achat/rechargement de licence, décompté à chaque attribution/ajustement
@@ -176,6 +178,6 @@ class CenterLicense(Base, UUIDMixin, TimestampMixin):
     formula: Mapped["LicenseFormula"] = relationship(
         "LicenseFormula", back_populates="licenses", lazy="noload"
     )
-
+    
     def __repr__(self) -> str:
         return f"<CenterLicense center={self.center_id} status={self.status}>"

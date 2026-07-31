@@ -10,6 +10,7 @@ export type StudentResponse = {
     email: string;
     full_name: string;
     is_active: boolean;
+    branch_id: (string | null);
     target_level_id: (string | null);
     first_login_at: (string | null);
     access_expires_at: (string | null);

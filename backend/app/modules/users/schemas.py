@@ -157,11 +157,12 @@ class StudentResponse(BaseSchema):
     email: str
     full_name: str
     is_active: bool
+    branch_id: uuid.UUID | None
     target_level_id: uuid.UUID | None
     first_login_at: datetime | None
     access_expires_at: datetime | None
     created_at: datetime
-    ai_credits: int = 0 
+    ai_credits: int = 0
     
 
 class StudentCreditAdjustRequest(BaseSchema):
@@ -192,15 +193,21 @@ class ModuleScoreBreakdown(BaseSchema):
     module_name: str
     average_score: float | None
 
-
+class SubjectScoreBreakdown(BaseSchema):
+    """Score par module (Lesen/Hören/Schreiben/Sprechen) pour un sujet précis."""
+    subject_id: uuid.UUID
+    subject_name: str
+    total_sessions: int
+    average_score: float | None
+    last_session_at: datetime | None
+    modules: list[ModuleScoreBreakdown]
 class ExamProgressResponse(BaseSchema):
-    """Progression détaillée sur un examen précis (ex: Goethe-Zertifikat B2)."""
     exam_id: uuid.UUID
     exam_name: str
     total_sessions: int
     average_score: float | None
     last_session_at: datetime | None
-    modules: list[ModuleScoreBreakdown]
+    subjects: list[SubjectScoreBreakdown]
 
 
 class ScoreHistoryPoint(BaseSchema):
@@ -221,3 +228,18 @@ class StudentDetailedProgressResponse(BaseSchema):
     last_session_at: datetime | None
     exams: list[ExamProgressResponse]
     score_history: list[ScoreHistoryPoint]
+    
+
+class StudentQuickCreateRequest(BaseSchema):
+    full_name: str = Field(min_length=2, max_length=150)
+    phone: str | None = Field(default=None, max_length=20)
+    branch_id: uuid.UUID | None = Field(
+        default=None,
+        description="Requis si créé par un directeur (plusieurs branches possibles). "
+                    "Ignoré si créé par une secrétaire (sa propre branche s'applique).",
+    )
+
+    @field_validator("full_name")
+    @classmethod
+    def full_name_strip(cls, v: str) -> str:
+        return v.strip()

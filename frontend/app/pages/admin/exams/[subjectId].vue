@@ -665,7 +665,6 @@ const handleUploadTeilImage = async (mod: any, teil: any, e: Event) => {
         }
       }
     }
-    console.log(teil.config);
 
     toast.add({
       severity: "success",

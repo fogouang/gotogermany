@@ -16,6 +16,9 @@ import type {
   CenterPoolResponse,
   CenterCreditTransactionResponse,
   StudentDetailedProgressResponse,
+  StudentQuickCreateRequest,
+  CenterUpdateRequest,
+  CenterResponse,
 } from "#shared/api";
 
 interface CenterStaffState {
@@ -421,6 +424,112 @@ export const useCenterStaffStore = defineStore("centerStaff", {
         return {
           success: false,
           error: error.body?.detail || "Erreur mise à jour cible",
+        };
+      }
+    },
+
+    async createStudentQuick(data: StudentQuickCreateRequest): Promise<{
+      success: boolean;
+      student?: StudentResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const student =
+          await UsersService.createStudentQuickApiV1UsersStudentsQuickPost(
+            data,
+          );
+        this.students.push(student);
+        return { success: true, student };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur création étudiant",
+        };
+      }
+    },
+
+    async updateMyCenter(data: CenterUpdateRequest): Promise<{
+      success: boolean;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      console.log("[centerStaff] updateMyCenter appelé, data =", data);
+      console.log(
+        "[centerStaff] CentersService.updateMyCenterApiV1CentersMePatch existe ?",
+        typeof CentersService.updateMyCenterApiV1CentersMePatch,
+      );
+      try {
+        const result =
+          await CentersService.updateMyCenterApiV1CentersMePatch(data);
+        console.log("[centerStaff] updateMyCenter résultat =", result);
+        return { success: true };
+      } catch (error: any) {
+        console.error("[centerStaff] updateMyCenter RAW ERROR:", error);
+        console.error("[centerStaff] error.name:", error?.name);
+        console.error("[centerStaff] error.message:", error?.message);
+        console.error("[centerStaff] error.status:", error?.status);
+        console.error("[centerStaff] error.body:", error?.body);
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur mise à jour du centre",
+        };
+      }
+    },
+
+    async fetchMyCenterDetails(): Promise<{
+      success: boolean;
+      center?: CenterResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      console.log(
+        "[centerStaff] CentersService.getMyCenterApiV1CentersMeGet existe ?",
+        typeof CentersService.getMyCenterApiV1CentersMeGet,
+      );
+      try {
+        const center = await CentersService.getMyCenterApiV1CentersMeGet();
+        console.log("[centerStaff] fetchMyCenterDetails résultat =", center);
+        return { success: true, center };
+      } catch (error: any) {
+        console.error("[centerStaff] fetchMyCenterDetails RAW ERROR:", error);
+        console.error("[centerStaff] error.message:", error?.message);
+        console.error("[centerStaff] error.body:", error?.body);
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement du centre",
+        };
+      }
+    },
+
+    async uploadMyLogo(file: File): Promise<{
+      success: boolean;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const config = useRuntimeConfig();
+        const base = config.public.apiBaseUrl || "http://localhost:8001";
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(`${base}/api/v1/centers/me/logo`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || "Erreur envoi du logo");
+        }
+
+        return { success: true };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || "Erreur envoi du logo",
         };
       }
     },

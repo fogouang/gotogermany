@@ -5,7 +5,7 @@
 /**
  * Response complète d'un paiement — historique.
  */
-export type PaymentResponse = {
+export type app__modules__payments__schemas__PaymentResponse = {
     id: string;
     level_id: string;
     plan_id: string;

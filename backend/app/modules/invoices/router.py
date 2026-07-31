@@ -27,6 +27,17 @@ async def generate_invoice(
     return SuccessResponse(message="Facture générée.", data={"invoice_url": invoice_url})
 
 
+@router.post("/generate/formation/{payment_id}", status_code=201)
+async def generate_formation_invoice(
+    payment_id: UUID,
+    _: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Génère le reçu PDF d'un paiement de frais d'inscription/formation."""
+    invoice_url = await InvoiceService(db).generate_invoice_for_formation_payment(payment_id)
+    return SuccessResponse(message="Reçu généré.", data={"invoice_url": invoice_url})
+
+
 @router.get("/payment/{payment_id}", response_model=InvoiceResponse)
 async def get_invoice(
     payment_id: UUID,

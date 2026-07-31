@@ -18,6 +18,7 @@ from app.modules.users.models import UserRole
 from app.modules.users.schemas import (
     StudentProgressResponse,
     StudentDetailedProgressResponse,
+    StudentQuickCreateRequest,
     UserAdminResponse,
     UserChangePasswordRequest,
     UserMeResponse,
@@ -84,6 +85,14 @@ async def list_secretaries(
 ):
     """Liste les secrétaires du centre du directeur connecté."""
     return await UserService(db).list_secretaries_for_director(current_director)
+
+@router.post("/students/quick", response_model=StudentResponse, status_code=201)
+async def create_student_quick(
+    data: StudentQuickCreateRequest,
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    return await UserService(db).create_student_quick(data, staff)
 
 
 # ── Admin ────────────────────────────────────

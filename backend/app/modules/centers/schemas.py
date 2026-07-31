@@ -93,6 +93,8 @@ class CenterResponse(BaseSchema):
     contact_email: str | None
     contact_phone: str | None
     is_active: bool
+    address: str | None = None
+    logo_path: str | None = None
     ai_credit_pool_balance: int  
     default_credits_per_student: int  
     created_at: datetime
@@ -139,3 +141,7 @@ class CenterCreditTransactionResponse(BaseSchema):
 class CenterPoolResponse(BaseSchema):
     ai_credit_pool_balance: int
     default_credits_per_student: int
+    
+
+class CenterUpdateRequest(BaseSchema):
+    address: str | None = Field(default=None, max_length=255)

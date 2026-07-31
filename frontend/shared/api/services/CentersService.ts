@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_upload_my_logo_api_v1_centers_me_logo_post } from '../models/Body_upload_my_logo_api_v1_centers_me_logo_post';
 import type { BranchCreateRequest } from '../models/BranchCreateRequest';
 import type { BranchResponse } from '../models/BranchResponse';
 import type { CenterCreateRequest } from '../models/CenterCreateRequest';
@@ -13,6 +14,7 @@ import type { CenterLicenseExtendRequest } from '../models/CenterLicenseExtendRe
 import type { CenterLicenseResponse } from '../models/CenterLicenseResponse';
 import type { CenterPoolResponse } from '../models/CenterPoolResponse';
 import type { CenterResponse } from '../models/CenterResponse';
+import type { CenterUpdateRequest } from '../models/CenterUpdateRequest';
 import type { LicenseFormulaCreateRequest } from '../models/LicenseFormulaCreateRequest';
 import type { LicenseFormulaResponse } from '../models/LicenseFormulaResponse';
 import type { LicenseUsageResponse } from '../models/LicenseUsageResponse';
@@ -20,6 +22,52 @@ import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class CentersService {
+    /**
+     * Get My Center
+     * Détails du centre du directeur connecté — adresse et logo actuels.
+     * @param accessToken
+     * @returns CenterResponse Successful Response
+     * @throws ApiError
+     */
+    public static getMyCenterApiV1CentersMeGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<CenterResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/centers/me',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Update My Center
+     * Le directeur renseigne/modifie l'adresse de son centre (affichée sur les reçus).
+     * @param requestBody
+     * @param accessToken
+     * @returns CenterResponse Successful Response
+     * @throws ApiError
+     */
+    public static updateMyCenterApiV1CentersMePatch(
+        requestBody: CenterUpdateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<CenterResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/centers/me',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
     /**
      * List My Branches
      * Liste les succursales du centre du directeur connecté.
@@ -196,6 +244,31 @@ export class CentersService {
             cookies: {
                 'access_token': accessToken,
             },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Upload My Logo
+     * Upload du logo du centre — affiché en en-tête des reçus PDF.
+     * @param formData
+     * @param accessToken
+     * @returns CenterResponse Successful Response
+     * @throws ApiError
+     */
+    public static uploadMyLogoApiV1CentersMeLogoPost(
+        formData: Body_upload_my_logo_api_v1_centers_me_logo_post,
+        accessToken?: (string | null),
+    ): CancelablePromise<CenterResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/centers/me/logo',
+            cookies: {
+                'access_token': accessToken,
+            },
+            formData: formData,
+            mediaType: 'multipart/form-data',
             errors: {
                 422: `Validation Error`,
             },

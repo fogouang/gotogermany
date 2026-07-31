@@ -17,6 +17,7 @@ from app.modules.centers.schemas import (
     CenterCreateRequest,
     BranchCreateRequest,
     CenterCreditTransactionResponse,
+    CenterUpdateRequest,
     LicenseFormulaCreateRequest,
     CenterLicenseActivateRequest,
     CenterLicenseExtendRequest,
@@ -251,6 +252,17 @@ class CenterService:
         """Vue d'audit restreinte — uniquement les actions de cette secrétaire."""
         transactions = await self.credit_txn_repo.find_by_performer(secretary.id)
         return [_to_transaction_response(t) for t in transactions]
+    
+    async def update_my_center(self, center_id: UUID, data: CenterUpdateRequest) -> Center:
+        """Le directeur renseigne l'adresse affichée sur les reçus PDF de son centre."""
+        update_data = data.model_dump(exclude_unset=True, exclude_none=True)
+        if not update_data:
+            return await self.center_repo.get_by_id_or_404(center_id)
+        return await self.center_repo.update(center_id, **update_data)
+
+    async def update_my_logo(self, center_id: UUID, logo_path: str) -> Center:
+        """Enregistre le chemin du logo uploadé — utilisé sur les reçus PDF."""
+        return await self.center_repo.update(center_id, logo_path=logo_path)
     
 def _to_transaction_response(txn: CenterCreditTransaction) -> CenterCreditTransactionResponse:
     return CenterCreditTransactionResponse(

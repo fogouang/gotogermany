@@ -2,7 +2,7 @@
 app/modules/centers/router.py
 """
 from uuid import UUID
-from fastapi import Depends
+from fastapi import Depends, File, UploadFile
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +13,7 @@ from app.modules.centers.schemas import (
     CenterDetailResponse,
     BranchCreateRequest,
     BranchResponse,
+    CenterUpdateRequest,
     LicenseFormulaCreateRequest,
     LicenseFormulaResponse,
     CenterLicenseActivateRequest,
@@ -35,6 +36,14 @@ router = APIRouter()
 
 # ── Directeur (routes /me/... — toujours déclarées avant /{center_id}/...) ──
 
+@router.get("/me", response_model=CenterResponse)
+async def get_my_center(
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Détails du centre du directeur connecté — adresse et logo actuels."""
+    return await CenterService(db).center_repo.get_by_id_or_404(current_director.center_id)
+
 @router.get("/me/branches", response_model=list[BranchResponse])
 async def list_my_branches(
     current_director: CurrentDirector,
@@ -42,6 +51,7 @@ async def list_my_branches(
 ):
     """Liste les succursales du centre du directeur connecté."""
     return await CenterService(db).list_my_branches(current_director.center_id)
+
 
 
 @router.post("/me/branches", response_model=BranchResponse, status_code=201)
@@ -122,6 +132,42 @@ async def get_my_credit_transactions(
     du centre, utiliser /me/credit-transactions."""
     return await CenterService(db).get_credit_transactions_for_secretary(current_user)
 
+@router.patch("/me", response_model=CenterResponse)
+async def update_my_center(
+    data: CenterUpdateRequest,
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    """Le directeur renseigne/modifie l'adresse de son centre (affichée sur les reçus)."""
+    return await CenterService(db).update_my_center(current_director.center_id, data)
+
+
+@router.post("/me/logo", response_model=CenterResponse)
+async def upload_my_logo(
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+    file: UploadFile = File(...),
+):
+    """Upload du logo du centre — affiché en en-tête des reçus PDF."""
+    import os
+    from pathlib import Path
+
+    allowed_ext = {".png", ".jpg", ".jpeg"}
+    ext = Path(file.filename).suffix.lower()
+    if ext not in allowed_ext:
+        raise BadRequestException(detail="Format non supporté (PNG/JPG uniquement).")
+
+    logos_dir = Path("storage/center_logos")
+    logos_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{current_director.center_id}{ext}"
+    file_path = logos_dir / filename
+
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    return await CenterService(db).update_my_logo(current_director.center_id, str(file_path))
 
 # ── Admin ITIA ────────────────────────────────
 

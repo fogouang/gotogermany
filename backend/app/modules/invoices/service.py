@@ -264,14 +264,14 @@ class InvoiceService:
 
             if level:
                 exam = await self.db.get(Exam, level.exam_id)
-                exam_name = f"{exam.name} — {level.cefr_code}" if exam else f"Niveau {level.cefr_code}"
+                exam_name = f"{exam.name} - {level.cefr_code}" if exam else f"Niveau {level.cefr_code}"
             else:
                 exam_name = "Examen"
 
             plan_name = plan.name if plan else "Accès"
             duration = f"{plan.duration_days} jours" if plan else ""
 
-            return f"{exam_name} — {plan_name} ({duration})"
+            return f"{exam_name} - {plan_name} ({duration})"
         except Exception:
             return "Accès examen GoToGermany"
 
@@ -330,3 +330,151 @@ class InvoiceService:
             "product_description": product_description,
             "partner_info": partner_info,
         }
+        
+    
+    # ── Reçus centres de formation (module enrollments) ──────
+
+    async def generate_invoice_for_formation_payment(self, payment_id: UUID) -> str:
+        from app.modules.enrollments.repository import FormationPaymentRepository
+        from app.modules.enrollments.models import LevelEnrollment, Cursus, FormationPaymentType
+        from app.modules.centers.models import Branch, Center
+        from app.modules.users.models import User
+
+        payment_repo = FormationPaymentRepository(self.db)
+        payment = await payment_repo.get_by_id_or_404(payment_id)
+
+        enrollment = await self.db.get(LevelEnrollment, payment.enrollment_id)
+        cursus = await self.db.get(Cursus, enrollment.cursus_id)
+        branch = await self.db.get(Branch, cursus.branch_id)
+        center = await self.db.get(Center, branch.center_id)
+        student = await self.db.get(User, cursus.student_id)
+
+        inscription_paid = await payment_repo.sum_paid(enrollment.id, FormationPaymentType.inscription)
+        formation_paid = await payment_repo.sum_paid(enrollment.id, FormationPaymentType.formation)
+        remaining = (
+            max(enrollment.inscription_fee_amount - inscription_paid, 0)
+            if payment.payment_type == FormationPaymentType.inscription
+            else max(enrollment.formation_fee_amount - formation_paid, 0)
+        )
+
+        motif = self._build_formation_motif(payment.payment_type, enrollment.level, payment.notes)
+
+        pdf_filename = f"{payment.invoice_number}.pdf"
+        pdf_path = self.invoices_dir / pdf_filename
+
+        self._create_formation_pdf(
+            pdf_path=str(pdf_path),
+            invoice_number=payment.invoice_number,
+            payment_date=payment.paid_at,
+            student_name=student.full_name if student else "—",
+            amount=payment.amount,
+            remaining=remaining,
+            motif=motif,
+            center_name=center.name,
+            center_address=getattr(center, "address", None),
+            center_logo_path=getattr(center, "logo_path", None),
+        )
+
+        invoice_url = f"/invoices/{pdf_filename}"
+        await payment_repo.update(payment_id, invoice_url=invoice_url)
+        return invoice_url
+
+    def _build_formation_motif(self, payment_type, level, notes: str | None) -> str:
+        """Le staff peut surcharger via `notes` ; sinon motif généré automatiquement."""
+        if notes:
+            return notes
+        from app.modules.enrollments.models import FormationPaymentType
+        label = "Frais d'inscription" if payment_type == FormationPaymentType.inscription else "Frais de formation"
+        return f"{label} - Niveau {level.value}"
+
+    def _create_formation_pdf(
+        self, pdf_path: str, invoice_number: str, payment_date: datetime,
+        student_name: str, amount: int, remaining: int, motif: str,
+        center_name: str, center_address: str | None, center_logo_path: str | None,
+    ):
+        from num2words import num2words
+
+        doc = SimpleDocTemplate(
+            pdf_path, pagesize=A4,
+            rightMargin=2 * cm, leftMargin=2 * cm, topMargin=2 * cm, bottomMargin=2 * cm,
+        )
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            "FTitle", parent=styles["Heading1"], fontSize=18,
+            textColor=colors.HexColor("#0d6e4f"), spaceAfter=4,
+        )
+        subtitle_style = ParagraphStyle(
+            "FSubtitle", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#64748b"),
+        )
+        heading_style = ParagraphStyle(
+            "FHeading", parent=styles["Heading2"], fontSize=13,
+            textColor=colors.HexColor("#0f172a"), spaceAfter=10, alignment=1,
+        )
+        footer_style = ParagraphStyle(
+            "FFooter", parent=styles["Normal"], fontSize=8,
+            textColor=colors.HexColor("#94a3b8"), alignment=1,
+        )
+
+        story = []
+
+        # ── En-tête : nom à gauche, logo au centre, adresse à droite ──
+        left_cell = [Paragraph(center_name, title_style)]
+        middle_cell = []
+        if center_logo_path and os.path.exists(center_logo_path):
+            logo = Image(center_logo_path, width=3 * cm, height=1.3 * cm)
+            logo.hAlign = "CENTER"
+            middle_cell.append(logo)
+        right_cell = [Paragraph(center_address, subtitle_style)] if center_address else []
+
+        header_table = Table(
+            [[left_cell, middle_cell, right_cell]],
+            colWidths=[5.5 * cm, 6 * cm, 5.5 * cm],
+        )
+        header_table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ALIGN", (0, 0), (0, 0), "LEFT"),
+            ("ALIGN", (1, 0), (1, 0), "CENTER"),
+            ("ALIGN", (2, 0), (2, 0), "RIGHT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        story.append(header_table)
+        story.append(Spacer(1, 0.6 * cm))
+        story.append(Paragraph("REÇU DE PAIEMENT", heading_style))
+
+        # ── Corps : reprend fidèlement les champs du reçu papier ──
+        amount_words = num2words(amount, lang="fr").capitalize() + " francs CFA"
+        rows = [
+            ["N°", invoice_number],
+            ["Reçu de M./Mme", student_name],
+            ["La somme de", amount_words],
+            ["Motif", motif],
+            ["Date", payment_date.strftime("%d/%m/%Y")],
+            ["Reste", f"{remaining:,} FCFA"],
+        ]
+        table = Table(rows, colWidths=[4 * cm, 13 * cm])
+        table.setStyle(TableStyle([
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 10),
+            ("TEXTCOLOR", (0, 0), (0, -1), colors.HexColor("#475569")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ]))
+        story.append(table)
+        story.append(Spacer(1, 2 * cm))
+
+        # ── Signature ──
+        sig_table = Table([["Signature"]], colWidths=[17 * cm])
+        sig_table.setStyle(TableStyle([
+            ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+            ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 10),
+            ("LINEABOVE", (0, 0), (-1, 0), 0.5, colors.HexColor("#94a3b8")),
+            ("TOPPADDING", (0, 0), (-1, -1), 30),
+        ]))
+        story.append(sig_table)
+        story.append(Spacer(1, 1 * cm))
+        story.append(Paragraph(f"{center_name} - via GoToGermany", footer_style))
+
+        doc.build(story)

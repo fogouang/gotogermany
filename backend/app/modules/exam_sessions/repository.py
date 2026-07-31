@@ -90,15 +90,16 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
 
     async def get_detailed_sessions_for_user(self, user_id: UUID) -> list[dict]:
         """
-        Sessions complétées d'un utilisateur, enrichies du nom de l'examen,
-        triées chronologiquement — base pour la vue de progression détaillée
-        (ventilation par examen/module + historique pour graphes).
+        Sessions complétées d'un utilisateur, enrichies du nom de l'examen ET
+        du sujet — base pour la vue de progression détaillée (ventilation
+        par examen > sujet > module + historique pour graphes).
         """
-        from app.modules.exams.models import Exam
+        from app.modules.exams.models import Exam, Subject
 
         result = await self.db.execute(
-            select(ExamSession, Exam.name)
+            select(ExamSession, Exam.name, Subject.name)
             .join(Exam, Exam.id == ExamSession.exam_id)
+            .join(Subject, Subject.id == ExamSession.subject_id)
             .where(
                 ExamSession.user_id == user_id,
                 ExamSession.status.in_(["COMPLETED", "PENDING_REVIEW"]),
@@ -107,10 +108,12 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
         )
 
         rows = []
-        for session, exam_name in result.all():
+        for session, exam_name, subject_name in result.all():
             rows.append({
                 "exam_id": session.exam_id,
                 "exam_name": exam_name,
+                "subject_id": session.subject_id,
+                "subject_name": subject_name,
                 "score": session.score,
                 "score_breakdown": session.score_breakdown or {},
                 "submitted_at": session.submitted_at,

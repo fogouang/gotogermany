@@ -83,7 +83,7 @@
             text
             size="small"
             class="w-full justify-center! text-red-400! text-xs!"
-              @click="handleLogout"
+            @click="handleLogout"
           />
         </div>
       </div>
@@ -133,6 +133,7 @@ const sidebarOpen = ref(false);
 
 const directorNav = [
   { name: "Vue d'ensemble", href: "/centre/dashboard", icon: "pi-chart-bar" },
+  { name: "Inscriptions", href: "/centre/inscriptions", icon: "pi-id-card" },
   { name: "Succursales", href: "/centre/succursales", icon: "pi-sitemap" },
   { name: "Secrétaires", href: "/centre/secretaires", icon: "pi-users" },
   { name: "Étudiants", href: "/centre/etudiants", icon: "pi-user" },
@@ -143,6 +144,11 @@ const directorNav = [
     icon: "pi-history",
   },
   { name: "Ma licence", href: "/centre/licence", icon: "pi-verified" },
+  {
+    name: "Reglages",
+    href: "/centre/reglages",
+    icon: "pi-history",
+  },
 ];
 
 const secretaryNav = [
@@ -175,6 +181,10 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
     title: "Vue d'ensemble",
     subtitle: "Quota et statut de votre licence",
   },
+  "/centre/inscriptions": {
+    title: "Inscriptions",
+    subtitle: "Cursus, paiements et suivi des élèves",
+  },
   "/centre/succursales": {
     title: "Succursales",
     subtitle: "Gestion de vos points de formation",
@@ -202,6 +212,11 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/centre/credits-historique": {
     title: "Historique des crédits",
     subtitle: "Audit des ajustements de crédits IA",
+  },
+
+  "/centre/reglages": {
+    title: "Reglages",
+    subtitle: "Reglages du compte ",
   },
 };
 

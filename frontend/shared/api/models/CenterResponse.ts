@@ -8,6 +8,8 @@ export type CenterResponse = {
     contact_email: (string | null);
     contact_phone: (string | null);
     is_active: boolean;
+    address?: (string | null);
+    logo_path?: (string | null);
     ai_credit_pool_balance: number;
     default_credits_per_student: number;
     created_at: string;
