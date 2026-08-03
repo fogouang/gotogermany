@@ -144,6 +144,11 @@ const mainItems = computed(() => [
     icon: "pi-microphone",
     to: "/dashboard/sprechen",
   },
+    {
+    label: t("live_session.nav_label"),   // ← nouveau, ex: "Session live"
+    icon: "pi-video",
+    to: "/dashboard/sessions-live",
+  },
   {
     label: t("dashboard.pages.methodologie"),
     icon: "pi-book",

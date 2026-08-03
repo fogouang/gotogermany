@@ -182,6 +182,8 @@ from app.modules.centers.router import router as centers_router
 from app.modules.sprechen_agent.router import router as sprechen_router
 from app.modules.referrals.router import router as referrals_router
 from app.modules.enrollments.router import router as enrollments_router
+from app.modules.live_session.router import router as live_session_router
+
 
 
 
@@ -204,6 +206,8 @@ app.include_router(centers_router, prefix="/api/v1/centers", tags=["centers"])
 app.include_router(sprechen_router, prefix="/api/v1/sprechen-simulator", tags=["sprechen-simulator"])
 app.include_router(referrals_router, prefix="/api/v1/referrals", tags=["referrals"])
 app.include_router(enrollments_router, prefix="/api/v1/enrollments", tags=["enrollments"])
+app.include_router(live_session_router, prefix="/api/v1/live-session", tags=["live-session"])
+
 
 
 

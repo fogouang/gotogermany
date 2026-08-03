@@ -884,5 +884,21 @@
     "note_placeholder": "E.g.: Payment received via Orange Money on...",
     "cancel": "Cancel",
     "confirm_validation": "Confirm validation"
+  },
+  "live_session": {
+    "title": "Live sessions",
+    "subtitle": "Your oral exams with an examiner from your center",
+    "page_title": "Live sessions",
+    "nav_label": "Live session",
+    "session_label": "Sprechen session",
+    "no_sessions_title": "No session yet",
+    "no_sessions_subtitle": "Your center will launch a session once you're ready to take the live oral exam.",
+    "status_waiting": "Waiting",
+    "status_preparing": "Preparing",
+    "status_live": "Live",
+    "status_ended": "Ended",
+    "status_cancelled": "Cancelled",
+    "see_notes": "See notes",
+    "join": "Join"
   }
 }

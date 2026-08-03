@@ -137,6 +137,11 @@ const directorNav = [
   { name: "Succursales", href: "/centre/succursales", icon: "pi-sitemap" },
   { name: "Secrétaires", href: "/centre/secretaires", icon: "pi-users" },
   { name: "Étudiants", href: "/centre/etudiants", icon: "pi-user" },
+  {
+    name: "Session live",
+    href: "/centre/sessions-live",
+    icon: "pi-microphone",
+  },
   { name: "Progression", href: "/centre/progression", icon: "pi-chart-line" },
   {
     name: "Historique crédits",
@@ -153,6 +158,7 @@ const directorNav = [
 
 const secretaryNav = [
   { name: "Mes étudiants", href: "/centre/etudiants", icon: "pi-user" },
+
   {
     name: "Nouvel étudiant",
     href: "/centre/etudiants/nouveau",
@@ -217,6 +223,10 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/centre/reglages": {
     title: "Reglages",
     subtitle: "Reglages du compte ",
+  },
+  "/centre/sessions-live": {
+    title: "Session live",
+    subtitle: "Lancer et suivre un examen oral en direct",
   },
 };
 

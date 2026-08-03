@@ -883,5 +883,20 @@
   "note_placeholder": "Z. B.: Zahlung per Orange Money erhalten am...",
   "cancel": "Abbrechen",
   "confirm_validation": "Bestätigung abschließen"
+},"live_session": {
+  "title": "Live-Sitzungen",
+  "subtitle": "Ihre mündlichen Prüfungen mit einer Prüferin/einem Prüfer Ihres Zentrums",
+  "page_title": "Live-Sitzungen",
+  "nav_label": "Live-Sitzung",
+  "session_label": "Sprechen-Sitzung",
+  "no_sessions_title": "Noch keine Sitzung",
+  "no_sessions_subtitle": "Ihr Zentrum startet eine Sitzung, sobald Sie bereit sind, die mündliche Live-Prüfung abzulegen.",
+  "status_waiting": "Wartend",
+  "status_preparing": "Vorbereitung läuft",
+  "status_live": "Live",
+  "status_ended": "Beendet",
+  "status_cancelled": "Abgesagt",
+  "see_notes": "Notizen ansehen",
+  "join": "Beitreten"
 }
 }
