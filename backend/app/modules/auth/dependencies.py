@@ -78,15 +78,20 @@ async def get_current_user_ws(
     websocket: WebSocket,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Variante WebSocket de get_current_user — lit uniquement le
-    cookie, jamais HTTPBearer (qui exige un objet Request classique
-    et casse sur les routes WebSocket avec un TypeError au moment de
-    la résolution des dépendances). Un client WebSocket navigateur ne
-    peut de toute façon pas fixer de header Authorization personnalisé
-    à la connexion, donc le cookie est la seule voie viable ici."""
+    """Variante WebSocket de get_current_user.
+
+    MODIF : accepte désormais le token soit via le cookie access_token,
+    soit via un paramètre de requête ?token=... — un client WebSocket
+    natif ne peut pas fixer de header Authorization à la connexion, et
+    le cookie access_token (posé côté frontend via useCookie()) n'est
+    pas garanti d'atteindre le domaine du backend si frontend et backend
+    sont sur des origines différentes (contrairement au REST, qui envoie
+    le token en header Bearer via OpenAPI.TOKEN, jamais via ce cookie).
+    Le query param est donc la voie fiable pour un WS cross-origin.
+    """
     from app.modules.auth.service import AuthService
 
-    token = websocket.cookies.get("access_token")
+    token = websocket.cookies.get("access_token") or websocket.query_params.get("token")
     if not token:
         await websocket.close(code=4401)
         raise WebSocketDisconnect(code=4401)

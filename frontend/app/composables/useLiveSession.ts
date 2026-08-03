@@ -77,6 +77,11 @@ export interface UseLiveSessionOptions {
   role: LiveSessionRole;
   wsBaseUrl: string; // e.g. "wss://api.example.com/api/v1/live-session"
   audioIO: LiveSessionAudioIO;
+  /** Token d'accès à passer en query param — un WebSocket natif ne peut
+   * pas fixer de header Authorization, et le cookie access_token n'est
+   * pas garanti d'atteindre le domaine du backend (voir
+   * get_current_user_ws côté serveur). */
+  accessToken: string;
   /** Injectable for testing — defaults to the real `WebSocket` global. */
   createWebSocket?: (url: string) => WebSocket;
 }
@@ -190,7 +195,7 @@ export function useLiveSession(options: UseLiveSessionOptions) {
     sessionEndedCleanly = false;
 
     const socket = createWs(
-      `${options.wsBaseUrl}/ws/${options.liveSessionId}/${options.role}`,
+      `${options.wsBaseUrl}/ws/${options.liveSessionId}/${options.role}?token=${encodeURIComponent(options.accessToken)}`,
     );
     socket.binaryType = "arraybuffer";
 

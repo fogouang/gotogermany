@@ -209,6 +209,7 @@ const liveSessionId = route.params.id as string;
 
 const liveSessionStore = useLiveSessionStore();
 const config = useRuntimeConfig();
+const tokenCookie = useCookie("access_token");
 
 const loadingSession = ref(true);
 const session = ref<LiveSessionResponse | null>(null);
@@ -230,6 +231,7 @@ const live = useLiveSession({
   liveSessionId,
   role: "examiner",
   wsBaseUrl: wsBaseUrl.value,
+  accessToken: tokenCookie.value ?? "",
   audioIO: createBrowserAudioIO(),
 });
 
