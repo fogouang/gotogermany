@@ -39,6 +39,13 @@ const SPEAKING_DECAY_MS = 400;
 // l'oreille si trop sensible ou pas assez.
 const SPEAKING_RMS_THRESHOLD = 0.02;
 
+// Porte de bruit : sous ce seuil (nettement plus bas que le seuil de
+// parole), on ne transmet PAS le paquet du tout — coupe le bruit de fond
+// ambiant continu (souffle du micro, bruit électrique) qui autrement
+// serait envoyé en permanence même dans un environnement calme. Volontairement
+// bas pour ne jamais couper le début d'un mot prononcé doucement.
+const NOISE_GATE_RMS_THRESHOLD = 0.006;
+
 /** Calcule le niveau RMS (0-1) d'un chunk audio PCM16 brut. */
 function pcm16RmsLevel(bytes: Uint8Array): number {
   const pcm16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 2);
@@ -150,9 +157,13 @@ export function useLiveSession(options: UseLiveSessionOptions) {
         preparationInfo.value = null;
         status.value = "live";
         options.audioIO.startCapture((chunk) => {
-          if (pcm16RmsLevel(chunk) > SPEAKING_RMS_THRESHOLD) {
+          const level = pcm16RmsLevel(chunk);
+          if (level > SPEAKING_RMS_THRESHOLD) {
             markSpeaking(localSpeaking, "local");
           }
+          // Porte de bruit : on ignore silencieusement les paquets sous
+          // le seuil de bruit de fond, pour ne jamais les transmettre.
+          if (level < NOISE_GATE_RMS_THRESHOLD) return;
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(chunk as BufferSource);
           }

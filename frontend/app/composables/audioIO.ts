@@ -3,29 +3,37 @@
  * ============
  * The real `SprechenAudioIO` implementation for the browser —
  * getUserMedia + AudioWorklet for capture, a scheduled playback
- * queue for the agent's incoming audio.
+ * queue for the incoming audio.
  *
  * NOT unit-testable in this environment: AudioContext, AudioWorklet,
- * and getUserMedia don't exist outside a real browser. This file is
- * type-checked but not exercised by the test suite alongside
- * useSprechenSession.ts — treat it with the same caution as
- * live_client.py's Gemini/OpenAI calls on the backend (structurally
- * sound, unverified against a live environment).
+ * and getUserMedia don't exist outside a real browser.
  *
- * Sample rates: capture at 16kHz to match Gemini Live's expected
- * input rate; playback assumes 24kHz PCM16 for the agent's voice
- * (Gemini Live's typical output rate) — confirm both against the
- * current Gemini Live API docs before shipping, since these have
- * shifted before and aren't guaranteed stable across model versions.
+ * MODIF : taux d'échantillonnage désormais paramétrables. Par défaut,
+ * on garde 16kHz capture / 24kHz lecture — ce qui correspond aux
+ * besoins de Gemini Live pour l'agent IA (entrée et sortie ne sont PAS
+ * le même flux : la voix de l'utilisateur en entrée, la voix générée
+ * par Gemini en sortie, chacune à son propre taux). Pour live_session
+ * (voix humaine à humaine, même flux capté et rejoué), il faut passer
+ * des taux IDENTIQUES en capture et lecture, sinon la voix rejouée est
+ * accélérée/suraiguë (effet "voix de tchip") — c'est le bug qui vient
+ * d'être diagnostiqué.
  */
 
-import type { SprechenAudioIO } from './useSprechenSession'; 
+import type { SprechenAudioIO } from './useSprechenSession';
 
-const CAPTURE_SAMPLE_RATE = 16000;
-const PLAYBACK_SAMPLE_RATE = 24000;
+const DEFAULT_CAPTURE_SAMPLE_RATE = 16000;
+const DEFAULT_PLAYBACK_SAMPLE_RATE = 24000;
 const WORKLET_MODULE_URL = '/pcm-capture-processor.js'; // must be in Nuxt's public/
 
-export function createBrowserAudioIO(): SprechenAudioIO {
+export interface CreateAudioIOOptions {
+  captureSampleRate?: number;
+  playbackSampleRate?: number;
+}
+
+export function createBrowserAudioIO(options: CreateAudioIOOptions = {}): SprechenAudioIO {
+  const CAPTURE_SAMPLE_RATE = options.captureSampleRate ?? DEFAULT_CAPTURE_SAMPLE_RATE;
+  const PLAYBACK_SAMPLE_RATE = options.playbackSampleRate ?? DEFAULT_PLAYBACK_SAMPLE_RATE;
+
   let captureContext: AudioContext | null = null;
   let micStream: MediaStream | null = null;
   let workletNode: AudioWorkletNode | null = null;

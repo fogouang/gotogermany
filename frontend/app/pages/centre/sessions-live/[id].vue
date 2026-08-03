@@ -232,7 +232,7 @@ const live = useLiveSession({
   role: "examiner",
   wsBaseUrl: wsBaseUrl.value,
   accessToken: tokenCookie.value ?? "",
-  audioIO: createBrowserAudioIO(),
+  audioIO: createBrowserAudioIO({ captureSampleRate: 16000, playbackSampleRate: 16000 }),
 });
 
 const connectionStatus = computed(() => live.status.value);
