@@ -1,4 +1,12 @@
 // stores/simulator.ts
+//
+// ⚠️ criteriaList / taskList ne font plus aucun branchement par provider —
+// _getCriteriaMax a disparu. Le backend (response_normalizer.py) renvoie
+// désormais directement `criteria: [...]` et `tasks: [...]` déjà dans la
+// forme attendue par l'UI, quel que soit l'examen (3 ou 4 critères pour
+// telc/Goethe, structure ÖSD B2 avec sub_criteria agrégée en amont côté
+// backend). Ces deux getters ne font plus qu'un renommage de champs
+// (snake_case backend -> camelCase frontend).
 import { defineStore } from "pinia";
 import { SchreibenSimulatorService, OpenAPI } from "#shared/api";
 import type {
@@ -51,52 +59,41 @@ export const useSimulatorStore = defineStore("simulator", {
       return state.correction.level === "b2" ? "B1" : "A2";
     },
 
+    // ÖSD B2 uniquement : vrai plancher officiel (>=10/30), distinct du
+    // `passed` interne à 60%. Undefined pour les autres examens.
+    floorReached: (state): boolean | undefined => {
+      return state.correction?.floor_reached ?? undefined;
+    },
+
     criteriaList: (state) => {
       if (!state.correction) return [];
-      const c = state.correction;
-      const f = c.criteria_feedbacks as Record<string, string>;
-      const maxMap = _getCriteriaMax(c.provider, c.level);
-      return [
-        {
-          key: "aufgabe",
-          label: "Aufgabenerfüllung",
-          score: c.aufgabe_score,
-          maxScore: maxMap.aufgabe,
-          feedback: f.aufgabe_feedback || "",
-        },
-        {
-          key: "kohaesion",
-          label: "Kohäsion",
-          score: c.kohaesion_score,
-          maxScore: maxMap.kohaesion,
-          feedback: f.kohaesion_feedback || "",
-        },
-        {
-          key: "wortschatz",
-          label: "Wortschatz",
-          score: c.wortschatz_score,
-          maxScore: maxMap.wortschatz,
-          feedback: f.wortschatz_feedback || "",
-        },
-        {
-          key: "grammatik",
-          label: "Grammatik",
-          score: c.grammatik_score,
-          maxScore: maxMap.grammatik,
-          feedback: f.grammatik_feedback || "",
-        },
-      ];
+      return state.correction.criteria.map((c) => ({
+        key: c.key,
+        label: c.label,
+        score: c.score,
+        maxScore: c.max_score,
+        feedback: c.feedback,
+      }));
     },
 
     taskList: (state) => {
       if (!state.correction) return [];
-      const tf = state.correction.task_feedbacks as Record<string, any>;
-      return Object.entries(tf).map(([key, val]) => ({
-        key,
-        label: _taskLabel(key),
-        correctedText: val.corrected_text || "",
-        strengths: val.main_strengths || [],
-        weaknesses: val.main_weaknesses || [],
+      return state.correction.tasks.map((t) => ({
+        key: t.key,
+        label: t.label,
+        correctedText: t.corrected_text,
+        strengths: t.main_strengths,
+        weaknesses: t.main_weaknesses,
+        // Optionnels — présents seulement pour les barèmes qui notent la
+        // tâche individuellement (ex. ÖSD B2 : score/15 + détail A/K/T/L/F).
+        score: t.score ?? null,
+        maxScore: t.max_score ?? null,
+        subCriteria: (t.sub_criteria ?? []).map((sc) => ({
+          key: sc.key,
+          label: sc.label,
+          score: sc.score,
+          maxScore: sc.max_score,
+        })),
       }));
     },
   },
@@ -110,6 +107,9 @@ export const useSimulatorStore = defineStore("simulator", {
     },
 
     loadResultIntoCorrection(result: SimulatorResultResponse) {
+      // result.result_data contient déjà la forme normalisée complète
+      // (criteria/tasks/...), persistée telle quelle au moment de la
+      // correction — aucun retraitement nécessaire ici.
       this.correction = {
         subject_id: result.subject_id,
         provider: result.provider,
@@ -312,15 +312,3 @@ export const useSimulatorStore = defineStore("simulator", {
     },
   },
 });
-
-function _getCriteriaMax(provider: string, level: string) {
-  if (provider === "telc")
-    return { aufgabe: 15, kohaesion: 10, wortschatz: 10, grammatik: 10 };
-  if (provider === "osd" && level === "b2")
-    return { aufgabe: 28, kohaesion: 22, wortschatz: 22, grammatik: 18 };
-  return { aufgabe: 30, kohaesion: 25, wortschatz: 25, grammatik: 20 };
-}
-
-function _taskLabel(key: string): string {
-  return { task1: "Teil 1", task2: "Teil 2", task3: "Teil 3" }[key] ?? key;
-}

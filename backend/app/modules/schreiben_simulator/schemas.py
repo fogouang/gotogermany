@@ -59,6 +59,8 @@ class TaskSchema(BaseModel):
     word_count_target: int | None = None
     register: str = ""
     recipient: str = ""
+
+
 # ─────────────────────────────────────────────────────────
 # CRUD Admin
 # ─────────────────────────────────────────────────────────
@@ -108,36 +110,74 @@ class SimulatorCorrectRequest(BaseModel):
     task_texts: list[str]    # 1, 2 ou 3 textes selon le sujet
 
 
+class CriterionScore(BaseModel):
+    """Un critère de notation générique — même contrat que corrections/schemas.py."""
+    key: str
+    label: str
+    score: float
+    max_score: float
+    feedback: str = ""
+
+
+class SubCriterionScore(BaseModel):
+    """Composante fine d'un critère, propre à certains barèmes (ex. ÖSD B2 : a/k/t/l/f par tâche)."""
+    key: str
+    label: str
+    score: float
+    max_score: float
+
+
+class TaskFeedback(BaseModel):
+    """Feedback pour une tâche individuelle — même contrat que corrections/schemas.py."""
+    key: str
+    label: str
+    corrected_text: str
+    main_strengths: list[str] = Field(default_factory=list)
+    main_weaknesses: list[str] = Field(default_factory=list)
+    score: float | None = None
+    max_score: float | None = None
+    sub_criteria: list[SubCriterionScore] | None = None
+
+
 class SimulatorCorrectResponse(BaseModel):
-    """Réutilise exactement le même format que CorrectionResponse."""
+    """
+    Réutilise exactement le même contrat que corrections.schemas.CorrectionResponse
+    (criteria/tasks génériques, produits par response_normalizer), moins id/session_id
+    puisqu'ici il n'y a pas de session — remplacés par subject_id.
+    """
     subject_id: uuid.UUID
     provider: str
     level: str
-    overall_score: int
-    max_score: int
+    overall_score: float
+    max_score: float
     passed: bool
     score_percentage: float
-    aufgabe_score: int
-    kohaesion_score: int
-    wortschatz_score: int
-    grammatik_score: int
-    criteria_feedbacks: dict
-    task_feedbacks: dict
+    appreciation: str
+
+    # ÖSD B2 uniquement : vrai plancher officiel, distinct de `passed`
+    # (repère interne à 60%, cf. osd_b2_prompt.py). None pour les autres examens.
+    floor_reached: bool | None = None
+
+    criteria: list[CriterionScore]
+    tasks: list[TaskFeedback]
+
     corrections_list: list[dict]
     suggestions: list[str]
-    appreciation: str
-    
-    
+
+
 class SimulatorResultResponse(BaseModel):
-    id:               uuid.UUID
-    subject_id:       uuid.UUID
-    subject_title:    str | None = None
-    provider:         str
-    level:            str
-    overall_score:    int
-    max_score:        int
-    passed:           bool
+    id: uuid.UUID
+    subject_id: uuid.UUID
+    subject_title: str | None = None
+    provider: str
+    level: str
+    overall_score: float
+    max_score: float
+    passed: bool
     score_percentage: float
-    result_data:      dict
-    created_at:       datetime
+    # Contient désormais directement la forme normalisée (criteria/tasks/...),
+    # produite par response_normalizer au moment de la correction et persistée
+    # telle quelle — pas de retraitement nécessaire à la lecture.
+    result_data: dict
+    created_at: datetime
     model_config = {"from_attributes": True}

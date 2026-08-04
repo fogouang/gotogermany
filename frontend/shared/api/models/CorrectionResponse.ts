@@ -2,8 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { app__modules__corrections__schemas__CriterionScore } from './app__modules__corrections__schemas__CriterionScore';
+import type { app__modules__corrections__schemas__TaskFeedback } from './app__modules__corrections__schemas__TaskFeedback';
+import type { CorrectionError } from './CorrectionError';
 /**
- * Réponse complète retournée au frontend.
+ * Réponse complète retournée au frontend — même forme pour tous les examens.
  */
 export type CorrectionResponse = {
     id: string;
@@ -14,15 +17,12 @@ export type CorrectionResponse = {
     max_score: number;
     passed: boolean;
     score_percentage: number;
-    aufgabe_score: number;
-    kohaesion_score: number;
-    wortschatz_score: number;
-    grammatik_score: number;
-    criteria_feedbacks: Record<string, any>;
-    task_feedbacks: Record<string, any>;
-    corrections_list: Array<Record<string, any>>;
-    suggestions: Array<string>;
     appreciation: string;
+    floor_reached?: (boolean | null);
+    criteria: Array<app__modules__corrections__schemas__CriterionScore>;
+    tasks: Array<app__modules__corrections__schemas__TaskFeedback>;
+    corrections_list: Array<CorrectionError>;
+    suggestions: Array<string>;
     ai_provider: string;
     created_at: string;
 };

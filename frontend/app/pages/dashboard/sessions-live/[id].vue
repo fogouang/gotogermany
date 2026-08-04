@@ -38,37 +38,64 @@
       <!-- Live -->
       <div
         v-else-if="connectionStatus === 'live'"
-        class="bg-white rounded-xl border border-green-200 p-6 text-center space-y-4"
+        class="rounded-2xl overflow-hidden bg-gray-900 text-white shadow-lg"
       >
-        <div class="flex items-center justify-center gap-2 text-green-700 font-semibold">
-          <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-          En direct avec l'examinateur
+        <div class="px-4 py-3 text-center border-b border-gray-800">
+          <p class="text-sm font-semibold flex items-center justify-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            En direct avec l'examinateur
+          </p>
         </div>
 
-        <div class="flex items-center justify-center gap-10 pt-2">
-          <div class="flex flex-col items-center gap-2">
-            <div
-              :class="[
-                'w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150',
-                live.localSpeaking.value
-                  ? 'bg-teal-500 scale-110 shadow-lg shadow-teal-200'
-                  : 'bg-gray-200',
-              ]"
-            >
-              <i
-                :class="[
-                  'pi pi-microphone text-lg',
-                  live.localSpeaking.value ? 'text-white' : 'text-gray-400',
-                ]"
-              />
-            </div>
-            <span class="text-xs font-medium text-gray-500">Vous</span>
+        <div class="grid grid-cols-2 gap-px bg-gray-800">
+          <div class="relative bg-gray-950 aspect-square sm:aspect-video">
+            <video
+              ref="localVideoEl"
+              autoplay
+              muted
+              playsinline
+              class="w-full h-full object-cover"
+              :class="live.localSpeaking.value ? 'ring-2 ring-inset ring-teal-400' : ''"
+            />
+            <span class="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded">
+              Vous
+            </span>
           </div>
+          <div class="relative bg-gray-950 aspect-square sm:aspect-video">
+            <video
+              ref="remoteVideoEl"
+              autoplay
+              playsinline
+              class="w-full h-full object-cover"
+              :class="live.peerSpeaking.value ? 'ring-2 ring-inset ring-amber-400' : ''"
+            />
+            <span class="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded">
+              Examinateur
+            </span>
+          </div>
+        </div>
 
-          <div class="flex flex-col items-center gap-2">
-            <AvatarExaminer :talking="live.peerSpeaking.value" class="w-16 h-16" />
-            <span class="text-xs font-medium text-gray-500">Examinateur</span>
-          </div>
+        <div class="flex items-center justify-center gap-4 py-4">
+          <button
+            class="w-11 h-11 rounded-full flex items-center justify-center transition-colors"
+            :class="cameraEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'"
+            @click="toggleCamera"
+          >
+            <i :class="cameraEnabled ? 'pi pi-video' : 'pi pi-video text-white'" class="text-white text-sm" />
+          </button>
+          <button
+            class="w-11 h-11 rounded-full flex items-center justify-center transition-colors"
+            :class="micEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'"
+            @click="toggleMic"
+          >
+            <i class="pi pi-microphone text-white text-sm" />
+          </button>
+          <button
+            class="w-11 h-11 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors"
+            @click="live.endSession"
+          >
+            <i class="pi pi-phone text-white text-sm" style="transform: rotate(135deg)" />
+          </button>
         </div>
       </div>
 
@@ -134,11 +161,13 @@
         <p class="text-sm text-red-600">{{ live.errorMessage.value }}</p>
       </div>
 
-      <!-- Contenu du sujet — bloc totalement INDÉPENDANT de la chaîne
+      <!-- Contenu du sujet — visible UNIQUEMENT pendant la prépa côté
+           candidat (masqué une fois en direct, l'écran doit se concentrer
+           sur l'appel). Bloc totalement INDÉPENDANT de la chaîne
            connecting/preparing/live/ended/error ci-dessus (jamais imbriqué
            au milieu : ça casse le v-else-if suivant, déjà vécu une fois) -->
       <div
-        v-if="['preparing', 'live'].includes(connectionStatus) && subjectContent"
+        v-if="connectionStatus === 'preparing' && subjectContent"
         class="space-y-3 mt-6"
       >
         <div
@@ -216,11 +245,7 @@ import { useLiveSession } from "~/composables/useLiveSession";
 // LiveSessionAudioIO a exactement la même forme (mêmes 4 méthodes/signatures)
 // — accepté par typage structurel TS, pas de cast nécessaire.
 import { createBrowserAudioIO } from "~/composables/audioIO";
-// ASSUMPTION — AvatarExaminer.vue vit dans components/sprechen/, donc selon
-// ta config Nuxt (components.pathPrefix), l'auto-import peut exiger
-// <SprechenAvatarExaminer /> dans le template plutôt que <AvatarExaminer />.
-// Si le composant ne s'affiche pas, essaie ce nom préfixé, ou ajoute un
-// import explicite ici : import AvatarExaminer from "~/components/sprechen/AvatarExaminer.vue";
+import { createLiveVideoCapture, createLiveVideoPlayback } from "~/composables/useLiveVideo";
 import type { LiveSessionResponse } from "#shared/api";
 
 const route = useRoute();
@@ -239,13 +264,62 @@ const wsBaseUrl = computed(() => {
   return base.replace(/^http/, "ws") + "/api/v1/live-session";
 });
 
+const videoCapture = createLiveVideoCapture();
+const videoPlayback = createLiveVideoPlayback();
+const localVideoEl = ref<HTMLVideoElement | null>(null);
+const remoteVideoEl = ref<HTMLVideoElement | null>(null);
+const cameraEnabled = ref(true);
+// ⚠️ Le micro n'est PAS encore réellement coupé : audioIO.ts (le pipeline
+// PCM16 existant) n'expose aucune méthode pour désactiver la piste micro
+// sans arrêter toute la capture — juste un état visuel pour l'instant.
+// Pour un vrai mute, il faudrait qu'audioIO.ts expose getLocalStream()
+// comme le fait déjà useLiveVideo.ts, et couper track.enabled dessus.
+const micEnabled = ref(true);
+
+function toggleCamera() {
+  cameraEnabled.value = !cameraEnabled.value;
+  videoCapture.getLocalStream()?.getVideoTracks().forEach((track) => {
+    track.enabled = cameraEnabled.value;
+  });
+}
+
+function toggleMic() {
+  micEnabled.value = !micEnabled.value;
+  // TODO : coupure réelle du micro, voir note ci-dessus.
+}
+
 const live = useLiveSession({
   liveSessionId,
   role: "student",
   wsBaseUrl: wsBaseUrl.value,
   accessToken: tokenCookie.value ?? "",
   audioIO: createBrowserAudioIO({ captureSampleRate: 16000, playbackSampleRate: 16000 }),
+  videoCapture,
+  videoPlayback,
 });
+
+let localStreamPoll: ReturnType<typeof setInterval> | null = null;
+watch(
+  () => live.status.value,
+  (status) => {
+    if (status === "live") {
+      localStreamPoll = setInterval(() => {
+        const stream = videoCapture.getLocalStream();
+        if (stream && localVideoEl.value) {
+          localVideoEl.value.srcObject = stream;
+          if (localStreamPoll) clearInterval(localStreamPoll);
+          localStreamPoll = null;
+        }
+      }, 200);
+      nextTick(() => {
+        if (remoteVideoEl.value) videoPlayback.attach(remoteVideoEl.value);
+      });
+    } else if (localStreamPoll) {
+      clearInterval(localStreamPoll);
+      localStreamPoll = null;
+    }
+  },
+);
 
 const connectionStatus = computed(() => live.status.value);
 
@@ -308,6 +382,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (timerHandle) clearInterval(timerHandle);
+  if (localStreamPoll) clearInterval(localStreamPoll);
   live.disconnect();
 });
 </script>

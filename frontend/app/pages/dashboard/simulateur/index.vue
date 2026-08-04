@@ -419,39 +419,21 @@ const openResult = (result: SimulatorResultResponse) => {
 };
 
 const criteriaList = (result: SimulatorResultResponse) => {
-  const d = result.result_data;
-  const max = _getCriteriaMax(result.provider, result.level);
-  const toNum = (v: any): number => Number(v) || 0;
-  return [
-    {
-      key: "aufgabe",
-      label: "Aufgabe",
-      score: toNum(d.aufgabe_score),
-      max: max.aufgabe,
-      pct: Math.round((toNum(d.aufgabe_score) / max.aufgabe) * 100),
-    },
-    {
-      key: "kohaesion",
-      label: "Kohäsion",
-      score: toNum(d.kohaesion_score),
-      max: max.kohaesion,
-      pct: Math.round((toNum(d.kohaesion_score) / max.kohaesion) * 100),
-    },
-    {
-      key: "wortschatz",
-      label: "Wortschatz",
-      score: toNum(d.wortschatz_score),
-      max: max.wortschatz,
-      pct: Math.round((toNum(d.wortschatz_score) / max.wortschatz) * 100),
-    },
-    {
-      key: "grammatik",
-      label: "Grammatik",
-      score: toNum(d.grammatik_score),
-      max: max.grammatik,
-      pct: Math.round((toNum(d.grammatik_score) / max.grammatik) * 100),
-    },
-  ];
+  const criteria = (result.result_data?.criteria ?? []) as Array<{
+    key: string;
+    label: string;
+    score: number;
+    max_score: number;
+    feedback?: string;
+  }>;
+
+  return criteria.map((c) => ({
+    key: c.key,
+    label: c.label,
+    score: c.score,
+    max: c.max_score,
+    pct: c.max_score ? Math.round((c.score / c.max_score) * 100) : 0,
+  }));
 };
 
 const _getCriteriaMax = (provider: string, level: string) => {

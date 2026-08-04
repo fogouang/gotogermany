@@ -32,18 +32,23 @@ from app.modules.corrections.prompts import (
     get_max_score,
     TaskData,
 )
+from app.modules.corrections.response_normalizer import CRITERIA_CONFIG
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.modules.exams.models import Subject, Level
 
 from app.config import get_settings
 from app.modules.questions.models import Question
-settings = get_settings()
 
+settings = get_settings()
 logger = logging.getLogger(__name__)
 
-# Champs requis dans la réponse IA selon le format
-_REQUIRED_FIELDS_SIMPLE   = {"overall_score", "passed", "aufgabe_score"}
-_REQUIRED_FIELDS_COMBINED = {"global_assessment", "criteria_scores", "task_feedbacks"}
+# Champs minimaux attendus par shape de sortie IA (cf. response_normalizer.py :
+# "nested" = Goethe B2 / Goethe-ÖSD B1, "flat" = telc B1/B2, "osd_b2" = ÖSD B2).
+_REQUIRED_FIELDS_BY_SHAPE = {
+    "nested": {"global_assessment", "criteria_scores", "task_feedbacks"},
+    "flat": {"overall_score", "passed"},
+    "osd_b2": {"global_assessment", "task1", "task2"},
+}
 
 
 class CorrectionService:
@@ -51,7 +56,7 @@ class CorrectionService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = CorrectionRepository(db)
-        
+
         # Choisir provider selon config (default: gemini avec fallback claude)
         provider = settings.AI_PROVIDER
         if provider == "claude":
@@ -88,6 +93,10 @@ class CorrectionService:
         tasks = await self._extract_tasks(session.id, provider, level)
 
         # 5. Construire le payload
+        # NB: max_score ici sert surtout de trace/contexte sur le payload ;
+        # le max_score réellement persisté vient de response_normalizer
+        # (repository.create), calculé depuis CRITERIA_CONFIG — les deux
+        # doivent rester synchronisés (MAX_SCORES dans prompts/__init__.py).
         max_score = get_max_score(provider, level)
         payload = CorrectionPayload(
             session_id=session.id,
@@ -187,11 +196,11 @@ class CorrectionService:
         Returns:
             ("telc", "b1"), ("goethe", "b2"), etc.
         """
-        level_obj  = session.subject.level
-        exam_obj   = level_obj.exam
+        level_obj = session.subject.level
+        exam_obj = level_obj.exam
 
         provider = exam_obj.provider.lower().strip()
-        level    = level_obj.cefr_code.lower().strip()
+        level = level_obj.cefr_code.lower().strip()
 
         return provider, level
 
@@ -275,21 +284,26 @@ class CorrectionService:
         level: str,
     ) -> None:
         """
-        Vérifier que la réponse IA contient les champs minimaux attendus.
-        Lève ValueError si la réponse est incomplète.
+        Vérifier que la réponse IA contient les champs minimaux attendus,
+        selon le "shape" réel du prompt utilisé pour cet examen (et non plus
+        une heuristique par provider, qui ne couvrait pas ÖSD B2 correctement —
+        ce prompt n'a pas de criteria_scores/task_feedbacks, mais task1/task2
+        directement).
         """
-        # Format combiné (Goethe/ÖSD — plusieurs tâches)
-        is_combined = provider in ("goethe", "osd") or (
-            provider == "telc" and level == "b1" and
-            "global_assessment" in ai_result
-        )
+        config = CRITERIA_CONFIG.get((provider.lower(), level.lower()))
+        if config is None:
+            raise ValueError(f"Barème inconnu pour {provider} {level}.")
 
-        required = _REQUIRED_FIELDS_COMBINED if is_combined else _REQUIRED_FIELDS_SIMPLE
-        missing  = required - set(ai_result.keys())
+        shape = config["shape"]
+        required = _REQUIRED_FIELDS_BY_SHAPE.get(shape)
+        if required is None:
+            raise ValueError(f"Shape inconnu: {shape}")
 
+        missing = required - set(ai_result.keys())
         if missing:
             raise ValueError(
-                f"Réponse IA incomplète. Champs manquants : {missing}"
+                f"Réponse IA incomplète pour {provider.upper()} {level.upper()} "
+                f"(format '{shape}'). Champs manquants : {missing}"
             )
 
 
@@ -307,15 +321,12 @@ def _to_response(correction: Correction) -> CorrectionResponse:
         max_score=correction.max_score,
         passed=correction.passed,
         score_percentage=correction.score_percentage,
-        aufgabe_score=correction.aufgabe_score,
-        kohaesion_score=correction.kohaesion_score,
-        wortschatz_score=correction.wortschatz_score,
-        grammatik_score=correction.grammatik_score,
-        criteria_feedbacks=correction.criteria_feedbacks,
-        task_feedbacks=correction.task_feedbacks,
+        appreciation=correction.appreciation,
+        floor_reached=correction.floor_reached,
+        criteria=correction.criteria,
+        tasks=correction.tasks,
         corrections_list=correction.corrections_list,
         suggestions=correction.suggestions,
-        appreciation=correction.appreciation,
         ai_provider=correction.ai_provider,
         created_at=correction.created_at,
     )

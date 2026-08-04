@@ -4,6 +4,15 @@ app/modules/corrections/models.py
 Une Correction est créée pour le module Schreiben d'une ExamSession.
 Elle est liée à la session (pas à une answer individuelle) car le prompt
 combine toutes les réponses free_text de la session en une seule évaluation.
+
+⚠️ Changement structurel : les 4 colonnes fixes aufgabe_score/kohaesion_score/
+wortschatz_score/grammatik_score (+ criteria_feedbacks séparé) sont remplacées
+par une colonne JSONB générique `criteria` (liste de critères, nombre et noms
+variables selon l'examen). `task_feedbacks` devient `tasks` (même idée, liste
+au lieu de dict clé→objet). Nécessite une migration Alembic — voir
+alembic_migration_criteria_tasks.py. La normalisation vers ce format se fait
+une seule fois à l'écriture (repository.create), donc ces colonnes JSONB
+stockent déjà la forme finale consommée telle quelle par le frontend.
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
@@ -28,7 +37,9 @@ class Correction(Base, UUIDMixin, TimestampMixin):
 
     Une seule correction par session (UniqueConstraint).
     Tous les feedbacks et scores sont stockés en JSONB pour éviter
-    des colonnes variables selon le nombre de tâches.
+    des colonnes variables selon le nombre de tâches ET selon le nombre/nom
+    des critères (qui diffère par examen : 3 pour telc, 4 pour Goethe,
+    structure imbriquée pour ÖSD B2).
     """
     __tablename__ = "corrections"
 
@@ -59,28 +70,28 @@ class Correction(Base, UUIDMixin, TimestampMixin):
     provider: Mapped[str] = mapped_column(String(20), nullable=False)   # telc | goethe | osd
     level: Mapped[str] = mapped_column(String(5), nullable=False)        # b1 | b2
 
-    # ── Scores ───────────────────────────────────────────
+    # ── Scores globaux ───────────────────────────────────
     overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    max_score: Mapped[int] = mapped_column(Integer, nullable=False)      # 45, 90 ou 100
+    max_score: Mapped[int] = mapped_column(Integer, nullable=False)      # 30, 45 ou 100
     passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    # Scores par critère
-    aufgabe_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    kohaesion_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    wortschatz_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    grammatik_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    # ÖSD B2 uniquement : vrai plancher officiel (>=10/30), distinct de `passed`
+    # (qui reste un repère interne à 60% pour tous les examens, cf. osd_b2_prompt.py).
+    # Nullable — non renseigné pour les autres examens.
+    floor_reached: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
 
-    # ── Feedbacks textuels (JSONB) ───────────────────────
-    # {"aufgabe_feedback": "...", "kohaesion_feedback": "...", ...}
-    criteria_feedbacks: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    # ── Critères de notation (JSONB) ─────────────────────
+    # [{"key": "erfullung", "label": "Erfüllung", "score": 18, "max_score": 25,
+    #   "feedback": "..."}, ...]
+    # Nombre et clés variables selon l'examen — voir response_normalizer.CRITERIA_CONFIG.
+    criteria: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
 
-    # Feedbacks par tâche :
-    # {
-    #   "task1": {"corrected_text": "...", "main_strengths": [...], "main_weaknesses": [...]},
-    #   "task2": {...},
-    #   "task3": {...}   ← présent seulement pour Goethe/ÖSD B1
-    # }
-    task_feedbacks: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    # ── Feedbacks par tâche (JSONB) ───────────────────────
+    # [{"key": "task1", "label": "Teil 1", "corrected_text": "...",
+    #   "main_strengths": [...], "main_weaknesses": [...],
+    #   "score": 12, "max_score": 15, "sub_criteria": [...]}, ...]  (score/max_score/
+    # sub_criteria optionnels, remplis seulement pour ÖSD B2)
+    tasks: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
 
     # Liste des erreurs corrigées :
     # [{"error": "...", "correction": "...", "task": "1", "explanation": "..."}]

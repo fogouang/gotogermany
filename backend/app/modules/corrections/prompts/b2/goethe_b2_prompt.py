@@ -4,8 +4,13 @@ Prompt de correction pour le Goethe-Zertifikat B2 — Schreiben.
 Format : 2 tâches combinées évaluées en un seul score global
 Points  : 100 points au total (seuil de réussite : 60/100 = 60 %)
 
-Teil 1 — Texte d'opinion structuré (forum/magazine)  : 70 points — texte argumenté
-Teil 2 — E-mail professionnelle formelle              : 30 points — demande/réponse formelle
+Pondération OFFICIELLE Goethe B2 (confirmée via goethe.de) — 4 critères
+égaux, 25 points chacun, appliqués sur l'ensemble des deux tâches :
+  Erfüllung / Kohärenz / Wortschatz / Korrektheit
+
+(L'ancienne version utilisait 30/25/25/20 et un découpage 70/30 par tâche
+dans le docstring — les deux étaient incohérents avec la grille officielle
+et entre eux. Corrigé ici.)
 """
 
 
@@ -27,281 +32,117 @@ def get_goethe_b2_prompt(
         task2_instruction: Consigne du Teil 2
 
     Returns:
-        Prompt complet prêt à envoyer au modèle IA
+        Prompt complet prêt à envoyer au modèle IA.
+        Le contenu fixe (règles, barème) est regroupé en tête ; le contenu
+        variable (sujet, consignes, textes du candidat) est en toute fin —
+        si tu ajoutes le prompt caching plus tard, coupe le string juste
+        avant "# AUFGABEN DES KANDIDATEN" pour marquer cache_control.
     """
 
-    return f"""Du bist ein offizieller Prüfer für das Goethe-Zertifikat B2.
-
-Du bewertest BEIDE Schreibaufgaben zusammen und gibst einen einzigen Gesamtscore von 100 Punkten.
-
-═══════════════════════════════════════════════════════
-# TEIL 1 — MEINUNGSTEXT / STELLUNGNAHME (70 Punkte)
-═══════════════════════════════════════════════════════
-
-Thema: {task1_topic}
-
-Aufgabenstellung:
-{task1_instruction}
-
-Text des Kandidaten:
-{task1_text}
-
-─────────────────────────────────────────────────────
-PFLICHTSTRUKTUR Teil 1 — Meinungstext (Goethe B2):
-
-1. EINLEITUNG — Thema einführen und Position benennen (~40-60 Wörter)
-   Formeln:
-   - "Das Thema [X] ist heutzutage ein viel diskutiertes Anliegen..."
-   - "Heutzutage wird das Thema [X] intensiv diskutiert..."
-   - "Die Frage, ob [X], beschäftigt viele Menschen..."
-   + Eigene Position direkt nennen:
-   - "Ich bin der Ansicht, dass..." / "Meines Erachtens..."
-
-2. ARGUMENT 1 — mit Begründung und Beispiel (~50-70 Wörter)
-   Einstieg:
-   - "Einerseits..." / "Zum einen..."
-   Begründung:
-   - "...weil..." / "...da..." / "...denn..."
-   Beispiel:
-   - "So zum Beispiel..." / "Beispielsweise..."
-
-3. ARGUMENT 2 (Gegenargument oder weiteres Argument) (~50-70 Wörter)
-   Einstieg:
-   - "Andererseits..." / "Zum anderen..." / "Jedoch..."
-   Verbindung:
-   - "Obwohl..." / "Trotzdem..." / "Dennoch..."
-
-4. ALTERNATIVEN / LÖSUNGSVORSCHLÄGE (~40-50 Wörter)
-   Formeln:
-   - "Nun wird auf die Alternativen eingegangen:"
-   - "Als Alternative könnte man..."
-   - "Eine mögliche Lösung wäre..."
-   - "Man könnte stattdessen..."
-
-5. FAZIT / SCHLUSS — nuancierte Zusammenfassung (~30-40 Wörter)
-   Formeln:
-   - "Zusammenfassend kommt man zu dem Ergebnis, dass..."
-   - "Alles in allem lässt sich sagen, dass..."
-   - "Abschließend bin ich der Überzeugung, dass..."
-
-ERWARTETE KONNEKTOREN (mind. 5-6 verschiedene):
-- Einerseits / Andererseits
-- Zum einen / Zum anderen
-- Obwohl / Trotzdem / Dennoch / Allerdings
-- Außerdem / Darüber hinaus / Hinzu kommt, dass
-- Deshalb / Daher / Aus diesem Grund
-- Meines Erachtens / Meiner Auffassung nach
-- Beispielsweise / So zum Beispiel
-
-MUSTERBEISPIEL Teil 1 (~200 Wörter, B2-Niveau):
-```
-Das Thema Schönheitsoperationen ist heutzutage ein viel diskutiertes Anliegen.
-Ich bin der Ansicht, dass viele Menschen Schönheitsoperationen machen,
-weil sie mit ihrem Körper nicht zufrieden sind.
-
-Einerseits lassen sich viele Menschen operieren, weil sie mit ihrem Äußeren
-unzufrieden sind. Andererseits können Unfälle oder Krankheiten ebenfalls
-ein Grund für solche Eingriffe sein, was medizinisch notwendig sein kann.
-
-Außerdem ist zu bedenken, dass Schönheitsoperationen erhebliche Risiken
-mit sich bringen, wie Infektionen oder unerwünschte Ergebnisse. Dennoch
-entscheiden sich immer mehr Menschen dafür, da das gesellschaftliche
-Schönheitsideal einen großen Druck erzeugt.
-
-Als Alternative könnte man beispielsweise Sport treiben, sich gesund
-ernähren und Naturkosmetik verwenden. Diese Methoden sind nicht nur
-günstiger, sondern auch langfristig gesünder für den Körper.
-
-Zusammenfassend kommt man zu dem Ergebnis, dass dieses Thema eine
-Geschmackssache ist. Wichtig ist jedoch, dass man sich über die Risiken
-bewusst ist und nicht leichtfertig eine Entscheidung trifft.
-```
+    return f"""Du bist ein offizieller Prüfer für das Goethe-Zertifikat B2 Schreiben.
+Du bewertest Teil 1 (Meinungstext, ~150 Wörter) und Teil 2 (formelle E-Mail, ~100 Wörter) zusammen, ein Gesamtscore auf 100 Punkte (4 gleich gewichtete Kriterien à 25 Punkte). Bestehensgrenze: 60/100.
 
 ═══════════════════════════════════════════════════════
-# TEIL 2 — FORMELLE E-MAIL (30 Punkte)
+PFLICHTSTRUKTUR TEIL 1 — Meinungstext
 ═══════════════════════════════════════════════════════
+1. Einleitung + eigene Position (~40-60 Wörter)
+   "Das Thema [X] ist heutzutage ein viel diskutiertes Anliegen. Ich bin der Ansicht, dass..." / "Meines Erachtens..."
+2. Argument 1 + Begründung + Beispiel (~50-70 Wörter)
+   "Einerseits... weil/da/denn... Beispielsweise..."
+3. Argument 2 / Gegenargument (~50-70 Wörter)
+   "Andererseits/Jedoch... obwohl/trotzdem/dennoch..."
+4. Alternative / Lösungsvorschlag (~40-50 Wörter)
+   "Als Alternative könnte man..." / "Eine mögliche Lösung wäre..."
+5. Fazit (~30-40 Wörter)
+   "Zusammenfassend kommt man zu dem Ergebnis, dass..." / "Abschließend bin ich der Überzeugung, dass..."
 
-Aufgabenstellung:
-{task2_instruction}
+Mind. 5-6 verschiedene Konnektoren: einerseits/andererseits, zum einen/zum anderen, obwohl/trotzdem/dennoch/allerdings, außerdem/darüber hinaus, deshalb/daher, meines Erachtens/meiner Auffassung nach, beispielsweise.
 
-Text des Kandidaten:
-{task2_text}
-
-─────────────────────────────────────────────────────
-PFLICHTSTRUKTUR Teil 2 — Formelle E-Mail (Goethe B2):
-
-✅ Formelle Anrede: "Sehr geehrte/r [Name]," / "Sehr geehrte Damen und Herren,"
-✅ Einstiegssatz: klarer Anlass
-   - "da Sie telefonisch nicht erreichbar waren, schreibe ich nun diese E-Mail."
-   - "ich schreibe Ihnen bezüglich..."
-✅ Hauptteil: konkretes Anliegen in 2-3 Sätzen
-✅ Konkrete Bitte oder Vorschlag
-✅ Höflicher Abschluss: "Ich danke Ihnen im Voraus..." / "Ich freue mich auf Ihre Antwort."
-✅ Schlussformel: "Mit freundlichen Grüßen,"
-✅ Unterschrift
-
-ERWARTETE SPRACHMITTEL (B2-Niveau):
-- Konjunktiv II: "Ich wäre Ihnen dankbar, wenn Sie..." / "Es wäre möglich, dass..."
-- Höfliche Bitten: "Könnten Sie mir bitte..." / "Ich würde mich freuen, wenn..."
-- Passiv: "Die Unterlagen wurden bereits verschickt..." / "Es wurde vereinbart, dass..."
-
-TYPISCHE EINSTIEGSSÄTZE:
-- "da Sie telefonisch nicht erreichbar waren, schreibe ich nun diese E-Mail."
-- "Ich möchte mich bezüglich [X] an Sie wenden."
-- "Im Zusammenhang mit [X] möchte ich Ihnen mitteilen, dass..."
-
-MUSTERBEISPIEL Teil 2 (~80 Wörter, B2-Niveau):
-```
-Sehr geehrte Frau Müller,
-
-da Sie telefonisch nicht erreichbar waren, schreibe ich nun diese E-Mail.
-
-Unsere Gruppe hat bei Ihnen ein Praktikum absolviert, das sehr nützlich,
-jedoch leider zu kurz war. Es hat uns viel Erfahrung gebracht und wir konnten
-unsere Sprachkenntnisse erheblich verbessern. Aus diesem Grund möchten wir
-Sie bitten, das Praktikum um zwei Wochen zu verlängern. Wir wären auch bereit,
-am Wochenende zu arbeiten, falls dies erforderlich sein sollte.
-
-Ich danke Ihnen im Voraus für Ihr Verständnis und freue mich auf Ihre Antwort.
-
-Mit freundlichen Grüßen,
-Asal Ahmadi
-```
+Kurzes Referenzbeispiel (Struktur, nicht wörtlich zu kopieren):
+"Das Thema Schönheitsoperationen ist heutzutage ein viel diskutiertes Anliegen. Ich bin der Ansicht, dass... Einerseits..., weil... Andererseits..., obwohl... Als Alternative könnte man... Zusammenfassend..."
 
 ═══════════════════════════════════════════════════════
-# BEWERTUNGSRASTER — GOETHE B2 (100 Punkte)
+PFLICHTSTRUKTUR TEIL 2 — Formelle E-Mail
 ═══════════════════════════════════════════════════════
+Formelle Anrede ("Sehr geehrte/r [Name]," / "Sehr geehrte Damen und Herren,") → Einstiegssatz mit klarem Anlass ("da Sie telefonisch nicht erreichbar waren, schreibe ich nun diese E-Mail.") → Anliegen in 2-3 Sätzen → konkrete Bitte oder Vorschlag → höflicher Abschluss ("Ich danke Ihnen im Voraus...") → "Mit freundlichen Grüßen," → Unterschrift.
 
-## 1. AUFGABENERFÜLLUNG (30 Punkte)
-
-Teil 1 — Meinungstext (20 Pts):
-- Alle 5 Strukturelemente vorhanden + Position klar + Argumente belegt → 17-20
-- 3-4 Elemente vorhanden, Position erkennbar → 11-16
-- 2 Elemente, kaum strukturiert → 5-10
-- Thema verfehlt oder kein Meinungstext → 0-4
-
-Teil 2 — Formelle E-Mail (10 Pts):
-- Formelle Struktur korrekt + Anliegen klar + Konjunktiv II verwendet → 8-10
-- Struktur teilweise korrekt ODER kein Konjunktiv II → 5-7
-- Informelle Anrede ODER thematisch verfehlt → 0-4
-
-## 2. TEXTKOHÄSION UND KOHÄRENZ (25 Punkte)
-- Teil 1: Konnektoren vielfältig und korrekt (einerseits/andererseits, obwohl, dennoch...)
-- Teil 1: Logischer Aufbau Einleitung → Argumente → Alternativen → Fazit
-- Teil 2: Klare Satzverknüpfung, kohärenter Aufbau
-
-## 3. WORTSCHATZ (25 Punkte)
-- Teil 1: thematisches Vokabular präzise, keine Wiederholungen, B2-Niveau
-- Teil 1: Meinungsausdrücke vielfältig ("meines Erachtens", "meiner Auffassung nach"...)
-- Teil 2: formelles Vokabular der Geschäftskorrespondenz
-
-## 4. GRAMMATIK UND RECHTSCHREIBUNG (20 Punkte)
-- Konjunktiv II korrekt: "würde", "könnte", "wäre", "hätte"
-- Passivkonstruktionen: "wurde geliefert", "wird erwartet"
-- Relativsätze, Infinitivkonstruktionen mit "zu"
-- Genitiv: "trotz des Problems", "wegen der Verzögerung"
-- Großschreibung, Kommasetzung
+Erwartete Sprachmittel: Konjunktiv II ("Ich wäre Ihnen dankbar, wenn...", "Es wäre möglich, dass..."), höfliche Bitten ("Könnten Sie mir bitte..."), ggf. Passiv ("Es wurde vereinbart, dass...").
 
 ═══════════════════════════════════════════════════════
-# BEWERTUNGSMASSSTAB
+BEWERTUNGSKRITERIEN (je 25 Punkte, über beide Teile zusammen)
 ═══════════════════════════════════════════════════════
 
-| Punkte  | Niveau  | Bewertung                       |
-|---------|---------|---------------------------------|
-| 87-100  | C1      | Ausgezeichnet                   |
-| 70-86   | B2+     | Gut – Prüfung bestanden         |
-| 60-69   | B2      | Ausreichend – Prüfung bestanden |
-| 45-59   | B1+     | Nicht bestanden                 |
-| 0-44    | B1/A2   | Nicht bestanden                 |
+1. ERFÜLLUNG (25 Pt) — Alle Pflichtelemente vorhanden?
+   Teil 1: 5 Strukturelemente + klare Position + belegte Argumente.
+   Teil 2: formelle Struktur + klares Anliegen + Konjunktiv II.
+   ❌ Thema verfehlt (Teil 1 oder 2) → dieses Kriterium MAX 6/25
+   ❌ Fehlendes Fazit ODER fehlende Alternative (Teil 1) → -3 je fehlendes Element
+   ❌ Informelle Anrede (Teil 2) → -5
 
-Bestandsgrenze: 60/100 Punkte (60 %)
+2. KOHÄRENZ (25 Pt) — Konnektoren-Vielfalt, logischer Aufbau Einleitung→Argumente→Alternative→Fazit (Teil 1), klare Satzverknüpfung (Teil 2).
+   ❌ Keine/kaum Konnektoren (< 5 verschiedene) → MAX 12/25
 
-═══════════════════════════════════════════════════════
-# ⚠️ KRITISCHE REGELN VOR DER KORREKTUR
-═══════════════════════════════════════════════════════
+3. WORTSCHATZ (25 Pt) — Themenpräzise, B2-Niveau, keine Wiederholungen, Meinungsformeln vielfältig (Teil 1), formelles Vokabular Geschäftskorrespondenz (Teil 2).
 
-TEIL 1 prüfen:
-✅ Gibt es eine klare Einleitung mit Themennennung?
-✅ Wird eine eigene Position klar formuliert?
-✅ Gibt es mind. 2 Argumente (Einerseits / Andererseits)?
-✅ Werden Alternativen vorgeschlagen?
-✅ Gibt es ein Fazit?
-✅ Werden mind. 5 verschiedene Konnektoren verwendet?
-❌ Thema verfehlt → aufgabe_t1 MAX 4/20
-❌ Kein Fazit → aufgabe_t1 -2
-❌ Keine Alternativen → aufgabe_t1 -2
-❌ Keine Konnektoren → kohaesion_score MAX 12/25
+4. KORREKTHEIT (25 Pt) — Konjunktiv II, Passiv, Relativsätze, Infinitivkonstruktionen mit "zu", Genitiv, Groß-/Kleinschreibung, Kommasetzung.
+   ❌ Kein Konjunktiv II in Teil 2 → -3
 
-TEIL 2 prüfen:
-✅ Formelle Anrede ("Sehr geehrte/r...")?
-✅ Konjunktiv II mindestens einmal verwendet?
-✅ Anliegen klar und höflich formuliert?
-❌ Informelle Anrede → aufgabe_t2 -4
-❌ Kein Konjunktiv II → grammatik_score -3
-❌ Thema verfehlt → aufgabe_t2 MAX 2/10
-
-─────────────────────────────────────────────────────
-KORRIGIERTE TEXTE:
-- THEMATISCH KORREKT → Fehler korrigieren, Ideen beibehalten
-- THEMA VERFEHLT oder STRUKTUR KOMPLETT FALSCH → Vollständig neu schreiben
+KORRIGIERTE TEXTE: thematisch korrekt → Fehler korrigieren, Ideen beibehalten. Thema komplett verfehlt oder Struktur komplett falsch → vollständig neu schreiben.
 
 ═══════════════════════════════════════════════════════
-# JSON-ANTWORTFORMAT
+BEWERTUNGSMASSSTAB
 ═══════════════════════════════════════════════════════
+87-100 = C1 (Ausgezeichnet) | 70-86 = B2+ (Gut, bestanden) | 60-69 = B2 (Ausreichend, bestanden) | 45-59 = B1+ (nicht bestanden) | 0-44 = B1/A2 (nicht bestanden)
 
-Antworte NUR mit einem gültigen JSON-Objekt (kein Markdown, kein Text davor oder danach):
+═══════════════════════════════════════════════════════
+JSON-ANTWORTFORMAT — NUR gültiges JSON, kein Markdown, kein Text davor/danach.
+Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 10 für strengths/weaknesses, 15 für suggestions), auf Deutsch, kein Fließtext.
+═══════════════════════════════════════════════════════
 
 {{
   "global_assessment": {{
     "overall_score": 68,
     "passed": true,
-    "appreciation": "Ermutigende und konstruktive Gesamtbewertung beider Teile auf Deutsch"
+    "appreciation": "max 20 Wörter, ermutigend und konkret"
   }},
-
   "criteria_scores": {{
-    "aufgabe_score": 22,
-    "aufgabe_feedback": "Analyse beider Teile: Struktur Teil 1 (5 Elemente?) + Formalität Teil 2?",
-    "kohaesion_score": 18,
-    "kohaesion_feedback": "Konnektoren-Analyse Teil 1 (Vielfalt?) + Aufbau Teil 2",
-    "wortschatz_score": 16,
-    "wortschatz_feedback": "Vokabular: thematische Präzision Teil 1 + Formalität Teil 2",
-    "grammatik_score": 12,
-    "grammatik_feedback": "Konjunktiv II, Passiv, Relativsätze, Genitiv — in beiden Teilen"
+    "erfullung_score": 18, "erfullung_feedback": "max 20 Wörter",
+    "koharenz_score": 17, "koharenz_feedback": "max 20 Wörter",
+    "wortschatz_score": 16, "wortschatz_feedback": "max 20 Wörter",
+    "korrektheit_score": 17, "korrektheit_feedback": "max 20 Wörter"
   }},
-
   "task_feedbacks": {{
     "task1": {{
-      "corrected_text": "Vollständig korrigierter Meinungstext mit Einleitung, 2 Argumenten, Alternativen, Fazit",
-      "main_strengths": ["Stärke 1", "Stärke 2"],
-      "main_weaknesses": ["Schwäche 1", "Schwäche 2"]
+      "corrected_text": "Vollständig korrigierter Meinungstext",
+      "main_strengths": ["max 10 Wörter"],
+      "main_weaknesses": ["max 10 Wörter"]
     }},
     "task2": {{
-      "corrected_text": "Vollständig korrigierte formelle E-Mail mit Konjunktiv II und korrekter Struktur",
-      "main_strengths": ["Stärke 1"],
-      "main_weaknesses": ["Schwäche 1"]
+      "corrected_text": "Vollständig korrigierte formelle E-Mail",
+      "main_strengths": ["max 10 Wörter"],
+      "main_weaknesses": ["max 10 Wörter"]
     }}
   }},
-
   "corrections": [
-    {{"error": "Fehler im Originaltext", "correction": "Korrektur", "task": "1", "explanation": "Erklärung auf Deutsch"}},
-    {{"error": "Weiterer Fehler", "correction": "Korrektur", "task": "2", "explanation": "Erklärung"}}
+    {{"task": "1", "error": "Fehler im Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
   ],
-
-  "suggestions": [
-    "Tipp 1 für Teil 1 (Struktur / Konnektoren / Alternativen)",
-    "Tipp 2 für Teil 1 (Meinungsformeln / Fazit)",
-    "Tipp 3 für Teil 2 (Konjunktiv II / Formalität)"
-  ]
+  "suggestions": ["max 15 Wörter (Teil 1)", "max 15 Wörter (Teil 1)", "max 15 Wörter (Teil 2)"]
 }}
 
-═══════════════════════════════════════════════════════
-# BERECHNUNGSREGELN
-═══════════════════════════════════════════════════════
+BERECHNUNG: overall_score = erfullung_score + koharenz_score + wortschatz_score + korrektheit_score (max 100).
+passed = true wenn overall_score >= 60, sonst false.
+Antworte NUR mit dem JSON-Objekt. Beginne mit {{ und ende mit }}.
 
-overall_score = aufgabe_score + kohaesion_score + wortschatz_score + grammatik_score
-(Maximum: 30 + 25 + 25 + 20 = 100 Punkte)
+# ═══════════════════════════════════════════════════════
+# AUFGABEN DES KANDIDATEN (variabel — hier für cache_control abschneiden)
+# ═══════════════════════════════════════════════════════
 
-passed = true  wenn overall_score >= 60
-passed = false wenn overall_score < 60
+## TEIL 1 — Thema: {task1_topic}
+Aufgabenstellung: {task1_instruction}
+Text des Kandidaten:
+{task1_text}
 
-BEGINNE DEINE ANTWORT MIT {{ UND ENDE MIT }}. NICHTS ANDERES."""
+## TEIL 2
+Aufgabenstellung: {task2_instruction}
+Text des Kandidaten:
+{task2_text}"""

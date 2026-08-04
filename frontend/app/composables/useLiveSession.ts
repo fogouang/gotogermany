@@ -27,6 +27,20 @@ import type {
   LiveSessionOutboundEvent,
   PreparationStartedEvent,
 } from "#shared/liveSessionWebSocketTypes"; // ADJUST if the real path differs
+import type { LiveVideoCapture, LiveVideoPlayback } from "./useLiveVideo";
+
+// Préfixe d'un octet sur chaque message binaire, pour distinguer audio et
+// vidéo dans le même flux WebSocket — le backend relaie ces messages sans
+// jamais les interpréter, la distinction ne compte que côté client.
+const MESSAGE_TYPE_AUDIO = 0;
+const MESSAGE_TYPE_VIDEO = 1;
+
+function withTypePrefix(type: number, bytes: Uint8Array): Uint8Array {
+  const out = new Uint8Array(bytes.length + 1);
+  out[0] = type;
+  out.set(bytes, 1);
+  return out;
+}
 
 // Combien de temps sans dépasser le seuil avant de considérer que la
 // personne a arrêté de parler — évite un indicateur qui clignote entre
@@ -89,6 +103,11 @@ export interface UseLiveSessionOptions {
    * pas garanti d'atteindre le domaine du backend (voir
    * get_current_user_ws côté serveur). */
   accessToken: string;
+  /** Optionnels — si absents, la session reste audio seul (comportement
+   * inchangé). Fournis, la vidéo bidirectionnelle s'active en même
+   * temps que l'audio, sur le même WebSocket. */
+  videoCapture?: LiveVideoCapture;
+  videoPlayback?: LiveVideoPlayback;
   /** Injectable for testing — defaults to the real `WebSocket` global. */
   createWebSocket?: (url: string) => WebSocket;
 }
@@ -165,7 +184,7 @@ export function useLiveSession(options: UseLiveSessionOptions) {
           // le seuil de bruit de fond, pour ne jamais les transmettre.
           if (level < NOISE_GATE_RMS_THRESHOLD) return;
           if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(chunk as BufferSource);
+            ws.send(withTypePrefix(MESSAGE_TYPE_AUDIO, chunk) as BufferSource);
           }
         }).catch((err) => {
           console.error("Mic capture failed:", err);
@@ -173,6 +192,19 @@ export function useLiveSession(options: UseLiveSessionOptions) {
           errorMessage.value =
             "Impossible d'accéder au microphone. Vérifiez les permissions.";
         });
+
+        if (options.videoCapture) {
+          options.videoCapture.startCapture((chunk) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              const prefixed = withTypePrefix(MESSAGE_TYPE_VIDEO, new Uint8Array(chunk));
+              ws.send(prefixed as BufferSource);
+            }
+          }).catch((err) => {
+            // La vidéo est optionnelle — un échec caméra ne doit jamais
+            // faire tomber la session audio, qui reste l'essentiel.
+            console.error("Video capture failed:", err);
+          });
+        }
         break;
 
       case "peer_left":
@@ -182,16 +214,29 @@ export function useLiveSession(options: UseLiveSessionOptions) {
         resetSpeakingIndicators();
         options.audioIO.stopCapture();
         options.audioIO.stopPlayback();
+        options.videoCapture?.stopCapture();
+        options.videoPlayback?.stop();
         break;
     }
   }
 
   function handleBinaryMessage(data: ArrayBuffer): void {
-    // Seule la session "live" doit jouer l'audio entrant — pendant la
-    // prépa côté candidat, aucun binaire n'est censé arriver, mais on
+    // Seule la session "live" doit traiter l'audio/vidéo entrant —
+    // pendant la prépa côté candidat, rien n'est censé arriver, mais on
     // reste défensif plutôt que de crasher sur un flux inattendu.
     if (status.value !== "live") return;
-    const bytes = new Uint8Array(data);
+    if (data.byteLength < 1) return;
+
+    const messageType = new Uint8Array(data, 0, 1)[0];
+    const payload = data.slice(1);
+
+    if (messageType === MESSAGE_TYPE_VIDEO) {
+      options.videoPlayback?.pushChunk(payload);
+      return;
+    }
+
+    // Par défaut (ou type audio explicite) : chemin audio existant.
+    const bytes = new Uint8Array(payload);
     if (pcm16RmsLevel(bytes) > SPEAKING_RMS_THRESHOLD) {
       markSpeaking(peerSpeaking, "peer");
     }
@@ -226,6 +271,8 @@ export function useLiveSession(options: UseLiveSessionOptions) {
     socket.onclose = (event: CloseEvent) => {
       options.audioIO.stopCapture();
       options.audioIO.stopPlayback();
+      options.videoCapture?.stopCapture();
+      options.videoPlayback?.stop();
       resetSpeakingIndicators();
       if (!sessionEndedCleanly) {
         status.value = "error";
@@ -258,6 +305,8 @@ export function useLiveSession(options: UseLiveSessionOptions) {
   function disconnect(): void {
     options.audioIO.stopCapture();
     options.audioIO.stopPlayback();
+    options.videoCapture?.stopCapture();
+    options.videoPlayback?.stop();
     resetSpeakingIndicators();
     ws?.close();
     ws = null;

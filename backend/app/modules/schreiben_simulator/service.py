@@ -22,7 +22,8 @@ from app.modules.schreiben_simulator.schemas import (
 from app.modules.schreiben_simulator.repository import SchreibenSubjectRepository
 from app.modules.corrections.ai_providers.gemini import GeminiProvider
 from app.modules.corrections.ai_providers.claude import ClaudeProvider
-from app.modules.corrections.prompts import build_correction_prompt, get_max_score, TaskData
+from app.modules.corrections.prompts import build_correction_prompt, TaskData
+from app.modules.corrections.response_normalizer import normalize_correction_result
 from app.config import get_settings
 
 settings = get_settings()
@@ -31,9 +32,8 @@ logger = logging.getLogger(__name__)
 
 class SchreibenSimulatorService:
 
-
     def __init__(self, db: AsyncSession):
-        self.db   = db
+        self.db = db
         self.repo = SchreibenSubjectRepository(db)
 
         provider = settings.AI_PROVIDER
@@ -45,7 +45,7 @@ class SchreibenSimulatorService:
     @property
     def ai(self):
         return self._ai
-    
+
     # ── Lecture ──────────────────────────────────────────
 
     async def list_subjects(
@@ -148,7 +148,7 @@ class SchreibenSimulatorService:
             raise ValueError("Ce sujet n'est plus disponible.")
 
         self._validate_task_count(subject.provider, subject.level, len(request.task_texts))
-        tasks  = self._build_tasks(subject, request.task_texts)
+        tasks = self._build_tasks(subject, request.task_texts)
         prompt = build_correction_prompt(
             provider=subject.provider,
             level=subject.level,
@@ -174,7 +174,6 @@ class SchreibenSimulatorService:
 
         return response
 
-     
     async def list_my_results(self, user_id: uuid.UUID):
         return await self.repo.get_results_by_user(user_id)
 
@@ -204,67 +203,28 @@ class SchreibenSimulatorService:
         subject: SchreibenSubject,
         ai_result: dict,
     ) -> SimulatorCorrectResponse:
-        """Construire la réponse depuis le résultat IA."""
-        max_score = get_max_score(subject.provider, subject.level)
-
-        # Extraire scores — même logique que corrections/repository.py
-        if "global_assessment" in ai_result:
-            overall = ai_result["global_assessment"].get("overall_score", 0)
-            passed  = ai_result["global_assessment"].get("passed", False)
-            scores  = ai_result.get("criteria_scores", {})
-            feedbacks = {
-                "aufgabe_feedback":   scores.get("aufgabe_feedback", ""),
-                "kohaesion_feedback": scores.get("kohaesion_feedback", ""),
-                "wortschatz_feedback": scores.get("wortschatz_feedback", ""),
-                "grammatik_feedback": scores.get("grammatik_feedback", ""),
-            }
-            task_feedbacks = ai_result.get("task_feedbacks", {})
-            appreciation   = ai_result["global_assessment"].get("appreciation", "")
-        else:
-            overall = ai_result.get("overall_score", 0)
-            passed  = ai_result.get("passed", False)
-            scores  = ai_result
-            feedbacks = {
-                "aufgabe_feedback":    ai_result.get("aufgabe_feedback", ""),
-                "kohaesion_feedback":  ai_result.get("kohaesion_feedback", ""),
-                "wortschatz_feedback": ai_result.get("wortschatz_feedback", ""),
-                "grammatik_feedback":  ai_result.get("grammatik_feedback", ""),
-            }
-            task_feedbacks = {
-                "task1": {
-                    "corrected_text": ai_result.get("corrected_text", ""),
-                    "main_strengths": [],
-                    "main_weaknesses": [],
-                }
-            }
-            appreciation = ai_result.get("appreciation", "")
+        """
+        Construire la réponse depuis le résultat IA.
+        Délègue entièrement à response_normalizer — même logique que
+        corrections/repository.py, une seule source de vérité sur les
+        5 formats de sortie possibles (nested/flat/osd_b2).
+        """
+        normalized = normalize_correction_result(subject.provider, subject.level, ai_result)
 
         return SimulatorCorrectResponse(
             subject_id=subject.id,
             provider=subject.provider,
             level=subject.level,
-            overall_score=overall,
-            max_score=max_score,
-            passed=passed,
-            score_percentage=round(overall / max_score * 100, 1) if max_score else 0,
-            aufgabe_score=scores.get("aufgabe_score", 0),
-            kohaesion_score=scores.get("kohaesion_score", 0),
-            wortschatz_score=scores.get("wortschatz_score", 0),
-            grammatik_score=scores.get("grammatik_score", 0),
-            criteria_feedbacks=feedbacks,
-            task_feedbacks=task_feedbacks,
-            corrections_list=ai_result.get("corrections", []),
-            suggestions=ai_result.get("suggestions", []),
-            appreciation=appreciation,
+            **normalized,
         )
 
     @staticmethod
     def _validate_task_count(provider: str, level: str, count: int) -> None:
         """Vérifier la cohérence nombre de tâches ↔ examen."""
         expected = {
-            ("telc",   "b1"): 1, ("telc",   "b2"): 1,
+            ("telc", "b1"): 1, ("telc", "b2"): 1,
             ("goethe", "b1"): 3, ("goethe", "b2"): 2,
-            ("osd",    "b1"): 3, ("osd",    "b2"): 2,
+            ("osd", "b1"): 3, ("osd", "b2"): 2,
         }.get((provider.lower(), level.lower()))
 
         if expected and count != expected:
