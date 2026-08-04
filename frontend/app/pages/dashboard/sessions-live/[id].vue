@@ -1,6 +1,6 @@
 <!-- pages/dashboard/sessions-live/[id].vue -->
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div class="max-w-3xl mx-auto space-y-6">
     <div v-if="loadingSession" class="flex justify-center py-16">
       <ProgressSpinner style="width: 50px; height: 50px" />
     </div>
@@ -48,7 +48,7 @@
         </div>
 
         <div class="grid grid-cols-2 gap-px bg-gray-800">
-          <div class="relative bg-gray-950 aspect-square sm:aspect-video">
+          <div class="relative bg-gray-950 aspect-video min-h-55">
             <video
               ref="localVideoEl"
               autoplay
@@ -61,7 +61,7 @@
               Vous
             </span>
           </div>
-          <div class="relative bg-gray-950 aspect-square sm:aspect-video">
+          <div class="relative bg-gray-950 aspect-video min-h-55">
             <video
               ref="remoteVideoEl"
               autoplay
@@ -268,12 +268,8 @@ const videoCapture = createLiveVideoCapture();
 const videoPlayback = createLiveVideoPlayback();
 const localVideoEl = ref<HTMLVideoElement | null>(null);
 const remoteVideoEl = ref<HTMLVideoElement | null>(null);
+const audioIO = createBrowserAudioIO({ captureSampleRate: 16000, playbackSampleRate: 16000 });
 const cameraEnabled = ref(true);
-// ⚠️ Le micro n'est PAS encore réellement coupé : audioIO.ts (le pipeline
-// PCM16 existant) n'expose aucune méthode pour désactiver la piste micro
-// sans arrêter toute la capture — juste un état visuel pour l'instant.
-// Pour un vrai mute, il faudrait qu'audioIO.ts expose getLocalStream()
-// comme le fait déjà useLiveVideo.ts, et couper track.enabled dessus.
 const micEnabled = ref(true);
 
 function toggleCamera() {
@@ -285,7 +281,9 @@ function toggleCamera() {
 
 function toggleMic() {
   micEnabled.value = !micEnabled.value;
-  // TODO : coupure réelle du micro, voir note ci-dessus.
+  audioIO.getLocalStream()?.getAudioTracks().forEach((track) => {
+    track.enabled = micEnabled.value;
+  });
 }
 
 const live = useLiveSession({
@@ -293,7 +291,7 @@ const live = useLiveSession({
   role: "student",
   wsBaseUrl: wsBaseUrl.value,
   accessToken: tokenCookie.value ?? "",
-  audioIO: createBrowserAudioIO({ captureSampleRate: 16000, playbackSampleRate: 16000 }),
+  audioIO,
   videoCapture,
   videoPlayback,
 });

@@ -1,15 +1,13 @@
 <!-- pages/centre/sessions-live/[id].vue -->
 <template>
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <div v-if="loadingSession" class="flex justify-center py-16">
       <ProgressSpinner style="width: 50px; height: 50px" />
     </div>
 
     <template v-else-if="session">
       <div class="mb-6">
-        <h1 class="text-xl font-bold text-gray-900">
-          Session Sprechen — examinateur
-        </h1>
+        <h1 class="text-xl font-bold text-gray-900">Session Sprechen — examinateur</h1>
         <p class="text-sm text-gray-500">
           Statut connexion : <span class="font-medium">{{ statusLabel }}</span>
         </p>
@@ -23,9 +21,7 @@
             v-if="connectionStatus === 'connecting'"
             class="bg-white rounded-xl border border-gray-200 p-6 text-center"
           >
-            <i
-              class="pi pi-spin pi-spinner text-2xl text-gray-400 mb-2 block"
-            />
+            <i class="pi pi-spin pi-spinner text-2xl text-gray-400 mb-2 block" />
             <p class="text-sm text-gray-500">
               En attente que le candidat rejoigne et termine sa préparation…
             </p>
@@ -38,10 +34,7 @@
           >
             <i class="pi pi-clock text-2xl text-amber-500 mb-2 block" />
             <p class="text-sm text-gray-600">
-              Le candidat est en préparation ({{
-                live.preparationInfo.value?.duration_minutes
-              }}
-              min).
+              Le candidat est en préparation ({{ live.preparationInfo.value?.duration_minutes }} min).
             </p>
           </div>
 
@@ -51,49 +44,35 @@
             class="rounded-2xl overflow-hidden bg-gray-900 text-white shadow-lg"
           >
             <div class="px-4 py-3 text-center border-b border-gray-800">
-              <p
-                class="text-sm font-semibold flex items-center justify-center gap-2"
-              >
+              <p class="text-sm font-semibold flex items-center justify-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 En direct
               </p>
             </div>
 
             <div class="grid grid-cols-2 gap-px bg-gray-800">
-              <div class="relative bg-gray-950 aspect-square sm:aspect-video">
+              <div class="relative bg-gray-950 aspect-video min-h-55">
                 <video
                   ref="localVideoEl"
                   autoplay
                   muted
                   playsinline
                   class="w-full h-full object-cover"
-                  :class="
-                    live.localSpeaking.value
-                      ? 'ring-2 ring-inset ring-teal-400'
-                      : ''
-                  "
+                  :class="live.localSpeaking.value ? 'ring-2 ring-inset ring-teal-400' : ''"
                 />
-                <span
-                  class="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded"
-                >
+                <span class="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded">
                   Vous
                 </span>
               </div>
-              <div class="relative bg-gray-950 aspect-square sm:aspect-video">
+              <div class="relative bg-gray-950 aspect-video min-h-55">
                 <video
                   ref="remoteVideoEl"
                   autoplay
                   playsinline
                   class="w-full h-full object-cover"
-                  :class="
-                    live.peerSpeaking.value
-                      ? 'ring-2 ring-inset ring-amber-400'
-                      : ''
-                  "
+                  :class="live.peerSpeaking.value ? 'ring-2 ring-inset ring-amber-400' : ''"
                 />
-                <span
-                  class="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded"
-                >
+                <span class="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded">
                   Candidat
                 </span>
               </div>
@@ -102,22 +81,14 @@
             <div class="flex items-center justify-center gap-4 py-4">
               <button
                 class="w-11 h-11 rounded-full flex items-center justify-center transition-colors"
-                :class="
-                  cameraEnabled
-                    ? 'bg-gray-700 hover:bg-gray-600'
-                    : 'bg-red-500 hover:bg-red-600'
-                "
+                :class="cameraEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'"
                 @click="toggleCamera"
               >
                 <i class="pi pi-video text-white text-sm" />
               </button>
               <button
                 class="w-11 h-11 rounded-full flex items-center justify-center transition-colors"
-                :class="
-                  micEnabled
-                    ? 'bg-gray-700 hover:bg-gray-600'
-                    : 'bg-red-500 hover:bg-red-600'
-                "
+                :class="micEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'"
                 @click="toggleMic"
               >
                 <i class="pi pi-microphone text-white text-sm" />
@@ -126,10 +97,7 @@
                 class="w-11 h-11 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors"
                 @click="handleEnd"
               >
-                <i
-                  class="pi pi-phone text-white text-sm"
-                  style="transform: rotate(135deg)"
-                />
+                <i class="pi pi-phone text-white text-sm" style="transform: rotate(135deg)" />
               </button>
             </div>
           </div>
@@ -150,10 +118,7 @@
             </p>
           </div>
 
-          <div
-            v-else-if="connectionStatus === 'error'"
-            class="bg-red-50 rounded-xl border border-red-200 p-6 text-center"
-          >
+          <div v-else-if="connectionStatus === 'error'" class="bg-red-50 rounded-xl border border-red-200 p-6 text-center">
             <p class="text-sm text-red-600">{{ live.errorMessage.value }}</p>
           </div>
         </div>
@@ -162,62 +127,35 @@
         <div class="mt-6 lg:mt-0 space-y-4">
           <!-- Notes de correction — en premier, toujours accessible sans scroller loin de la vidéo -->
           <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-            <p class="text-sm font-semibold text-gray-700">
-              Vos notes de correction
-            </p>
+            <p class="text-sm font-semibold text-gray-700">Vos notes de correction</p>
             <p class="text-xs text-gray-400">
-              Rédigez librement vos observations — pas de grille imposée.
-              L'étudiant les verra dans son espace dès la fin de la session.
+              Rédigez librement vos observations — pas de grille imposée. L'étudiant
+              les verra dans son espace dès la fin de la session.
             </p>
-            <Textarea
-              v-model="notes"
-              rows="8"
-              class="w-full"
-              placeholder="Vos observations sur la prestation du candidat…"
-            />
+            <Textarea v-model="notes" rows="8" class="w-full" placeholder="Vos observations sur la prestation du candidat…" />
             <div class="flex items-center gap-3">
-              <Button
-                label="Enregistrer les notes"
-                :loading="savingNotes"
-                @click="handleSaveNotes"
-              />
-              <span v-if="notesSaved" class="text-sm text-green-600"
-                >Enregistré ✓</span
-              >
+              <Button label="Enregistrer les notes" :loading="savingNotes" @click="handleSaveNotes" />
+              <span v-if="notesSaved" class="text-sm text-green-600">Enregistré ✓</span>
             </div>
           </div>
 
           <!-- Sujet — replié par défaut pour ne pas encombrer, dépliable au besoin -->
-          <div
-            v-if="subjectContent"
-            class="bg-white rounded-xl border border-gray-200 overflow-hidden"
-          >
+          <div v-if="subjectContent" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <button
               class="w-full flex items-center justify-between px-5 py-4 text-left"
               @click="subjectsExpanded = !subjectsExpanded"
             >
-              <span class="text-sm font-semibold text-gray-700"
-                >Sujet de l'examen</span
-              >
-              <i
-                :class="
-                  subjectsExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'
-                "
-                class="text-gray-400 text-xs"
-              />
+              <span class="text-sm font-semibold text-gray-700">Sujet de l'examen</span>
+              <i :class="subjectsExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-gray-400 text-xs" />
             </button>
-            <div
-              v-if="subjectsExpanded"
-              class="px-5 pb-5 space-y-3 border-t border-gray-100 pt-3"
-            >
+            <div v-if="subjectsExpanded" class="px-5 pb-5 space-y-3 border-t border-gray-100 pt-3">
               <div
                 v-for="teil in subjectContent.teile"
                 :key="teil.teil_number"
                 class="bg-gray-50 rounded-lg p-4"
               >
                 <p class="text-sm font-semibold text-gray-900 mb-1">
-                  Teil {{ teil.teil_number
-                  }}<span v-if="teil.name"> — {{ teil.name }}</span>
+                  Teil {{ teil.teil_number }}<span v-if="teil.name"> — {{ teil.name }}</span>
                 </p>
                 <p v-if="teil.instructions" class="text-sm text-gray-600 mb-2">
                   {{ teil.instructions }}
@@ -237,25 +175,15 @@
                       v-if="theme.leitpunkte?.length || theme.punkte?.length"
                       class="list-disc list-inside text-sm text-gray-600 mt-1"
                     >
-                      <li
-                        v-for="(p, i) in theme.leitpunkte || theme.punkte"
-                        :key="i"
-                      >
-                        {{ p }}
-                      </li>
+                      <li v-for="(p, i) in (theme.leitpunkte || theme.punkte)" :key="i">{{ p }}</li>
                     </ul>
                   </div>
                 </div>
 
                 <!-- Discussion (ex: telc B2 Teil 2) -->
                 <div v-if="teil.diskussion_titel" class="mt-2">
-                  <p class="text-sm font-medium text-gray-800">
-                    {{ teil.diskussion_titel }}
-                  </p>
-                  <p
-                    v-if="teil.diskussion_thema"
-                    class="text-sm text-gray-600 mt-1"
-                  >
+                  <p class="text-sm font-medium text-gray-800">{{ teil.diskussion_titel }}</p>
+                  <p v-if="teil.diskussion_thema" class="text-sm text-gray-600 mt-1">
                     {{ teil.diskussion_thema }}
                   </p>
                 </div>
@@ -269,9 +197,7 @@
                   v-if="teil.content_points?.length"
                   class="list-disc list-inside text-sm text-gray-600 space-y-0.5 mt-2"
                 >
-                  <li v-for="(point, i) in teil.content_points" :key="i">
-                    {{ point }}
-                  </li>
+                  <li v-for="(point, i) in teil.content_points" :key="i">{{ point }}</li>
                 </ul>
 
                 <ul
@@ -304,10 +230,7 @@ import { useLiveSession } from "~/composables/useLiveSession";
 // LiveSessionAudioIO a exactement la même forme (mêmes 4 méthodes/signatures)
 // — accepté par typage structurel TS, pas de cast nécessaire.
 import { createBrowserAudioIO } from "~/composables/audioIO";
-import {
-  createLiveVideoCapture,
-  createLiveVideoPlayback,
-} from "~/composables/useLiveVideo";
+import { createLiveVideoCapture, createLiveVideoPlayback } from "~/composables/useLiveVideo";
 import type { LiveSessionResponse } from "#shared/api";
 
 const route = useRoute();
@@ -336,27 +259,24 @@ const wsBaseUrl = computed(() => {
 
 const videoCapture = createLiveVideoCapture();
 const videoPlayback = createLiveVideoPlayback();
+const audioIO = createBrowserAudioIO({ captureSampleRate: 16000, playbackSampleRate: 16000 });
 const localVideoEl = ref<HTMLVideoElement | null>(null);
 const remoteVideoEl = ref<HTMLVideoElement | null>(null);
 const cameraEnabled = ref(true);
-// ⚠️ Même limite que côté candidat : le micro n'est pas encore réellement
-// coupé (audioIO.ts n'expose pas le flux brut pour désactiver la piste) —
-// juste un état visuel pour l'instant.
 const micEnabled = ref(true);
 
 function toggleCamera() {
   cameraEnabled.value = !cameraEnabled.value;
-  videoCapture
-    .getLocalStream()
-    ?.getVideoTracks()
-    .forEach((track) => {
-      track.enabled = cameraEnabled.value;
-    });
+  videoCapture.getLocalStream()?.getVideoTracks().forEach((track) => {
+    track.enabled = cameraEnabled.value;
+  });
 }
 
 function toggleMic() {
   micEnabled.value = !micEnabled.value;
-  // TODO : coupure réelle du micro, voir note ci-dessus.
+  audioIO.getLocalStream()?.getAudioTracks().forEach((track) => {
+    track.enabled = micEnabled.value;
+  });
 }
 
 const live = useLiveSession({
@@ -364,10 +284,7 @@ const live = useLiveSession({
   role: "examiner",
   wsBaseUrl: wsBaseUrl.value,
   accessToken: tokenCookie.value ?? "",
-  audioIO: createBrowserAudioIO({
-    captureSampleRate: 16000,
-    playbackSampleRate: 16000,
-  }),
+  audioIO,
   videoCapture,
   videoPlayback,
 });
@@ -421,9 +338,7 @@ async function handleEnd() {
 async function handleSaveNotes() {
   savingNotes.value = true;
   notesSaved.value = false;
-  const result = await liveSessionStore.submitNotes(liveSessionId, {
-    notes: notes.value,
-  });
+  const result = await liveSessionStore.submitNotes(liveSessionId, { notes: notes.value });
   savingNotes.value = false;
   if (result.success) notesSaved.value = true;
 }

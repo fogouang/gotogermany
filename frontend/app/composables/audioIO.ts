@@ -21,6 +21,14 @@
 
 import type { SprechenAudioIO } from './useSprechenSession';
 
+// Étend SprechenAudioIO avec un accès au flux brut, pour permettre un
+// vrai mute (track.enabled = false) sans arrêter toute la capture —
+// utilisé par live_session, ignoré sans risque par l'agent IA qui garde
+// son typage SprechenAudioIO plus étroit (surplus de méthode inoffensif).
+export interface BrowserAudioIO extends SprechenAudioIO {
+  getLocalStream(): MediaStream | null;
+}
+
 const DEFAULT_CAPTURE_SAMPLE_RATE = 16000;
 const DEFAULT_PLAYBACK_SAMPLE_RATE = 24000;
 const WORKLET_MODULE_URL = '/pcm-capture-processor.js'; // must be in Nuxt's public/
@@ -30,7 +38,7 @@ export interface CreateAudioIOOptions {
   playbackSampleRate?: number;
 }
 
-export function createBrowserAudioIO(options: CreateAudioIOOptions = {}): SprechenAudioIO {
+export function createBrowserAudioIO(options: CreateAudioIOOptions = {}): BrowserAudioIO {
   const CAPTURE_SAMPLE_RATE = options.captureSampleRate ?? DEFAULT_CAPTURE_SAMPLE_RATE;
   const PLAYBACK_SAMPLE_RATE = options.playbackSampleRate ?? DEFAULT_PLAYBACK_SAMPLE_RATE;
 
@@ -123,5 +131,9 @@ export function createBrowserAudioIO(options: CreateAudioIOOptions = {}): Sprech
     nextPlaybackStartTime = 0;
   }
 
-  return { startCapture, stopCapture, playChunk, stopPlayback };
+  function getLocalStream(): MediaStream | null {
+    return micStream;
+  }
+
+  return { startCapture, stopCapture, playChunk, stopPlayback, getLocalStream };
 }
