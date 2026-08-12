@@ -3,7 +3,7 @@ app/modules/auth/dependencies.py
 """
 from typing import Annotated
 
-from fastapi import Cookie, Depends
+from fastapi import Cookie, Depends, WebSocketException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.modules.users.models import User
@@ -12,8 +12,6 @@ from app.shared.exceptions.http import ForbiddenException, UnauthorizedException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.users.models import UserRole
 from fastapi import WebSocket
-from starlette.websockets import WebSocketException
-
 
 security = HTTPBearer(auto_error=False)
 
@@ -78,13 +76,22 @@ async def get_current_user_ws(
     websocket: WebSocket,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """
-    Résout l'utilisateur pour une route WebSocket. On lève WebSocketException
-    (PAS WebSocketDisconnect — celle-ci représente une déconnexion côté
-    CLIENT, pas un rejet côté serveur, et Starlette n'a pas de gestionnaire
-    par défaut pour elle levée depuis une dépendance). WebSocketException,
-    elle, est gérée nativement par Starlette : connexion fermée proprement
-    avec le code donné, sans RuntimeError ni traceback bruyant.
+    """Variante WebSocket de get_current_user.
+
+    Accepte le token soit via le cookie access_token, soit via un
+    paramètre de requête ?token=... — un client WebSocket natif ne peut
+    pas fixer de header Authorization à la connexion, et le cookie
+    access_token n'est pas garanti d'atteindre le domaine du backend si
+    frontend et backend sont sur des origines différentes. Le query
+    param est donc la voie fiable pour un WS cross-origin.
+
+    On lève WebSocketException (PAS WebSocketDisconnect — celle-ci
+    représente une déconnexion côté CLIENT, pas un rejet côté serveur,
+    et Starlette n'a pas de gestionnaire par défaut pour elle levée
+    depuis une dépendance, avant même que accept() ait été appelé).
+    WebSocketException est gérée nativement par Starlette : connexion
+    fermée proprement avec le code donné, sans RuntimeError ni
+    traceback bruyant.
     """
     from app.modules.auth.service import AuthService
 
@@ -96,35 +103,6 @@ async def get_current_user_ws(
         return await AuthService(db).get_current_user(token)
     except UnauthorizedException:
         raise WebSocketException(code=4401)
-    
-    
-# async def get_current_user_ws(
-#     websocket: WebSocket,
-#     db: AsyncSession = Depends(get_db),
-# ) -> User:
-#     """Variante WebSocket de get_current_user.
-
-#     MODIF : accepte désormais le token soit via le cookie access_token,
-#     soit via un paramètre de requête ?token=... — un client WebSocket
-#     natif ne peut pas fixer de header Authorization à la connexion, et
-#     le cookie access_token (posé côté frontend via useCookie()) n'est
-#     pas garanti d'atteindre le domaine du backend si frontend et backend
-#     sont sur des origines différentes (contrairement au REST, qui envoie
-#     le token en header Bearer via OpenAPI.TOKEN, jamais via ce cookie).
-#     Le query param est donc la voie fiable pour un WS cross-origin.
-#     """
-#     from app.modules.auth.service import AuthService
-
-#     token = websocket.cookies.get("access_token") or websocket.query_params.get("token")
-#     if not token:
-#         await websocket.close(code=4401)
-#         raise WebSocketDisconnect(code=4401)
-
-#     try:
-#         return await AuthService(db).get_current_user(token)
-#     except UnauthorizedException:
-#         await websocket.close(code=4401)
-#         raise WebSocketDisconnect(code=4401)
 
 async def get_current_ambassador(
     current_user: User = Depends(get_current_user),
