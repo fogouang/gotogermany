@@ -11,7 +11,8 @@ from app.shared.database.session import get_db
 from app.shared.exceptions.http import ForbiddenException, UnauthorizedException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.users.models import UserRole
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
+from starlette.websockets import WebSocketException
 
 
 security = HTTPBearer(auto_error=False)
@@ -78,24 +79,23 @@ async def get_current_user_ws(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
-    Résout l'utilisateur pour une route WebSocket. NE PAS appeler
-    websocket.close() ici : cette dépendance s'exécute AVANT que la route
-    n'ait appelé websocket.accept() (accept() est dans le corps de chaque
-    route, pas ici) — fermer un socket jamais accepté lève une
-    RuntimeError et pollue les logs d'un traceback, même si Starlette
-    finit quand même par rejeter proprement la connexion (403) par
-    défaut quand une exception remonte avant l'accept.
+    Résout l'utilisateur pour une route WebSocket. On lève WebSocketException
+    (PAS WebSocketDisconnect — celle-ci représente une déconnexion côté
+    CLIENT, pas un rejet côté serveur, et Starlette n'a pas de gestionnaire
+    par défaut pour elle levée depuis une dépendance). WebSocketException,
+    elle, est gérée nativement par Starlette : connexion fermée proprement
+    avec le code donné, sans RuntimeError ni traceback bruyant.
     """
     from app.modules.auth.service import AuthService
 
     token = websocket.cookies.get("access_token") or websocket.query_params.get("token")
     if not token:
-        raise WebSocketDisconnect(code=4401)
+        raise WebSocketException(code=4401)
 
     try:
         return await AuthService(db).get_current_user(token)
     except UnauthorizedException:
-        raise WebSocketDisconnect(code=4401)
+        raise WebSocketException(code=4401)
     
     
 # async def get_current_user_ws(
