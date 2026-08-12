@@ -141,6 +141,11 @@ const mainNav = [
   { name: "Dashboard", href: "/admin", icon: "pi-chart-bar" },
   { name: "Utilisateurs", href: "/admin/users", icon: "pi-users" },
   { name: "Examens", href: "/admin/exams", icon: "pi-book" },
+  {
+    name: "Start Deutsch (A1/A2)",
+    href: "/admin/start-deutsch",
+    icon: "pi-graduation-cap",
+  },
   { name: "Centres", href: "/admin/centers", icon: "pi-building" },
   { name: "Simulateur", href: "/admin/simulateur", icon: "pi-desktop" },
   { name: "Plans", href: "/admin/plans", icon: "pi-tag" },
@@ -168,6 +173,11 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
     subtitle: "Gestion des comptes et accès",
   },
   "/admin/exams": { title: "Examens", subtitle: "Gestion du contenu" },
+  "/admin/start-deutsch": {
+    title: "Start Deutsch (A1/A2)",
+    subtitle: "Import du contenu de familiarisation A1/A2",
+  },
+
   "/admin/centers": {
     title: "Centres",
     subtitle: "Gestion des centres de formation partenaires",

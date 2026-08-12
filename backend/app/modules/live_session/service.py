@@ -14,6 +14,7 @@ from app.modules.users.models import User, UserRole
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 
 from .models import LiveSession, LiveSessionStatus
+from .schemas import LiveSessionResponse
 
 SPRECHEN_SLUGS = ("sprechen", "muendlicher_ausdruck")
 
@@ -151,6 +152,51 @@ class LiveSessionService:
         await self.db.commit()
         await self.db.refresh(session)
         return session
+
+    # ── Construction des réponses (avec noms résolus) ────
+    # LiveSession ne stocke que examiner_id/student_id — les noms sont
+    # résolus ici via une requête batch sur User, plutôt que de dépendre
+    # d'une relation ORM chargée (qu'on ne sait pas garantie présente).
+
+    async def _fetch_names(self, user_ids: set[UUID]) -> dict[UUID, str]:
+        if not user_ids:
+            return {}
+        result = await self.db.execute(
+            select(User.id, User.full_name).where(User.id.in_(user_ids))
+        )
+        return {row.id: row.full_name for row in result}
+
+    def _to_response(self, session: LiveSession, names: dict[UUID, str]) -> LiveSessionResponse:
+        return LiveSessionResponse(
+            id=session.id,
+            examiner_id=session.examiner_id,
+            student_id=session.student_id,
+            subject_id=session.subject_id,
+            status=session.status,
+            created_at=session.created_at,
+            prep_started_at=session.prep_started_at,
+            live_started_at=session.live_started_at,
+            ended_at=session.ended_at,
+            examiner_notes=session.examiner_notes,
+            notes_sent_at=session.notes_sent_at,
+            student_name=names.get(session.student_id),
+            examiner_name=names.get(session.examiner_id),
+        )
+
+    async def to_response(self, session: LiveSession) -> LiveSessionResponse:
+        """Une seule session — résout les 2 noms (student + examiner)."""
+        names = await self._fetch_names({session.student_id, session.examiner_id})
+        return self._to_response(session, names)
+
+    async def to_response_list(self, sessions: list[LiveSession]) -> list[LiveSessionResponse]:
+        """Plusieurs sessions — résout tous les noms en UNE seule requête
+        batch, plutôt que 2 requêtes par session (évite le N+1)."""
+        ids: set[UUID] = set()
+        for s in sessions:
+            ids.add(s.student_id)
+            ids.add(s.examiner_id)
+        names = await self._fetch_names(ids)
+        return [self._to_response(s, names) for s in sessions]
 
     # ── Helpers internes ─────────────────────────────────
 

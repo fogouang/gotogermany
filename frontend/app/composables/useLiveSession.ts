@@ -20,6 +20,11 @@
  * but share the same message shapes and state machine — role is
  * passed in and only changes which URL we connect to and whether
  * sendReadyToStart() is meaningful.
+ *
+ * Chat (ajout) : relais texte brut, PAS de persistance côté backend —
+ * chatMessages ne vit qu'en mémoire côté client, pour la durée de
+ * l'appel. Un message envoyé est ajouté localement tout de suite
+ * (le backend ne renvoie jamais l'écho à l'expéditeur, seulement au pair).
  */
 
 import { ref, shallowRef, type Ref } from "vue";
@@ -62,7 +67,11 @@ const NOISE_GATE_RMS_THRESHOLD = 0.006;
 
 /** Calcule le niveau RMS (0-1) d'un chunk audio PCM16 brut. */
 function pcm16RmsLevel(bytes: Uint8Array): number {
-  const pcm16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 2);
+  const pcm16 = new Int16Array(
+    bytes.buffer,
+    bytes.byteOffset,
+    bytes.byteLength / 2,
+  );
   if (pcm16.length === 0) return 0;
   let sumSquares = 0;
   for (let i = 0; i < pcm16.length; i++) {
@@ -93,6 +102,12 @@ export type LiveSessionConnectionStatus =
   | "ended"
   | "error";
 
+export interface ChatMessage {
+  text: string;
+  from: LiveSessionRole;
+  at: number;
+}
+
 export interface UseLiveSessionOptions {
   liveSessionId: string;
   role: LiveSessionRole;
@@ -118,6 +133,10 @@ export function useLiveSession(options: UseLiveSessionOptions) {
   const peerLeft = ref(false);
   const errorMessage = ref<string | null>(null);
 
+  // Chat — mémoire uniquement, jamais persisté, jamais rechargé après
+  // reconnexion (comportement voulu : un vrai appel, pas un historique).
+  const chatMessages = ref<ChatMessage[]>([]);
+
   // Indicateurs "qui parle en ce moment" — dérivés du niveau du flux audio,
   // purement côté client (le backend ne fait que relayer des octets bruts,
   // il n'a aucune notion de tour de parole dans ce mode).
@@ -131,7 +150,8 @@ export function useLiveSession(options: UseLiveSessionOptions) {
     timerHolder: "local" | "peer",
   ): void {
     flag.value = true;
-    const existing = timerHolder === "local" ? localSpeakingTimer : peerSpeakingTimer;
+    const existing =
+      timerHolder === "local" ? localSpeakingTimer : peerSpeakingTimer;
     if (existing) clearTimeout(existing);
     const timer = setTimeout(() => {
       flag.value = false;
@@ -175,36 +195,55 @@ export function useLiveSession(options: UseLiveSessionOptions) {
       case "live_started":
         preparationInfo.value = null;
         status.value = "live";
-        options.audioIO.startCapture((chunk) => {
-          const level = pcm16RmsLevel(chunk);
-          if (level > SPEAKING_RMS_THRESHOLD) {
-            markSpeaking(localSpeaking, "local");
-          }
-          // Porte de bruit : on ignore silencieusement les paquets sous
-          // le seuil de bruit de fond, pour ne jamais les transmettre.
-          if (level < NOISE_GATE_RMS_THRESHOLD) return;
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(withTypePrefix(MESSAGE_TYPE_AUDIO, chunk) as BufferSource);
-          }
-        }).catch((err) => {
-          console.error("Mic capture failed:", err);
-          status.value = "error";
-          errorMessage.value =
-            "Impossible d'accéder au microphone. Vérifiez les permissions.";
-        });
+        options.audioIO
+          .startCapture((chunk) => {
+            const level = pcm16RmsLevel(chunk);
+            if (level > SPEAKING_RMS_THRESHOLD) {
+              markSpeaking(localSpeaking, "local");
+            }
+            // Porte de bruit : on ignore silencieusement les paquets sous
+            // le seuil de bruit de fond, pour ne jamais les transmettre.
+            if (level < NOISE_GATE_RMS_THRESHOLD) return;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(
+                withTypePrefix(MESSAGE_TYPE_AUDIO, chunk) as BufferSource,
+              );
+            }
+          })
+          .catch((err) => {
+            console.error("Mic capture failed:", err);
+            status.value = "error";
+            errorMessage.value =
+              "Impossible d'accéder au microphone. Vérifiez les permissions.";
+          });
 
         if (options.videoCapture) {
-          options.videoCapture.startCapture((chunk) => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              const prefixed = withTypePrefix(MESSAGE_TYPE_VIDEO, new Uint8Array(chunk));
-              ws.send(prefixed as BufferSource);
-            }
-          }).catch((err) => {
-            // La vidéo est optionnelle — un échec caméra ne doit jamais
-            // faire tomber la session audio, qui reste l'essentiel.
-            console.error("Video capture failed:", err);
-          });
+          options.videoCapture
+            .startCapture((chunk) => {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                const prefixed = withTypePrefix(
+                  MESSAGE_TYPE_VIDEO,
+                  new Uint8Array(chunk),
+                );
+                ws.send(prefixed as BufferSource);
+              }
+            })
+            .catch((err) => {
+              // La vidéo est optionnelle — un échec caméra ne doit jamais
+              // faire tomber la session audio, qui reste l'essentiel.
+              console.error("Video capture failed:", err);
+            });
         }
+        break;
+
+      case "chat_message":
+        // Le backend ne relaie qu'au PAIR, jamais un écho à l'expéditeur
+        // — donc tout ce qui arrive ici vient forcément de l'autre partie.
+        chatMessages.value.push({
+          text: msg.text,
+          from: msg.from,
+          at: Date.now(),
+        });
         break;
 
       case "peer_left":
@@ -249,6 +288,7 @@ export function useLiveSession(options: UseLiveSessionOptions) {
     errorMessage.value = null;
     peerLeft.value = false;
     sessionEndedCleanly = false;
+    chatMessages.value = [];
 
     const socket = createWs(
       `${options.wsBaseUrl}/ws/${options.liveSessionId}/${options.role}?token=${encodeURIComponent(options.accessToken)}`,
@@ -278,6 +318,13 @@ export function useLiveSession(options: UseLiveSessionOptions) {
         status.value = "error";
         errorMessage.value =
           errorMessage.value ?? `Connexion interrompue (code ${event.code}).`;
+      } else {
+        // Fin propre — que ce soit parce que le pair a quitté (peer_left,
+        // déjà géré dans handleTextMessage) ou parce que CE client vient
+        // d'appeler endSession() lui-même (aucun message retour du serveur
+        // dans ce cas) : on force "ended" ici pour couvrir les deux cas.
+        // Idempotent si déjà "ended" via peer_left.
+        status.value = "ended";
       }
       ws = null;
     };
@@ -293,6 +340,21 @@ export function useLiveSession(options: UseLiveSessionOptions) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     if (status.value !== "preparing") return;
     ws.send(JSON.stringify({ type: "ready_to_start" }));
+  }
+
+  /** Les deux rôles peuvent envoyer un message texte — relayé brut par
+   * le backend au pair, jamais persisté. Ajouté localement tout de
+   * suite puisque le backend ne renvoie pas d'écho à l'expéditeur. */
+  function sendChatMessage(text: string): void {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type: "chat_message", text: trimmed }));
+    chatMessages.value.push({
+      text: trimmed,
+      from: options.role,
+      at: Date.now(),
+    });
   }
 
   /** Les deux rôles peuvent terminer la session explicitement. */
@@ -320,9 +382,11 @@ export function useLiveSession(options: UseLiveSessionOptions) {
     errorMessage,
     localSpeaking,
     peerSpeaking,
+    chatMessages,
     // actions
     connect,
     sendReadyToStart,
+    sendChatMessage,
     endSession,
     disconnect,
   };

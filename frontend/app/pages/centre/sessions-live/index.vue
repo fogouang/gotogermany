@@ -231,5 +231,16 @@ onMounted(async () => {
   loadingStudents.value = false;
 
   if (!examsStore.catalog.length) await examsStore.fetchCatalog();
+
+  // Filtre par défaut sur Goethe au montage — sans ça la liste de sujets
+  // reste vide tant que l'utilisateur n'a pas cliqué manuellement sur un
+  // badge provider, alors que targetExamSlug (et donc sprechenSubjects)
+  // ne se calcule qu'une fois selectedProvider renseigné.
+  if (!selectedProvider.value) {
+    const goethe = availableProviders.value.find(
+      (p) => p.toLowerCase() === "goethe",
+    );
+    selectedProvider.value = goethe ?? availableProviders.value[0] ?? "";
+  }
 });
 </script>

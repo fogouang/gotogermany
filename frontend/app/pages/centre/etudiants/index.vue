@@ -62,7 +62,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="student in students"
+              v-for="student in pagedStudents"
               :key="student.id"
               class="border-b border-gray-100 last:border-0"
             >
@@ -132,6 +132,16 @@
           </tbody>
         </table>
       </div>
+
+      <Paginator
+        v-if="students.length > rowsPerPage"
+        :rows="rowsPerPage"
+        :total-records="students.length"
+        :first="firstRecordIndex"
+        :rows-per-page-options="[10, 20, 50]"
+        class="border-t border-gray-200"
+        @page="onPageChange"
+      />
     </div>
 
     <!-- Dialog crédits -->
@@ -253,6 +263,27 @@ function expiryClass(dateStr: string | null) {
   if (daysLeft <= 7) return "text-amber-600 font-medium";
   return "text-gray-500";
 }
+
+// ── Pagination (côté client — la liste complète est déjà chargée en
+// mémoire par loadStudents, donc pas besoin d'aller-retours réseau
+// supplémentaires ; simple découpage pour l'affichage) ────────────
+const rowsPerPage = ref(20);
+const firstRecordIndex = ref(0);
+
+const pagedStudents = computed(() =>
+  students.value.slice(firstRecordIndex.value, firstRecordIndex.value + rowsPerPage.value),
+);
+
+function onPageChange(event: { first: number; rows: number }) {
+  firstRecordIndex.value = event.first;
+  rowsPerPage.value = event.rows;
+}
+
+// Revenir à la première page si la liste change (filtre, rechargement)
+// pour éviter une page vide si le nombre d'étudiants a diminué.
+watch(students, () => {
+  firstRecordIndex.value = 0;
+});
 
 async function loadStudents() {
   loading.value = true;

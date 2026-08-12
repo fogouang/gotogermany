@@ -9,7 +9,7 @@
     </div>
 
     <!-- ── Actions rapides ────────────────────────────── -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <button
         class="group flex items-center gap-4 bg-white border border-gray-100 rounded-xl p-5 hover:border-teal-400 hover:shadow-md transition-all text-left"
         @click="navigateTo('/dashboard/examens')"
@@ -55,6 +55,33 @@
         </div>
         <i
           class="pi pi-arrow-right text-gray-300 group-hover:text-indigo-500 ml-auto transition-all group-hover:translate-x-1"
+        ></i>
+      </button>
+
+      <!-- Start Deutsch — accent bleu "Python" (secondary-*), volontairement
+           distinct du vert marque (primary-*) utilisé pour l'action Examens,
+           puisque ce module est neutre sans branding provider -->
+      <button
+        class="group flex items-center gap-4 bg-card border border-line rounded-xl p-5 hover:border-secondary-400 hover:shadow-md transition-all text-left"
+        @click="navigateTo('/dashboard/start-deutsch')"
+      >
+        <div
+          class="w-12 h-12 rounded-xl bg-secondary-50 flex items-center justify-center shrink-0 group-hover:bg-secondary-100 transition-colors"
+        >
+          <i class="pi pi-graduation-cap text-secondary-600 text-xl"></i>
+        </div>
+        <div>
+          <p
+            class="font-semibold text-ink group-hover:text-secondary-700 transition-colors"
+          >
+            {{ t("dashboard.quick_actions.start_deutsch") }}
+          </p>
+          <p class="text-xs text-ink-tertiary mt-0.5">
+            {{ t("dashboard.quick_actions.start_deutsch_sub") }}
+          </p>
+        </div>
+        <i
+          class="pi pi-arrow-right text-ink-tertiary group-hover:text-secondary-500 ml-auto transition-all group-hover:translate-x-1"
         ></i>
       </button>
 

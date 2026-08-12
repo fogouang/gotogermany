@@ -133,7 +133,6 @@ const sidebarOpen = ref(false);
 
 const directorNav = [
   { name: "Vue d'ensemble", href: "/centre/dashboard", icon: "pi-chart-bar" },
-  { name: "Inscriptions", href: "/centre/inscriptions", icon: "pi-id-card" },
   { name: "Succursales", href: "/centre/succursales", icon: "pi-sitemap" },
   { name: "Secrétaires", href: "/centre/secretaires", icon: "pi-users" },
   { name: "Étudiants", href: "/centre/etudiants", icon: "pi-user" },
@@ -186,10 +185,6 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/centre/dashboard": {
     title: "Vue d'ensemble",
     subtitle: "Quota et statut de votre licence",
-  },
-  "/centre/inscriptions": {
-    title: "Inscriptions",
-    subtitle: "Cursus, paiements et suivi des élèves",
   },
   "/centre/succursales": {
     title: "Succursales",

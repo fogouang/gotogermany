@@ -295,7 +295,9 @@
       "simulator": "Simulateur Schreiben",
       "simulator_sub": "Correction IA instantanée",
       "results": "Mes résultats",
-      "results_sub": "Suivi de progression"
+      "results_sub": "Suivi de progression",
+      "start_deutsch": "Start Deutsch A1/A2",
+      "start_deutsch_sub": "Entraîne-toi en attendant ton vrai test"
     },
     "choose_exam": "Choisir un examen",
     "see_all": "Voir tout →",
@@ -314,7 +316,9 @@
       "resultats": "Résultats",
       "profil": "Profil",
       "factures": "Factures",
-      "credits": "Crédits"
+      "credits": "Crédits",
+      "start_deutsch": "Start Deutsch A1/A2",
+      "sessions-live": "Session Sprechen en direct"
     }
   },
   "sidebar": {
@@ -890,5 +894,55 @@
     "status_cancelled": "Annulée",
     "see_notes": "Voir les notes",
     "join": "Rejoindre"
+  },
+  "start_deutsch": {
+    "title": "Start Deutsch — A1 & A2",
+    "subtitle": "Entraîne-toi et familiarise-toi avec la plateforme avant tes vrais tests B1/B2.",
+    "info_banner": "Ces modules sont un entraînement de familiarisation, pas un vrai examen certifiant — profites-en pour découvrir la plateforme sans pression.",
+    "empty": "Aucun sujet disponible pour le moment.",
+    "all_levels": "Tous niveaux",
+    "session": {
+      "progress": "Question {current} sur {total}",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "submit": "Terminer"
+    },
+    "result": {
+      "not_found": "Résultat introuvable.",
+      "back": "Retour au catalogue",
+      "score_of": "{score} points obtenus",
+      "by_module": "Résultat par module",
+      "pending": "En attente",
+      "detail": "Détail",
+      "your_answer": "Votre réponse",
+      "correct_answer": "Réponse attendue",
+      "pending_review": "En cours de correction",
+      "good_score": "Bon score, continue comme ça !",
+      "keep_practicing": "Continue à t'entraîner",
+      "retry": "Recommencer"
+    },
+    "free_text": {
+      "word_count": "{count} mots",
+      "words": "mots"
+    },
+    "sprechen": {
+      "theme_label": "Thème :",
+      "person_questions_label": "Question personnelle",
+      "time_label": "Heure",
+      "participant_a_label": "Participant·e A",
+      "participant_b_label": "Participant·e B"
+    },
+    "schreiben": {
+      "complete_title": "Aufgabe vollständig",
+      "complete_description": "Sie haben alle Schreiben-Aufgaben beantwortet. Laden Sie Ihre Antworten als PDF herunter, um sie an Ihre Lehrkraft zu senden.",
+      "download_button": "Meine Antworten herunterladen (PDF)"
+    }
+  },
+  "admin": {
+    "import": {
+      "submit_json": "Importer le sujet",
+      "submit_audio": "Importer l'audio",
+      "submit_images": "Importer les images"
+    }
   }
 }

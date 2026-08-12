@@ -9,6 +9,10 @@ appelle Gemini Live.
 
 Ne touche pas au module sprechen_agent existant (mode solo IA) — fichier
 entierement separe.
+
+Chat texte (ajout) : relais brut "chat_message" entre les deux WebSocket,
+EXACTEMENT comme l'audio/vidéo — aucune persistance en DB, les messages
+ne servent que pendant l'appel en cours et disparaissent avec lui.
 """
 from __future__ import annotations
 
@@ -80,6 +84,17 @@ async def _notify_peer_left(peer_ws: WebSocket | None) -> None:
         pass
 
 
+async def _relay_chat_message(peer_ws: WebSocket | None, text: str, sender_role: str) -> None:
+    """Relais brut, pas de persistance — les messages n'existent que le
+    temps de l'appel, exactement comme les octets audio/vidéo."""
+    if peer_ws is None or not text:
+        return
+    try:
+        await peer_ws.send_text(json.dumps({"type": "chat_message", "text": text, "from": sender_role}))
+    except Exception:  # noqa: BLE001
+        pass
+
+
 # ---------------------------------------------------------------------------
 # Endpoint candidat
 # ---------------------------------------------------------------------------
@@ -143,6 +158,8 @@ async def live_session_student_ws(
                 await websocket.send_text(live_started_msg)
                 if bridge.examiner_ws is not None:
                     await bridge.examiner_ws.send_text(live_started_msg)
+            elif msg_type == "chat_message":
+                await _relay_chat_message(bridge.examiner_ws, payload.get("text", ""), "student")
             elif msg_type == "end_session":
                 await service.mark_ended(live_session_id)
                 raise _SessionEnded()
@@ -199,9 +216,12 @@ async def live_session_examiner_ws(
             except json.JSONDecodeError:
                 continue
 
-            if payload.get("type") == "end_session":
+            msg_type = payload.get("type")
+            if msg_type == "end_session":
                 await service.mark_ended(live_session_id)
                 raise _SessionEnded()
+            elif msg_type == "chat_message":
+                await _relay_chat_message(bridge.student_ws, payload.get("text", ""), "examiner")
 
     except (_SessionEnded, WebSocketDisconnect):
         await _notify_peer_left(bridge.student_ws)
@@ -229,7 +249,7 @@ async def create_live_session(
         student_id=payload.student_id,
         subject_id=payload.subject_id,
     )
-    return LiveSessionResponse.model_validate(session)
+    return await service.to_response(session)
 
 
 @router.patch("/{live_session_id}/notes", response_model=LiveSessionResponse)
@@ -247,7 +267,7 @@ async def submit_examiner_notes(
         examiner_id=current_user.id,
         notes=payload.notes,
     )
-    return LiveSessionResponse.model_validate(session)
+    return await service.to_response(session)
 
 
 @router.get("/mine", response_model=LiveSessionListResponse)
@@ -261,9 +281,7 @@ async def get_my_live_sessions(
     l'examinateur incluses une fois la session terminée."""
     service = LiveSessionService(db)
     items, total = await service.list_for_student(current_user.id, limit=limit, offset=offset)
-    return LiveSessionListResponse(
-        items=[LiveSessionResponse.model_validate(s) for s in items], total=total
-    )
+    return LiveSessionListResponse(items=await service.to_response_list(items), total=total)
 
 
 @router.get("/launched", response_model=LiveSessionListResponse)
@@ -276,9 +294,7 @@ async def get_launched_live_sessions(
     """Côté examinateur : sessions qu'il/elle a lancées."""
     service = LiveSessionService(db)
     items, total = await service.list_for_examiner(current_user.id, limit=limit, offset=offset)
-    return LiveSessionListResponse(
-        items=[LiveSessionResponse.model_validate(s) for s in items], total=total
-    )
+    return LiveSessionListResponse(items=await service.to_response_list(items), total=total)
 
 
 @router.get("/{live_session_id}", response_model=LiveSessionResponse)
@@ -297,7 +313,7 @@ async def get_live_session(
     if current_user.id not in (session.examiner_id, session.student_id):
         from fastapi import HTTPException
         raise HTTPException(status_code=403, detail="Vous n'avez pas accès à cette session.")
-    return LiveSessionResponse.model_validate(session)
+    return await service.to_response(session)
 
 
 @router.get("/{live_session_id}/subject", response_model=SubjectContentResponse)

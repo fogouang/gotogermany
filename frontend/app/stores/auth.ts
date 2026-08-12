@@ -73,7 +73,7 @@ export const useAuthStore = defineStore("auth", {
         });
 
         const tokenCookie = useCookie("access_token", {
-          maxAge: 60 * 60 * 24 * 7,
+          maxAge: 720 * 60,
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
         });

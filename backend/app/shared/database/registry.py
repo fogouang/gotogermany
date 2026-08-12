@@ -34,3 +34,4 @@ import app.modules.schreiben_simulator.models  # noqa: F401
 import app.modules.sprechen_agent.models  # noqa: F401
 import app.modules.live_session.models   # noqa: F401  ← dépend de users + exams (Subject) uniquement, pas de questions
 import app.modules.referrals.models      # noqa: F401  ← dépend de users + payments
+import app.modules.start_deutsch.models

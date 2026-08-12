@@ -15,5 +15,7 @@ export type LiveSessionResponse = {
     ended_at: (string | null);
     examiner_notes: (string | null);
     notes_sent_at: (string | null);
+    student_name: (string | null);
+    examiner_name: (string | null);
 };
 

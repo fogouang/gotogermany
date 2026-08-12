@@ -30,7 +30,7 @@
         v-for="session in sessions"
         :key="session.id"
         :to="`/dashboard/sessions-live/${session.id}`"
-        class="group bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-teal-200 transition-all flex flex-col gap-3"
+        class="group bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-primary-200 transition-all flex flex-col gap-3"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3">
@@ -58,7 +58,7 @@
 
         <div class="flex items-center justify-end pt-1">
           <span
-            class="text-xs text-teal-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all"
+            class="text-xs text-primary-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all"
           >
             {{ ctaLabel(session.status) }}
             <i class="pi pi-arrow-right text-xs" />

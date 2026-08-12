@@ -19,7 +19,16 @@ export interface EndSessionMessage {
   type: 'end_session';
 }
 
-export type LiveSessionInboundMessage = ReadyToStartMessage | EndSessionMessage;
+/** Chat texte — relayé brut par le backend au pair, jamais persisté. */
+export interface ChatMessageInbound {
+  type: 'chat_message';
+  text: string;
+}
+
+export type LiveSessionInboundMessage =
+  | ReadyToStartMessage
+  | EndSessionMessage
+  | ChatMessageInbound;
 
 // ── Outbound: backend -> frontend (received as WebSocket text frames;
 //    binary frames carry raw PCM16 audio and aren't typed here) ──
@@ -37,10 +46,20 @@ export interface PeerLeftEvent {
   type: 'peer_left';
 }
 
+/** Chat texte reçu du pair — le backend attache lui-même `from` au
+ * relais (jamais fourni par le client émetteur), donc cette valeur est
+ * fiable côté réception. */
+export interface ChatMessageEvent {
+  type: 'chat_message';
+  text: string;
+  from: 'student' | 'examiner';
+}
+
 export type LiveSessionOutboundEvent =
   | PreparationStartedEvent
   | LiveStartedEvent
-  | PeerLeftEvent;
+  | PeerLeftEvent
+  | ChatMessageEvent;
 
 // ── Type guard helper, since every message arrives as unknown JSON ──
 

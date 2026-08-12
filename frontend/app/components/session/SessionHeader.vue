@@ -28,9 +28,9 @@
           :class="[
             'h-2 rounded-full transition-all',
             i < currentTeilIndex
-              ? 'bg-teal-600'
+              ? 'bg-primary-600'
               : i === currentTeilIndex
-                ? 'bg-teal-400'
+                ? 'bg-primary-400'
                 : 'bg-gray-200',
             teile.length <= 5 ? 'w-8' : 'w-4',
           ]"

@@ -28,9 +28,10 @@ class LiveSessionResponse(BaseModel):
     ended_at: datetime | None
     examiner_notes: str | None
     notes_sent_at: datetime | None
+    student_name: str | None
+    examiner_name: str | None
 
     model_config = {"from_attributes": True}
-
 
 class SubmitNotesRequest(BaseModel):
     notes: str = Field(min_length=1, max_length=5000)

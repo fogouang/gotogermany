@@ -306,7 +306,9 @@
       "simulator": "Schreiben Simulator",
       "simulator_sub": "Instant AI correction",
       "results": "My results",
-      "results_sub": "Progress tracking"
+      "results_sub": "Progress tracking",
+      "start_deutsch": "Start Deutsch A1/A2",
+      "start_deutsch_sub": "Practice while you wait for your real test"
     },
     "choose_exam": "Choose an exam",
     "see_all": "See all →",
@@ -325,8 +327,9 @@
       "resultats": "Results",
       "profil": "Profile",
       "factures": "Invoices",
-      "credits": "Credits"
-    }
+      "credits": "Credits",
+      "start_deutsch": "Start Deutsch A1/A2",
+      "sessions-live": "Live Sprechen session"    }
   },
   "sidebar": {
     "main": "Main",
@@ -900,5 +903,47 @@
     "status_cancelled": "Cancelled",
     "see_notes": "See notes",
     "join": "Join"
+  },
+  "start_deutsch": {
+    "title": "Start Deutsch — A1 & A2",
+    "subtitle": "Practice and get familiar with the platform before your real B1/B2 tests.",
+    "info_banner": "These modules are a familiarization exercise, not a real certifying exam — use them to explore the platform without pressure.",
+    "empty": "No subjects available right now.",
+    "all_levels": "All levels",
+    "session": {
+      "progress": "Question {current} of {total}",
+      "previous": "Previous",
+      "next": "Next",
+      "submit": "Finish"
+    },
+    "result": {
+      "not_found": "Result not found.",
+      "back": "Back to catalogue",
+      "score_of": "{score} points earned",
+      "by_module": "Result by module",
+      "pending": "Pending",
+      "detail": "Detail",
+      "your_answer": "Your answer",
+      "correct_answer": "Expected answer",
+      "pending_review": "Correction in progress",
+      "good_score": "Good score, keep it up!",
+      "keep_practicing": "Keep practicing",
+      "retry": "Try again"
+    },
+    "free_text": {
+      "word_count": "{count} words",
+      "words": "words"
+    },"sprechen": {
+      "theme_label": "Theme:",
+      "person_questions_label": "Personal question",
+      "time_label": "Time",
+      "participant_a_label": "Participant A",
+      "participant_b_label": "Participant B"
+    },
+    "schreiben": {
+      "complete_title": "Assignment complete",
+      "complete_description": "You've answered all Schreiben tasks. Download your answers as a PDF to send to your teacher.",
+      "download_button": "Download my assignment (PDF)"
+    }
   }
 }

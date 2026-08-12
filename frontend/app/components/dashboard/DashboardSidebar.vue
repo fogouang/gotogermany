@@ -150,6 +150,11 @@ const mainItems = computed(() => [
     to: "/dashboard/sessions-live",
   },
   {
+    label: t("dashboard.pages.start_deutsch"), 
+    icon: "pi-graduation-cap",
+    to: "/dashboard/start-deutsch",
+  },
+  {
     label: t("dashboard.pages.methodologie"),
     icon: "pi-book",
     to: "/dashboard/methodologie",
