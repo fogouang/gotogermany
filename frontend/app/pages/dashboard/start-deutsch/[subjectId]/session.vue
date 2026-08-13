@@ -125,6 +125,10 @@
           :student-name="authStore.userName"
           :teile="store.currentModule?.teile ?? []"
           :answers="store.answers"
+          :time-expired="
+            timeRemainingForCurrentModule === 0 &&
+            store.currentModule?.slug === 'schreiben'
+          "
         />
 
         <!-- Navigateur de questions (points cliquables) — scopé au module courant -->
@@ -255,8 +259,33 @@ function startTimerLoop() {
     const current = secondsRemainingByModule[idx];
     if (current !== undefined && current > 0) {
       secondsRemainingByModule[idx] = current - 1;
+      if (secondsRemainingByModule[idx] === 0) {
+        onModuleTimeUp(idx);
+      }
     }
   }, 1000);
+}
+
+// ── Téléchargement automatique du PDF Schreiben quand le temps alloué
+// s'écoule — capture les réponses en l'état (complètes ou partielles),
+// puisque temps écoulé = remise forcée. Un seul déclenchement par
+// session (schreibenAutoDownloaded), même si l'étudiant revient sur
+// l'onglet Schreiben après coup avec le compteur resté à 0.
+const schreibenAutoDownloaded = ref(false);
+
+function onModuleTimeUp(moduleIndex: number) {
+  const mod = store.modules[moduleIndex];
+  if (mod?.slug !== "schreiben" || schreibenAutoDownloaded.value) return;
+
+  schreibenAutoDownloaded.value = true;
+  const { download } = useSchreibenPdf();
+  download({
+    subjectTitle: store.subjectTitle,
+    level: store.level,
+    studentName: authStore.userName,
+    teile: mod.teile ?? [],
+    answers: store.answers,
+  });
 }
 
 function handleExit() {

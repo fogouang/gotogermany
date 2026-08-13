@@ -125,6 +125,11 @@ const selectedStudentId = ref<string | null>(null);
 
 const selectedProvider = ref("");
 const selectedLevel = ref("");
+
+watch(selectedProvider, () => {
+  selectedLevel.value = "";
+});
+
 const selectedSubjectId = ref<string | null>(null);
 
 const launchError = ref<string | null>(null);

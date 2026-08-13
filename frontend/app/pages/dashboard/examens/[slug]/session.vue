@@ -78,6 +78,7 @@
           :answers="sessionStore.answers"
           :session-id="sessionStore.sessionId"
           :exam-name="sessionStore.examName"
+          :time-expired="isSchreibenModule && sessionStore.timeRemaining <= 0"
           @answer="onAnswer"
         />
       </div>
@@ -230,6 +231,11 @@ const currentView = computed(() => {
   )
     return SprechenView;
   return LesenView;
+});
+
+const isSchreibenModule = computed(() => {
+  const slug = currentModule.value?.slug?.toLowerCase() || "";
+  return slug.includes("schreib") || slug.includes("schriftlich");
 });
 
 // ── Actions ───────────────────────────────────────────

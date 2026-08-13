@@ -935,7 +935,9 @@
     "schreiben": {
       "complete_title": "Aufgabe vollständig",
       "complete_description": "Sie haben alle Schreiben-Aufgaben beantwortet. Laden Sie Ihre Antworten als PDF herunter, um sie an Ihre Lehrkraft zu senden.",
-      "download_button": "Meine Antworten herunterladen (PDF)"
+      "download_button": "Meine Antworten herunterladen (PDF)",
+      "time_up_title": "Temps écoulé",
+      "time_up_description": "Votre devoir a été téléchargé automatiquement avec vos réponses en l'état."
     }
   },
   "admin": {

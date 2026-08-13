@@ -152,24 +152,24 @@
 
                   <!-- Points forts + À améliorer côte à côte sur desktop -->
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div v-if="task.strengths.length">
+                    <div v-if="task.strengths?.length">
                       <p class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1">
                         <i class="pi pi-check-circle"></i> {{ t('simulator_result.strengths') }}
                       </p>
                       <ul class="space-y-1.5">
-                        <li v-for="(s, i) in task.strengths" :key="i"
+                        <li li v-for="(s, i) in task.strengths ?? []" :key="i"
                           class="flex items-start gap-2 text-sm text-gray-700 bg-green-50 rounded-lg px-3 py-2">
                           <i class="pi pi-check text-green-500 mt-0.5 shrink-0 text-xs"></i>
                           <span>{{ s }}</span>
                         </li>
                       </ul>
                     </div>
-                    <div v-if="task.weaknesses.length">
+                    <div v-if="task.weaknesses?.length">
                       <p class="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2 flex items-center gap-1">
                         <i class="pi pi-exclamation-circle"></i> {{ t('simulator_result.to_improve') }}
                       </p>
                       <ul class="space-y-1.5">
-                        <li v-for="(w, i) in task.weaknesses" :key="i"
+                        <li v-for="(w, i) in task.weaknesses ?? []" :key="i"
                           class="flex items-start gap-2 text-sm text-gray-700 bg-orange-50 rounded-lg px-3 py-2">
                           <i class="pi pi-times text-orange-400 mt-0.5 shrink-0 text-xs"></i>
                           <span>{{ w }}</span>

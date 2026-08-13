@@ -329,7 +329,8 @@
       "factures": "Invoices",
       "credits": "Credits",
       "start_deutsch": "Start Deutsch A1/A2",
-      "sessions-live": "Live Sprechen session"    }
+      "sessions-live": "Live Sprechen session"
+    }
   },
   "sidebar": {
     "main": "Main",
@@ -933,7 +934,8 @@
     "free_text": {
       "word_count": "{count} words",
       "words": "words"
-    },"sprechen": {
+    },
+    "sprechen": {
       "theme_label": "Theme:",
       "person_questions_label": "Personal question",
       "time_label": "Time",
@@ -943,7 +945,9 @@
     "schreiben": {
       "complete_title": "Assignment complete",
       "complete_description": "You've answered all Schreiben tasks. Download your answers as a PDF to send to your teacher.",
-      "download_button": "Download my assignment (PDF)"
+      "download_button": "Download my assignment (PDF)",
+      "time_up_title": "Time's up",
+      "time_up_description": "Your assignment was automatically downloaded with your answers as they stand."
     }
   }
 }

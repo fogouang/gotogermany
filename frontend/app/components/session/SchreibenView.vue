@@ -446,12 +446,32 @@ const props = defineProps<{
   answers: Record<string, any>;
   sessionId: string;
   examName?: string;
+  /** Passé par session.vue quand le temps global de l'examen est écoulé
+   * ET que ce Teil Schreiben est actuellement affiché. */
+  timeExpired?: boolean;
 }>();
 
 const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
 
 const { t } = useI18n();
 const downloading = ref(false);
+
+// ── Téléchargement PDF automatique quand le temps est écoulé ────────
+// Une seule fois, pour chaque question ayant une réponse non vide.
+const autoDownloaded = ref(false);
+
+watch(
+  () => props.timeExpired,
+  async (expired) => {
+    if (!expired || autoDownloaded.value) return;
+    autoDownloaded.value = true;
+    for (const q of props.questions) {
+      if (getTextAnswer(q).trim()) {
+        await downloadPDF(q);
+      }
+    }
+  },
+);
 
 // ── Sprachliche Mittel ─────────────────────────────────
 function parseExamInfo(name?: string) {
