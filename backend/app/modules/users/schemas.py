@@ -192,6 +192,9 @@ class ModuleScoreBreakdown(BaseSchema):
     """Score moyen pour un module donné (Lesen, Hören, Schreiben, Sprechen...)."""
     module_name: str
     average_score: float | None
+    questions_correct: int = 0
+    questions_incorrect: int = 0
+    questions_total: int = 0
 
 class SubjectScoreBreakdown(BaseSchema):
     """Score par module (Lesen/Hören/Schreiben/Sprechen) pour un sujet précis."""
@@ -200,7 +203,9 @@ class SubjectScoreBreakdown(BaseSchema):
     total_sessions: int
     average_score: float | None
     last_session_at: datetime | None
+    last_session_id: uuid.UUID | None = None
     modules: list[ModuleScoreBreakdown]
+    
 class ExamProgressResponse(BaseSchema):
     exam_id: uuid.UUID
     exam_name: str
@@ -238,6 +243,22 @@ class StudentQuickCreateRequest(BaseSchema):
         description="Requis si créé par un directeur (plusieurs branches possibles). "
                     "Ignoré si créé par une secrétaire (sa propre branche s'applique).",
     )
+
+    @field_validator("full_name")
+    @classmethod
+    def full_name_strip(cls, v: str) -> str:
+        return v.strip()
+    
+    
+class TeacherCreateRequest(BaseSchema):
+    """Création d'un compte teacher — par le directeur (branch_id requis,
+    plusieurs succursales possibles) ou la secrétaire (sa propre succursale
+    s'applique, branch_id ignoré si fourni)."""
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=100)
+    full_name: str = Field(min_length=2, max_length=150)
+    phone: str | None = Field(default=None, max_length=20)
+    branch_id: uuid.UUID | None = Field(default=None)
 
     @field_validator("full_name")
     @classmethod

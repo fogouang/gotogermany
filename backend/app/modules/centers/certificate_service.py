@@ -16,7 +16,7 @@ from reportlab.platypus import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.centers.models import CenterLicense
+from app.modules.centers.models import Center, CenterLicense
 from app.modules.centers.repository import CenterLicenseRepository, CenterRepository
 from app.modules.users.models import User, UserRole
 from app.modules.users.repository import UserRepository
@@ -195,7 +195,7 @@ class CenterLicenseCertificateService:
 
         # ── Corps ─────────────────────────────────────────
         story.append(Paragraph(
-            "ITIA SARL, éditeur de la plateforme GoToGermany, atteste par la présente que le "
+            "Fogouang Corp, éditeur de la plateforme GoToGermany, atteste par la présente que le "
             "centre de formation ci-dessous bénéficie d'une licence d'accès active, permettant "
             "à ses étudiants inscrits d'utiliser la plateforme de préparation aux examens "
             "d'allemand (TELC, Goethe, ÖSD) dans les conditions décrites ci-après.",
@@ -239,7 +239,7 @@ class CenterLicenseCertificateService:
         sign_data = [
             [
                 Paragraph(f"Fait à Dschang, le {issued_at.strftime('%d/%m/%Y')}", value_style),
-                Paragraph("Pour ITIA SARL", label_style),
+                Paragraph("Pour Fogouang Corp", label_style),
             ],
             [
                 Paragraph("", value_style),
@@ -257,8 +257,8 @@ class CenterLicenseCertificateService:
         story.append(HRFlowable(width="100%", thickness=0.4, color=colors.HexColor("#e2e8f0")))
         story.append(Spacer(1, 0.2 * cm))
         story.append(Paragraph(
-            "ITIA SARL - Dschang, Cameroun - www.prep-telc-osd.com<br/>"
-            "Document généré automatiquement, vérifiable auprès d'ITIA SARL sur présentation de la référence ci-dessus.",
+            "Fogouang Corp - Dschang, Cameroun - www.prep-telc-osd.com<br/>"
+            "Document généré automatiquement, vérifiable auprès de Fogouang Corp sur présentation de la référence ci-dessus.",
             footer_style,
         ))
 

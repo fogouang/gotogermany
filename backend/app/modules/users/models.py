@@ -22,7 +22,7 @@ class UserRole(str, enum.Enum):
     student = "student"
     branch_secretary = "branch_secretary"
     center_director = "center_director"
-    # Le staff ITIA reste géré par le booléen is_admin existant, pas dans cet enum
+    teacher = "teacher"
 
 
 class User(Base, UUIDMixin, TimestampMixin):

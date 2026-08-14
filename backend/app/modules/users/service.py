@@ -12,6 +12,7 @@ from app.modules.users.schemas import (
     StudentCreditAdjustRequest,
     StudentDetailedProgressResponse,
     StudentQuickCreateRequest,
+    TeacherCreateRequest,
     UserChangePasswordRequest,
     UserUpdateRequest,
     DirectorCreateRequest,
@@ -129,6 +130,61 @@ class UserService:
             branch_id=branch.id,
         )
 
+    async def create_teacher(self, data: TeacherCreateRequest, staff: User) -> User:
+        """Créé par le directeur (branch_id requis, doit appartenir à son
+        centre) ou la secrétaire (sa propre succursale s'applique,
+        branch_id fourni ignoré)."""
+        from app.modules.centers.repository import BranchRepository
+
+        branch_repo = BranchRepository(self.db)
+
+        if staff.role == UserRole.center_director:
+            if not data.branch_id:
+                raise BadRequestException(detail="branch_id requis pour un directeur.")
+            branch = await branch_repo.get_by_id_or_404(data.branch_id)
+            if branch.center_id != staff.center_id:
+                raise ForbiddenException(detail="Cette succursale n'appartient pas à votre centre.")
+        elif staff.role == UserRole.branch_secretary:
+            branch = await branch_repo.get_by_id_or_404(staff.branch_id)
+        else:
+            raise ForbiddenException(detail="Action réservée au staff de centre.")
+
+        await self._check_email_available(data.email)
+        return await self.repo.create(
+            email=data.email,
+            hashed_password=hash_password(data.password),
+            full_name=data.full_name,
+            phone=data.phone,
+            is_active=True,
+            is_admin=False,
+            is_verified=True,
+            role=UserRole.teacher,
+            branch_id=branch.id,
+        )
+    
+    async def toggle_teacher_active(self, teacher_id: UUID, staff: User) -> User:
+        """Active/désactive un compte enseignant. Directeur : tout son
+        centre. Secrétaire : sa succursale uniquement."""
+        from app.modules.centers.repository import BranchRepository
+
+        teacher = await self.repo.get_by_id_or_404(teacher_id)
+        if teacher.role != UserRole.teacher:
+            raise BadRequestException(detail="Cet utilisateur n'est pas un enseignant.")
+
+        branch_repo = BranchRepository(self.db)
+        branch = await branch_repo.get_by_id_or_404(teacher.branch_id)
+
+        if staff.role == UserRole.branch_secretary:
+            if teacher.branch_id != staff.branch_id:
+                raise ForbiddenException(detail="Cet enseignant n'appartient pas à votre succursale.")
+        elif staff.role == UserRole.center_director:
+            if branch.center_id != staff.center_id:
+                raise ForbiddenException(detail="Cet enseignant n'appartient pas à votre centre.")
+        else:
+            raise ForbiddenException(detail="Action réservée au staff de centre.")
+
+        return await self.repo.update(teacher_id, is_active=not teacher.is_active)
+      
     async def create_student(self, data: StudentCreateRequest, secretary: User) -> User:
         """Créé par la secrétaire — vérifie le quota, puis prélève les crédits
         par défaut du centre sur le pool."""
@@ -277,7 +333,14 @@ class UserService:
         students = await self.repo.find_students_by_center(director.center_id)
         return await self._build_progress_rows(students)
 
+    async def get_student_progress_for_teacher(self, teacher: User) -> list[dict]:
+        from app.modules.training_sessions.repository import TrainingSessionTeacherRepository
 
+        teacher_link_repo = TrainingSessionTeacherRepository(self.db)
+        student_ids = await teacher_link_repo.find_active_student_ids_for_teacher(teacher.id)
+        students = await self.repo.find_by_ids(student_ids)
+        return await self._build_progress_rows(students)
+    
     async def _build_progress_rows(self, students: list[User]) -> list[dict]:
         """Agrège sessions/scores par étudiant. À adapter selon le repository
         exam_sessions réel — squelette fourni, je n'ai pas ce fichier sous les yeux."""
@@ -329,13 +392,14 @@ class UserService:
   
 
 
-    async def get_student_progress_detail(
-        self, student_id: UUID, requester: User
+    async def _get_student_progress_detail_unscoped(
+        self, student_id: UUID
     ) -> "StudentDetailedProgressResponse":
         """
         Vue détaillée d'un étudiant, avec ventilation par examen > sujet > module
-        et historique pour graphes. Secrétaire limitée à sa succursale,
-        directeur à tout son centre.
+        (score + compteurs de questions correctes/incorrectes/totales) et
+        historique pour graphes. Pas de contrôle d'accès ici — le scope
+        (secrétaire/directeur/enseignant) est vérifié en amont par l'appelant.
         """
         from app.modules.centers.repository import BranchRepository
         from app.modules.exam_sessions.repository import ExamSessionRepository
@@ -353,15 +417,6 @@ class UserService:
 
         branch_repo = BranchRepository(self.db)
         branch = await branch_repo.get_by_id_or_404(student.branch_id)
-
-        if requester.role == UserRole.branch_secretary:
-            if student.branch_id != requester.branch_id:
-                raise ForbiddenException(detail="Cet étudiant n'appartient pas à votre succursale.")
-        elif requester.role == UserRole.center_director:
-            if branch.center_id != requester.center_id:
-                raise ForbiddenException(detail="Cet étudiant n'appartient pas à votre centre.")
-        else:
-            raise ForbiddenException(detail="Action réservée aux secrétaires et directeurs.")
 
         session_repo = ExamSessionRepository(self.db)
         rows = await session_repo.get_detailed_sessions_for_user(student.id)
@@ -390,7 +445,14 @@ class UserService:
                 if score is None:
                     continue
                 label = _MODULE_LABELS.get(module_key, module_key.capitalize())
-                subjects[sid]["module_scores"].setdefault(label, []).append(score)
+                counts = (row.get("module_question_counts") or {}).get(module_key, {})
+                bucket = subjects[sid]["module_scores"].setdefault(
+                    label, {"scores": [], "correct": 0, "incorrect": 0, "total": 0}
+                )
+                bucket["scores"].append(score)
+                bucket["correct"] += counts.get("correct", 0)
+                bucket["incorrect"] += counts.get("incorrect", 0)
+                bucket["total"] += counts.get("total", 0)
 
             if row["score"] is not None and row["submitted_at"]:
                 score_history.append(ScoreHistoryPoint(
@@ -415,10 +477,18 @@ class UserService:
                 modules = [
                     ModuleScoreBreakdown(
                         module_name=label,
-                        average_score=sum(vals) / len(vals) if vals else None,
+                        average_score=sum(b["scores"]) / len(b["scores"]) if b["scores"] else None,
+                        questions_correct=b["correct"],
+                        questions_incorrect=b["incorrect"],
+                        questions_total=b["total"],
                     )
-                    for label, vals in sdata["module_scores"].items()
+                    for label, b in sdata["module_scores"].items()
                 ]
+
+                last_session_id = None
+                if dates:
+                    last_row = max(sessions, key=lambda s: s["submitted_at"] or datetime.min)
+                    last_session_id = last_row.get("session_id")
 
                 subjects_list.append(SubjectScoreBreakdown(
                     subject_id=sid,
@@ -426,6 +496,7 @@ class UserService:
                     total_sessions=len(sessions),
                     average_score=sum(scores) / len(scores) if scores else None,
                     last_session_at=max(dates) if dates else None,
+                    last_session_id=last_session_id,
                     modules=modules,
                 ))
 
@@ -456,6 +527,38 @@ class UserService:
             score_history=score_history,
         )
         
+    async def get_student_progress_detail(
+        self, student_id: UUID, requester: User
+    ) -> "StudentDetailedProgressResponse":
+        """Wrapper director/secretary — check de scope puis délègue à
+        l'agrégation partagée avec la vue enseignant."""
+        from app.modules.centers.repository import BranchRepository
+
+        student = await self.repo.get_by_id_or_404(student_id)
+        if student.role != UserRole.student:
+            raise BadRequestException(detail="Cet utilisateur n'est pas un étudiant.")
+
+        branch_repo = BranchRepository(self.db)
+        branch = await branch_repo.get_by_id_or_404(student.branch_id)
+
+        if requester.role == UserRole.branch_secretary:
+            if student.branch_id != requester.branch_id:
+                raise ForbiddenException(detail="Cet étudiant n'appartient pas à votre succursale.")
+        elif requester.role == UserRole.center_director:
+            if branch.center_id != requester.center_id:
+                raise ForbiddenException(detail="Cet étudiant n'appartient pas à votre centre.")
+        else:
+            raise ForbiddenException(detail="Action réservée aux secrétaires et directeurs.")
+
+        return await self._get_student_progress_detail_unscoped(student_id)
+
+    async def get_student_progress_detail_for_teacher(
+        self, student_id: UUID, teacher: User
+    ) -> "StudentDetailedProgressResponse":
+        from app.modules.training_sessions.service import TrainingSessionService
+
+        await TrainingSessionService(self.db).assert_teacher_can_view_student(teacher, student_id)
+        return await self._get_student_progress_detail_unscoped(student_id)
     
     async def create_student_quick(
         self, data: StudentQuickCreateRequest, staff: User
@@ -499,3 +602,9 @@ class UserService:
             ai_credits=0,
             access_duration_days=30,
         )
+        
+    async def list_teachers_for_director(self, director: User) -> list[User]:
+        return await self.repo.find_teachers_by_center(director.center_id)
+
+    async def list_teachers_for_secretary(self, secretary: User) -> list[User]:
+        return await self.repo.find_teachers_by_branch(secretary.branch_id)

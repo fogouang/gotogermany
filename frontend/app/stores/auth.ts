@@ -23,6 +23,7 @@ export const useAuthStore = defineStore("auth", {
       state.user && "is_admin" in state.user ? state.user.is_admin : false,
     isDirector: (state) => state.user?.role === "center_director",
     isSecretary: (state) => state.user?.role === "branch_secretary",
+    isTeacher: (state) => state.user?.role == "teacher",
     isAmbassador: (state) =>
       state.user && "is_ambassador" in state.user
         ? state.user.is_ambassador
@@ -32,6 +33,10 @@ export const useAuthStore = defineStore("auth", {
       state.user && "center_id" in state.user ? state.user.center_id : null,
     branchId: (state) =>
       state.user && "branch_id" in state.user ? state.user.branch_id : null,
+    targetLevelId: (state) =>
+      state.user && "target_level_id" in state.user
+        ? state.user.target_level_id
+        : null,
     isVerified: (state) => state.user?.is_verified || false,
     userName: (state) => state.user?.full_name || "",
     userEmail: (state) => state.user?.email || "",
@@ -205,7 +210,21 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    logout() {
+    async logout() {
+      this._ensureApiConfig();
+
+      // Libère le slot d'appareil côté serveur AVANT de nettoyer le state local.
+      // Best-effort : si l'appel échoue (token déjà expiré, réseau coupé...),
+      // on nettoie quand même le state local pour ne pas bloquer l'utilisateur.
+      try {
+        const deviceFingerprint = this._getOrCreateDeviceFingerprint();
+        await AuthService.logoutApiV1AuthLogoutPost({
+          device_fingerprint: deviceFingerprint,
+        });
+      } catch (error) {
+        console.error("Logout API error:", error);
+      }
+
       // Vider le state
       this.user = null;
       this.token = null;

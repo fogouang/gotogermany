@@ -188,7 +188,7 @@ from app.modules.referrals.router import router as referrals_router
 from app.modules.enrollments.router import router as enrollments_router
 from app.modules.live_session.router import router as live_session_router
 from app.modules.start_deutsch.router import router as start_deutsch_router
-
+from app.modules.training_sessions.router import router as training_sessions_router
 
 
 
@@ -214,6 +214,8 @@ app.include_router(referrals_router, prefix="/api/v1/referrals", tags=["referral
 app.include_router(enrollments_router, prefix="/api/v1/enrollments", tags=["enrollments"])
 app.include_router(live_session_router, prefix="/api/v1/live-session", tags=["live-session"])
 app.include_router(start_deutsch_router, prefix="/api/v1/start-deutsch", tags=["start-deutsch"])
+app.include_router(training_sessions_router, prefix="/api/v1/training-sessions", tags=["training-sessions"])
+
 
 
 

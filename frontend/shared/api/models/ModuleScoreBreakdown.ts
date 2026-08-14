@@ -8,5 +8,8 @@
 export type ModuleScoreBreakdown = {
     module_name: string;
     average_score: (number | null);
+    questions_correct?: number;
+    questions_incorrect?: number;
+    questions_total?: number;
 };
 

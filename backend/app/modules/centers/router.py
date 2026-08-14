@@ -221,6 +221,14 @@ async def create_branch(
     """Créer une succursale supplémentaire — admin ITIA."""
     return await CenterService(db).create_branch(center_id, data)
 
+@router.patch("/{center_id}/toggle-active", response_model=CenterResponse)
+async def toggle_center_active(
+    center_id: UUID,
+    _: CurrentAdmin = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Désactive/réactive un centre — admin ITIA uniquement."""
+    return await CenterService(db).toggle_active(center_id)
 
 @router.post("/{center_id}/license/activate", response_model=CenterLicenseResponse, status_code=201)
 async def activate_license(
@@ -270,3 +278,4 @@ async def recharge_credit_pool(
     return await CenterService(db).recharge_pool(
         center_id, data.amount, current_admin, data.reason
     )
+    

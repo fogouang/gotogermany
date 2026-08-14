@@ -144,7 +144,7 @@
 
         <div v-else class="divide-y divide-gray-50">
           <button
-            v-for="exam in examsStore.catalog.slice(0, 4)"
+            v-for="exam in visibleCatalog.slice(0, 4)"
             :key="exam.id"
             class="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left group"
             @click="navigateTo(`/dashboard/examens/${exam.slug}`)"
@@ -279,6 +279,12 @@ const { t, locale } = useI18n();
 const authStore = useAuthStore();
 const examsStore = useExamsStore();
 const sessionStore = useSessionStore();
+const { visibleCatalog } = useVisibleCatalog();
+
+console.log("DEBUG branchId:", authStore.branchId);
+console.log("DEBUG targetLevelId:", authStore.targetLevelId);
+console.log("DEBUG user:", authStore.user);
+console.log("DEBUG visibleCatalog:", visibleCatalog.value);
 
 const sessionsLoading = ref(false);
 const recentSessions = ref<any[]>([]);

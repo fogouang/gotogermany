@@ -1,3 +1,4 @@
+//pages/axamens/index.vue
 <template>
   <div class="space-y-6 pb-10">
     <!-- Header -->
@@ -196,6 +197,7 @@ const examsStore = useExamsStore();
 const searchQuery = ref("");
 const selectedProvider = ref("");
 const selectedLevel = ref("");
+const { visibleCatalog } = useVisibleCatalog();
 
 const providers = computed(() => [
   { label: t("dashboard_exams.all_providers"), value: "" },
@@ -211,7 +213,7 @@ const cefrLevels = computed(() => [
 ]);
 
 const filteredExams = computed(() => {
-  let exams = examsStore.catalog;
+  let exams = visibleCatalog.value;
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     exams = exams.filter(

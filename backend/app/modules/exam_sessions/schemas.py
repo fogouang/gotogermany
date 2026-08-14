@@ -84,6 +84,9 @@ class ModuleResultResponse(BaseSchema):
     max_score: int
     score_obtained: float | None
     is_corrected: bool
+    questions_correct: int
+    questions_incorrect: int
+    questions_total: int
     teile: list[TeilResultResponse] = []
 
 

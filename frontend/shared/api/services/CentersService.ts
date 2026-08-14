@@ -405,6 +405,32 @@ export class CentersService {
         });
     }
     /**
+     * Toggle Center Active
+     * Désactive/réactive un centre — admin ITIA uniquement.
+     * @param centerId
+     * @param accessToken
+     * @returns CenterResponse Successful Response
+     * @throws ApiError
+     */
+    public static toggleCenterActiveApiV1CentersCenterIdToggleActivePatch(
+        centerId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<CenterResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/centers/{center_id}/toggle-active',
+            path: {
+                'center_id': centerId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Activate License
      * Activer une licence pour un centre — après confirmation du paiement.
      * @param centerId

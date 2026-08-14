@@ -6,4 +6,5 @@ export enum UserRole {
     STUDENT = 'student',
     BRANCH_SECRETARY = 'branch_secretary',
     CENTER_DIRECTOR = 'center_director',
+    TEACHER = 'teacher',
 }

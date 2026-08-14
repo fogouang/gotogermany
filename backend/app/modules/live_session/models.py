@@ -43,7 +43,8 @@ class LiveSession(Base, UUIDMixin, TimestampMixin):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        doc="Staff du centre (branch_secretary ou center_director) qui lance et mène la session",
+        doc="Staff du centre (branch_secretary, center_director) ou enseignant "
+            "assigné via une training_session — qui lance et mène la session",
     )
     student_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

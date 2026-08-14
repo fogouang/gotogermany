@@ -68,17 +68,13 @@ class LiveSessionService:
     async def create_session(
         self, examiner_id: UUID, student_id: UUID, subject_id: UUID
     ) -> LiveSession:
-        examiner = await self._get_user_or_404(examiner_id)
-        if examiner.role not in (UserRole.branch_secretary, UserRole.center_director):
-            raise BadRequestException(
-                detail="Seul un membre du staff du centre peut lancer une session live."
-            )
+        from app.modules.training_sessions.service import TrainingSessionService
 
-        student = await self._get_user_or_404(student_id)
-        if not await self._same_center(examiner, student):
-            raise BadRequestException(
-                detail="Cet étudiant n'appartient pas à votre centre."
-            )
+        examiner = await self._get_user_or_404(examiner_id)
+
+        await TrainingSessionService(self.db).assert_can_launch_live_session(
+            examiner, student_id
+        )
 
         await self._check_subject_has_sprechen(subject_id)
 

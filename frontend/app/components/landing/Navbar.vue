@@ -23,7 +23,7 @@
             :key="item.key"
             :to="item.to"
             class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-medium flex items-center gap-2"
-            active-class="text-white bg-[#076152]"
+            active-class="text-white bg-primary-600"
           >
             <i :class="[item.icon, 'text-xs']"></i>
             <span>{{ item.label }}</span>
@@ -42,7 +42,7 @@
               :class="[
                 'text-xs font-bold px-2 py-1 rounded-md transition-colors uppercase',
                 locale === loc.code
-                  ? 'bg-[#076152] text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'text-gray-400 hover:text-gray-600',
               ]"
               @click="changeLocale(loc.code)"
@@ -56,7 +56,7 @@
             <span
               class="text-sm text-gray-600 font-medium flex items-center gap-1.5"
             >
-              <i class="pi pi-user text-[#076152] text-xs"></i>
+              <i class="pi pi-user text-primary-600 text-xs"></i>
               {{ authStore.userName }}
             </span>
             <div class="w-px h-4 bg-gray-200 mx-1" />
@@ -64,7 +64,7 @@
               :label="t('nav.dashboard')"
               icon="pi pi-th-large"
               size="small"
-              class="bg-teal-600! hover:bg-teal-700! border-0! text-white! font-semibold!"
+              class="bg-primary-600! hover:bg-primary-700! border-0! text-white! font-semibold!"
               @click="navigateTo('/dashboard')"
             />
             <Button
@@ -81,14 +81,14 @@
           <!-- Guest -->
           <template v-else>
             <button
-              class="px-4 py-2 text-sm font-semibold text-[#076152] hover:bg-teal-50 rounded-lg transition-colors"
+              class="px-4 py-2 text-sm font-semibold text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               @click="openLogin"
             >
               {{ t("nav.login") }}
             </button>
             <button
-              class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-              style="background-color: #076152"
+              class="bg-primary-600 flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+              
               @click="openSignup"
             >
               {{ t("nav.signup") }}
@@ -135,7 +135,7 @@
               :class="[
                 'text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors uppercase',
                 locale === loc.code
-                  ? 'bg-[#076152] text-white border-[#076152]'
+                  ? 'bg-primary-600 text-white border-primary-600'
                   : 'text-gray-400 border-gray-200 hover:text-gray-600',
               ]"
               @click="changeLocale(loc.code)"
@@ -149,7 +149,7 @@
             <div
               class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700"
             >
-              <i class="pi pi-user text-teal-600"></i>
+              <i class="pi pi-user text-primary-600"></i>
               {{ authStore.userName }}
             </div>
             <NuxtLink
@@ -234,15 +234,14 @@
         <Button
           :label="t('auth.login_btn')"
           :loading="authStore.loading"
-          class="w-full mt-1"
-          style="background-color: #076152; border: none"
+          class="w-full mt-1 bg-primary-600 border-0"
           @click="handleLogin"
         />
         <p class="text-xs text-gray-500 text-center">
           {{ t("auth.no_account") }}
           <a
             href="#"
-            class="text-teal-600 hover:underline font-medium"
+            class="text-primary-600 hover:underline font-medium"
             @click.prevent="openSignup"
           >
             {{ t("auth.register_link") }}
@@ -271,7 +270,7 @@
             {{ t("auth.have_account") }}
             <a
               href="#"
-              class="text-[#076152] hover:underline font-medium"
+              class="text-primary-600 hover:underline font-medium"
               @click.prevent="openLogin"
             >
               {{ t("auth.login_link") }}
@@ -357,6 +356,8 @@ const handleLogin = async () => {
       navigateTo("/centre/etudiants");
     } else if (authStore.isAmbassador) {
       navigateTo("/referrals");
+    } else if (authStore.isTeacher) {
+      navigateTo("/enseignant/sessions");
     } else {
       navigateTo("/dashboard");
     }

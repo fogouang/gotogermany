@@ -5,9 +5,9 @@
       <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
         <div class="flex items-center gap-3">
           <div
-            class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center"
+            class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
           >
-            <i class="pi pi-users text-teal-600"></i>
+            <i class="pi pi-users text-primary-600"></i>
           </div>
           <div>
             <p class="text-2xl font-bold text-gray-900">
@@ -23,7 +23,7 @@
           <div
             class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"
           >
-            <i class="pi pi-list text-blue-600"></i>
+            <i class="pi pi-list text-secondary-600"></i>
           </div>
           <div>
             <p class="text-2xl font-bold text-gray-900">—</p>
@@ -37,7 +37,7 @@
           <div
             class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center"
           >
-            <i class="pi pi-building text-purple-600"></i>
+            <i class="pi pi-building text-yellow-600"></i>
           </div>
           <div>
             <p class="text-2xl font-bold text-gray-900">
@@ -69,7 +69,7 @@
           <div
             class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center"
           >
-            <i class="pi pi-graduation-cap text-emerald-600"></i>
+            <i class="pi pi-graduation-cap text-primary-600"></i>
           </div>
           <div>
             <p class="text-2xl font-bold text-gray-900">
@@ -82,26 +82,17 @@
     </div>
 
     <FreeAccessToggle />
-    <!-- Bienvenue -->
-    <div
-      class="bg-linear-to-br from-teal-600 to-teal-800 rounded-xl p-6 text-white"
-    >
-      <h2 class="text-lg font-semibold mb-1">
-        Bienvenue, {{ authStore.userName }} 👋
-      </h2>
-      <p class="text-sm text-teal-100">Panel d'administration DeutschTest</p>
-    </div>
 
     <!-- Raccourcis -->
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
       <NuxtLink
         to="/admin/users"
-        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex items-center gap-4"
+        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-primary-200 transition-all flex items-center gap-4"
       >
         <div
-          class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center"
+          class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
         >
-          <i class="pi pi-users text-teal-600"></i>
+          <i class="pi pi-users text-primary-600"></i>
         </div>
         <div>
           <p class="font-semibold text-gray-900">Utilisateurs</p>
@@ -112,12 +103,12 @@
 
       <NuxtLink
         to="/admin/partners"
-        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex items-center gap-4"
+        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-primary-200 transition-all flex items-center gap-4"
       >
         <div
           class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center"
         >
-          <i class="pi pi-building text-purple-600"></i>
+          <i class="pi pi-building text-yellow-600"></i>
         </div>
         <div>
           <p class="font-semibold text-gray-900">Partenaires</p>
@@ -128,7 +119,7 @@
 
       <NuxtLink
         to="/admin/promo-codes"
-        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex items-center gap-4"
+        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-primary-200 transition-all flex items-center gap-4"
       >
         <div
           class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center"
@@ -144,12 +135,12 @@
 
       <NuxtLink
         to="/admin/centers"
-        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex items-center gap-4"
+        class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-primary-200 transition-all flex items-center gap-4"
       >
         <div
           class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center"
         >
-          <i class="pi pi-graduation-cap text-emerald-600"></i>
+          <i class="pi pi-graduation-cap text-primary-600"></i>
         </div>
         <div>
           <p class="font-semibold text-gray-900">Centres</p>
@@ -169,7 +160,7 @@
         <h3 class="font-semibold text-gray-900">Utilisateurs récents</h3>
         <NuxtLink
           to="/admin/users"
-          class="text-xs text-teal-600 hover:underline"
+          class="text-xs text-primary-600 hover:underline"
         >
           Voir tout →
         </NuxtLink>
@@ -187,7 +178,7 @@
             <td class="px-5 py-3">
               <div class="flex items-center gap-3">
                 <div
-                  class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs shrink-0"
+                  class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-primary-700 font-bold text-xs shrink-0"
                 >
                   {{ user.full_name.charAt(0).toUpperCase() }}
                 </div>

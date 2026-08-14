@@ -15,7 +15,7 @@
               class="h-15 object-contain"
             />
           </div>
-          <p class="text-gray-400 leading-relaxed mb-6">
+          <p class="text-primary-500 leading-relaxed mb-6">
            {{ t("footer.tagline") }}
           </p>
 
@@ -23,25 +23,25 @@
           <div class="flex gap-2">
             <a
               href="#"
-              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-teal-500 transition-all"
+              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-primary-500 transition-all"
             >
               <i class="pi pi-facebook text-sm"></i>
             </a>
             <a
               href="#"
-              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-teal-500 transition-all"
+              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-primary-500 transition-all"
             >
               <i class="pi pi-twitter text-sm"></i>
             </a>
             <a
               href="#"
-              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-teal-500 transition-all"
+              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-primary-500 transition-all"
             >
               <i class="pi pi-linkedin text-sm"></i>
             </a>
             <a
               href="#"
-              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-teal-500 transition-all"
+              class="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-primary-500 transition-all"
             >
               <i class="pi pi-instagram text-sm"></i>
             </a>
@@ -51,7 +51,7 @@
         <!-- Examens -->
         <div>
           <h3 class="font-bold mb-5 text-base flex items-center gap-2">
-            <i class="pi pi-book text-teal-400"></i>
+            <i class="pi pi-book text-primary-400"></i>
              {{ t("footer.exams.title") }}
           </h3>
           <ul class="space-y-3 text-sm">
@@ -61,7 +61,7 @@
                 class="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
               >
                 <i
-                  class="pi pi-angle-right text-xs text-teal-500 group-hover:translate-x-1 transition-transform"
+                  class="pi pi-angle-right text-xs text-primary-500 group-hover:translate-x-1 transition-transform"
                 ></i>
                 {{ item.label }}
               </a>
@@ -72,7 +72,7 @@
         <!-- Ressources -->
         <div>
           <h3 class="font-bold mb-5 text-base flex items-center gap-2">
-            <i class="pi pi-compass text-teal-400"></i>
+            <i class="pi pi-compass text-primary-400"></i>
             {{ t("footer.resources.title") }}
           </h3>
           <ul class="space-y-3 text-sm">
@@ -82,7 +82,7 @@
                 class="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
               >
                 <i
-                  class="pi pi-angle-right text-xs text-teal-500 group-hover:translate-x-1 transition-transform"
+                  class="pi pi-angle-right text-xs text-primary-500 group-hover:translate-x-1 transition-transform"
                 ></i>
                 {{ item.label }}
               </a>
@@ -93,7 +93,7 @@
         <!-- À propos -->
         <div>
           <h3 class="font-bold mb-5 text-base flex items-center gap-2">
-            <i class="pi pi-info-circle text-teal-400"></i>
+            <i class="pi pi-info-circle text-primary-400"></i>
              {{ t("footer.about.title") }}
           </h3>
           <ul class="space-y-3 text-sm">
@@ -103,7 +103,7 @@
                 class="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
               >
                 <i
-                  class="pi pi-angle-right text-xs text-teal-500 group-hover:translate-x-1 transition-transform"
+                  class="pi pi-angle-right text-xs text-primary-500 group-hover:translate-x-1 transition-transform"
                 ></i>
                 {{ item.label }}
               </a>
@@ -122,7 +122,7 @@
         </p>
         <div class="flex items-center gap-4 text-sm text-gray-500">
           <span class="flex items-center gap-1">
-            <i class="pi pi-shield text-teal-400 text-xs"></i>
+            <i class="pi pi-shield text-primary-400 text-xs"></i>
             {{ t("footer.secure_payment") }}
           </span>
           <span class="text-gray-700">·</span>

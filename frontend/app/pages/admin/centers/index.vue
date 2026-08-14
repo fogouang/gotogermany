@@ -122,6 +122,16 @@
                         size="small"
                         @click="openRechargeDialog(center)"
                       />
+                      <Button
+                        :label="center.is_active ? 'Désactiver' : 'Réactiver'"
+                        :icon="
+                          center.is_active ? 'pi pi-ban' : 'pi pi-check-circle'
+                        "
+                        text
+                        size="small"
+                        :severity="center.is_active ? 'danger' : 'success'"
+                        @click="confirmToggleActive(center)"
+                      />
                     </td>
                   </tr>
                 </tbody>
@@ -414,10 +424,10 @@
                 <label class="text-sm font-medium text-gray-700 mb-1 block"
                   >Mot de passe provisoire</label
                 >
-                <InputText
+                <Password
                   v-model="directorForm.password"
-                  type="password"
                   class="w-full"
+                  toggleMask
                   placeholder="Min. 8 caractères"
                 />
               </div>
@@ -609,6 +619,35 @@ const showCreateCenterDialog = ref(false);
 const creatingCenter = ref(false);
 const centerFormError = ref<string | null>(null);
 const centerForm = ref({ name: "", contact_email: "", contact_phone: "" });
+
+const confirm = useConfirm();
+
+function confirmToggleActive(center: CenterResponse) {
+  confirm.require({
+    message: center.is_active
+      ? `Désactiver "${center.name}" ? Tout le personnel et les étudiants de ce centre perdront l'accès immédiatement.`
+      : `Réactiver "${center.name}" ? Le personnel et les étudiants retrouveront l'accès.`,
+    header: center.is_active ? "Désactiver le centre" : "Réactiver le centre",
+    icon: "pi pi-exclamation-triangle",
+    acceptClass: center.is_active ? "p-button-danger" : undefined,
+    accept: async () => {
+      const result = await adminCenters.toggleCenterActive(center.id);
+      if (result.success) {
+        toast.add({
+          severity: "success",
+          summary: center.is_active ? "Centre désactivé" : "Centre réactivé",
+          life: 3000,
+        });
+      } else {
+        toast.add({
+          severity: "error",
+          summary: result.error || "Erreur",
+          life: 4000,
+        });
+      }
+    },
+  });
+}
 
 function openCreateCenterDialog() {
   centerForm.value = { name: "", contact_email: "", contact_phone: "" };

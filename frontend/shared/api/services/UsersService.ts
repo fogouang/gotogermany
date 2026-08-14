@@ -13,6 +13,7 @@ import type { StudentQuickCreateRequest } from '../models/StudentQuickCreateRequ
 import type { StudentResponse } from '../models/StudentResponse';
 import type { StudentTargetUpdateRequest } from '../models/StudentTargetUpdateRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
+import type { TeacherCreateRequest } from '../models/TeacherCreateRequest';
 import type { UserAdminResponse } from '../models/UserAdminResponse';
 import type { UserChangePasswordRequest } from '../models/UserChangePasswordRequest';
 import type { UserMeResponse } from '../models/UserMeResponse';
@@ -154,6 +155,79 @@ export class UsersService {
             },
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Create Teacher
+     * Le directeur ou la secrétaire créent un compte enseignant.
+     * @param requestBody
+     * @param accessToken
+     * @returns UserAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static createTeacherApiV1UsersTeachersPost(
+        requestBody: TeacherCreateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<UserAdminResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/teachers',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Teachers
+     * Directeur : tout le centre. Secrétaire : sa succursale uniquement.
+     * @param accessToken
+     * @returns UserAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static listTeachersApiV1UsersTeachersGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<UserAdminResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/teachers',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Toggle Teacher Active
+     * Directeur ou secrétaire activent/désactivent un compte enseignant
+     * (scope vérifié dans le service : centre entier vs succursale).
+     * @param teacherId
+     * @param accessToken
+     * @returns UserAdminResponse Successful Response
+     * @throws ApiError
+     */
+    public static toggleTeacherActiveApiV1UsersTeachersTeacherIdToggleActivePatch(
+        teacherId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<UserAdminResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/teachers/{teacher_id}/toggle-active',
+            path: {
+                'teacher_id': teacherId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
             errors: {
                 422: `Validation Error`,
             },

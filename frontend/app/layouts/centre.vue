@@ -122,6 +122,7 @@
         <slot />
       </main>
     </div>
+    <ConfirmDialog />
   </div>
 </template>
 
@@ -135,6 +136,8 @@ const directorNav = [
   { name: "Vue d'ensemble", href: "/centre/dashboard", icon: "pi-chart-bar" },
   { name: "Succursales", href: "/centre/succursales", icon: "pi-sitemap" },
   { name: "Secrétaires", href: "/centre/secretaires", icon: "pi-users" },
+  { name: "Enseignants", href: "/centre/enseignants", icon: "pi-user-edit" },
+  { name: "Sessions", href: "/centre/sessions", icon: "pi-calendar" },
   { name: "Étudiants", href: "/centre/etudiants", icon: "pi-user" },
   {
     name: "Session live",
@@ -157,12 +160,13 @@ const directorNav = [
 
 const secretaryNav = [
   { name: "Mes étudiants", href: "/centre/etudiants", icon: "pi-user" },
-
   {
     name: "Nouvel étudiant",
     href: "/centre/etudiants/nouveau",
     icon: "pi-user-plus",
   },
+  { name: "Enseignants", href: "/centre/enseignants", icon: "pi-user-edit" },
+  { name: "Sessions", href: "/centre/sessions", icon: "pi-calendar" },
   { name: "Progression", href: "/centre/progression", icon: "pi-chart-line" },
   {
     name: "Historique crédits",
@@ -198,6 +202,10 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
     title: "Étudiants",
     subtitle: "Comptes étudiants inscrits",
   },
+  "/centre/enseignants": {
+    title: "Enseignant",
+    subtitle: "Comptes de gestion enseignant",
+  },
   "/centre/etudiants/nouveau": {
     title: "Nouvel étudiant",
     subtitle: "Créer un compte étudiant",
@@ -222,6 +230,11 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/centre/sessions-live": {
     title: "Session live",
     subtitle: "Lancer et suivre un examen oral en direct",
+  },
+
+  "/centre/sessions": {
+    title: "Sessions",
+    subtitle: "Cohortes par niveau, avec enseignants et étudiants",
   },
 };
 

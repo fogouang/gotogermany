@@ -19,6 +19,7 @@ import type {
   StudentQuickCreateRequest,
   CenterUpdateRequest,
   CenterResponse,
+  TeacherCreateRequest,
 } from "#shared/api";
 
 interface CenterStaffState {
@@ -530,6 +531,61 @@ export const useCenterStaffStore = defineStore("centerStaff", {
         return {
           success: false,
           error: error.message || "Erreur envoi du logo",
+        };
+      }
+    },
+
+    async createTeacher(data: TeacherCreateRequest): Promise<{
+      success: boolean;
+      teacher?: UserAdminResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const teacher =
+          await UsersService.createTeacherApiV1UsersTeachersPost(data);
+        return { success: true, teacher };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur création enseignant",
+        };
+      }
+    },
+
+    async fetchTeachers(): Promise<{
+      success: boolean;
+      teachers?: UserAdminResponse[];
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const teachers = await UsersService.listTeachersApiV1UsersTeachersGet();
+        return { success: true, teachers };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur chargement enseignants",
+        };
+      }
+    },
+
+    async toggleTeacherActive(teacherId: string): Promise<{
+      success: boolean;
+      teacher?: UserAdminResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const teacher =
+          await UsersService.toggleTeacherActiveApiV1UsersTeachersTeacherIdToggleActivePatch(
+            teacherId,
+          );
+        return { success: true, teacher };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur changement de statut",
         };
       }
     },

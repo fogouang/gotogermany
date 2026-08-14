@@ -8,11 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.auth.schemas import (
     AuthResponse,
     LoginRequest,
+    LogoutRequest,
     RegisterRequest,
 )
 from app.modules.auth.service import AuthService
 from app.shared.database.session import get_db
 from app.shared.schemas.responses import SuccessResponse
+from app.shared.dependencies import CurrentUser
 
 router = APIRouter()
 
@@ -34,6 +36,15 @@ async def login(
     """Connexion — retourne un JWT."""
     return await AuthService(db).login(data)
 
+@router.post("/logout", response_model=SuccessResponse)
+async def logout(
+    data: LogoutRequest,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Libère le slot d'appareil du fingerprint fourni."""
+    await AuthService(db).logout(current_user.id, data.device_fingerprint)
+    return SuccessResponse(message="Déconnexion réussie.")
 
 @router.post("/verify-email/{token}", response_model=SuccessResponse)
 async def verify_email(

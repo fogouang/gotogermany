@@ -18,7 +18,7 @@
         />
         <div
           v-else
-          class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center mx-auto"
+          class="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center mx-auto"
         >
           <i class="pi pi-graduation-cap text-white text-sm"></i>
         </div>
@@ -44,7 +44,7 @@
               ? 'justify-center px-0 py-2.5 mx-1'
               : 'gap-3 px-3 py-2.5',
           ]"
-          active-class="!bg-teal-50 !text-teal-700 font-semibold"
+          active-class="!bg-primary-50 !text-primary-700 font-semibold"
           v-tooltip.right="props.collapsed ? item.label : undefined"
           @click="$emit('navigate')"
         >
@@ -71,7 +71,7 @@
               ? 'justify-center px-0 py-2.5 mx-1'
               : 'gap-3 px-3 py-2.5',
           ]"
-          active-class="!bg-teal-50 !text-teal-700 font-semibold"
+          active-class="!bg-primary-50 !text-primary-600 font-semibold"
           v-tooltip.right="props.collapsed ? item.label : undefined"
           @click="$emit('navigate')"
         >
@@ -87,7 +87,7 @@
           class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 mb-1"
         >
           <div
-            class="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0"
+            class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-bold shrink-0"
           >
             {{ authStore.userName?.[0]?.toUpperCase() }}
           </div>

@@ -9,6 +9,9 @@ export type ModuleResultResponse = {
     max_score: number;
     score_obtained: (number | null);
     is_corrected: boolean;
+    questions_correct: number;
+    questions_incorrect: number;
+    questions_total: number;
     teile?: Array<TeilResultResponse>;
 };
 

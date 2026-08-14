@@ -24,7 +24,9 @@ class LoginRequest(BaseSchema):
         description="Identifiant stable de l'appareil, généré côté client (ex: FingerprintJS ou UUID stocké localement).",
     )
 
-
+class LogoutRequest(BaseSchema):
+    device_fingerprint: str | None = None
+    
 class TokenResponse(BaseSchema):
     access_token: str
     token_type: str = "bearer"

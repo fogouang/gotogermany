@@ -6,7 +6,7 @@
         <!-- Logo -->
         <div class="flex items-center gap-3 mb-8">
           <div
-            class="w-10 h-10 bg-linear-to-br from-teal-600 to-teal-800 rounded-xl flex items-center justify-center"
+            class="w-10 h-10 bg-linear-to-br from-primary-600 rounded-xl flex items-center justify-center"
           >
             <i class="pi pi-shield text-white text-xl"></i>
           </div>
@@ -28,7 +28,7 @@
             :key="item.name"
             :to="item.href"
             class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-            active-class="!bg-teal-600 !text-white"
+            active-class="!bg-primary-600 !text-white"
           >
             <i :class="['pi text-sm', item.icon]"></i>
             <span class="text-sm font-medium">{{ item.name }}</span>
@@ -44,7 +44,7 @@
             :key="item.name"
             :to="item.href"
             class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-            active-class="!bg-teal-600 !text-white"
+            active-class="!bg-primary-600 !text-white"
           >
             <i :class="['pi text-sm', item.icon]"></i>
             <span class="text-sm font-medium">{{ item.name }}</span>
@@ -60,7 +60,7 @@
             :key="item.name"
             :to="item.href"
             class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-            active-class="!bg-teal-600 !text-white"
+            active-class="!bg-primary-600 !text-white"
           >
             <i :class="['pi text-sm', item.icon]"></i>
             <span class="text-sm font-medium">{{ item.name }}</span>
@@ -75,7 +75,7 @@
         <div class="p-3 bg-gray-800 rounded-lg">
           <div class="flex items-center gap-3 mb-3">
             <div
-              class="w-9 h-9 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+              class="w-9 h-9 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
             >
               {{ adminInitial }}
             </div>
@@ -130,6 +130,7 @@
         <slot />
       </main>
     </div>
+    <ConfirmDialog />
   </div>
 </template>
 

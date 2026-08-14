@@ -264,6 +264,12 @@ class CenterService:
         """Enregistre le chemin du logo uploadé — utilisé sur les reçus PDF."""
         return await self.center_repo.update(center_id, logo_path=logo_path)
     
+    async def toggle_active(self, center_id: UUID) -> Center:
+        """Désactive/réactive un centre — admin ITIA uniquement. Ne supprime
+        rien (succursales, licences, étudiants restent intacts)."""
+        center = await self.center_repo.get_by_id_or_404(center_id)
+        return await self.center_repo.update(center_id, is_active=not center.is_active)
+    
 def _to_transaction_response(txn: CenterCreditTransaction) -> CenterCreditTransactionResponse:
     return CenterCreditTransactionResponse(
         id=txn.id,

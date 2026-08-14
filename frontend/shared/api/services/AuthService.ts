@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { AuthResponse } from '../models/AuthResponse';
 import type { LoginRequest } from '../models/LoginRequest';
+import type { LogoutRequest } from '../models/LogoutRequest';
 import type { RegisterRequest } from '../models/RegisterRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -43,6 +44,31 @@ export class AuthService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/auth/login',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Logout
+     * Libère le slot d'appareil du fingerprint fourni.
+     * @param requestBody
+     * @param accessToken
+     * @returns SuccessResponse Successful Response
+     * @throws ApiError
+     */
+    public static logoutApiV1AuthLogoutPost(
+        requestBody: LogoutRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<SuccessResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/auth/logout',
+            cookies: {
+                'access_token': accessToken,
+            },
             body: requestBody,
             mediaType: 'application/json',
             errors: {

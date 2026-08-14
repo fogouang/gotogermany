@@ -33,9 +33,7 @@ async def get_current_user(
 
     if not token:
         raise UnauthorizedException(detail="Token d'authentification manquant.")
-
     return await AuthService(db).get_current_user(token)
-
 
 async def get_current_admin(
     current_user: User = Depends(get_current_user),
@@ -61,6 +59,14 @@ async def get_current_secretary(
     """Restreint l'accès aux secrétaires de succursale."""
     if current_user.role != UserRole.branch_secretary:
         raise ForbiddenException(detail="Accès réservé aux secrétaires.")
+    return current_user
+
+async def get_current_teacher(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Restreint l'accès aux enseignants."""
+    if current_user.role != UserRole.teacher:
+        raise ForbiddenException(detail="Accès réservé aux enseignants.")
     return current_user
 
 
@@ -122,6 +128,7 @@ CurrentAdmin = Annotated[User, Depends(get_current_admin)]
 # Annotations pratiques pour les routers
 CurrentDirector = Annotated[User, Depends(get_current_director)]
 CurrentSecretary = Annotated[User, Depends(get_current_secretary)]
+CurrentTeacher = Annotated[User, Depends(get_current_teacher)]
 CurrentCenterStaff = Annotated[User, Depends(get_current_director_or_secretary)]
 
 CurrentAmbassador = Annotated[User, Depends(get_current_ambassador)]

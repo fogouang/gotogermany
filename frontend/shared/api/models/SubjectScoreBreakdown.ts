@@ -12,6 +12,7 @@ export type SubjectScoreBreakdown = {
     total_sessions: number;
     average_score: (number | null);
     last_session_at: (string | null);
+    last_session_id?: (string | null);
     modules: Array<ModuleScoreBreakdown>;
 };
 

@@ -71,11 +71,26 @@ class AuthService:
         if not user.is_active:
             raise UnauthorizedException(detail="Compte désactivé.")
 
+        # Centre désactivé (admin ITIA) — bloque tout le personnel/étudiants
+        # rattachés, que ce soit via center_id direct (directeur) ou via
+        # branch_id -> Branch.center_id (secrétaire, enseignant, étudiant).
+        center_id_to_check = user.center_id
+        if center_id_to_check is None and user.branch_id is not None:
+            from app.modules.centers.repository import BranchRepository
+            branch = await BranchRepository(self.db).get_by_id_or_404(user.branch_id)
+            center_id_to_check = branch.center_id
+
+        if center_id_to_check is not None:
+            from app.modules.centers.repository import CenterRepository
+            center = await CenterRepository(self.db).get_by_id_or_404(center_id_to_check)
+            if not center.is_active:
+                raise UnauthorizedException(detail="Ce centre est actuellement désactivé.")
+
         # Accès expiré (fenêtre de 2 mois) — pertinent surtout pour les students de centre
         if user.access_expires_at and user.access_expires_at < datetime.now(timezone.utc):
             raise UnauthorizedException(detail="Cet accès n'est plus disponible.")
 
-        # Gestion des appareils — max 2 par compte
+        # Gestion des appareils — max 5 par compte (libéré au logout)
         if data.device_fingerprint:
             await self.device_repo.register_device_or_raise(
                 user_id=user.id,
@@ -100,7 +115,8 @@ class AuthService:
             access_token=access_token,
             user=AuthUserResponse.model_validate(user),
         )
-
+        
+        
     async def get_current_user(self, token: str) -> User:
         payload = decode_access_token(token)
         if payload is None:
@@ -120,6 +136,23 @@ class AuthService:
             raise UnauthorizedException(detail="Utilisateur introuvable.")
         if not user.is_active:
             raise UnauthorizedException(detail="Compte désactivé.")
+
+        # Centre désactivé (admin ITIA) — coupe l'accès immédiatement, même
+        # pour une session déjà ouverte avec un token encore valide. Couvre
+        # center_id direct (directeur) et branch_id -> Branch.center_id
+        # (secrétaire, enseignant, étudiant). Un B2C individuel (les deux
+        # None) n'est jamais concerné.
+        center_id_to_check = user.center_id
+        if center_id_to_check is None and user.branch_id is not None:
+            from app.modules.centers.repository import BranchRepository
+            branch = await BranchRepository(self.db).get_by_id_or_404(user.branch_id)
+            center_id_to_check = branch.center_id
+
+        if center_id_to_check is not None:
+            from app.modules.centers.repository import CenterRepository
+            center = await CenterRepository(self.db).get_by_id_or_404(center_id_to_check)
+            if not center.is_active:
+                raise UnauthorizedException(detail="Ce centre est actuellement désactivé.")
 
         return user
 
@@ -166,3 +199,10 @@ class AuthService:
             reset_token=None,
             reset_token_expires_at=None,
         )
+        
+    async def logout(self, user_id: UUID, device_fingerprint: str | None) -> None:
+        """Libère le slot d'appareil correspondant au fingerprint fourni.
+        Idempotent — pas d'erreur si le fingerprint n'était déjà plus
+        enregistré (ex. double-clic, ou déjà retiré via /me/devices)."""
+        if device_fingerprint:
+            await self.device_repo.remove_device(user_id, device_fingerprint)

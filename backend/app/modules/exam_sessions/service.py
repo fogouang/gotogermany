@@ -246,6 +246,30 @@ class ExamSessionService:
             session, exam, subject, answers, total_pass_score
         )
 
+    async def get_result_for_staff(
+        self, session_id: UUID, student_id: UUID
+    ) -> SessionResultResponse:
+        """Variante de get_result sans contrainte 'requester == owner' — le
+        contrôle d'accès (directeur/secrétaire/enseignant scopé) est fait
+        en amont, dans le service appelant."""
+        session = await self.repo.get_by_id(session_id)
+        if not session:
+            raise NotFoundException(resource="Session", identifier=str(session_id))
+        if session.user_id != student_id:
+            raise ForbiddenException(detail="Cette session n'appartient pas à cet étudiant.")
+        if session.status == "IN_PROGRESS":
+            raise BadRequestException(detail="La session n'est pas encore soumise.")
+
+        answers = await self.answer_repo.get_by_session(session_id)
+        subject = await self._load_subject_full(session.subject_id)
+        exam = await self.exam_repo.get_by_id(session.exam_id)
+        level = await self._get_level(subject.level_id)
+        total_pass_score = level.total_pass_score if level else None
+
+        return await self._build_result_response(
+            session, exam, subject, answers, total_pass_score
+        )
+        
     async def get_my_sessions(
         self, user_id: UUID, skip: int = 0, limit: int = 20
     ) -> list[SessionListResponse]:
@@ -470,14 +494,23 @@ class ExamSessionService:
             teil_results = []
             module_score = 0.0
             module_is_corrected = True
+            questions_correct = 0
+            questions_incorrect = 0
+            questions_total = 0
 
             for teil in module.teile:
                 teil_score = 0.0
                 answer_details = []
 
                 for question in sorted(teil.questions, key=lambda x: x.question_number):
+                    questions_total += 1
                     answer = answer_map.get(question.id)
                     if answer:
+                        if answer.is_correct is True:
+                            questions_correct += 1
+                        elif answer.is_correct is False:
+                            questions_incorrect += 1
+
                         if answer.score_obtained is not None:
                             teil_score += answer.score_obtained
                         elif not question.is_auto_correctable:
@@ -527,6 +560,9 @@ class ExamSessionService:
                 max_score=module.max_score,
                 score_obtained=score_on_100,
                 is_corrected=module_is_corrected,
+                questions_correct=questions_correct,
+                questions_incorrect=questions_incorrect,
+                questions_total=questions_total,
                 teile=teil_results,
             ))
 

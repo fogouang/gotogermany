@@ -80,7 +80,33 @@ class UserRepository(BaseRepository[User]):
         )
         return list(result.scalars().all())
 
-
+    async def find_teachers_by_branch(self, branch_id: UUID) -> list[User]:
+            result = await self.db.execute(
+                select(User).where(
+                    User.branch_id == branch_id,
+                    User.role == UserRole.teacher,
+                )
+            )
+            return list(result.scalars().all())
+    
+    async def find_teachers_by_center(self, center_id: UUID) -> list[User]:
+        from app.modules.centers.models import Branch
+        result = await self.db.execute(
+            select(User)
+            .join(Branch, Branch.id == User.branch_id)
+            .where(
+                Branch.center_id == center_id,
+                User.role == UserRole.teacher,
+            )
+        )
+        return list(result.scalars().all())
+    
+    async def find_by_ids(self, ids: list[UUID]) -> list[User]:
+        if not ids:
+            return []
+        result = await self.db.execute(select(User).where(User.id.in_(ids)))
+        return list(result.scalars().all())
+    
 class UserDeviceRepository(BaseRepository[UserDevice]):
     def __init__(self, db: AsyncSession):
         super().__init__(UserDevice, db)
@@ -100,12 +126,27 @@ class UserDeviceRepository(BaseRepository[UserDevice]):
             select(UserDevice).where(UserDevice.user_id == user_id)
         )
         current_count = len(list(count_result.scalars().all()))
-        if current_count >= 2:
+        if current_count >= 5:
             raise ForbiddenException(
-                detail="Ce compte est déjà connecté sur 2 appareils."
+                detail="Ce compte est déjà connecté sur 5 appareils. Déconnectez-vous d'un appareil pour en libérer un."
             )
         return await self.create(
             user_id=user_id,
             device_fingerprint=fingerprint,
             last_seen_at=now,
         )
+        
+    async def remove_device(self, user_id: UUID, fingerprint: str) -> bool:
+        """Libère un slot — appelé au logout. Retourne False si le device
+        n'existait déjà plus (idempotent, pas une erreur)."""
+        result = await self.db.execute(
+            select(UserDevice).where(
+                UserDevice.user_id == user_id,
+                UserDevice.device_fingerprint == fingerprint,
+            )
+        )
+        existing = result.scalar_one_or_none()
+        if not existing:
+            return False
+        await self.delete(existing.id)
+        return True

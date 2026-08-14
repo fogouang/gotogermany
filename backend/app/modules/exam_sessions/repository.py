@@ -90,11 +90,12 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
 
     async def get_detailed_sessions_for_user(self, user_id: UUID) -> list[dict]:
         """
-        Sessions complétées d'un utilisateur, enrichies du nom de l'examen ET
-        du sujet — base pour la vue de progression détaillée (ventilation
-        par examen > sujet > module + historique pour graphes).
+        Sessions complétées d'un utilisateur, enrichies du nom de l'examen/sujet
+        ET, par module, du nombre de questions correctes/incorrectes/totales —
+        nécessaire pour la vue enseignant (pas juste le score_breakdown agrégé).
         """
-        from app.modules.exams.models import Exam, Subject
+        from app.modules.exams.models import Exam, Subject, Module, Teil
+        from app.modules.questions.models import Question
 
         result = await self.db.execute(
             select(ExamSession, Exam.name, Subject.name)
@@ -106,16 +107,38 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
             )
             .order_by(ExamSession.submitted_at.asc())
         )
+        sessions_data = result.all()
 
         rows = []
-        for session, exam_name, subject_name in result.all():
+        for session, exam_name, subject_name in sessions_data:
+            counts_result = await self.db.execute(
+                select(Module.slug, ExamSessionAnswer.is_correct)
+                .select_from(ExamSessionAnswer)
+                .join(Question, Question.id == ExamSessionAnswer.question_id)
+                .join(Teil, Teil.id == Question.teil_id)
+                .join(Module, Module.id == Teil.module_id)
+                .where(ExamSessionAnswer.session_id == session.id)
+            )
+            module_counts: dict[str, dict[str, int]] = {}
+            for module_slug, is_correct in counts_result.all():
+                counts = module_counts.setdefault(
+                    module_slug, {"correct": 0, "incorrect": 0, "total": 0}
+                )
+                counts["total"] += 1
+                if is_correct is True:
+                    counts["correct"] += 1
+                elif is_correct is False:
+                    counts["incorrect"] += 1
+
             rows.append({
                 "exam_id": session.exam_id,
                 "exam_name": exam_name,
                 "subject_id": session.subject_id,
                 "subject_name": subject_name,
+                "session_id": session.id,
                 "score": session.score,
                 "score_breakdown": session.score_breakdown or {},
+                "module_question_counts": module_counts,
                 "submitted_at": session.submitted_at,
             })
         return rows

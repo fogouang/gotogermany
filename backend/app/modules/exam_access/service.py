@@ -39,15 +39,22 @@ class ExamAccessService:
         self, user_id: UUID, subject: Subject
     ) -> bool:
         """
-        Accès libre si free_access_mode actif.
-        Accès libre si subject_number <= 3.
-        Sinon : accès individuel payant (ExamAccess) OU licence de centre active.
+        Accès libre (subject_number <= 3) uniquement pour le grand public
+        (B2C, sans centre) — sert d'aperçu gratuit avant achat.
+        Un étudiant de centre (branch_id renseigné) est verrouillé sur son
+        target_level_id assigné à l'inscription : aucun accès gratuit
+        "aperçu" sur d'autres niveaux/providers, même les 3 premiers sujets.
         """
         from app.modules.settings.service import AppSettingsService
+        from app.modules.users.repository import UserRepository
+
         if await AppSettingsService(self.db).is_free_access_mode():
             return True
 
-        if subject.subject_number <= 3:
+        user = await UserRepository(self.db).get_by_id(user_id)
+        is_center_student = bool(user and user.branch_id)
+
+        if not is_center_student and subject.subject_number <= 3:
             return True
 
         if await self.repo.user_has_access(user_id, subject.level_id):

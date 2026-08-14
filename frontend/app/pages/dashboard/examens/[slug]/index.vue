@@ -1,3 +1,4 @@
+//pages/axamens/[slug]/index.vue
 <template>
   <div class="space-y-6 pb-10">
     <!-- Loading -->
@@ -307,8 +308,10 @@ definePageMeta({ layout: "dashboard", middleware: "auth" });
 const { t } = useI18n();
 const route = useRoute();
 const examsStore = useExamsStore();
+const authStore = useAuthStore()
 const appStore = useAppStore();
 const slug = computed(() => route.params.slug as string);
+const { isCenterStudent, assignedExamSlug } = useVisibleCatalog();
 
 const { pending } = await useAsyncData(
   `exam-${slug.value}`,
@@ -320,6 +323,17 @@ const { pending } = await useAsyncData(
         ? examsStore.fetchCatalog()
         : Promise.resolve(),
     ]);
+
+    // Étudiant de centre : blocage si l'URL pointe vers un examen hors
+    // de son inscription — il ne doit même pas voir la structure d'un
+    // examen auquel il n'a pas droit.
+    if (
+      isCenterStudent.value &&
+      assignedExamSlug.value &&
+      slug.value !== assignedExamSlug.value
+    ) {
+      await navigateTo("/dashboard/examens");
+    }
   },
   { server: false, watch: [slug] },
 );
@@ -328,9 +342,13 @@ const exam = computed<ExamDetailResponse | null>(() => examsStore.currentExam);
 
 const sortedLevels = computed(() => {
   if (!exam.value?.levels) return [];
-  return [...exam.value.levels].sort(
-    (a, b) => a.display_order - b.display_order,
-  );
+  let levels = exam.value.levels;
+  // Étudiant de centre : n'affiche que son niveau assigné, même si
+  // l'examen en contient plusieurs (ex. Goethe B1 + B2 côte à côte).
+  if (isCenterStudent.value) {
+    levels = levels.filter((l) => l.id === authStore.targetLevelId);
+  }
+  return [...levels].sort((a, b) => a.display_order - b.display_order);
 });
 
 const totalSubjects = computed(
@@ -348,8 +366,12 @@ const hasAccess = (level: LevelWithSubjectsResponse): boolean => {
 };
 
 const isSubjectFree = (subject: any): boolean => {
-  return subject.subject_number <= 3
-}
+  // Aucune gratuité "aperçu" pour un étudiant de centre — verrouillé sur
+  // son niveau assigné, miroir exact de la règle backend
+  // (check_subject_access dans exam_access/service.py).
+  if (isCenterStudent.value) return false;
+  return subject.subject_number <= 3;
+};
 
 const goToSubject = (level: LevelWithSubjectsResponse, subject: any) => {
   if (!exam.value) return;

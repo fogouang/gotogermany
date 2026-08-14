@@ -195,5 +195,26 @@ export const useAdminCentersStore = defineStore("adminCenters", {
         };
       }
     },
+    async toggleCenterActive(centerId: string): Promise<{
+      success: boolean;
+      center?: CenterResponse;
+      error?: string;
+    }> {
+      this._ensureApiConfig();
+      try {
+        const center =
+          await CentersService.toggleCenterActiveApiV1CentersCenterIdToggleActivePatch(
+            centerId,
+          );
+        const index = this.centers.findIndex((c) => c.id === centerId);
+        if (index !== -1) this.centers[index] = center;
+        return { success: true, center };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur changement de statut",
+        };
+      }
+    },
   },
 });

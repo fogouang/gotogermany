@@ -19,6 +19,7 @@ from app.modules.users.schemas import (
     StudentProgressResponse,
     StudentDetailedProgressResponse,
     StudentQuickCreateRequest,
+    TeacherCreateRequest,
     UserAdminResponse,
     UserChangePasswordRequest,
     UserMeResponse,
@@ -85,6 +86,36 @@ async def list_secretaries(
 ):
     """Liste les secrétaires du centre du directeur connecté."""
     return await UserService(db).list_secretaries_for_director(current_director)
+
+@router.post("/teachers", response_model=UserAdminResponse, status_code=201)
+async def create_teacher(
+    data: TeacherCreateRequest,
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Le directeur ou la secrétaire créent un compte enseignant."""
+    return await UserService(db).create_teacher(data, staff)
+
+@router.get("/teachers", response_model=list[UserAdminResponse])
+async def list_teachers(
+    current_user: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Directeur : tout le centre. Secrétaire : sa succursale uniquement."""
+    service = UserService(db)
+    if current_user.role == UserRole.center_director:
+        return await service.list_teachers_for_director(current_user)
+    return await service.list_teachers_for_secretary(current_user)
+
+@router.patch("/teachers/{teacher_id}/toggle-active", response_model=UserAdminResponse)
+async def toggle_teacher_active(
+    teacher_id: UUID,
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Directeur ou secrétaire activent/désactivent un compte enseignant
+    (scope vérifié dans le service : centre entier vs succursale)."""
+    return await UserService(db).toggle_teacher_active(teacher_id, staff)
 
 @router.post("/students/quick", response_model=StudentResponse, status_code=201)
 async def create_student_quick(
