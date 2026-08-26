@@ -94,7 +94,7 @@
                 {{
                   student.access_expires_at
                     ? formatDate(student.access_expires_at)
-                    : "—"
+                    : "-"
                 }}
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-right">
@@ -154,7 +154,7 @@
       <div class="space-y-4">
         <p class="text-sm text-gray-500">
           Étudiant : <strong>{{ selectedStudent?.full_name }}</strong>
-          — solde actuel : <strong>{{ selectedStudent?.ai_credits }}</strong>
+          - solde actuel : <strong>{{ selectedStudent?.ai_credits }}</strong>
         </p>
         <div>
           <label class="text-sm font-medium text-gray-700 mb-1 block"
@@ -248,7 +248,7 @@ const allLevels = computed(() =>
 
 function levelLabel(targetLevelId: string | null) {
   if (!targetLevelId) return "—";
-  return allLevels.value.find((l) => l.value === targetLevelId)?.label ?? "—";
+  return allLevels.value.find((l) => l.value === targetLevelId)?.label ?? "-";
 }
 
 function formatDate(dateStr: string) {

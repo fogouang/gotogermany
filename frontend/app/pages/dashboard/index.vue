@@ -281,11 +281,6 @@ const examsStore = useExamsStore();
 const sessionStore = useSessionStore();
 const { visibleCatalog } = useVisibleCatalog();
 
-console.log("DEBUG branchId:", authStore.branchId);
-console.log("DEBUG targetLevelId:", authStore.targetLevelId);
-console.log("DEBUG user:", authStore.user);
-console.log("DEBUG visibleCatalog:", visibleCatalog.value);
-
 const sessionsLoading = ref(false);
 const recentSessions = ref<any[]>([]);
 
@@ -321,6 +316,7 @@ const providerText = (p: string) =>
   })[p?.toLowerCase()] ?? "text-gray-500";
 
 onMounted(async () => {
+  await authStore.fetchUser();
   if (examsStore.catalog.length === 0) await examsStore.fetchCatalog();
   sessionsLoading.value = true;
   const result = await sessionStore.getMySessions(0, 5);

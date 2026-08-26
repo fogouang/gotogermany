@@ -46,7 +46,7 @@
               </td>
               <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ row.total_sessions }}</td>
               <td class="px-4 py-3 whitespace-nowrap" :class="scoreClass(row.average_score)">
-                {{ row.average_score !== null ? row.average_score.toFixed(0) + '/100' : '—' }}
+                {{ row.average_score !== null ? row.average_score.toFixed(0) + '/100' : '-' }}
               </td>
               <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
                 {{ row.last_session_at ? formatDate(row.last_session_at) : 'Aucune session' }}

@@ -107,7 +107,7 @@
       >
         <div class="px-6 py-3 border-b border-line">
           <p class="text-xs font-bold text-ink-tertiary uppercase tracking-wide">
-            {{ t("start_deutsch.result.detail") }} — {{ moduleLabel(mod.slug) }}
+            {{ t("start_deutsch.result.detail") }} - {{ moduleLabel(mod.slug) }}
           </p>
         </div>
 
@@ -142,7 +142,7 @@
               </div>
               <div class="flex-1 min-w-0 text-sm">
                 <span class="text-ink-secondary">
-                  Q{{ answer.question_number }} — {{ t("start_deutsch.result.your_answer") }} :
+                  Q{{ answer.question_number }} - {{ t("start_deutsch.result.your_answer") }} :
                   <strong class="text-ink">{{ formatAnswer(answer.user_answer) }}</strong>
                 </span>
                 <span

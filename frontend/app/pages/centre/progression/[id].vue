@@ -249,7 +249,7 @@ function formatDate(dateStr: string) {
 }
 
 function nf(v: number | null, suffix = "") {
-  return v !== null && v !== undefined ? `${Math.round(v)}${suffix}` : "—";
+  return v !== null && v !== undefined ? `${Math.round(v)}${suffix}` : "-";
 }
 
 function scoreTone(score: number | null) {

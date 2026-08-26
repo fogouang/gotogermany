@@ -1,3 +1,4 @@
+//simulateur/index.vue
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -462,6 +463,17 @@ const providerTagClass = (p: string) =>
     telc: "bg-purple-100 text-purple-700",
     osd: "bg-orange-100 text-orange-700",
   })[p] ?? "bg-gray-100 text-gray-600";
+
+onMounted(async () => {
+  if (!examsStore.catalog.length) await examsStore.fetchCatalog();
+
+  if (!selectedProvider.value) {
+    const telc = availableProviders.value.find(
+      (p) => p.toLowerCase() === "telc",
+    );
+    selectedProvider.value = telc ?? availableProviders.value[0] ?? "";
+  }
+});
 
 const router = useRouter();
 </script>

@@ -1,3 +1,4 @@
+<!--sprechen/index.vue-->
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -304,8 +305,10 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
       continue;
 
     for (const subject of level.subjects ?? []) {
-      const sprechenModule = (subject.modules ?? []).find(
-        (m) => m.slug === "sprechen" || m.slug === "muendlicher_ausdruck",
+      const sprechenModule = (subject.modules ?? []).find((m) =>
+        ["sprechen", "muendlicher_ausdruck"].includes(
+          m.slug?.trim().toLowerCase(),
+        ),
       );
       if (!sprechenModule) continue;
 
@@ -416,5 +419,16 @@ const providerTagClass = (p: string) =>
 
 onMounted(async () => {
   if (!examsStore.catalog.length) await examsStore.fetchCatalog();
+
+  // Filtre par défaut sur TELC au montage — sans ça la liste de sujets
+  // reste vide tant que l'utilisateur n'a pas cliqué manuellement sur un
+  // badge provider (targetExamSlug ne se calcule qu'une fois
+  // selectedProvider renseigné).
+  if (!selectedProvider.value) {
+    const telc = availableProviders.value.find(
+      (p) => p.toLowerCase() === "telc",
+    );
+    selectedProvider.value = telc ?? availableProviders.value[0] ?? "";
+  }
 });
 </script>
