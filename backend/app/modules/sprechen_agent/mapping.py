@@ -51,12 +51,17 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
         behavior_note="Informal small talk. Ask simple personal questions (name, origin, hobbies).",
         min_turns=4,
     ),
-    "oral_monologue": SingleRoleBehavior(
-        role=AgentRole.SILENT_LISTENER,
-        agent_opens=False,
-        behavior_note='Do not interrupt. Minimal backchannel only ("Mhm", "Ja").',
-        min_turns=1,  # the student's whole presentation is genuinely one turn
-    ),
+    # "oral_monologue" is deliberately NOT listed here — a standalone
+    # monologue Teil (no kandidat split, not merged via ablauf_schema —
+    # both of those bypass _build_single_role_sequence entirely and
+    # never consult this table) is handled as its own special case
+    # right at the top of _build_single_role_sequence() instead, since
+    # it needs a 2-step sequence (presentation, then a follow-up
+    # question), not a single step. Every official structure verified
+    # so far (telc B2 Teil 1 "Präsentation", Goethe B1 Teil 2+3, Goethe
+    # B2 Teil 1 "Kurzvortrag") has the partner/examiner ask 1-2
+    # questions right after the presentation — there is no case where
+    # a real exam leaves a presentation completely unanswered.
     "oral_feedback": SingleRoleBehavior(
         role=AgentRole.EXAMINER,
         agent_opens=True,
@@ -126,6 +131,21 @@ def _extract_content_points(data: dict[str, Any]) -> list[str]:
         value = data.get(key)
         if value:
             return list(value)
+
+    # Goethe-style slide-by-slide presentation structure (each theme's
+    # "folien": [{"nummer":1,"titel":"...","konsigne":"..."}, ...]) —
+    # was previously dropped entirely (no key above matched), leaving
+    # the AI presenting Kandidat B with nothing but a bare title and no
+    # structure to follow. Each slide's own instruction becomes one
+    # content point, its title kept as a short label.
+    folien = data.get("folien")
+    if folien:
+        points = []
+        for i, slide in enumerate(folien):
+            label = slide.get("titel") or f"Folie {slide.get('nummer', i + 1)}"
+            points.append(f'{label}: {slide.get("konsigne", "")}')
+        return points
+
     hinweis = data.get("hinweis")
     return [hinweis] if hinweis else []
 
@@ -142,6 +162,12 @@ def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
             or teil_raw.get("diskussion_titel")
             or teil_raw.get("question")
         ),
+        # Free-text reading stimulus (telc B2 oral_interaction/
+        # oral_discussion "Diskussion" Teile: a full magazine article
+        # under "text") — previously silently dropped, reaching
+        # neither the agent's prompt nor the frontend prep screen,
+        # even though the real exam hands the student this exact text.
+        "text": teil_raw.get("text"),
     }
     for key in ("person_a", "person_b", "person1", "person2"):
         if key in teil_raw:
@@ -151,6 +177,37 @@ def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
         payload["themes"] = teil_raw["themes"]
 
     return payload
+
+
+def _resolve_stimulus_people(teil_raw: dict[str, Any]) -> list[dict[str, str]] | None:
+    """Normalizes the two-stimulus-person pattern used by oral_thema
+    (telc: person_a/person_b) and oral_meinungsaustausch (ÖSD:
+    person1/person2) into one provider-agnostic shape:
+    [{"name": ..., "opinion": ...}, {"name": ..., "opinion": ...}].
+
+    Exists so TeilConfig (and therefore the frontend preparation
+    screen) can show the actual reading stimulus — until now this data
+    only ever reached the agent's own prompt (prompt_builder.py's
+    _format_stimulus_people, kept separate and untouched), never the
+    student, even though the real exam hands the student this exact
+    text/card during the 20-min Vorbereitungszeit.
+    """
+    for first_key, second_key in (("person_a", "person_b"), ("person1", "person2")):
+        first, second = teil_raw.get(first_key), teil_raw.get(second_key)
+        if first and second:
+            return [
+                {
+                    "name": p.get("name", "?"),
+                    "opinion": p.get("meinung") or p.get("position") or "",
+                }
+                for p in (first, second)
+            ]
+    return None
+
+
+# Public alias — orchestrator.py needs this directly when populating
+# TeilConfig.stimulus_people for the frontend preparation screen.
+resolve_stimulus_people = _resolve_stimulus_people
 
 
 def _has_two_candidate_split(teil_raw: dict[str, Any]) -> bool:
@@ -184,6 +241,17 @@ def _build_default_alternating_sequence(teil_raw: dict[str, Any]) -> list[Sequen
     instead of trusting free-text parsing.
     """
     kandidat_b_data = teil_raw.get("kandidat_b", {})
+    if not isinstance(kandidat_b_data, dict):
+        # e.g. Goethe B2-style: kandidat_b is a LIST of alternative
+        # themes ([{"title":..., "leitpunkte":[...]}, ...]) rather than
+        # a dict keyed thema1/thema2 — _content_payload() below needs a
+        # dict and would crash otherwise (AttributeError: 'list' object
+        # has no attribute 'get'). This naive payload is only a
+        # placeholder anyway — orchestrator._finalize_presenter_steps()
+        # overwrites it right after with the properly resolved theme
+        # (orchestrator._resolve_presenter_content() handles the list
+        # shape explicitly), so an empty dict here is harmless.
+        kandidat_b_data = {}
 
     return [
         SequenceStep(
@@ -221,8 +289,37 @@ def _build_default_alternating_sequence(teil_raw: dict[str, Any]) -> list[Sequen
 
 def _build_single_role_sequence(teil_raw: dict[str, Any]) -> list[SequenceStep]:
     format_type = teil_raw.get("format_type", "")
+    duration_minutes = teil_raw.get("duration_minutes") or teil_raw.get("time_minutes") or 0
+
+    if format_type == "oral_monologue":
+        # A standalone monologue reaching this function is, by
+        # construction, neither part of a kandidat_a/kandidat_b split
+        # nor merged via ablauf_schema (both bypass this function
+        # entirely) — so it's a genuinely lone presentation, and every
+        # verified official structure (telc B2 Teil 1, Goethe B1
+        # Teil 2+3, Goethe B2 Teil 1) has the partner/examiner ask 1-2
+        # questions right after it. Two steps: presentation, then a
+        # real follow-up question — not the single silent-only step
+        # used before.
+        return [
+            SequenceStep(
+                order=1, role=AgentRole.SILENT_LISTENER, agent_opens=False,
+                content={
+                    "behavior_note": ROLE_DEFAULT_NOTES[AgentRole.SILENT_LISTENER],
+                    **_content_payload(teil_raw),
+                },
+                target_duration_seconds=(duration_minutes * 60) or None,
+                min_turns=1,  # the student's presentation is genuinely one turn
+            ),
+            SequenceStep(
+                order=2, role=AgentRole.EXAMINER, agent_opens=True,
+                content={"behavior_note": ROLE_DEFAULT_NOTES[AgentRole.EXAMINER]},
+                target_duration_seconds=45,
+                min_turns=2,  # agent's question, then the student's answer
+            ),
+        ]
+
     behavior = FORMAT_TYPE_BEHAVIOR.get(format_type, DEFAULT_BEHAVIOR)
-    duration_minutes = teil_raw.get("duration_minutes") or 0
 
     return [
         SequenceStep(

@@ -127,6 +127,73 @@
             {{ preparationInfo.instructions }}
           </p>
 
+          <!-- Sujet / scénario donné (telc oral_thema, Diskussion, etc.) —
+               anciennement calculé côté backend mais jamais montré à
+               l'étudiant pendant la préparation. -->
+          <div
+            v-if="preparationInfo.scenario"
+            class="bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-3"
+          >
+            <p
+              class="text-[11px] font-semibold text-indigo-200/80 uppercase tracking-wide mb-1"
+            >
+              {{ t("sprechen_subject.scenario_label") }}
+            </p>
+            <p class="text-sm text-white/85 leading-relaxed">
+              {{ preparationInfo.scenario }}
+            </p>
+          </div>
+
+          <!-- Les deux avis donnés (person_a/person_b, person1/person2) —
+               l'examen réel remet cette carte à l'étudiant pendant la
+               Vorbereitungszeit ; jusqu'ici elle n'atteignait que le
+               prompt de l'agent, jamais l'écran de préparation. -->
+          <div
+            v-if="preparationInfo.stimulus_people?.length"
+            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
+          >
+            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
+              <p
+                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
+              >
+                {{ t("sprechen_subject.stimulus_people_label") }}
+              </p>
+            </div>
+            <div class="divide-y divide-white/10">
+              <div
+                v-for="person in preparationInfo.stimulus_people"
+                :key="person.name"
+                class="px-4 py-3"
+              >
+                <p class="text-sm font-medium text-white/90">
+                  {{ person.name }}
+                </p>
+                <p class="text-xs text-white/60 italic mt-0.5">
+                  "{{ person.opinion }}"
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Texte de lecture donné (telc B2 "Diskussion") -->
+          <div
+            v-if="preparationInfo.stimulus_text"
+            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
+          >
+            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
+              <p
+                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
+              >
+                {{ t("sprechen_subject.reading_text_label") }}
+              </p>
+            </div>
+            <p
+              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-64 overflow-y-auto"
+            >
+              {{ preparationInfo.stimulus_text }}
+            </p>
+          </div>
+
           <ThemeChoicePanel
             v-if="preparationInfo.themes"
             :themes="preparationInfo.themes"
@@ -169,6 +236,21 @@
             <p class="text-sm text-white/60 text-center leading-relaxed">
               {{ t("sprechen_subject.preparation_no_limit") }}
             </p>
+            <span
+              v-if="preparationInfo.preparation_minutes > 0"
+              class="text-xs font-medium tabular-nums px-2.5 py-1 rounded-full border transition-colors"
+              :class="
+                prepTimerIsAlert
+                  ? 'bg-red-500/15 text-red-200 border-red-400/30 animate-pulse'
+                  : 'bg-white/5 text-white/40 border-white/10'
+              "
+            >
+              {{
+                t("sprechen_subject.prep_suggested_time_left", {
+                  time: prepCountdownLabel,
+                })
+              }}
+            </span>
             <Button
               :label="t('sprechen_subject.start_now')"
               class="w-full"
@@ -203,15 +285,78 @@
           </p>
 
           <span
-            class="inline-flex items-center self-start text-xs font-bold px-3 py-1 rounded-full bg-amber-400/10 text-amber-200 border border-amber-300/20"
+            class="inline-flex items-center self-start text-xs font-bold px-3 py-1 rounded-full border transition-colors"
+            :class="
+              teilTimerIsAlert
+                ? 'bg-red-500/15 text-red-200 border-red-400/30 animate-pulse'
+                : 'bg-amber-400/10 text-amber-200 border-amber-300/20'
+            "
           >
             <i class="pi pi-clock mr-1.5"></i>
-            {{
-              t("sprechen_subject.time_for_part", {
-                minutes: currentTeil.duration_minutes,
-              })
-            }}
+            {{ teilCountdownLabel }}
           </span>
+
+          <!-- Sujet / scénario donné — reste visible pendant toute la
+               session active, pas seulement pendant la préparation. -->
+          <div
+            v-if="currentTeil.scenario"
+            class="bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-3"
+          >
+            <p
+              class="text-[11px] font-semibold text-indigo-200/80 uppercase tracking-wide mb-1"
+            >
+              {{ t("sprechen_subject.scenario_label") }}
+            </p>
+            <p class="text-sm text-white/85 leading-relaxed">
+              {{ currentTeil.scenario }}
+            </p>
+          </div>
+
+          <div
+            v-if="currentTeil.stimulus_people?.length"
+            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
+          >
+            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
+              <p
+                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
+              >
+                {{ t("sprechen_subject.stimulus_people_label") }}
+              </p>
+            </div>
+            <div class="divide-y divide-white/10">
+              <div
+                v-for="person in currentTeil.stimulus_people"
+                :key="person.name"
+                class="px-4 py-3"
+              >
+                <p class="text-sm font-medium text-white/90">
+                  {{ person.name }}
+                </p>
+                <p class="text-xs text-white/60 italic mt-0.5">
+                  "{{ person.opinion }}"
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="currentTeil.stimulus_text"
+            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
+          >
+            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
+              <p
+                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
+              >
+                {{ t("sprechen_subject.reading_text_label") }}
+              </p>
+            </div>
+            <p
+              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-64 overflow-y-auto"
+            >
+              {{ currentTeil.stimulus_text }}
+            </p>
+          </div>
+
           <ThemeChoicePanel
             v-if="currentTeil.themes"
             :themes="currentTeil.themes"
@@ -721,9 +866,20 @@ const groupedTranscript = computed(() => {
   return groups;
 });
 
+// Seuil sous lequel un timer passe en état d'alerte (rouge, pulsant) —
+// pas pour couper quoi que ce soit côté backend (rien n'est imposé),
+// juste pour signaler visuellement au candidat qu'il doit conclure.
+const TIMER_ALERT_THRESHOLD_SECONDS = 30;
+
 // ── Décompte de préparation, purement côté client (le backend ne
 // pousse pas de tick — juste la durée totale une fois via
-// PreparationStartedEvent). Redémarre à chaque nouvelle préparation.
+// PreparationStartedEvent, avec un fallback à DEFAULT_PREPARATION_MINUTES
+// côté service.py si la donnée n'est pas renseignée). Redémarre à
+// chaque nouvelle préparation. prepSecondsElapsed reste l'affichage
+// principal ("sans limite" — la préparation n'est jamais coupée de
+// force) ; prepSecondsLeft/prepCountdownLabel alimentent un repère
+// secondaire discret, avec le même effet d'alerte que le timer du
+// Teil actif.
 const prepSecondsLeft = ref(0);
 const prepSecondsElapsed = ref(0);
 let prepIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -732,8 +888,10 @@ watch(preparationInfo, (info) => {
   if (prepIntervalId) clearInterval(prepIntervalId);
   if (!info) return;
   prepSecondsElapsed.value = 0;
+  prepSecondsLeft.value = (info.preparation_minutes || 0) * 60;
   prepIntervalId = setInterval(() => {
     prepSecondsElapsed.value += 1;
+    if (prepSecondsLeft.value > 0) prepSecondsLeft.value -= 1;
   }, 1000);
 });
 
@@ -753,6 +911,42 @@ const prepProgressDashArray = computed(() => {
   const fraction = total > 0 ? prepSecondsLeft.value / total : 0;
   return Math.round(fraction * 314);
 });
+const prepTimerIsAlert = computed(
+  () =>
+    prepSecondsLeft.value > 0 &&
+    prepSecondsLeft.value <= TIMER_ALERT_THRESHOLD_SECONDS,
+);
+
+// ── Compte à rebours du Teil actif — calé sur currentTeil.duration_minutes,
+// redémarre à chaque nouveau Teil (currentTeil est un shallowRef :
+// watch() se déclenche bien à chaque réaffectation de .value, même si
+// le contenu interne n'est pas rendu profondément réactif). Un Teil
+// enchaîne automatiquement sur le suivant côté backend (advance()
+// dans orchestrator.py) — ce timer n'a donc aucun pouvoir de blocage,
+// il sert uniquement à alerter le candidat qu'il doit conclure avant
+// la bascule automatique.
+const teilSecondsLeft = ref(0);
+let teilIntervalId: ReturnType<typeof setInterval> | null = null;
+
+watch(currentTeil, (teil) => {
+  if (teilIntervalId) clearInterval(teilIntervalId);
+  if (!teil) return;
+  teilSecondsLeft.value = (teil.duration_minutes || 0) * 60;
+  teilIntervalId = setInterval(() => {
+    if (teilSecondsLeft.value > 0) teilSecondsLeft.value -= 1;
+  }, 1000);
+});
+
+const teilCountdownLabel = computed(() => {
+  const m = Math.floor(teilSecondsLeft.value / 60);
+  const s = teilSecondsLeft.value % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+});
+const teilTimerIsAlert = computed(
+  () =>
+    teilSecondsLeft.value > 0 &&
+    teilSecondsLeft.value <= TIMER_ALERT_THRESHOLD_SECONDS,
+);
 
 // ── Étapes du modal de correction — purement décoratif/séquencé côté
 // client pendant l'attente du vrai appel de notation ; ne reflète pas
@@ -779,6 +973,15 @@ watch(status, (value) => {
   } else if (gradingIntervalId) {
     clearInterval(gradingIntervalId);
     gradingIntervalId = null;
+  }
+
+  // Le Teil actif ne quitte jamais "active" par une remise à null de
+  // currentTeil (voir useSprechenSession — session_ended ne le vide
+  // pas), donc watch(currentTeil, ...) seul ne suffit pas à arrêter le
+  // décompte une fois la session terminée/abandonnée.
+  if (value !== "active" && teilIntervalId) {
+    clearInterval(teilIntervalId);
+    teilIntervalId = null;
   }
 });
 
@@ -816,6 +1019,7 @@ onMounted(() => connect());
 onUnmounted(() => {
   disconnect();
   if (prepIntervalId) clearInterval(prepIntervalId);
+  if (teilIntervalId) clearInterval(teilIntervalId);
   if (gradingIntervalId) clearInterval(gradingIntervalId);
 });
 

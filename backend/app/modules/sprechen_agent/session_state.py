@@ -18,7 +18,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from . import schemas 
+from . import schemas
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@ class AgentRole(StrEnum):
 
 class SessionStatus(StrEnum):
     PENDING = "pending"
-    PREPARING = "preparing"        
+    PREPARING = "preparing"
     ACTIVE = "active"
     BETWEEN_SEGMENTS = "between_segments"
     AWAITING_GRADING = "awaiting_grading"
@@ -103,6 +103,17 @@ class TeilConfig(BaseModel):
     # choice — the frontend renders a flat content_points list in
     # that case, or a "choose a topic" panel when this is set.
     themes: dict[str, Any] | None = None
+    # The reading stimulus for Teile that present two given opinions
+    # to react to (telc oral_thema, ÖSD oral_meinungsaustausch) — the
+    # real exam hands the student this exact text during the
+    # Vorbereitungszeit, so it needs to reach the frontend prep
+    # screen, not just the agent's own prompt.
+    scenario: str | None = None
+    stimulus_people: list[dict[str, str]] | None = None
+    # Free-text reading stimulus (telc B2 "Diskussion" Teile: the full
+    # magazine article under raw "text") — same rationale as scenario/
+    # stimulus_people above.
+    stimulus_text: str | None = None
     sprachliche_mittel: list[str] = Field(default_factory=list)
     scoring_system: ScoringSystem
     scoring_criteria_raw: dict[str, Any] = Field(default_factory=dict)
@@ -206,17 +217,3 @@ class GradingResult(BaseModel):
     strengths: list[str] = Field(default_factory=list)
     improvement_areas: list[str] = Field(default_factory=list)
     graded_at: datetime = Field(default_factory=datetime.utcnow)
-    
-
-@staticmethod
-def to_teil_started_event(session: SessionState) -> schemas.TeilStartedEvent:
-    teil = session.current_teil()
-    return schemas.TeilStartedEvent(
-        session_id=session.session_id,
-        teil_number=teil.teil_number,
-        teil_name=teil.name,
-        instructions=teil.instructions,
-        content_points=teil.content_points,
-        duration_minutes=teil.duration_minutes,
-        preparation_minutes=teil.preparation_minutes,
-    )

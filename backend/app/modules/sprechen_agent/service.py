@@ -311,6 +311,9 @@ class SprechenAgentService:
             instructions=teil.instructions,
             content_points=teil.content_points,
             themes=teil.themes,
+            scenario=teil.scenario,
+            stimulus_people=teil.stimulus_people,
+            stimulus_text=teil.stimulus_text,
             preparation_minutes=teil.preparation_minutes or DEFAULT_PREPARATION_MINUTES,
         )
 
@@ -324,6 +327,9 @@ class SprechenAgentService:
             instructions=teil.instructions,
             content_points=teil.content_points,
             themes=teil.themes,
+            scenario=teil.scenario,
+            stimulus_people=teil.stimulus_people,
+            stimulus_text=teil.stimulus_text,
             duration_minutes=teil.duration_minutes,
             preparation_minutes=teil.preparation_minutes or DEFAULT_PREPARATION_MINUTES,
         )

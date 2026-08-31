@@ -74,6 +74,14 @@ class PreparationStartedEvent(BaseModel):
     instructions: str
     content_points: list[str]
     themes: dict[str, Any] | None = None
+    # The reading stimulus for Teile built around two given opinions
+    # (telc oral_thema, ÖSD oral_meinungsaustausch) — was previously
+    # only ever sent to the AI agent's own prompt, never shown to the
+    # student during prep even though the real exam hands them this
+    # exact text/card.
+    scenario: str | None = None
+    stimulus_people: list[dict[str, str]] | None = None
+    stimulus_text: str | None = None
     preparation_minutes: int
 
 
@@ -86,6 +94,9 @@ class TeilStartedEvent(BaseModel):
     instructions: str
     content_points: list[str]
     themes: dict[str, Any] | None = None
+    scenario: str | None = None
+    stimulus_people: list[dict[str, str]] | None = None
+    stimulus_text: str | None = None
     duration_minutes: int
     preparation_minutes: int = 0
 

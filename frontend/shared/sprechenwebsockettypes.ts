@@ -9,6 +9,7 @@
  */
 
 // ── Inbound: frontend -> backend (sent as WebSocket text frames) ──
+// ── Inbound: frontend -> backend (sent as WebSocket text frames) ──
 
 export interface AudioChunkMessage {
   type: 'audio_chunk';
@@ -47,6 +48,14 @@ export interface SessionReadyEvent {
   first_teil_name: string;
 }
 
+// One given stimulus person's opinion — telc oral_thema (person_a/
+// person_b) and ÖSD oral_meinungsaustausch (person1/person2) both
+// normalize to this shape backend-side (mapping.resolve_stimulus_people).
+export interface StimulusPerson {
+  name: string;
+  opinion: string;
+}
+
 export interface PreparationStartedEvent {
   type: 'preparation_started';
   session_id: string;
@@ -55,6 +64,14 @@ export interface PreparationStartedEvent {
   instructions: string;
   content_points: string[];
   themes: Record<string, ThemeOption> | null;
+  // The reading stimulus for Teile built around a scenario/two given
+  // opinions/a reading text (telc oral_thema, ÖSD oral_meinungsaustausch,
+  // telc B2 "Diskussion") — previously only ever reached the AI agent's
+  // own prompt, never shown to the student during prep even though the
+  // real exam hands them this exact text/card.
+  scenario: string | null;
+  stimulus_people: StimulusPerson[] | null;
+  stimulus_text: string | null;
   preparation_minutes: number;
 }
 
@@ -66,6 +83,9 @@ export interface TeilStartedEvent {
   instructions: string;
   content_points: string[];
   themes: Record<string, ThemeOption> | null;
+  scenario: string | null;
+  stimulus_people: StimulusPerson[] | null;
+  stimulus_text: string | null;
   duration_minutes: number;
   preparation_minutes: number;
 }

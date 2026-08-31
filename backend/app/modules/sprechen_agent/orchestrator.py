@@ -46,10 +46,12 @@ DEFAULT_SCORING_SYSTEM = ScoringSystem.CONTINUOUS
 # Presenter theme resolution — the provider-shape-specific part
 # ---------------------------------------------------------------------------
 
-def _resolve_presenter_content(kandidat_b_raw: dict[str, Any]) -> dict[str, Any]:
-    """kandidat_b's raw data comes in at least 3 shapes across the
+def _resolve_presenter_content(kandidat_b_raw: dict[str, Any] | list[Any]) -> dict[str, Any]:
+    """kandidat_b's raw data comes in at least 4 shapes across the
     samples we've seen:
-      - Goethe B2: {"thema1": {...}, "thema2": {...}}  -> pick one
+      - Goethe B1: {"thema1": {...}, "thema2": {...}}   -> pick one
+      - Goethe B2: [{"title": ..., "leitpunkte": [...]}, {...}]
+                                                          -> pick one (LIST, not dict)
       - ÖSD B2:    {"bilder": [{...}, {...}, {...}]}    -> pick one image
       - Flat:      {"title": ..., "leitpunkte": [...]}  -> use directly
 
@@ -57,6 +59,13 @@ def _resolve_presenter_content(kandidat_b_raw: dict[str, Any]) -> dict[str, Any]
     sessions reproducible for debugging/support without needing to
     replay exact randomness.
     """
+    if isinstance(kandidat_b_raw, list):
+        # Goethe B2-style: a list of alternative themes rather than a
+        # dict keyed thema1/thema2. Once we pick one, it's the same
+        # flat {"title":..., "leitpunkte":[...]} shape as the "already
+        # flat" branch below, so just fall through to it.
+        kandidat_b_raw = kandidat_b_raw[0] if kandidat_b_raw else {}
+
     theme_keys = sorted(k for k in kandidat_b_raw if k.startswith("thema"))
     if theme_keys:
         chosen = kandidat_b_raw[theme_keys[0]]
@@ -148,8 +157,16 @@ def _resolve_sprachliche_mittel(teil_raw: dict[str, Any], subject_raw: dict[str,
 # schema text itself, which stays fragile free text for humans to read.
 # ---------------------------------------------------------------------------
 
+def _teil_minutes(teil_raw: dict[str, Any]) -> int:
+    # Mirrors the fallback build_teil_configs() already applies to
+    # every non-merged Teil — most subjects use "time_minutes", not
+    # "duration_minutes". The merge below previously read only
+    # "duration_minutes" and silently produced 0.
+    return teil_raw.get("duration_minutes") or teil_raw.get("time_minutes") or 0
+
+
 def _merge_monologue_feedback_pair(
-    monologue_teil: dict[str, Any], feedback_teil: dict[str, Any]
+    monologue_teil: dict[str, Any], feedback_teil: dict[str, Any], subject_raw: dict[str, Any]
 ) -> dict[str, Any]:
     """Combines the two source Teile into one synthetic Teil carrying
     a kandidat_a/kandidat_b split, so mapping.py's existing alternating-
@@ -173,20 +190,46 @@ def _merge_monologue_feedback_pair(
         else:
             merged_scoring[key] = value
 
-    return {
+    # sprachliche_mittel: prefer whatever either source Teil carries
+    # inline. When NEITHER does (Goethe B1-style subjects keep it at
+    # subject level instead, under sprachliche_mittel_reference), pull
+    # and combine both merged-away Teil numbers' reference blocks
+    # directly here — _resolve_sprachliche_mittel()'s normal per-Teil
+    # lookup only ever matches a single teil_number by prefix, and this
+    # merged Teil represents two (e.g. "teil2_folien" + "teil3").
+    merged_sprachliche_mittel = (
+        monologue_teil.get("sprachliche_mittel") or feedback_teil.get("sprachliche_mittel")
+    )
+    if not merged_sprachliche_mittel:
+        reference = subject_raw.get("sprachliche_mittel_reference") or {}
+        combined: list[str] = []
+        for number in (monologue_teil.get("teil_number"), feedback_teil.get("teil_number")):
+            for key, value in reference.items():
+                if key.startswith(f"teil{number}"):
+                    combined.extend(_flatten_sprachliche_mittel(value))
+        merged_sprachliche_mittel = combined or None
+
+    merged: dict[str, Any] = {
         "teil_number": monologue_teil["teil_number"],
         "name": f'{monologue_teil.get("name", "")} + {feedback_teil.get("name", "")}',
         "format_type": monologue_teil.get("format_type", "oral_monologue"),
         "instructions": monologue_teil.get("instructions", ""),
-        "duration_minutes": (monologue_teil.get("duration_minutes") or 0)
-        + (feedback_teil.get("duration_minutes") or 0),
+        "duration_minutes": _teil_minutes(monologue_teil) + _teil_minutes(feedback_teil),
         "max_score": (monologue_teil.get("max_score") or 0) + (feedback_teil.get("max_score") or 0),
         "themes": themes,
         "kandidat_a": {},  # presence alone is enough to trigger mapping.py's alternating detector
         "kandidat_b": kandidat_b,
         "scoring_criteria": merged_scoring,
-        "sprachliche_mittel": monologue_teil.get("sprachliche_mittel") or feedback_teil.get("sprachliche_mittel"),
     }
+    # Only set the key when there's something real to put there —
+    # leaving it absent (rather than None) lets _resolve_sprachliche_mittel()
+    # correctly detect "this Teil has no inline sprachliche_mittel" in
+    # case this merge logic itself ever needs revisiting; here we've
+    # already done the combining above, so this is just the write-out.
+    if merged_sprachliche_mittel:
+        merged["sprachliche_mittel"] = merged_sprachliche_mittel
+
+    return merged
 
 
 def _merge_alternating_teil_pairs(
@@ -209,7 +252,7 @@ def _merge_alternating_teil_pairs(
         )
 
         if is_mergeable_pair:
-            merged.append(_merge_monologue_feedback_pair(current, nxt))
+            merged.append(_merge_monologue_feedback_pair(current, nxt, subject_raw))
             i += 2
         else:
             merged.append(current)
@@ -240,6 +283,16 @@ def _resolve_available_themes(teil_raw: dict[str, Any]) -> dict[str, Any] | None
     if isinstance(kandidat_a, dict) and any(k.startswith("thema") for k in kandidat_a):
         return kandidat_a
 
+    if isinstance(kandidat_a, list) and kandidat_a:
+        # Goethe B2-style: kandidat_a is a list of alternative themes
+        # ([{"title":..., "leitpunkte":[...]}, ...]) instead of a dict
+        # keyed thema1/thema2. Without this the student's own two
+        # theme choices never reached the frontend "choose a topic"
+        # panel at all (isinstance(..., dict) was False, so this whole
+        # branch was skipped and None was returned). Normalize to the
+        # same thema1/thema2-keyed shape the frontend already expects.
+        return {f"thema{i + 1}": theme for i, theme in enumerate(kandidat_a)}
+
     return None
 
 
@@ -252,6 +305,15 @@ def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilC
         sequence = mapping.build_sequence(teil_raw)
         sequence = _finalize_presenter_steps(sequence, teil_raw)
 
+        # scenario/stimulus_people: same normalization mapping.py
+        # already applies when building the agent's own prompt content
+        # (mapping.content_payload), just also surfaced here so the
+        # frontend preparation screen can show it to the student. For
+        # two-candidate alternating Teile this is naturally None/empty
+        # (teil_raw itself carries no scenario/person_a at top level
+        # in that shape) — harmless, nothing to show there.
+        content = mapping.content_payload(teil_raw)
+
         configs.append(
             TeilConfig(
                 teil_number=teil_raw.get("teil_number", len(configs) + 1),
@@ -262,6 +324,9 @@ def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilC
                 preparation_minutes=teil_raw.get("preparation_minutes", 0) or 0,
                 content_points=mapping.extract_content_points(teil_raw),
                 themes=_resolve_available_themes(teil_raw),
+                scenario=content.get("scenario"),
+                stimulus_people=mapping.resolve_stimulus_people(teil_raw),
+                stimulus_text=content.get("text"),
                 sprachliche_mittel=_resolve_sprachliche_mittel(teil_raw, subject_raw),
                 scoring_system=scoring_system,
                 scoring_criteria_raw=teil_raw.get("scoring_criteria", {}),

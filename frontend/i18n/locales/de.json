@@ -860,7 +860,11 @@
     "criterion_tip_label": "Tipp",
     "connecting": "Verbindung wird hergestellt…",
     "preparation_no_limit": "Nimm dir die Zeit, die du brauchst - klicke auf Beginnen, wenn du bereit bist.",
-    "choose_a_topic": "Wähle ein Thema"
+    "choose_a_topic": "Wähle ein Thema",
+     "scenario_label": "Thema",
+    "stimulus_people_label": "Gegebene Meinungen",
+    "reading_text_label": "Lesetext",
+    "prep_suggested_time_left": "Empfohlene Restzeit: {time}"
   },
   "referrals": {
     "page_title": "Empfehlungen",

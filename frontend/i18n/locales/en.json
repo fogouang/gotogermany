@@ -861,7 +861,11 @@
     "criterion_tip_label": "Tip",
     "connecting": "Connecting…",
     "preparation_no_limit": "Take as long as you need - click Start when you're ready.",
-    "choose_a_topic": "Choose a topic"
+    "choose_a_topic": "Choose a topic",
+    "scenario_label": "Topic",
+    "stimulus_people_label": "Given opinions",
+    "reading_text_label": "Reading text",
+    "prep_suggested_time_left": "Suggested time left: {time}"
   },
   "referrals": {
     "page_title": "Referrals",

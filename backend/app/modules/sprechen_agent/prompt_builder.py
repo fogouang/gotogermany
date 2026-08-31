@@ -97,6 +97,26 @@ def build_system_prompt(session: SessionState, *, exam_name: str = "") -> str:
     content_points = step.content.get("content_points") or teil.content_points
     scenario_or_title = step.content.get("title") or step.content.get("scenario")
     stimulus_people = _format_stimulus_people(step.content)
+    # telc B2 "Diskussion"-style reading stimulus (the full article
+    # under raw "text") — previously never reached this prompt at all.
+    stimulus_text = step.content.get("text") or teil.stimulus_text
+
+    # Pre-computed instead of inlined in the f-string below: a
+    # backslash (\n) can't appear inside an f-string's {...} expression
+    # part on Python < 3.12 (PEP 701 lifts this in 3.12+) — inlining it
+    # was a SyntaxError on any pre-3.12 interpreter.
+    scenario_line = f"Topic/scenario: {scenario_or_title}" if scenario_or_title else ""
+    stimulus_people_line = (
+        f"Two given viewpoints to report and react to:\n{stimulus_people}"
+        if stimulus_people
+        else ""
+    )
+    stimulus_text_block = (
+        f"Reading stimulus text (the student was also given this to read "
+        f"during preparation — refer to it naturally, don't just recite it):\n{stimulus_text}"
+        if stimulus_text
+        else ""
+    )
 
     recap = _format_transcript_recap(
         [e for e in session.transcript if e.teil_number == teil.teil_number]
@@ -124,8 +144,9 @@ above it, even if the correct answer would use more advanced grammar.
 
 SUBJECT CONTEXT:
 {instructions}
-{f"Topic/scenario: {scenario_or_title}" if scenario_or_title else ""}
-{f"Two given viewpoints to report and react to:\n{stimulus_people}" if stimulus_people else ""}
+{scenario_line}
+{stimulus_people_line}
+{stimulus_text_block}
 
 CONTENT POINTS TO COVER OR ADDRESS:
 {_format_content_points(content_points)}
