@@ -58,6 +58,8 @@ OPENAI_MODEL = "gpt-realtime-2.1"
 
 DEFAULT_HANDSHAKE_TIMEOUT_SECONDS = 5.0
 HEALTH_CHECK_TIMEOUT_SECONDS = 2.0
+LIVE_SEGMENT_CONNECT_ATTEMPTS = 3
+LIVE_SEGMENT_RETRY_BACKOFF_SECONDS = 1.5
 
 # Both providers expect raw PCM16 audio; only the sample rate differs.
 GEMINI_INPUT_SAMPLE_RATE = 16000
@@ -326,27 +328,61 @@ async def _gemini_reachable(api_key: str, timeout_seconds: float = HEALTH_CHECK_
         return False
 
 
-async def open_segment(
+async def _open_segment_once(
     system_prompt: str,
     *,
     gemini_api_key: str,
     openai_api_key: str,
-    preferred_provider: str = "gemini",
+    preferred_provider: str,
 ) -> LiveSegment:
+    """Une seule tentative : Gemini d'abord (après health check), puis
+    OpenAI en secours si Gemini échoue ET qu'une clé de secours est
+    configurée. Lève LiveConnectionError si rien n'a marché — c'est
+    open_segment() ci-dessous qui gère les nouvelles tentatives."""
     gemini_error: Exception | None = None
 
     if preferred_provider == "gemini" and await _gemini_reachable(gemini_api_key):
         try:
             return await GeminiLiveSegment.open(system_prompt, api_key=gemini_api_key)
         except LiveConnectionError as exc:
-            gemini_error = exc  # fall through to OpenAI below, if configured
+            gemini_error = exc
 
     if not openai_api_key:
-        # No OpenAI fallback configured — surface the real Gemini
-        # failure instead of a confusing "invalid_api_key: ''" from a
-        # provider we never intended to use.
         raise gemini_error or LiveConnectionError(
             "Gemini Live unreachable and no OpenAI fallback key configured."
         )
 
     return await OpenAIRealtimeSegment.open(system_prompt, api_key=openai_api_key)
+
+
+async def open_segment(
+    system_prompt: str,
+    *,
+    gemini_api_key: str,
+    openai_api_key: str,
+    preferred_provider: str = "gemini",
+    max_attempts: int = LIVE_SEGMENT_CONNECT_ATTEMPTS,
+) -> LiveSegment:
+    """Ouvre un segment Live, en retentant avec un court backoff avant
+    d'abandonner. Un simple accroc réseau de quelques secondes se
+    résout maintenant tout seul ici, au lieu de terminer la session.
+    Seule une connexion toujours down après toutes les tentatives lève
+    LiveConnectionError — que router.py intercepte pour terminer
+    proprement la session au lieu de planter."""
+    last_error: Exception | None = None
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return await _open_segment_once(
+                system_prompt,
+                gemini_api_key=gemini_api_key,
+                openai_api_key=openai_api_key,
+                preferred_provider=preferred_provider,
+            )
+        except LiveConnectionError as exc:
+            last_error = exc
+            if attempt < max_attempts:
+                await asyncio.sleep(LIVE_SEGMENT_RETRY_BACKOFF_SECONDS * attempt)
+
+    assert last_error is not None
+    raise last_error

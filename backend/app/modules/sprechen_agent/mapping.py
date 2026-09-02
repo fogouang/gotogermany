@@ -22,6 +22,27 @@ from .session_state import AgentRole, SequenceStep
 # shortened vs. the official 3-4 min to keep the Live segment cheap).
 AI_PRESENTER_TARGET_SECONDS = 120
 
+# Cap for the STUDENT's own monologue in the standalone oral_monologue
+# case (_build_single_role_sequence, no kandidat split). Based on telc
+# B2 Teil 1's explicit official instruction ("...präsentieren, max.
+# 90 Sekunden"): before this constant existed, the presentation step's
+# target_duration_seconds was the Teil's FULL duration_minutes (e.g.
+# 300s for telc B2 Teil 1) — harmless before the is_step_complete()
+# time floor existed, but once that floor shipped it meant the student
+# would effectively be held to a ~5 min monologue before follow-up
+# questions could start, contradicting the official 90s cap.
+# CONFIRMED (Goethe/ÖSD calibration pass) this constant does NOT apply
+# to Goethe B1 Teil 2+3 (merged via orchestrator._merge_monologue_
+# feedback_pair -> a synthetic kandidat_a/kandidat_b split, which
+# routes through _build_default_alternating_sequence() instead — see
+# that function) nor Goethe B2 Teil 1 (real kandidat_a/kandidat_b
+# split, same route). Both already use AI_PRESENTER_TARGET_SECONDS/the
+# fixed 45s examiner steps below, independent of duration_minutes, and
+# needed no change. So far the only confirmed user of this constant is
+# telc B2 Teil 1 — a genuinely standalone oral_monologue Teil with
+# neither a kandidat split nor an ablauf_schema-driven merge.
+STUDENT_MONOLOGUE_TARGET_SECONDS = 90
+
 
 @dataclass(frozen=True)
 class SingleRoleBehavior:
@@ -42,8 +63,18 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
     "oral_interaction": SingleRoleBehavior(
         role=AgentRole.PARTNER,
         agent_opens=True,
-        behavior_note="Propose, negotiate, and react to the student's ideas. Never correct explicitly.",
-        min_turns=4,  # at least 2 full exchanges — free-flowing planning dialogue
+        behavior_note=(
+            "You are planning this together as an equal partner, not a passive listener. "
+            "Actively propose your own concrete ideas — don't just wait for the student to "
+            "suggest everything, and don't simply agree with every proposal. Raise at least "
+            "one genuine objection or practical complication to something the student "
+            "proposes during the conversation, then negotiate toward a compromise — a "
+            "friction-free negotiation gives the student nothing real to respond to. Steer "
+            "the conversation so every content point listed below actually gets discussed, "
+            "especially if time is running out and some are still untouched. Never correct "
+            "the student's German explicitly."
+        ),
+        min_turns=4,
     ),
     "oral_kennenlernen": SingleRoleBehavior(
         role=AgentRole.PARTNER,
@@ -71,13 +102,27 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
     "oral_discussion": SingleRoleBehavior(
         role=AgentRole.PARTNER,
         agent_opens=True,
-        behavior_note="Take a genuine position and argue it honestly, without being complacent.",
+        behavior_note=(
+            "Take a genuine, consistent position on the topic and defend it with real "
+            "reasons — don't just agree with whatever the student says. Challenge at least "
+            "one of their arguments with a counter-argument or a follow-up question that "
+            "pushes them to justify it further, and bring in at least one angle they "
+            "haven't raised yet. Never correct the student's German explicitly — engage "
+            "with the substance of what they say, not its form."
+        ),
         min_turns=4,
     ),
-    "oral_meinungsaustausch": SingleRoleBehavior(
+   "oral_meinungsaustausch": SingleRoleBehavior(
         role=AgentRole.ASSIGNED_POSITION,
         agent_opens=True,
-        behavior_note="Defend the assigned position from the subject data, even if it isn't your own genuine opinion.",
+        behavior_note=(
+            "Defend the assigned position from the subject data, even if it isn't your own "
+            "genuine opinion — commit to it fully. Challenge the student's counter-arguments "
+            "rather than conceding early, and introduce at least one argument of your own "
+            "beyond what's already implied by the assigned position, so the exchange "
+            "doesn't stall into quick agreement. Never correct the student's German "
+            "explicitly."
+        ),
         min_turns=4,
     ),
     "bildbeschreibung": SingleRoleBehavior(
@@ -308,7 +353,10 @@ def _build_single_role_sequence(teil_raw: dict[str, Any]) -> list[SequenceStep]:
                     "behavior_note": ROLE_DEFAULT_NOTES[AgentRole.SILENT_LISTENER],
                     **_content_payload(teil_raw),
                 },
-                target_duration_seconds=(duration_minutes * 60) or None,
+                # Capped to the official presentation-length rule, NOT the
+                # Teil's full duration_minutes — see STUDENT_MONOLOGUE_
+                # TARGET_SECONDS above for why.
+                target_duration_seconds=STUDENT_MONOLOGUE_TARGET_SECONDS,
                 min_turns=1,  # the student's presentation is genuinely one turn
             ),
             SequenceStep(

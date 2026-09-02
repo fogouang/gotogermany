@@ -125,7 +125,6 @@ class _SessionEnded(Exception):
 class _LiveProviderError(Exception):
     pass
 
-
 # ---------------------------------------------------------------------------
 # Connection context
 # ---------------------------------------------------------------------------
@@ -166,10 +165,9 @@ def _transcript_event(session_id: UUID, speaker: str, text: str):
 
 
 async def _open_first_segment_of_teil(ctx: _ConnectionContext) -> None:
-    """Shared by the initial connection and by advance_and_reopen()
-    when a Teil transition leads into ACTIVE without needing a prep
-    wait (preparation_minutes == 0). Opens the Live segment, tells the
-    frontend the Teil has started, signals whose turn it is."""
+    """Called by _enter_preparation_phase() once the student signals
+    ready. Opens the Live segment, tells the frontend the Teil has
+    started, signals whose turn it is."""
     ctx.segment = await ctx.service.begin_live_segment(
         ctx.session, gemini_api_key=ctx.keys.gemini, openai_api_key=ctx.keys.openai
     )
@@ -263,12 +261,15 @@ async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
             elif event.type == "error":
                 raise _LiveProviderError(event.error_message or "unknown Live provider error")
 
-        transition, new_segment = await ctx.service.advance_and_reopen(
-            ctx.session, gemini_api_key=ctx.keys.gemini, openai_api_key=ctx.keys.openai
-        )
-        await ctx.segment.close()
+        # Fast, I/O-free: figures out whether the sequence advances and
+        # updates session state accordingly. Split out specifically so
+        # the role signal below can fire BEFORE the slow Live segment
+        # reconnect, not after — see resolve_step_transition()'s
+        # docstring for why this fixes the "trou de silence" bug.
+        transition = await ctx.service.resolve_step_transition(ctx.session)
 
         if transition.session_ended:
+            await ctx.segment.close()
             response = await ctx.service.finalize_session(
                 ctx.session, anthropic_api_key=ctx.keys.anthropic
             )
@@ -281,19 +282,29 @@ async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
             await ctx.websocket.close(code=1000)
             raise _SessionEnded()
 
-        if new_segment is None:
-            # advance_and_reopen() put the session into PREPARING for
-            # the new Teil instead of opening a segment — wait for the
-            # student, same as the very first Teil.
+        if transition.teil_changed:
+            # New Teil: goes through a preparation phase instead of a
+            # segment reconnect — _enter_preparation_phase() already
+            # sends PreparationStartedEvent immediately, so there's no
+            # silence gap to fix on this path.
+            await ctx.segment.close()
             ctx.segment = None
             await _enter_preparation_phase(ctx)
             continue
 
-        ctx.segment = new_segment
-
-        if transition.teil_changed:
-            await _send_event(ctx.websocket, ctx.service.to_teil_started_event(ctx.session))
+        # Same Teil continues (same step or the next one in it). Whose
+        # turn is next is already fully determined by session state
+        # resolve_step_transition() just updated — signal it right now,
+        # before paying the reconnect latency, instead of waiting for
+        # open_segment_for_current_step() to finish like before.
         await _send_role_signal(ctx)
+
+        old_segment = ctx.segment
+        new_segment = await ctx.service.open_segment_for_current_step(
+            ctx.session, gemini_api_key=ctx.keys.gemini, openai_api_key=ctx.keys.openai
+        )
+        await old_segment.close()
+        ctx.segment = new_segment
 
 
 # ---------------------------------------------------------------------------
@@ -357,7 +368,37 @@ async def sprechen_session_ws(
             await ctx.websocket.close(code=1011, reason=str(eg.exceptions[0]))
         except Exception:  # noqa: BLE001
             pass
-
+    except* live_client.LiveConnectionError as eg:
+        # live_client.open_segment() already retries with backoff on a
+        # connect/handshake failure (see its own docstring) — reaching
+        # here means the Live provider stayed unreachable across every
+        # retry, not just a passing blip. Previously this exception was
+        # never caught here at all: it's a different class from
+        # _LiveProviderError above (that one only fires for an in-band
+        # error event during an already-open segment), so it propagated
+        # out of the TaskGroup unhandled and crashed the whole session —
+        # including mid-session, after the student may have already
+        # completed one or more Teile. Ends the session the same clean
+        # way a disconnect does, but tells the frontend explicitly (via
+        # reason="error", already part of the SessionEndedEvent
+        # contract) so it can show a real "connection lost" screen
+        # instead of just going silent.
+        await service.abandon_session(ctx.session, ctx.segment)
+        try:
+            await ctx.websocket.send_text(
+                json.dumps({
+                    "type": "session_ended",
+                    "session_id": str(ctx.session.session_id),
+                    "reason": "error",
+                })
+            )
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            await ctx.websocket.close(code=1011, reason=str(eg.exceptions[0]))
+        except Exception:  # noqa: BLE001
+            pass
+                
 # ---------------------------------------------------------------------------
 # History — unchanged
 # ---------------------------------------------------------------------------

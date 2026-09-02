@@ -388,17 +388,36 @@ def is_step_complete(session: SessionState) -> bool:
     """Whether the CURRENT step has had enough turns to actually move
     the sequence forward. False means: reopen a fresh Live segment for
     the same step (still needed for the cost/segmentation strategy)
-    without advancing current_step_index/current_teil_index."""
-    step = session.current_step()
-    if session.current_step_turn_count >= step.min_turns:
-        return True
+    without advancing current_step_index/current_teil_index.
 
-    if step.target_duration_seconds and session.current_step_started_at:
+    Bug fix: min_turns alone used to be sufficient — a step (and for
+    single-step Teile, the whole Teil) would advance the instant enough
+    turns happened, often in well under a minute of real conversation,
+    regardless of the "programmed" duration_minutes/target_duration_seconds
+    it was supposed to run for. There was a ceiling (STEP_TIME_SAFETY_
+    MULTIPLIER, below) but never a floor, so nothing ever held a step
+    open for its allotted time. Fixed by requiring BOTH conditions
+    below target_duration_seconds*SAFETY_MULTIPLIER: enough turns AND
+    enough elapsed time. Steps with no target_duration_seconds keep the
+    old turns-only behavior (nothing to hold against)."""
+    step = session.current_step()
+    turns_reached = session.current_step_turn_count >= step.min_turns
+
+    elapsed: float | None = None
+    if session.current_step_started_at:
         elapsed = (datetime.now(timezone.utc) - session.current_step_started_at).total_seconds()
+
+    if step.target_duration_seconds and elapsed is not None:
+        # Ceiling — unchanged: force-advance regardless of turns once a
+        # chatty exchange has run way past its budget.
         if elapsed >= step.target_duration_seconds * STEP_TIME_SAFETY_MULTIPLIER:
             return True
+        # Floor — new: don't let min_turns alone end the step before
+        # its own allotted time has actually passed.
+        if elapsed < step.target_duration_seconds:
+            return False
 
-    return False
+    return turns_reached
 
 
 @dataclass

@@ -236,21 +236,6 @@
             <p class="text-sm text-white/60 text-center leading-relaxed">
               {{ t("sprechen_subject.preparation_no_limit") }}
             </p>
-            <span
-              v-if="preparationInfo.preparation_minutes > 0"
-              class="text-xs font-medium tabular-nums px-2.5 py-1 rounded-full border transition-colors"
-              :class="
-                prepTimerIsAlert
-                  ? 'bg-red-500/15 text-red-200 border-red-400/30 animate-pulse'
-                  : 'bg-white/5 text-white/40 border-white/10'
-              "
-            >
-              {{
-                t("sprechen_subject.prep_suggested_time_left", {
-                  time: prepCountdownLabel,
-                })
-              }}
-            </span>
             <Button
               :label="t('sprechen_subject.start_now')"
               class="w-full"
@@ -888,12 +873,11 @@ watch(preparationInfo, (info) => {
   if (prepIntervalId) clearInterval(prepIntervalId);
   if (!info) return;
   prepSecondsElapsed.value = 0;
-  prepSecondsLeft.value = (info.preparation_minutes || 0) * 60;
   prepIntervalId = setInterval(() => {
     prepSecondsElapsed.value += 1;
-    if (prepSecondsLeft.value > 0) prepSecondsLeft.value -= 1;
   }, 1000);
 });
+
 
 const prepElapsedLabel = computed(() => {
   const m = Math.floor(prepSecondsElapsed.value / 60);

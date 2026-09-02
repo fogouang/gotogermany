@@ -125,54 +125,41 @@ class SprechenAgentService:
         orchestrator.record_turn(session, speaker=speaker, text=text)
         await _save_session(session)
 
-    async def advance_and_reopen(
-        self,
-        session: SessionState,
-        *,
-        gemini_api_key: str,
-        openai_api_key: str,
-    ) -> tuple[orchestrator.StepTransition, live_client.LiveSegment | None]:
-        """Called once a turn boundary is detected. A fresh Live
-        segment is opened every time regardless (cost/segmentation
-        strategy), but the SEQUENCE only advances once
-        orchestrator.is_step_complete() says this step has had enough
-        turns (min_turns).
+    async def resolve_step_transition(self, session: SessionState) -> orchestrator.StepTransition:
+        """Called once a turn boundary is detected. Fast and I/O-free —
+        just records the turn and, if orchestrator.is_step_complete()
+        says so, advances the sequence position. Mutates and saves
+        session, but never touches live_client (no network call).
 
-        Returns (transition, None) in two distinct cases the caller
-        must tell apart itself: session_ended (nothing more to do), or
-        teil_changed — every Teil change now enters a preparation phase
-        unconditionally (router.py must wait for ReadyToStartMessage
-        before calling begin_live_segment()), regardless of whether the
-        subject data has a real preparation_minutes value. See
-        to_preparation_started_event() for the fallback duration used
-        when the data doesn't specify one."""
+        Deliberately split out of what used to be one combined
+        advance_and_reopen() method, together with
+        open_segment_for_current_step() below. The old single method
+        opened the next Live segment (a real network round-trip, ~2-5s)
+        BEFORE returning anything the caller could tell the frontend —
+        so router.py had no way to signal whose turn was next until
+        that reconnect finished, leaving the student staring at a
+        silent screen not knowing if it was their turn yet ("trou de
+        silence"). Since is_agent_turn_next() only reads session state
+        this method already updates (current step, transcript) — never
+        the segment itself — router.py can now call this first, signal
+        the frontend immediately, and only then await the slow
+        reconnect via open_segment_for_current_step()."""
         orchestrator.record_step_turn(session)
 
         if not orchestrator.is_step_complete(session):
-            prompt = prompt_builder.build_system_prompt(session)
-            segment = await live_client.open_segment(
-                prompt, gemini_api_key=gemini_api_key, openai_api_key=openai_api_key
-            )
-            session.live_provider = segment.provider
-
-            if orchestrator.is_agent_turn_next(session):
-                await segment.trigger_agent_turn()
-
             await _save_session(session)
-
-            transition = orchestrator.StepTransition(
+            return orchestrator.StepTransition(
                 teil_changed=False,
                 session_ended=False,
                 requires_new_live_segment=True,
                 new_step=session.current_step(),
             )
-            return transition, segment
 
         transition = orchestrator.advance(session)
         await _save_session(session)
 
         if transition.session_ended:
-            return transition, None
+            return transition
 
         if transition.teil_changed:
             # Every Teil transition now goes through a preparation phase —
@@ -184,8 +171,27 @@ class SprechenAgentService:
             # practice.
             session.status = SessionStatus.PREPARING
             await _save_session(session)
-            return transition, None  # router.py sends PreparationStartedEvent and waits
 
+        return transition
+
+    async def open_segment_for_current_step(
+        self,
+        session: SessionState,
+        *,
+        gemini_api_key: str,
+        openai_api_key: str,
+    ) -> live_client.LiveSegment:
+        """The slow half of the old advance_and_reopen(): opens a fresh
+        Live segment for whatever step resolve_step_transition() just
+        left session pointing at (cost/segmentation strategy — every
+        step change gets its own segment, text transcript only, no
+        audio history carried over), and triggers the agent immediately
+        if it's their turn on the new segment.
+
+        Only ever called by router.py for the case resolve_step_
+        transition() left the session ACTIVE (not session_ended, not
+        teil_changed-into-PREPARING) — those two other cases don't open
+        a segment here at all."""
         prompt = prompt_builder.build_system_prompt(session)
         segment = await live_client.open_segment(
             prompt, gemini_api_key=gemini_api_key, openai_api_key=openai_api_key
@@ -196,8 +202,7 @@ class SprechenAgentService:
             await segment.trigger_agent_turn()
 
         await _save_session(session)
-
-        return transition, segment
+        return segment
 
     async def _get_previous_attempt_score(
         self, *, student_id: UUID, subject_id: UUID
