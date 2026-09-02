@@ -10,6 +10,7 @@ import type { CenterCreditPoolRechargeRequest } from '../models/CenterCreditPool
 import type { CenterCreditTransactionResponse } from '../models/CenterCreditTransactionResponse';
 import type { CenterDefaultCreditsUpdateRequest } from '../models/CenterDefaultCreditsUpdateRequest';
 import type { CenterLicenseActivateRequest } from '../models/CenterLicenseActivateRequest';
+import type { CenterLicenseDatesUpdateRequest } from '../models/CenterLicenseDatesUpdateRequest';
 import type { CenterLicenseExtendRequest } from '../models/CenterLicenseExtendRequest';
 import type { CenterLicenseResponse } from '../models/CenterLicenseResponse';
 import type { CenterPoolResponse } from '../models/CenterPoolResponse';
@@ -477,6 +478,64 @@ export class CentersService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/centers/{center_id}/license/extend',
+            path: {
+                'center_id': centerId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Center License
+     * Licence active du centre, ou null si aucune — admin ITIA. Sert à
+     * afficher les dates de début/fin dans le tableau de gestion des centres.
+     * @param centerId
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static getCenterLicenseApiV1CentersCenterIdLicenseGet(
+        centerId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<(CenterLicenseResponse | null)> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/centers/{center_id}/license',
+            path: {
+                'center_id': centerId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Update License Dates
+     * Ajuster manuellement les dates de début/fin de la licence active d'un
+     * centre — admin ITIA (ex: alignement sur un accord commercial négocié).
+     * @param centerId
+     * @param requestBody
+     * @param accessToken
+     * @returns CenterLicenseResponse Successful Response
+     * @throws ApiError
+     */
+    public static updateLicenseDatesApiV1CentersCenterIdLicenseDatesPatch(
+        centerId: string,
+        requestBody: CenterLicenseDatesUpdateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<CenterLicenseResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/centers/{center_id}/license/dates',
             path: {
                 'center_id': centerId,
             },

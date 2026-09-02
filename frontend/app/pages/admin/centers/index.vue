@@ -51,6 +51,12 @@
                       Pool crédits IA
                     </th>
                     <th class="text-left px-4 py-3 font-semibold text-gray-600">
+                      Début licence
+                    </th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-600">
+                      Fin licence
+                    </th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-600">
                       Statut
                     </th>
                     <th
@@ -62,7 +68,7 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="center in adminCenters.centers"
+                    v-for="center in paginatedCenters"
                     :key="center.id"
                     class="border-b border-gray-100 last:border-0"
                   >
@@ -92,6 +98,21 @@
                       <span class="text-xs text-gray-400 ml-1">
                         (défaut:
                         {{ center.default_credits_per_student }}/étudiant)
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {{ formatDate(adminCenters.licenses[center.id]?.start_date) }}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <span
+                        class="font-medium"
+                        :class="
+                          licenseEndDateClass(
+                            adminCenters.licenses[center.id]?.end_date,
+                          )
+                        "
+                      >
+                        {{ formatDate(adminCenters.licenses[center.id]?.end_date) }}
                       </span>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
@@ -137,6 +158,14 @@
                 </tbody>
               </table>
             </div>
+
+            <Paginator
+              v-model:first="centersFirst"
+              v-model:rows="centersRows"
+              :totalRecords="adminCenters.centers.length"
+              :rowsPerPageOptions="[10, 20, 50]"
+              class="border-t border-gray-200"
+            />
           </div>
         </TabPanel>
 
@@ -188,7 +217,7 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="formula in adminCenters.formulas"
+                  v-for="formula in paginatedFormulas"
                   :key="formula.id"
                   class="border-b border-gray-100 last:border-0"
                 >
@@ -210,6 +239,14 @@
                 </tr>
               </tbody>
             </table>
+
+            <Paginator
+              v-model:first="formulasFirst"
+              v-model:rows="formulasRows"
+              :totalRecords="adminCenters.formulas.length"
+              :rowsPerPageOptions="[10, 20, 50]"
+              class="border-t border-gray-200"
+            />
           </div>
         </TabPanel>
       </TabPanels>
@@ -332,8 +369,109 @@
           <p class="font-semibold text-gray-900">{{ selectedCenter.name }}</p>
         </div>
 
+        <!-- Période de licence : affichage + édition des dates de début/fin -->
+        <div v-if="loadingSelectedLicense" class="flex justify-center py-4">
+          <i class="pi pi-spin pi-spinner text-xl text-teal-600"></i>
+        </div>
+
+        <div
+          v-else-if="selectedLicense"
+          class="p-3 border border-gray-200 rounded-lg"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold text-gray-700">
+              Période de la licence
+            </p>
+            <Button
+              v-if="!editingLicenseDates"
+              label="Ajuster les dates"
+              icon="pi pi-pencil"
+              text
+              size="small"
+              @click="startEditLicenseDates"
+            />
+          </div>
+
+          <div v-if="!editingLicenseDates" class="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p class="text-xs text-gray-400">Début</p>
+              <p class="text-gray-900 font-medium">
+                {{ formatDate(selectedLicense.start_date) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Fin</p>
+              <p
+                class="font-medium"
+                :class="licenseEndDateClass(selectedLicense.end_date)"
+              >
+                {{ formatDate(selectedLicense.end_date) }}
+              </p>
+            </div>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-gray-700 mb-1 block"
+                  >Début</label
+                >
+                <DatePicker
+                  v-model="licenseDatesForm.start_date"
+                  dateFormat="dd/mm/yy"
+                  showIcon
+                  class="w-full"
+                />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-gray-700 mb-1 block"
+                  >Fin</label
+                >
+                <DatePicker
+                  v-model="licenseDatesForm.end_date"
+                  dateFormat="dd/mm/yy"
+                  showIcon
+                  class="w-full"
+                />
+              </div>
+            </div>
+
+            <Message
+              v-if="licenseDatesError"
+              severity="error"
+              :closable="false"
+              >{{ licenseDatesError }}</Message
+            >
+
+            <div class="flex justify-end gap-2">
+              <Button
+                label="Annuler"
+                text
+                size="small"
+                @click="cancelEditLicenseDates"
+              />
+              <Button
+                label="Enregistrer"
+                size="small"
+                :loading="savingLicenseDates"
+                @click="handleSaveLicenseDates"
+              />
+            </div>
+          </div>
+
+          <Message
+            v-if="licenseDatesSuccess"
+            severity="success"
+            :closable="false"
+            class="mt-2"
+            >{{ licenseDatesSuccess }}</Message
+          >
+        </div>
+
         <!-- Formulaire activation licence — masqué une fois activée avec succès -->
-        <template v-if="!licenseSuccess">
+        <template
+          v-if="!loadingSelectedLicense && !licenseSuccess && !selectedLicense"
+        >
           <div>
             <label class="text-sm font-medium text-gray-700 mb-1 block"
               >Formule</label
@@ -379,7 +517,7 @@
         </template>
 
         <!-- Bloc création directeur — apparaît après activation réussie -->
-        <template v-else>
+        <template v-if="licenseSuccess">
           <Message severity="success" :closable="false">{{
             licenseSuccess
           }}</Message>
@@ -454,13 +592,13 @@
       <template #footer>
         <Button label="Fermer" text @click="showLicenseDialog = false" />
         <Button
-          v-if="!licenseSuccess"
+          v-if="!loadingSelectedLicense && !licenseSuccess && !selectedLicense"
           label="Activer la licence"
           :loading="activatingLicense"
           @click="handleActivateLicense"
         />
         <Button
-          v-else-if="!directorSuccess"
+          v-else-if="licenseSuccess && !directorSuccess"
           label="Créer le directeur"
           icon="pi pi-user-plus"
           :loading="creatingDirector"
@@ -614,6 +752,55 @@ const loadingCenters = ref(true);
 const loadingFormulas = ref(true);
 const showDirectorDialog = ref(false);
 
+// ── Pagination (client) ──
+const centersFirst = ref(0);
+const centersRows = ref(10);
+const paginatedCenters = computed(() =>
+  adminCenters.centers.slice(centersFirst.value, centersFirst.value + centersRows.value),
+);
+
+const formulasFirst = ref(0);
+const formulasRows = ref(10);
+const paginatedFormulas = computed(() =>
+  adminCenters.formulas.slice(
+    formulasFirst.value,
+    formulasFirst.value + formulasRows.value,
+  ),
+);
+
+// ── Formatage des dates ──
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+}
+
+function licenseEndDateClass(dateStr: string | null | undefined): string {
+  if (!dateStr) return "text-gray-400";
+  const end = new Date(dateStr);
+  if (Number.isNaN(end.getTime())) return "text-gray-400";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor(
+    (end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  if (diffDays < 0) return "text-red-600";
+  if (diffDays <= 30) return "text-orange-500";
+  return "text-gray-900";
+}
+
+function toDateOnlyString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // ── Création centre ──
 const showCreateCenterDialog = ref(false);
 const creatingCenter = ref(false);
@@ -716,6 +903,11 @@ async function handleCreateCenter() {
   creatingCenter.value = false;
   if (result.success) {
     showCreateCenterDialog.value = false;
+    // Le nouveau centre est ajouté en fin de liste — on saute à la
+    // dernière page pour qu'il soit visible immédiatement.
+    centersFirst.value =
+      Math.floor((adminCenters.centers.length - 1) / centersRows.value) *
+      centersRows.value;
     toast.add({ severity: "success", summary: "Centre créé", life: 3000 });
   } else {
     centerFormError.value = result.error || "Erreur lors de la création.";
@@ -753,6 +945,11 @@ async function handleCreateFormula() {
   creatingFormula.value = false;
   if (result.success) {
     showCreateFormulaDialog.value = false;
+    // La nouvelle formule est ajoutée en fin de liste — on saute à la
+    // dernière page pour qu'elle soit visible immédiatement.
+    formulasFirst.value =
+      Math.floor((adminCenters.formulas.length - 1) / formulasRows.value) *
+      formulasRows.value;
     toast.add({ severity: "success", summary: "Formule créée", life: 3000 });
   } else {
     formulaFormError.value = result.error || "Erreur lors de la création.";
@@ -765,18 +962,28 @@ const activatingLicense = ref(false);
 const licenseFormError = ref<string | null>(null);
 const licenseSuccess = ref<string | null>(null);
 const selectedCenter = ref<CenterResponse | null>(null);
+const loadingSelectedLicense = ref(false);
 const licenseForm = ref({
   formula_id: "",
   payment_method: "" as PaymentMethod | "",
   payment_reference: "",
 });
 
+// Licence active du centre actuellement sélectionné — vient du store
+// (peuplé par fetchAllLicenses au montage, ou par fetchLicenseForCenter
+// à l'ouverture du dialog si elle n'a pas encore été chargée).
+const selectedLicense = computed(() =>
+  selectedCenter.value
+    ? adminCenters.licenses[selectedCenter.value.id] ?? null
+    : null,
+);
+
 const paymentMethodOptions = [
   { label: "Mobile Money", value: PaymentMethod.MOBILE_MONEY },
   { label: "Virement bancaire", value: PaymentMethod.BANK_TRANSFER },
 ];
 
-function openLicenseDialog(center: CenterResponse) {
+async function openLicenseDialog(center: CenterResponse) {
   selectedCenter.value = center;
   licenseForm.value = {
     formula_id: "",
@@ -788,7 +995,18 @@ function openLicenseDialog(center: CenterResponse) {
   directorForm.value = { full_name: "", email: "", phone: "", password: "" };
   directorFormError.value = null;
   directorSuccess.value = null;
+  editingLicenseDates.value = false;
+  licenseDatesError.value = null;
+  licenseDatesSuccess.value = null;
   showLicenseDialog.value = true;
+
+  // Si la licence de ce centre n'a pas encore été chargée (ex: dialog
+  // ouvert avant la fin de fetchAllLicenses), on la récupère ici.
+  if (!(center.id in adminCenters.licenses)) {
+    loadingSelectedLicense.value = true;
+    await adminCenters.fetchLicenseForCenter(center.id);
+    loadingSelectedLicense.value = false;
+  }
 }
 
 async function handleActivateLicense() {
@@ -811,8 +1029,71 @@ async function handleActivateLicense() {
   if (result.success) {
     licenseSuccess.value =
       "Licence activée avec succès. Vous pouvez maintenant créer le compte directeur.";
+    // result.license a déjà été enregistré dans adminCenters.licenses par
+    // l'action du store — selectedLicense (computed) se met à jour seul.
   } else {
     licenseFormError.value = result.error || "Erreur lors de l'activation.";
+  }
+}
+
+// ── Ajustement des dates de licence (début / fin) ──
+const editingLicenseDates = ref(false);
+const savingLicenseDates = ref(false);
+const licenseDatesError = ref<string | null>(null);
+const licenseDatesSuccess = ref<string | null>(null);
+const licenseDatesForm = ref<{ start_date: Date | null; end_date: Date | null }>({
+  start_date: null,
+  end_date: null,
+});
+
+function startEditLicenseDates() {
+  if (!selectedLicense.value) return;
+  licenseDatesForm.value = {
+    start_date: new Date(selectedLicense.value.start_date),
+    end_date: new Date(selectedLicense.value.end_date),
+  };
+  licenseDatesError.value = null;
+  licenseDatesSuccess.value = null;
+  editingLicenseDates.value = true;
+}
+
+function cancelEditLicenseDates() {
+  editingLicenseDates.value = false;
+  licenseDatesError.value = null;
+}
+
+async function handleSaveLicenseDates() {
+  if (!selectedCenter.value) return;
+  const { start_date, end_date } = licenseDatesForm.value;
+  if (!start_date || !end_date) {
+    licenseDatesError.value = "Les deux dates sont requises.";
+    return;
+  }
+  if (end_date <= start_date) {
+    licenseDatesError.value =
+      "La date de fin doit être postérieure à la date de début.";
+    return;
+  }
+
+  savingLicenseDates.value = true;
+  licenseDatesError.value = null;
+
+  const result = await adminCenters.updateLicenseDates(selectedCenter.value.id, {
+    start_date: toDateOnlyString(start_date),
+    end_date: toDateOnlyString(end_date),
+  });
+
+  savingLicenseDates.value = false;
+
+  if (result.success) {
+    licenseDatesSuccess.value = "Dates de licence mises à jour.";
+    editingLicenseDates.value = false;
+    // result.license a déjà été enregistré dans adminCenters.licenses par
+    // l'action du store — selectedLicense (computed) se met à jour seul,
+    // et donc aussi les colonnes Début/Fin du tableau.
+  } else {
+    licenseDatesError.value =
+      result.error || "Erreur lors de la mise à jour des dates.";
   }
 }
 
@@ -877,5 +1158,9 @@ onMounted(async () => {
   loadingFormulas.value = true;
   await adminCenters.fetchFormulas();
   loadingFormulas.value = false;
+
+  // Charge la licence active de chaque centre pour peupler les colonnes
+  // Début/Fin du tableau (en arrière-plan, sans bloquer l'affichage).
+  adminCenters.fetchAllLicenses();
 });
 </script>

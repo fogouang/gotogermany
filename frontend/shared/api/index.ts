@@ -38,6 +38,7 @@ export type { CenterCreditPoolRechargeRequest } from './models/CenterCreditPoolR
 export type { CenterCreditTransactionResponse } from './models/CenterCreditTransactionResponse';
 export type { CenterDefaultCreditsUpdateRequest } from './models/CenterDefaultCreditsUpdateRequest';
 export type { CenterLicenseActivateRequest } from './models/CenterLicenseActivateRequest';
+export type { CenterLicenseDatesUpdateRequest } from './models/CenterLicenseDatesUpdateRequest';
 export type { CenterLicenseExtendRequest } from './models/CenterLicenseExtendRequest';
 export type { CenterLicenseResponse } from './models/CenterLicenseResponse';
 export type { CenterPoolResponse } from './models/CenterPoolResponse';

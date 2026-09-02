@@ -18,6 +18,7 @@ from app.modules.centers.schemas import (
     LicenseFormulaResponse,
     CenterLicenseActivateRequest,
     CenterLicenseExtendRequest,
+    CenterLicenseDatesUpdateRequest,
     CenterLicenseResponse,
     LicenseUsageResponse,
     CenterCreditPoolRechargeRequest,
@@ -252,6 +253,29 @@ async def extend_license(
     return await CenterService(db).extend_license(center_id, data)
 
 
+@router.get("/{center_id}/license", response_model=CenterLicenseResponse | None)
+async def get_center_license(
+    center_id: UUID,
+    _: CurrentAdmin = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Licence active du centre, ou null si aucune — admin ITIA. Sert à
+    afficher les dates de début/fin dans le tableau de gestion des centres."""
+    return await CenterLicenseRepository(db).get_active_for_center(center_id)
+
+
+@router.patch("/{center_id}/license/dates", response_model=CenterLicenseResponse)
+async def update_license_dates(
+    center_id: UUID,
+    data: CenterLicenseDatesUpdateRequest,
+    _: CurrentAdmin = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Ajuster manuellement les dates de début/fin de la licence active d'un
+    centre — admin ITIA (ex: alignement sur un accord commercial négocié)."""
+    return await CenterService(db).update_license_dates(center_id, data)
+
+
 @router.get("/{center_id}/license/certificate")
 async def get_license_certificate_admin(
     center_id: UUID,
@@ -278,4 +302,3 @@ async def recharge_credit_pool(
     return await CenterService(db).recharge_pool(
         center_id, data.amount, current_admin, data.reason
     )
-    

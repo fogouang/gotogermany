@@ -145,3 +145,10 @@ class CenterPoolResponse(BaseSchema):
 
 class CenterUpdateRequest(BaseSchema):
     address: str | None = Field(default=None, max_length=255)
+    
+
+class CenterLicenseDatesUpdateRequest(BaseSchema):
+    """Ajustement manuel des dates de début/fin d'une licence active — admin ITIA
+    (ex: alignement sur un accord commercial négocié hors plateforme)."""
+    start_date: datetime
+    end_date: datetime

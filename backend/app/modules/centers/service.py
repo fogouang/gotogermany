@@ -21,6 +21,7 @@ from app.modules.centers.schemas import (
     LicenseFormulaCreateRequest,
     CenterLicenseActivateRequest,
     CenterLicenseExtendRequest,
+    CenterLicenseDatesUpdateRequest,
     LicenseUsageResponse,
 )
 from app.modules.users.models import User
@@ -112,6 +113,29 @@ class CenterService:
             # end_date inchangée — l'extension suit le prorata jusqu'à la licence existante
         )
 
+    async def update_license_dates(
+        self, center_id: UUID, data: CenterLicenseDatesUpdateRequest
+    ) -> CenterLicense:
+        """Ajustement manuel des dates de début/fin d'une licence active —
+        admin ITIA (ex: alignement sur un accord commercial négocié hors
+        plateforme). Ne recalcule pas max_students ni le statut : la
+        vérification d'expiration se fait déjà via end_date dans
+        check_quota_available."""
+        license_ = await self.license_repo.get_active_for_center(center_id)
+        if not license_:
+            raise BadRequestException(detail="Aucune licence active pour ce centre.")
+
+        if data.end_date <= data.start_date:
+            raise BadRequestException(
+                detail="La date de fin doit être postérieure à la date de début."
+            )
+
+        return await self.license_repo.update(
+            license_.id,
+            start_date=data.start_date,
+            end_date=data.end_date,
+        )
+
     # ── Directeur ─────────────────────────────
 
     async def get_usage_for_center(self, center_id: UUID) -> LicenseUsageResponse:
@@ -134,7 +158,7 @@ class CenterService:
 
             return LicenseUsageResponse(
                 license=license_,
-                formula_label=formula_label,          
+                formula_label=formula_label,
                 students_used=students_used,
                 students_remaining=max((license_.max_students - students_used), 0) if license_ else 0,
                 days_remaining=days_remaining,
@@ -156,17 +180,17 @@ class CenterService:
             raise BadRequestException(
                 detail="Quota d'étudiants atteint pour cette licence. Contactez votre direction pour une extension."
             )
-            
-    
+
+
     async def list_centers(self, skip: int = 0, limit: int = 100) -> list[Center]:
         return list(await self.center_repo.get_all(skip=skip, limit=limit))
 
     async def list_active_formulas(self) -> list[LicenseFormula]:
         return await self.formula_repo.get_active_formulas()
-    
+
     async def list_my_branches(self, center_id: UUID) -> list[Branch]:
         return await self.branch_repo.find_by_center(center_id)
-    
+
         # ── Pool de crédits IA ────────────────────
 
     async def recharge_pool(
@@ -252,7 +276,7 @@ class CenterService:
         """Vue d'audit restreinte — uniquement les actions de cette secrétaire."""
         transactions = await self.credit_txn_repo.find_by_performer(secretary.id)
         return [_to_transaction_response(t) for t in transactions]
-    
+
     async def update_my_center(self, center_id: UUID, data: CenterUpdateRequest) -> Center:
         """Le directeur renseigne l'adresse affichée sur les reçus PDF de son centre."""
         update_data = data.model_dump(exclude_unset=True, exclude_none=True)
@@ -263,13 +287,13 @@ class CenterService:
     async def update_my_logo(self, center_id: UUID, logo_path: str) -> Center:
         """Enregistre le chemin du logo uploadé — utilisé sur les reçus PDF."""
         return await self.center_repo.update(center_id, logo_path=logo_path)
-    
+
     async def toggle_active(self, center_id: UUID) -> Center:
         """Désactive/réactive un centre — admin ITIA uniquement. Ne supprime
         rien (succursales, licences, étudiants restent intacts)."""
         center = await self.center_repo.get_by_id_or_404(center_id)
         return await self.center_repo.update(center_id, is_active=not center.is_active)
-    
+
 def _to_transaction_response(txn: CenterCreditTransaction) -> CenterCreditTransactionResponse:
     return CenterCreditTransactionResponse(
         id=txn.id,
