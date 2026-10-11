@@ -13,7 +13,7 @@ Hiérarchie : Exam → Level → Subject → Module → Teil → Question
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import uuid
-from sqlalchemy import String, Boolean, Integer, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import String, Boolean, Integer, Text, ForeignKey, UniqueConstraint,false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
@@ -115,6 +115,10 @@ class Subject(Base, UUIDMixin, TimestampMixin):
     subject_number: Mapped[int] = mapped_column(Integer, nullable=False)
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+        # Privé = réservé à la banque des enseignants, jamais dans le catalogue étudiant
+    is_private: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false(), nullable=False, index=True
+    )
 
     # Relations
     level: Mapped["Level"] = relationship("Level", back_populates="subjects", lazy="noload")

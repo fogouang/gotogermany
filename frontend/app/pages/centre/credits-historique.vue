@@ -63,7 +63,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff",
 });
 
 import type { CenterCreditTransactionResponse } from "#shared/api";

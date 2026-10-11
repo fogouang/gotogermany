@@ -435,7 +435,7 @@
 <script setup lang="ts">
 import type { ExamCatalogResponse } from "#shared/api";
 
-definePageMeta({ layout: "admin", middleware: "admin" });
+definePageMeta({ layout: "admin" });
 
 const examsStore = useExamsStore();
 const toast = useToast();

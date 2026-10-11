@@ -216,7 +216,6 @@ import FreeAccessToggle from "~/components/admin/FreeAccessToggle.vue";
 
 definePageMeta({
   layout: "admin",
-  middleware: "admin",
 });
 
 const authStore = useAuthStore();

@@ -15,7 +15,6 @@ settings = get_settings()
 
 # Taux de commission de parrainage, en % du montant du paiement.
 # Constante globale pour l'instant — pas de taux par ambassadeur.
-REFERRAL_COMMISSION_RATE = 10.0
 
 
 class ReferralService:
@@ -58,12 +57,14 @@ class ReferralService:
         user.referred_by_user_id = referrer_id
         await self.db.flush()
 
+
     async def record_payment_earning(
         self, *, payment_id: uuid.UUID, payer_user_id: uuid.UUID, payment_amount: int
     ) -> None:
-        """Appelé après un paiement complété (automatique ou manuel).
-        Ne fait rien si le payeur n'a pas de parrain, ou si ce paiement
-        a déjà généré un gain (contrainte unique sur payment_id)."""
+        """Appelé après un paiement en ligne complété (ou manuel validé par l'admin).
+        La commission suit maintenant les règles paramétrables (module sales) et
+        alimente le solde de l'ambassadeur. ReferralEarning reste écrit pour le
+        tableau de bord ambassadeur existant."""
         payer = await self.db.get(User, payer_user_id)
         if payer is None or payer.referred_by_user_id is None:
             return
@@ -74,18 +75,22 @@ class ReferralService:
         if existing.scalar_one_or_none() is not None:
             return
 
-        amount = int(payment_amount * REFERRAL_COMMISSION_RATE / 100)
-        if amount <= 0:
+        from app.modules.sales.service import SalesService
+        sale = await SalesService(self.db).record_online_referral(
+            payment_id=payment_id, payer=payer, payment_amount=payment_amount
+        )
+        if sale is None:
             return
 
         earning = ReferralEarning(
             referrer_user_id=payer.referred_by_user_id,
             referred_user_id=payer_user_id,
             payment_id=payment_id,
-            amount=amount,
+            amount=sale.partner_share,
         )
         self.db.add(earning)
         await self.db.flush()
+        
 
     async def get_dashboard(self, ambassador_id: uuid.UUID) -> ReferralDashboardResponse:
         result = await self.db.execute(

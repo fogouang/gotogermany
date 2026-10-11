@@ -90,7 +90,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "secretary",
 });
 
 const centerStaffStore = useCenterStaffStore();

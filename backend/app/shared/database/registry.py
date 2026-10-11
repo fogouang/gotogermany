@@ -36,3 +36,5 @@ import app.modules.live_session.models   # noqa: F401  ← dépend de users + ex
 import app.modules.referrals.models      # noqa: F401  ← dépend de users + payments
 import app.modules.start_deutsch.models 
 import app.modules.training_sessions.models
+import app.modules.sales.models  # noqa: F401
+import app.modules.assignments.models  # noqa: F401

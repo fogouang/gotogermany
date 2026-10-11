@@ -499,7 +499,7 @@ import { useSimulatorStore } from "~/stores/simulator";
 import SprachlicheMittelPanel from "~/components/session/SprachlicheMittelPanel.vue";
 import { resolveMittelKey } from "#shared/sprachlicheMittel";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const route = useRoute();

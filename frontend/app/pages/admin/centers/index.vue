@@ -739,7 +739,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "admin", middleware: "admin" });
+definePageMeta({ layout: "admin" });
 
 import type { CenterResponse } from "#shared/api";
 import { PaymentMethod } from "#shared/api";

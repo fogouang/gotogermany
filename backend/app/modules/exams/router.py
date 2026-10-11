@@ -38,19 +38,23 @@ async def get_catalog(
 @router.get("/{exam_id}", response_model=ExamDetailResponse)
 async def get_exam_detail(
     exam_id: UUID,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    return await ExamService(db).get_detail(exam_id)
+    return await ExamService(db).get_detail(
+        exam_id, include_private=bool(current_user.is_admin)
+    )
 
 
 @router.get("/slug/{slug}", response_model=ExamDetailResponse)
 async def get_exam_by_slug(
     slug: str,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    return await ExamService(db).get_by_slug(slug)
+    return await ExamService(db).get_by_slug(
+        slug, include_private=bool(current_user.is_admin)
+    )
 
 
 # ── Admin — Exams CRUD ───────────────────────────────────

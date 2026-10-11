@@ -1,78 +1,112 @@
 <template>
-  <section class="relative pt-8 pb-10 overflow-hidden bg-card">
+  <section
+    class="relative overflow-hidden bg-canvas pt-10 pb-16 sm:pt-14 lg:pb-24"
+  >
+    <!-- Décor : grille discrète + halos -->
     <div
-      class="relative max-w-7xl mx-auto w-full px-6 flex flex-col items-center justify-between gap-12 md:flex-row md:gap-3"
+      class="pointer-events-none absolute inset-0 bg-grid opacity-40 mask-[radial-gradient(ellipse_at_top_left,black,transparent_65%)]"
+      aria-hidden="true"
+    />
+    <div
+      class="pointer-events-none absolute -top-40 -left-40 size-120 rounded-full bg-accent-500/15 blur-3xl"
+      aria-hidden="true"
+    />
+    <div
+      class="pointer-events-none absolute -right-40 -bottom-48 size-136 rounded-full bg-primary/10 blur-3xl"
+      aria-hidden="true"
+    />
+
+    <div
+      class="relative mx-auto flex w-full max-w-7xl flex-col items-center gap-12 px-6 md:flex-row md:justify-between md:gap-8"
     >
-      <div class="fade-in-up relative w-full md:max-w-120">
-        <div class="relative z-10 mb-6">
-          <h2
-            class="outline-none text-3xl text-ink leading-tight font-bold md:text-4xl lg:text-[42px] lg:leading-14"
-          >
-            {{ t("hero.title") }}
-          </h2>
-          <p class="outline-none mt-4 text-lg text-ink-secondary">
-            {{ t("hero.subtitle") }}
+      <!-- Texte -->
+      <div class="fade-in-up w-full md:max-w-xl">
+        <h1
+          class="font-heading text-3xl leading-tight font-bold tracking-tight text-ink sm:text-4xl lg:text-5xl lg:leading-[1.1]"
+        >
+          {{ t("hero.title") }}
+        </h1>
+        <p
+          class="mt-5 max-w-lg text-base leading-relaxed text-muted sm:text-lg"
+        >
+          {{ t("hero.subtitle") }}
+        </p>
+
+        <!-- CTA -->
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <AppButton
+            variant="gradient"
+            size="large"
+            icon="pi pi-arrow-right"
+            icon-pos="right"
+            :label="t('hero.cta')"
+            @click="handleCta"
+          />
+          <AppLinkButton
+            :to="localePath('/tarifs')"
+            variant="outline"
+            size="md"
+            :label="t('nav.pricing')"
+            icon="pi pi-tags"
+            icon-pos="left"
+            class="h-12!"
+          />
+        </div>
+
+        <!-- Preuve sociale -->
+        <div class="mt-8 flex items-center gap-3">
+          <div class="flex items-center gap-0.5">
+            <i
+              v-for="i in 5"
+              :key="i"
+              class="pi pi-star-fill text-sm text-accent-500"
+            />
+          </div>
+          <p class="text-sm">
+            <span class="font-semibold text-ink">5.0</span>
+            <span class="text-muted"> · {{ t("hero.social_proof") }}</span>
           </p>
         </div>
 
-        <button
-          class="bg-gradient-primary inline-flex items-center gap-3 text-white font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-md mb-4 transition-transform hover:-translate-y-0.5"
-          @click="openSignup"
-        >
-          {{ t("hero.cta") }}
-          <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-            <path
-              d="M7.5264 0C7.5264 0.6962 8.21633 1.738 8.9138 2.61293C9.81193 3.7394 10.8838 4.72347 12.1137 5.4748C13.0351 6.0374 14.154 6.57747 15.0528 6.57747M7.5264 13.1712C7.5264 12.475 8.21633 11.4332 8.9138 10.5583C9.81193 9.43187 10.8838 8.44773 12.1137 7.6964C13.0351 7.1338 14.154 6.59373 15.0528 6.59373M15.0528 6.5856H0"
-              stroke="currentColor"
-              stroke-width="1.5"
+        <!-- Organismes préparés -->
+        <div class="mt-6 flex flex-wrap items-center gap-2">
+          <span
+            v-for="org in ['Goethe', 'telc', 'ÖSD', 'TestDaF', 'ECL']"
+            :key="org"
+            class="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-xs font-semibold text-ink shadow-soft"
+          >
+            <i
+              class="pi pi-check-circle text-[11px] text-emerald-600 dark:text-emerald-400"
             />
-          </svg>
-        </button>
-
-        <div class="relative z-10 flex items-center gap-3">
-          <div class="relative">
-            <div class="relative flex items-center gap-2">
-              <span v-for="i in 5" :key="i">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="lucide -mb-0.5 h-4 w-4 p-0 text-accent-500"
-                >
-                  <path
-                    d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
-                  ></path>
-                </svg>
-              </span>
-              <p class="outline-none font-medium text-ink">5.0</p>
-            </div>
-            <p class="outline-none text-sm text-ink-secondary">
-              {{ t("hero.social_proof") }}
-            </p>
-          </div>
+            {{ org }}
+          </span>
+          <span
+            class="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700"
+          >
+            B1 · B2
+          </span>
         </div>
-
-        <div
-          class="hero-blob-secondary pointer-events-none absolute -top-120 -right-120 h-300 w-300 rounded-full opacity-25"
-        ></div>
       </div>
 
-      <div class="relative w-full max-w-160">
+      <!-- Image -->
+      <div class="relative w-full max-w-xl md:max-w-160">
+        <!-- Halo + anneau doré -->
+        <div
+          class="pointer-events-none absolute inset-[8%] rounded-full bg-accent-500/20 blur-2xl"
+          aria-hidden="true"
+        />
+        <div
+          class="pointer-events-none absolute inset-[4%] rounded-full border border-dashed border-accent-500/40"
+          aria-hidden="true"
+        />
+
         <img
           :alt="t('hero.image_alt')"
           draggable="false"
-          class="relative z-10 h-full w-full"
-          src="/images/hero-image.png"
+          class="relative z-10 h-full w-full select-none drop-shadow-[0_30px_60px_rgba(24,24,27,0.25)]"
+          src="/images/hero-student.png"
+          fetchpriority="high"
         />
-        <div
-          class="hero-blob-primary pointer-events-none absolute -right-120 -bottom-100 h-300 w-300 rounded-full opacity-25"
-        ></div>
       </div>
     </div>
   </section>
@@ -82,7 +116,21 @@
 import { useAuthDialog } from "~/composables/useAuthDialog";
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 
 const authStore = useAuthStore();
 const { openSignup } = useAuthDialog();
+
+// Connecté : direction son espace ; invité : inscription
+const handleCta = () => {
+  if (authStore.isAuthenticated) {
+    if (authStore.isAdmin) navigateTo("/admin");
+    else if (authStore.isDirector) navigateTo("/centre/dashboard");
+    else if (authStore.isSecretary) navigateTo("/centre/etudiants");
+    else if (authStore.isTeacher) navigateTo("/enseignant/sessions");
+    else navigateTo("/dashboard");
+  } else {
+    openSignup();
+  }
+};
 </script>

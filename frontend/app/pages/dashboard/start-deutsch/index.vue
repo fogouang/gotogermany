@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const store = useStartDeutschSessionStore();

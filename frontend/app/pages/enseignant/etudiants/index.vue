@@ -97,7 +97,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "enseignant",
-  middleware: "teacher",
 });
 
 import type { StudentProgressResponse } from "#shared/api";

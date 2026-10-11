@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 import type { LiveSessionResponse } from "#shared/api";
 

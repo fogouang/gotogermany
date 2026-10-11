@@ -36,6 +36,30 @@
     "minutes": "Minuten",
     "points": "Punkte"
   },
+  "seo": {
+    "home": {
+      "title": "Goethe, telc, ÖSD, TestDaF & ECL Prüfungsvorbereitung online",
+      "description": "Bereiten Sie sich auf die Deutschprüfungen Goethe, telc, ÖSD, TestDaF und ECL von B1 bis C1 vor: Aufgaben im offiziellen Format, Audios, KI-Korrektur für Schreiben und Sprechsimulator. Zahlung per MTN und Orange Money."
+    },
+    "contact": {
+      "title": "Kontakt | GoToGermany",
+      "description": "Fragen zur Vorbereitung auf Deutschprüfungen? Kontaktieren Sie das GoToGermany-Team per WhatsApp, Telefon oder E-Mail."
+    },"about": {
+    "title": "Über uns | GoToGermany",
+    "description": "GoToGermany bereitet auf die Deutschprüfungen von Goethe, telc, ÖSD, TestDaF und ECL vor, mit Modelltests im offiziellen Format, Audios und Auswertung pro Modul."
+  }
+  },
+  "testimonials": {
+    "eyebrow": "Sie vertrauen uns",
+    "title": "Was Sprachzentren und ihre Lernenden sagen",
+    "subtitle": "Sprachzentren in Kamerun bereiten ihre Kandidaten bereits mit GoToGermany vor.",
+    "centres": "Sie nutzen GoToGermany",
+    "roles": {
+      "directeur": "Leitung des Sprachzentrums",
+      "enseignant": "Lehrkraft",
+      "etudiant": "Lernende/r"
+    }
+  },
   "common": {
     "loading": "Laden...",
     "error": "Fehler",
@@ -50,58 +74,68 @@
     "close": "Schließen"
   },
   "hero": {
-    "title": "Sei nicht der nächste Kandidat, der seine Deutschprüfung wiederholen muss.",
-    "subtitle": "Bereite dich ruhig auf Goethe-, TELC- oder ÖSD-Zertifizierungen vor. Meistere den anspruchsvollen Schreiben-Teil mit unserer KI-Korrektur und bestehe dein B1- oder B2-Niveau beim ersten Versuch.",
+    "title": "Holen Sie sich das Zertifikat, das Ihnen die Türen nach Deutschland öffnet.",
+    "subtitle": "Aufgaben im offiziellen Prüfungsformat, ein Prüfungssimulator unter echten Bedingungen für alle vier Teile (Lesen, Hören, Schreiben, Sprechen), KI-Korrektur und Live-Sitzungen mit einem Prüfer. Goethe, telc, ÖSD, TestDaF oder ECL: Sie gehen bestens vorbereitet in die Prüfung.",
     "cta": "Training starten",
     "social_proof": "+500 zufriedene Lernende",
     "image_alt": "Student bereitet sich auf die Deutschprüfung vor"
   },
   "how_it_works": {
-    "title": "So funktioniert es",
-    "subtitle1": "Wie funktioniert",
-    "subtitle2": " GoToGermany",
-    "subtitle3": "?",
+    "title": "So funktioniert's",
+    "subtitle1": "Ihre Vorbereitung mit ",
+    "subtitle2": "GoToGermany",
+    "subtitle3": " in 3 Schritten",
     "steps": {
       "account": {
         "title": "Konto erstellen",
-        "description": "Als Lernender oder Kursleiter"
+        "description": "In einer Minute, allein oder über Ihr Sprachzentrum."
       },
       "exam": {
         "title": "Prüfung wählen und üben",
-        "description": "Themen aufrufen und Text schreiben"
+        "description": "Komplette Prüfungssätze mit allen 4 Modulen, einzeln oder unter echten Bedingungen."
       },
       "progress": {
-        "title": "Verfolgen und verbessern",
-        "description": "Punktzahl und detaillierte Korrekturen erhalten"
+        "title": "Fortschritt verfolgen",
+        "description": "Punktzahl pro Modul und ausführliche Korrekturen, damit Sie genau wissen, woran Sie arbeiten müssen."
       }
     }
   },
   "cta_section": {
-    "title": "Lass die Prüfung nicht über dich entscheiden",
-    "title_line1": "Bestehe dein Zertifikat",
-    "title_line2": "Goethe, TELC oder ÖSD",
+    "title": "Lassen Sie nicht die Prüfung über Sie entscheiden",
+    "title_line1": "Bestehen Sie Ihr",
+    "title_line2": "Goethe-, telc-, ÖSD-, TestDaF- oder ECL-Zertifikat",
     "title_line3": "beim ersten Versuch.",
     "phone": "+237 691 85 09 13",
-    "button": "Jetzt mit dem Training beginnen"
+    "button": "Jetzt starten"
   },
   "exams_section": {
     "title": "Offizielle Prüfungen",
-    "subtitle1": "Bereite dein ",
-    "subtitle2": " B1- oder B2-",
-    "subtitle3": "Zertifikat mit der richtigen Organisation vor",
-    "features": "An offizielle Prüfungen angepasste Simulationen · Sofortige KI-Korrektur der Schreiben-Aufgaben",
+    "subtitle1": "Bereiten Sie Ihr",
+    "subtitle2": "B1-, B2- oder C1-Zertifikat",
+    "subtitle3": " beim richtigen Anbieter vor",
+    "features": "Prüfungssimulationen im offiziellen Format · Sofortige KI-Korrektur für Schreiben · Sprechsimulator für Sprechen",
+    "cta": "Jetzt starten",
+    "disclaimer": "GoToGermany ist eine unabhängige Vorbereitungsplattform und steht in keiner Verbindung zu den genannten Institutionen. Die Namen und Logos von Goethe, telc, ÖSD, TestDaF und ECL sind Eigentum ihrer jeweiligen Inhaber.",
     "orgs": {
       "goethe": {
         "name": "Goethe-Institut",
-        "subtitle": "Internationale Zertifizierung"
+        "subtitle": "Internationales Zertifikat"
       },
       "telc": {
-        "name": "TELC",
-        "subtitle": "Europäische Zertifizierungen"
+        "name": "telc",
+        "subtitle": "Europäische Zertifikate"
       },
       "osd": {
         "name": "ÖSD",
         "subtitle": "Österreichisches Sprachdiplom"
+      },
+      "testdaf": {
+        "name": "TestDaF",
+        "subtitle": "Für das Studium in Deutschland"
+      },
+      "ecl": {
+        "name": "ECL",
+        "subtitle": "Modulares europäisches Zertifikat"
       }
     }
   },
@@ -114,7 +148,8 @@
         "goethe_b2": "Goethe B2",
         "osd": "ÖSD Zertifikat",
         "testdaf": "TestDaF",
-        "telc": "TELC Deutsch"
+        "telc": "TELC Deutsch",
+        "ecl": "ECL"
       }
     },
     "resources": {
@@ -140,106 +175,85 @@
     "secure_payment": "Sichere Zahlung"
   },
   "pricing": {
-    "title": "GoToGermany Preise",
-    "subtitle": "Wählen Sie die passende Laufzeit und bereiten Sie sich auf die Prüfung Ihrer Wahl vor.",
+    "title": "Einfache Preise, keine Überraschungen",
+    "subtitle": "Wählen Sie die passende Dauer und bereiten Sie sich in Ihrem Tempo auf die Prüfung Ihrer Wahl vor.",
     "payment_methods": "Akzeptierte Zahlungsmethoden",
     "immediate_access": "Sofortiger Zugang nach der Zahlung",
-    "no_plans": "Derzeit sind keine Pläne verfügbar.",
-    "popular": "⭐ Am beliebtesten",
-    "per_day": "d. h.",
+    "no_plans": "Derzeit sind keine Angebote verfügbar.",
+    "popular": "Am häufigsten gewählt",
+    "per_day": "also",
     "per_day_suffix": "FCFA/Tag",
     "features": {
-      "full_access": "Voller Zugang zur gewählten Prüfung und Niveau",
-      "all_modules": "Lesen, Hören, Schreiben, Sprechen inklusive",
-      "multi_provider": "Wahl zwischen TELC, Goethe oder ÖSD",
-      "corrections": "Automatische KI-Korrekturen",
-      "progress": "Fortschrittsverfolgung",
-      "unlimited_attempts": "Unbegrenzte Themen während der Laufzeit",
-      "mobile_access": "Verfügbar auf Mobilgerät und Computer"
+      "full_access": "Voller Zugang zu Ihrer gewählten Prüfung und Stufe",
+      "all_modules": "Lesen, Hören, Schreiben und Sprechen inklusive",
+      "multi_provider": "Goethe, telc, ÖSD, TestDaF oder ECL nach Wahl",
+      "corrections": "KI-Korrektur für Schreiben und Sprechsimulator",
+      "progress": "Fortschrittsverfolgung pro Modul",
+      "unlimited_attempts": "Unbegrenzte Prüfungssätze während der gesamten Laufzeit",
+      "mobile_access": "Auf Handy und Computer verfügbar"
     },
-    "cta": "Diesen Plan wählen",
-    "default_description": "Voller Zugang zur gewählten Prüfung für"
+    "cta": "Dieses Angebot wählen",
+    "default_description": "Voller Zugang zur Prüfung Ihrer Wahl für",
+    "centres_title": "Sie sind ein Sprachzentrum?",
+    "centres_desc": "Aktivieren Sie Ihre Lernenden in Ihrem Zentrumsbereich, verfolgen Sie ihren Fortschritt und geben Sie ihnen Zugang zum kompletten Prüfungssimulator. Sprechen wir über Ihr Zentrum.",
+    "centres_cta": "Kontakt aufnehmen",
+    "faq_text": "Eine Frage zur Zahlung oder zum Zugang?",
+    "faq_link": "Zur FAQ"
   },
-  "about": {
-    "hero": {
-      "badge": "Offizielle Vorbereitungsplattform",
-      "title_line1": "Bestehe deine",
-      "title_line2": "Deutschprüfung",
-      "subtitle": "GoToGermany bietet Simulationen, die an die offiziellen Goethe-, ÖSD- und TELC-Prüfungen angepasst sind. Bereite dich auf B1- und B2-Niveau mit realistischen Tests und intelligenten Korrekturen vor.",
-      "cta_start": "Jetzt starten",
-      "cta_exams": "Prüfungen ansehen"
-    },
-    "stats": {
-      "candidates": "Vorbereitete Kandidaten",
-      "success_rate": "Erfolgsquote",
-      "levels": "Verfügbare Niveaus",
-      "access": "Unbegrenzter Zugang"
-    },
-    "features": {
-      "title": "Ernsthafte, einfache und effektive Vorbereitung",
-      "subtitle": "Zugang zu Probeprüfungen, die nach denselben Kriterien wie die offiziellen Tests erstellt wurden.",
-      "badge": "Unser Angebot",
-      "items": {
-        "exams": {
-          "title": "Realistische Probeprüfungen",
-          "desc": "Jeder Test reproduziert originalgetreu Struktur, Dauer und Fragetypen der offiziellen Goethe-, ÖSD- und TELC-Prüfungen."
-        },
-        "audio": {
-          "title": "Hörverstehen mit Audio",
-          "desc": "Das Hörverstehen ist mit echten Audiodateien integriert, genau wie am Prüfungstag."
-        },
-        "access": {
-          "title": "Einfacher & flexibler Zugang",
-          "desc": "Wähle deine Zugangsdauer und zahle per MTN oder Orange Money. Sofortiger Zugang."
-        },
-        "progress": {
-          "title": "Fortschrittsverfolgung",
-          "desc": "Sieh deine Punktzahlen nach Modul, erkenne Schwächen und miss deine Verbesserung."
-        },
-        "partners": {
-          "title": "Partnerzentren",
-          "desc": "Wir arbeiten mit zertifizierten Ausbildungszentren zusammen, die GoToGermany ihren Lernenden empfehlen."
-        },
-        "payment": {
-          "title": "Mobile-Money-Zahlung",
-          "desc": "Zahle einfach mit MTN MoMo oder Orange Money. Keine Bankkarte erforderlich."
-        }
-      }
-    },
-    "levels": {
-      "title": "Verfügbare Niveaus",
-      "subtitle": "Zwei Niveaus, Tausende von Fragen, eine Plattform",
-      "b1": {
-        "badge": "BELIEBT",
-        "name": "Mittelstufe",
-        "desc": "Das Wesentliche in alltäglichen Situationen verstehen - Arbeit, Schule, Reisen. Ideal für Visum- oder Aufenthaltsgenehmigungsanträge in Deutschland."
-      },
-      "b2": {
-        "badge": "NEU",
-        "name": "Fortgeschritten",
-        "desc": "Komplexe Themen flüssig beherrschen. Erforderlich für ein Universitätsstudium oder qualifizierte Stellen in Deutschland oder Österreich."
-      }
-    },
-    "certifications": {
-      "title": "Zertifizierungen & Partner",
-      "subtitle": "Unsere Tests wurden nach den offiziellen Kriterien dieser anerkannten Institutionen erstellt.",
-      "items": {
-        "goethe": "Internationale Zertifizierung",
-        "osd": "Österreichisches Sprachdiplom",
-        "telc": "Europäische Zertifizierungen",
-        "partners": {
-          "name": "Partnerzentren",
-          "desc": "Zertifiziertes Ausbildungsnetzwerk"
-        }
-      },
-      "cta_pricing": "Preise ansehen",
-      "cta_exams": "Eine Prüfung ausprobieren"
+ "about": {
+  "hero": {
+    "badge": "Über uns",
+    "title": "Eine Vorbereitung, die Sie zum Bestehen Ihrer Deutschprüfung führt",
+    "subtitle": "GoToGermany trainiert Sie mit Modelltests im Format der Prüfungen von Goethe, telc, ÖSD, TestDaF und ECL, mit klaren Ergebnissen, damit Sie vor dem Prüfungstag wissen, wo Sie stehen."
+  },
+  "mission": {
+    "eyebrow": "Unsere Mission",
+    "title": "Keine Überraschungen am Prüfungstag",
+    "p1": "Für viele Kandidaten ist das Deutschzertifikat der erste Schritt zu einem Studium, einer Ausbildung oder einer Arbeit in Deutschland. Ein Nichtbestehen kostet Zeit und Geld.",
+    "p2": "Mit GoToGermany üben Sie unter Prüfungsbedingungen, am Handy oder am Computer, und wissen genau, welche Module Sie noch trainieren müssen."
+  },
+  "values": {
+    "title": "Was uns leitet",
+    "items": {
+      "format": { "title": "Treue zum Format", "desc": "Aufbau, Dauer und Aufgabentypen entsprechen der gewählten Prüfung." },
+      "clarity": { "title": "Klare Ergebnisse", "desc": "Eine Punktzahl pro Modul, damit Sie Ihre Stärken und Schwächen sofort sehen." },
+      "access": { "title": "Für alle zugänglich", "desc": "Zahlung per Mobile Money und eine Plattform, die auf dem Handy funktioniert." }
     }
   },
+  "offer": {
+    "eyebrow": "Unser Angebot",
+    "title": "Alles für eine ernsthafte Vorbereitung",
+    "subtitle": "Jeder Modelltest ist eine vollständige Prüfung mit allen vier Modulen.",
+    "items": {
+      "exams": { "title": "Modelltests im offiziellen Format", "desc": "Lesen, Hören, Schreiben und Sprechen, aufgebaut wie am Prüfungstag, für Goethe, telc, ÖSD, TestDaF und ECL." },
+      "audio": { "title": "Hören mit echten Audios", "desc": "Das Hörverstehen läuft mit Audiodateien, unter denselben Bedingungen wie in der Prüfung." },
+      "correction": { "title": "Korrektur für Schreiben und Sprechen", "desc": "Ihre Texte werden mit Kommentaren korrigiert, und ein Simulator trainiert Ihr Sprechen." },
+      "progress": { "title": "Fortschrittsanzeige", "desc": "Ihre Punktzahlen pro Modul und Ihr Verlauf zeigen, woran Sie noch arbeiten müssen." },
+      "payment": { "title": "Zahlung per Mobile Money", "desc": "Bezahlen Sie mit MTN Mobile Money oder Orange Money, ohne Bankkarte. Der Zugang wird sofort nach Zahlungsbestätigung freigeschaltet." },
+      "centres": { "title": "Für Sprachschulen", "desc": "Partnerzentren melden ihre Lernenden an und verfolgen deren Ergebnisse." }
+    }
+  },
+  "independence": {
+    "title": "Eine unabhängige Plattform",
+    "text": "GoToGermany ist weder mit dem Goethe-Institut noch mit telc, ÖSD, TestDaF oder ECL verbunden. Unsere Modelltests folgen dem Format ihrer Prüfungen, das Zertifikat stellt jedoch nur die offizielle Institution aus."
+  },
+  "centres": {
+    "title": "Sie leiten eine Sprachschule?",
+    "text": "Bieten Sie GoToGermany Ihren Lernenden an und verfolgen Sie ihre Vorbereitung in Ihrem Zentrumsbereich.",
+    "cta": "Kontakt aufnehmen"
+  },
+  "cta": {
+    "title": "Bereit loszulegen?",
+    "subtitle": "Wählen Sie Ihre Prüfung und Ihren Tarif, der Zugang ist sofort aktiv.",
+    "pricing": "Preise ansehen",
+    "faq": "Häufige Fragen"
+  }
+},
   "contact": {
     "badge": "Kontaktiere uns",
     "title": "Nimm Kontakt auf",
     "subtitle": "Hast du eine Frage zu unseren Deutschprüfungen? Wir helfen dir gerne.",
+    "whatsapp_greeting": "Hallo GoToGermany,",
     "form": {
       "name": "Vollständiger Name",
       "name_placeholder": "Dein Name",
@@ -255,7 +269,12 @@
       "submit": "Nachricht senden",
       "error_fill": "Bitte fülle alle Felder aus",
       "success_summary": "Nachricht gesendet",
-      "success_detail": "Wir melden uns so schnell wie möglich bei dir"
+      "success_detail": "Wir melden uns so schnell wie möglich bei dir",
+      "email": "E-Mail",
+      "email_invalid": "Ungültige E-Mail-Adresse",
+      "submit_whatsapp": "Per WhatsApp senden",
+      "note": "Ihre Nachricht öffnet sich in WhatsApp und ist bereit zum Senden.",
+      "or_email": "oder per E-Mail senden"
     },
     "subjects": {
       "inscription": "Prüfungsanmeldung",
@@ -275,7 +294,8 @@
       "faq_title": "Brauchst du schnelle Hilfe?",
       "faq_desc": "Sieh dir unsere FAQ an, um sofortige Antworten auf häufige Fragen zu erhalten.",
       "faq_btn": "FAQ ansehen",
-      "phone": "Telefon"
+      "phone": "Telefon",
+      "email": "E-Mail"
     }
   },
   "dashboard_exams": {
@@ -332,9 +352,10 @@
     }
   },
   "sidebar": {
-    "main": "Hauptmenü",
+    "main": "Übersicht",
     "account": "Konto",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "collapse": "Einklappen"
   },
   "session": {
     "loading": "Sitzung wird geladen...",
@@ -748,6 +769,8 @@
     "badge": "Hilfezentrum",
     "title": "Häufig gestellte Fragen",
     "subtitle": "Finde schnell Antworten auf deine Fragen zu DeutschTest",
+    "search_placeholder": "Frage suchen (Zahlung, Prüfung, Konto…)",
+    "no_results": "Keine Frage passt zu Ihrer Suche. Kontaktieren Sie uns, wir antworten schnell.",
     "categories": {
       "all": "Alle",
       "exams": "Prüfungen",
@@ -861,7 +884,7 @@
     "connecting": "Verbindung wird hergestellt…",
     "preparation_no_limit": "Nimm dir die Zeit, die du brauchst - klicke auf Beginnen, wenn du bereit bist.",
     "choose_a_topic": "Wähle ein Thema",
-     "scenario_label": "Thema",
+    "scenario_label": "Thema",
     "stimulus_people_label": "Gegebene Meinungen",
     "reading_text_label": "Lesetext",
     "prep_suggested_time_left": "Empfohlene Restzeit: {time}"
@@ -951,6 +974,33 @@
       "download_button": "Meine Antworten herunterladen (PDF)",
       "time_up_title": "Zeit abgelaufen",
       "time_up_description": "Ihre Antworten wurden automatisch als PDF heruntergeladen."
+    }
+  },
+  "modules_section": {
+    "eyebrow": "Komplette Prüfung",
+    "title": "Jeder Prüfungssatz umfasst alle 4 Module",
+    "subtitle": "Keine isolierten Übungen: Sie trainieren mit kompletten Prüfungssätzen, die genau wie Ihre Prüfung aufgebaut sind.",
+    "center": {
+      "title": "Ein Prüfungssatz = eine komplette Prüfung",
+      "description": "Alle 4 Module im offiziellen Format, einzeln zu üben oder am Stück unter echten Bedingungen."
+    },
+    "items": {
+      "lesen": {
+        "label": "Leseverstehen",
+        "description": "Texte und Aufgaben im offiziellen Format, automatisch korrigiert mit einer Übersicht Ihrer Fehler."
+      },
+      "hoeren": {
+        "label": "Hörverstehen",
+        "description": "Audiodateien für jeden Teil, damit Sie sich an Tempo und Stimmen der Prüfung gewöhnen."
+      },
+      "schreiben": {
+        "label": "Schriftlicher Ausdruck",
+        "description": "Ausführliche KI-Korrektur Ihrer Texte, mit Bewertung und Tipps zur Verbesserung."
+      },
+      "sprechen": {
+        "label": "Mündlicher Ausdruck",
+        "description": "Sprechsimulator mit einem KI-Prüfer, der antwortet, nachfragt und Sie bewertet."
+      }
     }
   }
 }

@@ -82,22 +82,7 @@ async def get_my_payments(
     payments = await PaymentService(db).get_my_payments(current_user)
     return [PaymentResponse.model_validate(p) for p in payments]
 
-from app.modules.auth.dependencies import CurrentAmbassador
 
-@router.post("/manual/ambassador", response_model=dict)
-async def create_ambassador_manual_payment(
-    data: ManualPaymentRequest,
-    ambassador: CurrentAmbassador,
-    db: AsyncSession = Depends(get_db),
-):
-    """Permet à un ambassadeur de confirmer manuellement un paiement
-    pour l'un de ses propres filleuls, quand pawaPay est instable —
-    scope volontairement limité à ses filleuls, contrairement à la
-    route admin équivalente."""
-    return await PaymentService(db).create_manual_payment(
-        data, admin=ambassador, require_referral_match=True
-    )
-    
 @router.get("/{payment_id}", response_model=PaymentResponse)
 async def get_payment(
     payment_id: UUID,
@@ -114,6 +99,17 @@ async def get_payment(
 # URL obfusquée — ne pas documenter publiquement
 _WEBHOOK_SECRET = "jkdKo0Lp8lsdfjk4j0HJhskfak93d"
 
+def _metadata_app(body: dict) -> str | None:
+    """Lit metadata.app, que pawaPay le renvoie en objet ou en liste d'objets."""
+    metadata = body.get("metadata")
+    if isinstance(metadata, dict):
+        return metadata.get("app")
+    if isinstance(metadata, list):
+        for item in metadata:
+            if isinstance(item, dict) and "app" in item:
+                return item["app"]
+    return None
+
 # Remplacer tout le bloc webhook par :
 @router.post(f"/callback/{_WEBHOOK_SECRET}", include_in_schema=False)
 async def payment_callback(
@@ -121,7 +117,7 @@ async def payment_callback(
     db: AsyncSession = Depends(get_db),
 ):
     body = await request.json()
-    app_tag = (body.get("metadata") or {}).get("app")
+    app_tag = _metadata_app(body)
 
     if app_tag == "lumina":
         import httpx

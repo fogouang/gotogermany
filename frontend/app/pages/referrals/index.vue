@@ -224,7 +224,7 @@
 <script setup lang="ts">
 import { useReferralsStore } from "~/stores/referrals";
 
-definePageMeta({ layout: "ambassador", middleware: "ambassador" });
+definePageMeta({ layout: "ambassador" });
 
 const { t } = useI18n();
 useHead({ title: t("referrals.page_title") });

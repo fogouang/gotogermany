@@ -167,6 +167,7 @@ class GradingResponse(BaseModel):
     total_score: float
     total_max_score: float
     passed: bool
+    level_estimate: str | None = None
     strengths: list[str]
     improvement_areas: list[str]
     graded_at: datetime

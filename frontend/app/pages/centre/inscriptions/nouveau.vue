@@ -121,7 +121,6 @@ import type { CursusLevel } from "#shared/api";
 
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff",
 });
 
 const centerStaffStore = useCenterStaffStore();

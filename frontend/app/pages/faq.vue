@@ -1,150 +1,271 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="bg-canvas">
+    <!-- En-tête -->
+    <section class="relative overflow-hidden pt-12 pb-10 sm:pt-16">
+      <div
+        class="pointer-events-none absolute inset-0 bg-grid opacity-40 mask-[radial-gradient(ellipse_at_top,black,transparent_70%)]"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -top-32 left-1/2 size-120 -translate-x-1/2 rounded-full bg-accent-500/15 blur-3xl"
+        aria-hidden="true"
+      />
 
-    <!-- Hero -->
-    <section class="bg-gradient-primary text-white py-20 relative overflow-hidden">
-      <div class="absolute inset-0 opacity-10">
-        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 40px 40px;"></div>
-      </div>
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-6 animate-fade-in-down">
-          <i class="pi pi-question-circle"></i>
-          <span>{{ t('faq.badge') }}</span>
-        </div>
-        <h1 class="text-4xl sm:text-5xl font-bold mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
-          {{ t('faq.title') }}
-        </h1>
-        <p class="text-xl text-teal-100 animate-fade-in-up" style="animation-delay: 0.3s">
-          {{ t('faq.subtitle') }}
+      <div class="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
+        <p
+          class="mb-3 inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-primary"
+        >
+          <span class="h-px w-6 bg-accent-500" />
+          {{ t("faq.badge") }}
+          <span class="h-px w-6 bg-accent-500" />
         </p>
-      </div>
-      <div class="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full">
-          <path d="M0 0L60 8C120 16 240 32 360 37.3C480 43 600 37 720 32C840 27 960 21 1080 21.3C1200 21 1320 27 1380 29.3L1440 32V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V0Z" fill="rgb(249, 250, 251)" />
-        </svg>
+        <h1 class="font-heading text-3xl font-bold tracking-tight text-ink sm:text-5xl">
+          {{ t("faq.title") }}
+        </h1>
+        <p class="mt-4 text-base text-muted sm:text-lg">
+          {{ t("faq.subtitle") }}
+        </p>
+
+        <!-- Recherche -->
+        <div class="relative mx-auto mt-8 max-w-xl">
+          <i
+            class="pi pi-search pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-faint"
+          />
+          <input
+            v-model="recherche"
+            type="search"
+            :placeholder="t('faq.search_placeholder')"
+            class="h-12 w-full rounded-card border border-line bg-card pr-4 pl-11 text-sm text-ink shadow-soft outline-none transition-colors placeholder:text-faint focus:border-accent-500"
+          />
+        </div>
       </div>
     </section>
 
-    <!-- FAQ Content -->
-    <section class="py-16 -mt-8">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
+    <!-- Contenu -->
+    <section class="pb-16 sm:pb-24">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6">
         <!-- Catégories -->
-        <div class="grid sm:grid-cols-4 gap-4 mb-12">
+        <div class="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:px-0">
           <button
-            v-for="category in categories" :key="category.id"
-            :class="['p-4 rounded-xl border-2 transition-all duration-300 text-left group',
+            v-for="category in categories"
+            :key="category.id"
+            type="button"
+            class="inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200"
+            :class="
               selectedCategory === category.id
-                ? 'border-teal-600 bg-teal-50 shadow-lg'
-                : 'border-gray-200 bg-white hover:border-teal-300 hover:shadow-md']"
+                ? 'border-transparent bg-zinc-900 text-white shadow-soft dark:bg-accent-500 dark:text-accent-950'
+                : 'border-line bg-card text-muted hover:border-accent-500/50 hover:text-ink'
+            "
             @click="selectedCategory = category.id"
           >
-            <div class="flex items-center gap-3">
-              <div :class="['w-12 h-12 rounded-lg flex items-center justify-center transition-all',
-                selectedCategory === category.id ? 'bg-gradient-primary' : 'bg-gray-100 group-hover:bg-teal-100']">
-                <i :class="[category.icon, 'text-xl', selectedCategory === category.id ? 'text-white' : 'text-gray-600']"></i>
-              </div>
-              <div>
-                <h3 :class="['font-semibold', selectedCategory === category.id ? 'text-teal-900' : 'text-gray-900']">
-                  {{ category.label }}
-                </h3>
-                <p class="text-sm text-gray-500">{{ category.count }} questions</p>
-              </div>
-            </div>
+            <i :class="[category.icon, 'text-xs']" />
+            {{ category.label }}
+            <span
+              class="rounded-full px-1.5 text-[11px] font-bold"
+              :class="selectedCategory === category.id ? 'bg-white/20' : 'bg-card-2 text-faint'"
+            >
+              {{ category.count }}
+            </span>
           </button>
         </div>
 
-        <!-- Accordion -->
-        <Accordion :value="activeIndex" @update:value="activeIndex = $event" class="space-y-4">
-          <AccordionPanel
-            v-for="(faq, index) in filteredFaqs" :key="index" :value="index"
-            class="border-2 border-gray-200 rounded-xl overflow-hidden hover:border-teal-600 transition-all duration-300 bg-white"
+        <!-- Questions -->
+        <div v-if="filteredFaqs.length" class="space-y-3">
+          <div
+            v-for="faq in filteredFaqs"
+            :key="faq.key"
+            class="overflow-hidden rounded-card border bg-card transition-all duration-300"
+            :class="
+              ouverte === faq.key
+                ? 'border-accent-500/50 shadow-lift'
+                : 'border-line shadow-soft hover:border-accent-500/30'
+            "
           >
-            <AccordionHeader class="px-6 py-4 hover:bg-teal-50 transition-colors">
-              <div class="flex items-start gap-4 w-full">
-                <div class="w-10 h-10 bg-gradient-secondary rounded-lg flex items-center justify-center shrink-0 mt-1">
-                  <i class="pi pi-question text-white"></i>
-                </div>
-                <div class="flex-1">
-                  <h3 class="font-semibold text-gray-900 text-left">{{ faq.question }}</h3>
-                </div>
-              </div>
-            </AccordionHeader>
-            <AccordionContent class="px-6 py-4 bg-gray-50">
-              <div class="ml-14 text-gray-700 leading-relaxed" v-html="faq.answer"></div>
-            </AccordionContent>
-          </AccordionPanel>
-        </Accordion>
-
-        <!-- CTA -->
-        <Card class="mt-12 border-2 border-teal-200 bg-linear-to-br from-teal-50 to-white">
-          <template #content>
-            <div class="text-center py-6">
-              <div class="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="pi pi-headphones text-3xl text-white"></i>
-              </div>
-              <h3 class="text-2xl font-bold text-gray-900 mb-3">{{ t('faq.cta_title') }}</h3>
-              <p class="text-gray-600 mb-6 max-w-2xl mx-auto">{{ t('faq.cta_desc') }}</p>
-              <Button
-                :label="t('faq.cta_btn')" icon="pi pi-envelope" iconPos="right"
-                class="bg-gradient-primary! border-0! text-white! hover:opacity-90 transition-opacity"
-                @click="navigateTo('/contact')"
+            <button
+              type="button"
+              class="flex w-full items-center gap-4 px-5 py-4 text-left sm:px-6"
+              :aria-expanded="ouverte === faq.key"
+              @click="basculer(faq.key)"
+            >
+              <span
+                class="flex size-9 shrink-0 items-center justify-center rounded-leaf transition-colors duration-300"
+                :class="
+                  ouverte === faq.key
+                    ? 'bg-accent-500 text-accent-950'
+                    : 'bg-primary-50 text-primary-700'
+                "
+              >
+                <i class="pi pi-question text-sm" />
+              </span>
+              <span class="flex-1 font-heading font-semibold text-ink">{{ faq.question }}</span>
+              <i
+                class="pi pi-chevron-down text-xs text-faint transition-transform duration-300 ease-spring"
+                :class="{ 'rotate-180 text-accent-600': ouverte === faq.key }"
               />
+            </button>
+
+            <div
+              class="grid transition-[grid-template-rows] duration-300 ease-spring"
+              :class="ouverte === faq.key ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
+            >
+              <div class="overflow-hidden">
+                <div
+                  class="faq-answer border-t border-line px-5 py-4 text-sm leading-relaxed text-muted sm:ml-13 sm:px-6"
+                  v-html="faq.answer"
+                />
+              </div>
             </div>
-          </template>
-        </Card>
+          </div>
+        </div>
+
+        <!-- Aucun résultat -->
+        <div
+          v-else
+          class="flex flex-col items-center gap-3 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
+        >
+          <span class="flex size-12 items-center justify-center rounded-leaf bg-primary-50 text-primary-700">
+            <i class="pi pi-search text-xl" />
+          </span>
+          <p class="text-sm text-muted">{{ t("faq.no_results") }}</p>
+        </div>
+
+        <!-- Contact -->
+        <div
+          class="relative mt-14 overflow-hidden rounded-card bg-zinc-950 px-6 py-10 text-center text-white shadow-lift sm:px-10"
+        >
+          <div class="flag-stripe absolute inset-x-0 top-0 h-1" aria-hidden="true" />
+          <div
+            class="pointer-events-none absolute -top-20 -right-20 size-64 rounded-full bg-accent-500/20 blur-3xl"
+            aria-hidden="true"
+          />
+          <span
+            class="relative mx-auto mb-4 flex size-14 items-center justify-center rounded-leaf bg-accent-500 text-accent-950"
+          >
+            <i class="pi pi-headphones text-2xl" />
+          </span>
+          <h2 class="relative font-heading text-2xl font-bold">{{ t("faq.cta_title") }}</h2>
+          <p class="relative mx-auto mt-3 max-w-xl text-sm text-white/70">{{ t("faq.cta_desc") }}</p>
+          <div class="relative mt-6 flex flex-wrap justify-center gap-3">
+            <AppButton
+              variant="accent"
+              icon="pi pi-envelope"
+              :label="t('faq.cta_btn')"
+              @click="navigateTo(localePath('/contact'))"
+            />
+            <a
+              :href="`https://wa.me/${SITE.phone}`"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex h-10 items-center gap-2 rounded-leaf border border-white/15 bg-white/5 px-4 text-sm font-semibold transition-colors hover:border-white/30 hover:bg-white/10"
+            >
+              <i class="pi pi-whatsapp text-emerald-400" />
+              WhatsApp
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+import { SITE } from "~/config/site";
+
+const { t } = useI18n();
+const localePath = useLocalePath();
 
 useHead({
-  title:  t('faq.page_title'),
-  meta: [{ name: 'description', content: t('faq.page_desc') }],
-})
+  title: t("faq.page_title"),
+  meta: [{ name: "description", content: t("faq.page_desc") }],
+});
 
-const selectedCategory = ref('all')
-const activeIndex      = ref()
+// Clés des questions par catégorie : ajouter une question = ajouter sa clé ici
+const QUESTIONS: Record<string, string[]> = {
+  exams: ["exams_1", "exams_2", "exams_3", "exams_4", "exams_5"],
+  account: ["account_1", "account_2", "account_3", "account_4"],
+  technical: ["technical_1", "technical_2", "technical_3"],
+};
+
+const selectedCategory = ref("all");
+const recherche = ref("");
+const ouverte = ref<string | null>(null);
+
+const faqs = computed(() =>
+  Object.entries(QUESTIONS).flatMap(([category, keys]) =>
+    keys.map((key) => ({
+      key,
+      category,
+      question: t(`faq.questions.${key}.q`),
+      answer: t(`faq.questions.${key}.a`),
+    })),
+  ),
+);
 
 const categories = computed(() => [
-  { id: 'all',       label: t('faq.categories.all'),       icon: 'pi pi-list', count: 12 },
-  { id: 'exams',     label: t('faq.categories.exams'),     icon: 'pi pi-book', count: 5  },
-  { id: 'account',   label: t('faq.categories.account'),   icon: 'pi pi-user', count: 4  },
-  { id: 'technical', label: t('faq.categories.technical'), icon: 'pi pi-cog',  count: 3  },
-])
+  { id: "all", label: t("faq.categories.all"), icon: "pi pi-list", count: faqs.value.length },
+  { id: "exams", label: t("faq.categories.exams"), icon: "pi pi-book", count: QUESTIONS.exams!.length },
+  { id: "account", label: t("faq.categories.account"), icon: "pi pi-user", count: QUESTIONS.account!.length },
+  { id: "technical", label: t("faq.categories.technical"), icon: "pi pi-cog", count: QUESTIONS.technical!.length },
+]);
 
-const faqs = computed(() => [
-  { category: 'exams',     question: t('faq.questions.exams_1.q'),     answer: t('faq.questions.exams_1.a')     },
-  { category: 'exams',     question: t('faq.questions.exams_2.q'),     answer: t('faq.questions.exams_2.a')     },
-  { category: 'exams',     question: t('faq.questions.exams_3.q'),     answer: t('faq.questions.exams_3.a')     },
-  { category: 'exams',     question: t('faq.questions.exams_4.q'),     answer: t('faq.questions.exams_4.a')     },
-  { category: 'exams',     question: t('faq.questions.exams_5.q'),     answer: t('faq.questions.exams_5.a')     },
-  { category: 'account',   question: t('faq.questions.account_1.q'),   answer: t('faq.questions.account_1.a')   },
-  { category: 'account',   question: t('faq.questions.account_2.q'),   answer: t('faq.questions.account_2.a')   },
-  { category: 'account',   question: t('faq.questions.account_3.q'),   answer: t('faq.questions.account_3.a')   },
-  { category: 'account',   question: t('faq.questions.account_4.q'),   answer: t('faq.questions.account_4.a')   },
-  { category: 'technical', question: t('faq.questions.technical_1.q'), answer: t('faq.questions.technical_1.a') },
-  { category: 'technical', question: t('faq.questions.technical_2.q'), answer: t('faq.questions.technical_2.a') },
-  { category: 'technical', question: t('faq.questions.technical_3.q'), answer: t('faq.questions.technical_3.a') },
-])
+// Texte sans balises HTML (recherche + données structurées Google)
+const sansHtml = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
-const filteredFaqs = computed(() =>
-  selectedCategory.value === 'all' ? faqs.value : faqs.value.filter(f => f.category === selectedCategory.value)
-)
+const filteredFaqs = computed(() => {
+  const q = recherche.value.trim().toLowerCase();
+  return faqs.value.filter((f) => {
+    const dansCategorie = selectedCategory.value === "all" || f.category === selectedCategory.value;
+    const correspond =
+      !q || f.question.toLowerCase().includes(q) || sansHtml(f.answer).toLowerCase().includes(q);
+    return dansCategorie && correspond;
+  });
+});
+
+function basculer(key: string) {
+  ouverte.value = ouverte.value === key ? null : key;
+}
+
+// Changer de catégorie ou de recherche referme la question ouverte
+watch([selectedCategory, recherche], () => {
+  ouverte.value = null;
+});
+
+// Données structurées FAQPage : Google peut afficher les questions dans ses résultats
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.value.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: sansHtml(f.answer) },
+        })),
+      }),
+    },
+  ],
+});
 </script>
 
 <style scoped>
-@keyframes fade-in-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fade-in-up   { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: translateY(0); } }
-.animate-fade-in-down { animation: fade-in-down 0.6s ease-out; animation-fill-mode: both; }
-.animate-fade-in-up   { animation: fade-in-up   0.6s ease-out; animation-fill-mode: both; }
-.bg-gradient-primary  { background: linear-gradient(135deg, hsl(145 63% 32%) 0%, hsl(145 50% 22%) 100%); }
-.bg-gradient-secondary{ background: linear-gradient(135deg, hsl(45 92% 55%)  0%, hsl(35 90% 50%)  100%); }
-:deep(.p-accordion-content-enter-active) { animation: accordion-expand  400ms cubic-bezier(0.65, 0, 0.35, 1); }
-:deep(.p-accordion-content-leave-active) { animation: accordion-collapse 400ms cubic-bezier(0.65, 0, 0.35, 1); }
-@keyframes accordion-expand   { from { opacity: 0; max-height: 0;   transform: scale(0.95); } to { opacity: 1; max-height: 500px; transform: scale(1); } }
-@keyframes accordion-collapse { from { opacity: 1; max-height: 500px; transform: scale(1); } to { opacity: 0; max-height: 0;   transform: scale(0.95); } }
+/* Mise en forme du HTML des réponses (liens, listes, gras) */
+.faq-answer :deep(a) {
+  color: var(--color-accent-600);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.faq-answer :deep(strong) {
+  color: var(--text-primary);
+}
+.faq-answer :deep(ul) {
+  margin-top: 0.5rem;
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.faq-answer :deep(li) {
+  margin-top: 0.25rem;
+}
 </style>

@@ -224,7 +224,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff", // accessible director OU secretary — cf. note ci-dessous
 });
 
 import type { StudentResponse } from "#shared/api";

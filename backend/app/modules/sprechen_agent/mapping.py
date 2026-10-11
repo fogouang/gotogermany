@@ -142,6 +142,23 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
         ),
         min_turns=4,  # report the stimulus, then a real back-and-forth discussion
     ),
+        # TestDaF digital (ESQUISSE) : format semi-direct, pas de vrai partenaire.
+    # L'agent joue l'interlocuteur fictif : il pose la situation/la question
+    # UNE fois, puis se tait pendant la réponse (comme l'enregistrement officiel).
+    "oral_semidirect": SingleRoleBehavior(
+        role=AgentRole.PARTNER,
+        agent_opens=True,
+        behavior_note=(
+            "You play the fictional interlocutor of this task (fellow student, tutor, "
+            "seminar participant...). Say your prompt line ONCE, briefly and naturally, "
+            "based on the scenario below. If a reading or listening input is given, "
+            "briefly present its key point first as part of the situation. Then stay "
+            "completely silent while the student answers: no follow-up questions, no "
+            "reactions, no backchannel. The real exam is semi-direct (recorded prompts), "
+            "so the student must speak alone for the whole response time."
+        ),
+        min_turns=2,  # ta question, puis la réponse de l'élève
+    ),
 }
 
 # Any format_type we haven't seen yet falls back here instead of

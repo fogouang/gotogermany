@@ -162,9 +162,15 @@ export const useAuthStore = defineStore("auth", {
         this.user = response;
         this.aiCredits = (response as any)?.ai_credits ?? 0;
         this.token = tokenCookie.value;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Fetch user error:", error);
-        this.logout();
+        // Token invalide ou expiré : on nettoie localement, sans appeler /logout
+        if (error?.status === 401) {
+          this.user = null;
+          this.token = null;
+          OpenAPI.TOKEN = undefined;
+          useCookie("access_token").value = null;
+        }
       } finally {
         this.loading = false;
       }

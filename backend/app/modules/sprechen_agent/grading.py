@@ -150,6 +150,10 @@ above, following each Teil's specific grading system instructions. Then \
 identify 2-4 concrete strengths and 2-4 concrete areas for improvement, \
 grounded in specific things the candidate actually said.
 
+Any Teil whose raw criteria are empty ({{}}) is an ungraded warm-up: return \
+it with an empty "criteria" list and do not invent criteria for it.
+
+
 Respond with ONLY a JSON object, no markdown fences, no preamble, matching \
 exactly this shape:
 {{
@@ -197,6 +201,21 @@ def _strip_code_fences(text: str) -> str:
             stripped = stripped.rsplit("```", 1)[0]
     return stripped.strip()
 
+
+# ---------------------------------------------------------------------------
+# TestDaF : niveau TDN estimé (ESQUISSE)
+# HYPOTHÈSE : seuils indicatifs en %, alignés sur l'écrit et les sessions
+# d'examen (les seuils officiels varient selon la session).
+# ---------------------------------------------------------------------------
+
+TESTDAF_TDN_THRESHOLDS = ((78.0, "TDN 5"), (63.0, "TDN 4"), (45.0, "TDN 3"))
+
+
+def _testdaf_level(percent: float) -> str:
+    for threshold, label in TESTDAF_TDN_THRESHOLDS:
+        if percent >= threshold:
+            return label
+    return "unter TDN 3"
 
 def parse_grading_response(raw_text: str, session: SessionState) -> GradingResult:
     """Turns Claude's raw JSON text into a validated GradingResult,
@@ -251,6 +270,7 @@ def parse_grading_response(raw_text: str, session: SessionState) -> GradingResul
         total_max_score=total_max_score,
         pass_threshold_percent=session.pass_threshold_percent,
         passed=percent >= session.pass_threshold_percent,
+        level_estimate=_testdaf_level(percent) if session.provider.lower() == "testdaf" else None,
         strengths=data.get("strengths", []),
         improvement_areas=data.get("improvement_areas", []),
     )

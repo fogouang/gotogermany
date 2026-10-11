@@ -28,9 +28,12 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
             conditions.append(ExamSession.subject_id == subject_id)
 
         result = await self.db.execute(
-            select(ExamSession).where(*conditions)
+            select(ExamSession)
+            .where(*conditions)
+            .order_by(ExamSession.started_at.desc())
+            .limit(1)
         )
-        return result.scalar_one_or_none()
+        return result.scalars.first()
 
     async def get_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 20

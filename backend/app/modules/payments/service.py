@@ -183,23 +183,33 @@ class PaymentService:
     # ── Grant Level Access ───────────────────────────────
 
     async def _grant_level_access(self, payment: Payment) -> None:
-        if payment.plan_id is None or payment.level_id is None:
-            # Pas un accès exam classique (ex: achat de crédits IA) — rien à faire ici.
+        if payment.level_id is None:
+            # Pas un accès exam (ex. achat de crédits IA)
             return
 
         from app.modules.exam_access.models import ExamAccess
         from app.modules.exam_access.repository import ExamAccessRepository
         from app.modules.plans.models import Plan
 
-        plan = await self.db.get(Plan, payment.plan_id)
-        if not plan:
-            logger.error(f"Plan {payment.plan_id} introuvable pour payment {payment.id}")
+        if payment.duration_days:
+            duration = payment.duration_days
+        elif payment.plan_id:
+            plan = await self.db.get(Plan, payment.plan_id)
+            if not plan:
+                logger.error(f"Plan {payment.plan_id} introuvable pour payment {payment.id}")
+                return
+            duration = plan.duration_days
+        else:
             return
 
-        expires_at = datetime.now(timezone.utc) + timedelta(days=plan.duration_days)
+        now = datetime.now(timezone.utc)
         repo = ExamAccessRepository(self.db)
-
         existing = await repo.find_by_user_and_level(payment.user_id, payment.level_id)
+
+        # Renouvellement avant échéance : les jours restants sont conservés
+        start = existing.expires_at if existing and existing.expires_at and existing.expires_at > now else now
+        expires_at = start + timedelta(days=duration)
+
         if existing:
             await repo.update(
                 existing.id,
@@ -207,25 +217,18 @@ class PaymentService:
                 payment_id=payment.id,
                 access_type="paid",
             )
-            logger.info(
-                f"ExamAccess renouvelé — user {payment.user_id} "
-                f"level {payment.level_id} — expires {expires_at}"
-            )
+            logger.info(f"ExamAccess renouvelé : user {payment.user_id} level {payment.level_id} jusqu'au {expires_at}")
         else:
-            access = ExamAccess(
+            self.db.add(ExamAccess(
                 user_id=payment.user_id,
                 level_id=payment.level_id,
                 access_type="paid",
                 payment_id=payment.id,
                 expires_at=expires_at,
-                granted_at=datetime.now(timezone.utc),
-            )
-            self.db.add(access)
+                granted_at=now,
+            ))
             await self.db.flush()
-            logger.info(
-                f"ExamAccess créé — user {payment.user_id} "
-                f"level {payment.level_id} — expires {expires_at}"
-            )
+            logger.info(f"ExamAccess créé : user {payment.user_id} level {payment.level_id} jusqu'au {expires_at}")
 
         await self.db.commit()
 
@@ -297,45 +300,56 @@ class PaymentService:
         return await self.repo.get_by_user(current_user.id)
 
     # ── Paiement manuel ──────────────────────────────────
+    
+    async def _daily_pass_price(self) -> int:
+        """Prix d'une journée (réglage app_settings "daily_pass_price", 1000 par défaut)."""
+        from sqlalchemy import select
+        from app.modules.settings.models import AppSetting
 
+        row = (
+            await self.db.execute(select(AppSetting).where(AppSetting.key == "daily_pass_price"))
+        ).scalar_one_or_none()
+        try:
+            return int(row.value) if row else 1000
+        except ValueError:
+            return 1000
+        
     async def create_manual_payment(
         self,
         data: ManualPaymentRequest,
         admin: User,
-        *,
-        require_referral_match: bool = False,
     ) -> dict:
         from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
-
-        if require_referral_match:
-            target_user = await self.db.get(User, data.user_id)
-            if target_user is None or target_user.referred_by_user_id != admin.id:
-                raise BadRequestException(
-                    detail="Vous ne pouvez valider que les paiements de vos propres filleuls."
-                )
 
         level = await self.db.get(Level, data.level_id)
         if not level:
             raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
-        plan = await self.db.get(Plan, data.plan_id)
-        if not plan or not plan.is_active:
-            raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+        plan = None
+        if data.days:
+            # Pass journalier : géré uniquement par l'admin, sans commission partenaire
+            amount = data.days * await self._daily_pass_price()
+            duration_days = data.days
+        else:
+            plan = await self.db.get(Plan, data.plan_id)
+            if not plan or not plan.is_active:
+                raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+            amount = plan.price
+            duration_days = None
 
         transaction_reference = await self.repo.generate_transaction_reference()
         transaction_reference = transaction_reference.replace("GTG-", "GTG-M-", 1)
-
         now = datetime.now(timezone.utc)
-        expires_at = now + timedelta(days=plan.duration_days)
 
         payment = await self.repo.create(
             user_id=data.user_id,
             level_id=data.level_id,
-            plan_id=data.plan_id,
+            plan_id=plan.id if plan else None,
+            duration_days=duration_days,
             promo_code_id=None,
-            amount_gross=plan.price,
-            amount_paid=plan.price,
+            amount_gross=amount,
+            amount_paid=amount,
             commission_due=0.0,
             currency="XAF",
             payment_status="COMPLETED",
@@ -349,17 +363,21 @@ class PaymentService:
         await self._grant_level_access(payment)
         await self._generate_invoice(payment)
 
-        # Enregistre le gain de parrainage si le payeur a un parrain —
-        # no-op silencieux sinon.
-        from app.modules.referrals.service import ReferralService
-        await ReferralService(self.db).record_payment_earning(
-            payment_id=payment.id, payer_user_id=data.user_id, payment_amount=plan.price
-        )
+        # Commission ambassadeur uniquement sur les formules, jamais sur le pass journalier
+        if plan:
+            from app.modules.referrals.service import ReferralService
+            await ReferralService(self.db).record_payment_earning(
+                payment_id=payment.id, payer_user_id=data.user_id, payment_amount=amount
+            )
+
+        from app.modules.exam_access.repository import ExamAccessRepository
+        access = await ExamAccessRepository(self.db).find_by_user_and_level(data.user_id, data.level_id)
 
         logger.info(
-            f"Paiement manuel créé par {admin.id} pour user {data.user_id} "
-            f"— level {data.level_id} — ref {transaction_reference}"
-            + (f" — note: {data.note}" if data.note else "")
+            f"Paiement manuel {transaction_reference} par {admin.id} pour user {data.user_id} : "
+            + (f"pass {data.days} jour(s)" if data.days else f"formule {plan.id}")
+            + f", {amount} FCFA"
+            + (f", note : {data.note}" if data.note else "")
         )
 
         return {
@@ -367,10 +385,11 @@ class PaymentService:
             "transaction_reference": transaction_reference,
             "user_id": data.user_id,
             "level_id": data.level_id,
-            "amount_paid": plan.price,
-            "expires_at": expires_at,
+            "amount_paid": amount,
+            "expires_at": access.expires_at if access else None,
             "note": data.note,
         }
+        
 
     async def get_manual_payments(self, limit: int = 20) -> list[Payment]:
         return await self.repo.get_manual_payments(limit=limit)

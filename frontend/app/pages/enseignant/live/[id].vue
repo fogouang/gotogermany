@@ -482,7 +482,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "enseignant",
-  middleware: "teacher",
 });
 
 import { useLiveSession } from "~/composables/useLiveSession";

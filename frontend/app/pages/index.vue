@@ -1,57 +1,57 @@
-<template>
+﻿<template>
   <div>
     <Hero />
-    <LandingLevelsSection />
+    <LevelsSection />
+    <ModulesSection />
     <HowIsWork />
+    <Temoignages />
     <Cta />
   </div>
 </template>
 
 <script setup lang="ts">
-import Cta from '~/components/landing/Cta.vue'
-import Hero from '~/components/landing/Hero.vue'
-import HowIsWork from '~/components/landing/HowIsWork.vue'
+import { SITE } from "~/config/site";
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: "default" });
 
-const { locale } = useI18n()
+const { t } = useI18n();
 
 useSeo({
-  title: locale.value === 'fr'
-    ? 'Préparation Goethe, TELC & ÖSD B1/B2 en ligne'
-    : 'Goethe, TELC & ÖSD B1/B2 German Exam Preparation Online',
-  description: locale.value === 'fr'
-    ? 'Préparez vos examens Goethe, TELC et ÖSD B1/B2 avec des simulations conformes aux standards officiels. Audio inclus, corrections IA instantanées. Paiement MTN & Orange Money.'
-    : 'Prepare for Goethe, TELC and ÖSD B1/B2 German exams with official-standard mock tests. Audio included, instant AI correction. Pass on your first try.',
-})
+  title: t("seo.home.title"),
+  description: t("seo.home.description"),
+});
 
-// Données structurées JSON-LD pour Google
+// DonnÃ©es structurÃ©es JSON-LD pour Google
 useHead({
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'EducationalOrganization',
-        name: 'GoToGermany',
-        url: 'https://prep-telc-osd.com',
-        logo: 'https://prep-telc-osd.com/images/logo.png',
-        description: 'Online preparation platform for Goethe, TELC and ÖSD German language certifications B1 and B2.',
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        name: SITE.name,
+        url: SITE.url,
+        logo: `${SITE.url}${SITE.logo}`,
+        description:
+          "Online preparation platform for Goethe, telc, Ã–SD, TestDaF and ECL German language certifications, from B1 to C1.",
         sameAs: [],
         offers: {
-          '@type': 'Offer',
-          category: 'German Language Exam Preparation',
-          availableLanguage: ['French', 'English'],
+          "@type": "Offer",
+          category: "German Language Exam Preparation",
+          availableLanguage: ["French", "English", "German"],
         },
         teaches: [
-          'German Language B1',
-          'German Language B2',
-          'Goethe-Zertifikat',
-          'TELC Deutsch',
-          'ÖSD Zertifikat',
+          "German Language B1",
+          "German Language B2",
+          "German Language C1",
+          "Goethe-Zertifikat",
+          "telc Deutsch",
+          "Ã–SD Zertifikat",
+          "TestDaF",
+          "ECL German exam",
         ],
       }),
     },
   ],
-})
+});
 </script>

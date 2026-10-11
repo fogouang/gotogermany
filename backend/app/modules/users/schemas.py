@@ -112,9 +112,6 @@ class StudentCreateRequest(BaseSchema):
         return v.strip()
 
 
-class StudentTargetUpdateRequest(BaseSchema):
-    """Modification du level ciblé — par la secrétaire, sans consommer le quota."""
-    target_level_id: uuid.UUID
 
 
 # ─────────────────────────────────────────────
@@ -170,11 +167,6 @@ class StudentCreditAdjustRequest(BaseSchema):
     amount: int = Field(gt=0, le=100)
     reason: str | None = Field(default=None, max_length=255)
 
-
-class StudentAccessDatesUpdateRequest(BaseSchema):
-    """Directeur ajuste la fenêtre d'accès d'un étudiant précis."""
-    access_expires_at: datetime | None = None
-    access_duration_days: int | None = Field(default=None, gt=0, le=365)
 
 
 class StudentProgressResponse(BaseSchema):

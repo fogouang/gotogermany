@@ -27,10 +27,8 @@ from app.modules.users.schemas import (
     DirectorCreateRequest,
     SecretaryCreateRequest,
     StudentCreateRequest,
-    StudentTargetUpdateRequest,
     StudentResponse,
     StudentCreditAdjustRequest,
-    StudentAccessDatesUpdateRequest,
 )
 from app.modules.users.service import UserService
 from app.shared.database.session import get_db
@@ -210,19 +208,6 @@ async def toggle_student_activation(
     return await UserService(db).toggle_student_active(student_id, current_director)
 
 
-@router.patch("/students/{student_id}/access-dates", response_model=StudentResponse)
-async def update_student_access_dates(
-    student_id: UUID,
-    data: StudentAccessDatesUpdateRequest,
-    current_director: CurrentDirector,
-    db: AsyncSession = Depends(get_db),
-):
-    """Le directeur ajuste manuellement la fenêtre d'accès d'un étudiant précis."""
-    return await UserService(db).update_student_access_dates(
-        student_id, data, current_director
-    )
-
-
 # ── Secrétaire ────────────────────────────────
 @router.post("/students", response_model=StudentResponse, status_code=201)
 async def create_student(
@@ -234,16 +219,6 @@ async def create_student(
     ou si le pool de crédits IA du centre est insuffisant."""
     return await UserService(db).create_student(data, current_secretary)
 
-
-@router.patch("/students/{student_id}/target", response_model=StudentResponse)
-async def update_student_target(
-    student_id: UUID,
-    data: StudentTargetUpdateRequest,
-    current_secretary: CurrentSecretary,
-    db: AsyncSession = Depends(get_db),
-):
-    """Modifie l'examen/niveau ciblé d'un étudiant — sans consommer une nouvelle place."""
-    return await UserService(db).update_student_target(student_id, data, current_secretary)
 
 
 @router.get("/students/by-branch", response_model=list[StudentResponse])

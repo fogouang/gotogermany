@@ -1,4 +1,3 @@
-import Aura from "@primeuix/themes/aura";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
@@ -14,6 +13,7 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css", "primeicons/primeicons.css"],
 
+  components: [{ path: "~/components/ui", pathPrefix: false }, "~/components"],
   // ── SEO global ──────────────────────────────────────────
   app: {
     head: {
@@ -25,7 +25,17 @@ export default defineNuxtConfig({
         { rel: "canonical", href: "https://prep-telc-osd.com" },
       ],
       meta: [
-        { name: "theme-color", content: "#0d6e4f" },
+        // Barre du navigateur mobile : anthracite en clair, sombre en mode sombre
+        {
+          name: "theme-color",
+          content: "#18181b",
+          media: "(prefers-color-scheme: light)",
+        },
+        {
+          name: "theme-color",
+          content: "#0c0c0e",
+          media: "(prefers-color-scheme: dark)",
+        },
         { name: "author", content: "GoToGermany" },
         // Open Graph
         { property: "og:site_name", content: "GoToGermany" },
@@ -43,6 +53,14 @@ export default defineNuxtConfig({
           content: "https://prep-telc-osd.com/images/og-image.png",
         },
         { name: "twitter:creator", content: "@GoToGermany" },
+      ],
+      script: [
+        {
+          // Applique le thème AVANT le premier rendu : évite le flash blanc
+          // au rechargement en mode sombre. Même clé que useTheme.ts.
+          innerHTML: `(function(){try{var t=localStorage.getItem('gtg-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}var h=document.documentElement;h.classList.add(t==='dark'?'dark-mode':'light-mode');h.style.colorScheme=t}catch(e){}})();`,
+          tagPosition: "head",
+        },
       ],
     },
   },
@@ -94,7 +112,7 @@ export default defineNuxtConfig({
   },
 
   primevue: {
-    options: { theme: { preset: Aura } },
+    importTheme: { from: "@/theme/gotogermany.ts" },
     autoImport: true,
   },
 
@@ -117,6 +135,24 @@ export default defineNuxtConfig({
           ? "wss://prep-telc-osd.com/api/v1/sprechen-simulator"
           : "ws://localhost:8001/api/v1/sprechen-simulator"),
     },
+  },
+
+  routeRules: {
+    "/dashboard/**": { ssr: false },
+    "/admin/**": { ssr: false },
+    "/centre/**": { ssr: false },
+    "/enseignant/**": { ssr: false },
+    "/fr/dashboard/**": { ssr: false },
+    "/fr/admin/**": { ssr: false },
+    "/fr/centre/**": { ssr: false },
+    "/fr/enseignant/**": { ssr: false },
+    "/de/dashboard/**": { ssr: false },
+    "/de/admin/**": { ssr: false },
+    "/de/centre/**": { ssr: false },
+    "/de/enseignant/**": { ssr: false },
+    "/referrals/**": { ssr: false },
+    "/fr/referrals/**": { ssr: false },
+    "/de/referrals/**": { ssr: false },
   },
 
   vite: {

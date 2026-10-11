@@ -12,6 +12,7 @@ from app.modules.schreiben_simulator.schemas import SchreibenSubjectCreate, Schr
 
 logger = logging.getLogger(__name__)
 
+SIMULATOR_PROVIDERS = ["telc", "goethe", "ösd", "osd", "ecl", "testdaf"]
 
 class SchreibenSubjectRepository:
 
@@ -55,7 +56,7 @@ class SchreibenSubjectRepository:
             level=data.level,
             title=data.title,
             description=data.description,
-            tasks=[t.model_dump() for t in data.tasks],
+            tasks=[t.model_dump(by_alias=True) for t in data.tasks],
             display_order=data.display_order,
             is_active=data.is_active,
         )
@@ -79,7 +80,7 @@ class SchreibenSubjectRepository:
         if data.description is not None:
             subject.description = data.description
         if data.tasks is not None:
-            subject.tasks = [t.model_dump() for t in data.tasks]
+            subject.tasks = [t.model_dump(by_alias=True) for t in data.tasks]
         if data.display_order is not None:
             subject.display_order = data.display_order
         if data.is_active is not None:
@@ -162,12 +163,13 @@ class SchreibenSubjectRepository:
                 selectinload(Subject.modules).selectinload(Module.teile).selectinload(Teil.questions),
                 selectinload(Subject.level).selectinload(Level.exam),
             )
-            .where(Subject.is_active == True)
+            .where(Subject.is_active == True, Subject.is_private == False)
         )
+        from sqlalchemy import func
         if provider:
-            q = q.where(Exam.provider == provider.lower())
+            q = q.where(func.lower(Exam.provider) == provider.lower())
         if level:
-            q = q.where(Level.cefr_code == level.lower())
+            q = q.where(func.lower(Level.cefr_code) == level.lower())
 
         result = await self.db.execute(q)
         subjects = list(result.scalars().unique().all())
@@ -195,7 +197,7 @@ class SchreibenSubjectRepository:
                 selectinload(Subject.modules).selectinload(Module.teile).selectinload(Teil.questions),
                 selectinload(Subject.level).selectinload(Level.exam),
             )
-            .where(Subject.id == subject_id)
+            .where(Subject.id == subject_id,Subject.is_private == False)
         )
         subject = result.scalar_one_or_none()
         if subject is None:
@@ -238,6 +240,8 @@ class SchreibenSubjectRepository:
                 "leitpunkte": content.get("leitpunkte", []),
                 "register": content.get("register", ""),
                 "recipient": content.get("recipient", ""),
+                "source_text": content.get("source_text", ""),
+                "graph_description": content.get("graph_description", ""),
             })
 
         if not tasks:

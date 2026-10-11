@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime, timezone
 import enum
-from sqlalchemy import Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, UniqueConstraint, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.shared.database.base import Base, UUIDMixin, TimestampMixin
@@ -43,6 +43,15 @@ class User(Base, UUIDMixin, TimestampMixin):
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
+    # ── Partenariat ambassadeur (mêmes règles qu'un centre) ──
+    partner_can_activate: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, server_default=true()
+    )
+    partner_unpaid_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    partner_payment_delay_hours: Mapped[int] = mapped_column(
+        Integer, default=24, nullable=False, server_default="24"
+    )
+    
     # Token de vérification email (nullable une fois vérifié)
     verification_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

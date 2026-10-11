@@ -185,10 +185,11 @@ from app.modules.settings.router import router as settings_router
 from app.modules.centers.router import router as centers_router
 from app.modules.sprechen_agent.router import router as sprechen_router
 from app.modules.referrals.router import router as referrals_router
-from app.modules.enrollments.router import router as enrollments_router
 from app.modules.live_session.router import router as live_session_router
 from app.modules.start_deutsch.router import router as start_deutsch_router
 from app.modules.training_sessions.router import router as training_sessions_router
+from app.modules.sales.router import router as sales_router
+from app.modules.assignments.router import router as assignments_router
 
 
 
@@ -211,19 +212,11 @@ app.include_router(settings_router, prefix="/api/v1/settings", tags=["Settings"]
 app.include_router(centers_router, prefix="/api/v1/centers", tags=["centers"])
 app.include_router(sprechen_router, prefix="/api/v1/sprechen-simulator", tags=["sprechen-simulator"])
 app.include_router(referrals_router, prefix="/api/v1/referrals", tags=["referrals"])
-app.include_router(enrollments_router, prefix="/api/v1/enrollments", tags=["enrollments"])
 app.include_router(live_session_router, prefix="/api/v1/live-session", tags=["live-session"])
 app.include_router(start_deutsch_router, prefix="/api/v1/start-deutsch", tags=["start-deutsch"])
 app.include_router(training_sessions_router, prefix="/api/v1/training-sessions", tags=["training-sessions"])
-
-
-
-
-
-
-
-
-
+app.include_router(sales_router, prefix="/api/v1/sales", tags=["sales"])
+app.include_router(assignments_router, prefix="/api/v1/assignments", tags=["assignments"])
 
 # ── Health ───────────────────────────────────
 @app.get("/health", tags=["system"])

@@ -36,7 +36,30 @@
     "minutes": "minutes",
     "points": "points"
   },
-
+  "seo": {
+    "home": {
+      "title": "Goethe, telc, ÖSD, TestDaF & ECL Exam Preparation Online",
+      "description": "Prepare for Goethe, telc, ÖSD, TestDaF and ECL German exams from B1 to C1: official-format papers, audio included, AI correction for Schreiben and a speaking simulator. Pay with MTN and Orange Money."
+    },
+    "contact": {
+      "title": "Contact | GoToGermany",
+      "description": "A question about German exam preparation? Contact the GoToGermany team by WhatsApp, phone or email."
+    },"about": {
+    "title": "About us | GoToGermany",
+    "description": "GoToGermany prepares you for the Goethe, telc, ÖSD, TestDaF and ECL German exams with papers in the official format, audio and per-module tracking."
+  }
+  },
+  "testimonials": {
+    "eyebrow": "They trust us",
+    "title": "What training centres and their students say",
+    "subtitle": "Training centres in Cameroon already use GoToGermany to prepare their candidates.",
+    "centres": "Already using GoToGermany",
+    "roles": {
+      "directeur": "Centre director",
+      "enseignant": "Teacher",
+      "etudiant": "Student"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
@@ -51,58 +74,68 @@
     "close": "Close"
   },
   "hero": {
-    "title": "Don't be the next candidate who has to retake their German exam.",
-    "subtitle": "Prepare calmly for Goethe, TELC or ÖSD certifications. Master the challenging Schreiben test with our AI correction, and pass your B1 or B2 level on the first try.",
+    "title": "Earn the certificate that opens the doors to Germany.",
+    "subtitle": "A bank of official-format papers, a real-conditions exam simulator for all four modules (Lesen, Hören, Schreiben, Sprechen), AI correction and live sessions with an examiner. Goethe, telc, ÖSD, TestDaF or ECL: you walk in ready on exam day.",
     "cta": "Start training",
     "social_proof": "+500 satisfied learners",
     "image_alt": "Student preparing for German exam"
   },
   "how_it_works": {
     "title": "How it works",
-    "subtitle1": "How does",
-    "subtitle2": " GoToGermany",
-    "subtitle3": " work?",
+    "subtitle1": "Your preparation with ",
+    "subtitle2": "GoToGermany",
+    "subtitle3": " in 3 steps",
     "steps": {
       "account": {
-        "title": "Create an account",
-        "description": "As a learner or instructor"
+        "title": "Create your account",
+        "description": "In one minute, on your own or through your training centre."
       },
       "exam": {
-        "title": "Choose your exam and practice",
-        "description": "Access subjects and write your text"
+        "title": "Choose your exam and practise",
+        "description": "Complete papers covering all 4 modules, one at a time or in real conditions."
       },
       "progress": {
-        "title": "Track and improve",
-        "description": "Get your score and detailed corrections"
+        "title": "Track your progress",
+        "description": "A score for each module and detailed corrections, so you know exactly what to work on."
       }
     }
   },
   "cta_section": {
     "title": "Don't let the exam decide for you",
-    "title_line1": "Pass your certification",
-    "title_line2": "Goethe, TELC or ÖSD",
+    "title_line1": "Pass your",
+    "title_line2": "Goethe, telc, ÖSD, TestDaF or ECL certification",
     "title_line3": "on the first try.",
     "phone": "+237 691 85 09 13",
-    "button": "Start training now"
+    "button": "Start now"
   },
   "exams_section": {
-    "title": "Official Exams",
-    "subtitle1": "Prepare your ",
-    "subtitle2": " B1 or B2 ",
-    "subtitle3": "certification with the right organization",
-    "features": "Simulations aligned with official exams · Instant AI correction of Schreiben tasks",
+    "title": "Official exams",
+    "subtitle1": "Prepare your",
+    "subtitle2": "B1, B2 or C1",
+    "subtitle3": " certification with the right provider",
+    "features": "Official-format mock exams · Instant AI correction for Schreiben · Speaking simulator for Sprechen",
+    "cta": "Get started",
+    "disclaimer": "GoToGermany is an independent preparation platform, not affiliated with the organisations listed. The Goethe, telc, ÖSD, TestDaF and ECL names and logos are the property of their respective owners.",
     "orgs": {
       "goethe": {
         "name": "Goethe-Institut",
         "subtitle": "International certification"
       },
       "telc": {
-        "name": "TELC",
+        "name": "telc",
         "subtitle": "European certifications"
       },
       "osd": {
         "name": "ÖSD",
         "subtitle": "Austrian diploma"
+      },
+      "testdaf": {
+        "name": "TestDaF",
+        "subtitle": "For studying in Germany"
+      },
+      "ecl": {
+        "name": "ECL",
+        "subtitle": "Modular European certificate"
       }
     }
   },
@@ -115,7 +148,8 @@
         "goethe_b2": "Goethe B2",
         "osd": "ÖSD Zertifikat",
         "testdaf": "TestDaF",
-        "telc": "TELC Deutsch"
+        "telc": "TELC Deutsch",
+        "ecl": "ECL"
       }
     },
     "resources": {
@@ -141,106 +175,85 @@
     "secure_payment": "Secure payment"
   },
   "pricing": {
-    "title": "GoToGermany Pricing",
-    "subtitle": "Choose the duration that suits you and prepare for the exam of your choice.",
+    "title": "Simple pricing, no surprises",
+    "subtitle": "Choose the duration that suits you and prepare for the exam of your choice, at your own pace.",
     "payment_methods": "Accepted payment methods",
     "immediate_access": "Immediate access after payment",
     "no_plans": "No plans available at the moment.",
-    "popular": "⭐ Most popular",
-    "per_day": "i.e.",
+    "popular": "Most chosen",
+    "per_day": "that's",
     "per_day_suffix": "FCFA/day",
     "features": {
       "full_access": "Full access to your chosen exam and level",
-      "all_modules": "Lesen, Hören, Schreiben, Sprechen included",
-      "multi_provider": "Choose between TELC, Goethe or ÖSD",
-      "corrections": "Automatic AI-powered corrections",
-      "progress": "Track your progress",
-      "unlimited_attempts": "Unlimited subjects during the plan's duration",
-      "mobile_access": "Accessible on mobile and desktop"
+      "all_modules": "Lesen, Hören, Schreiben and Sprechen included",
+      "multi_provider": "Goethe, telc, ÖSD, TestDaF or ECL, your choice",
+      "corrections": "AI correction for Schreiben and a speaking simulator",
+      "progress": "Progress tracking module by module",
+      "unlimited_attempts": "Unlimited papers for the whole duration of the plan",
+      "mobile_access": "Available on mobile and computer"
     },
     "cta": "Choose this plan",
-    "default_description": "Full access to your chosen exam for"
+    "default_description": "Full access to the exam of your choice for",
+    "centres_title": "Are you a training centre?",
+    "centres_desc": "Activate your students from your centre space, track their progress and give them access to the complete exam simulator. Let's talk about your centre.",
+    "centres_cta": "Contact us",
+    "faq_text": "A question about payment or access?",
+    "faq_link": "Read the FAQ"
   },
   "about": {
-    "hero": {
-      "badge": "Official preparation platform",
-      "title_line1": "Pass your",
-      "title_line2": "German exam",
-      "subtitle": "GoToGermany offers simulations aligned with official Goethe, ÖSD and TELC exams. Prepare for B1 and B2 levels with realistic tests and smart corrections.",
-      "cta_start": "Start now",
-      "cta_exams": "View exams"
-    },
-    "stats": {
-      "candidates": "Prepared candidates",
-      "success_rate": "Success rate",
-      "levels": "Available levels",
-      "access": "Unlimited access"
-    },
-    "features": {
-      "title": "Serious, simple and effective preparation",
-      "subtitle": "Access mock exams designed according to the same criteria as official tests.",
-      "badge": "Our offer",
-      "items": {
-        "exams": {
-          "title": "Realistic mock exams",
-          "desc": "Each test faithfully reproduces the structure, duration and question types of official Goethe, ÖSD and TELC exams."
-        },
-        "audio": {
-          "title": "Hörverstehen with audio",
-          "desc": "Listening comprehension is integrated with real audio files, exactly as on exam day."
-        },
-        "access": {
-          "title": "Simple & flexible access",
-          "desc": "Choose your access duration and pay via MTN or Orange Money. Immediate access."
-        },
-        "progress": {
-          "title": "Progress tracking",
-          "desc": "View your scores by module, identify weaknesses and measure your improvement."
-        },
-        "partners": {
-          "title": "Partner centers",
-          "desc": "We work with certified training centers that recommend GoToGermany to their learners."
-        },
-        "payment": {
-          "title": "Mobile money payment",
-          "desc": "Pay easily with MTN MoMo or Orange Money. No bank card needed."
-        }
-      }
-    },
-    "levels": {
-      "title": "Available levels",
-      "subtitle": "Two levels, thousands of questions, one platform",
-      "b1": {
-        "badge": "POPULAR",
-        "name": "Intermediate",
-        "desc": "Understand the essentials in everyday situations - work, school, travel. Ideal for visa or residence applications in Germany."
-      },
-      "b2": {
-        "badge": "NEW",
-        "name": "Advanced",
-        "desc": "Master complex topics with fluency. Required for university studies or skilled jobs in Germany or Austria."
-      }
-    },
-    "certifications": {
-      "title": "Certifications & Partners",
-      "subtitle": "Our tests are designed according to the official criteria of these recognized institutions.",
-      "items": {
-        "goethe": "International certification",
-        "osd": "Austrian diploma",
-        "telc": "European certifications",
-        "partners": {
-          "name": "Partner centers",
-          "desc": "Certified training network"
-        }
-      },
-      "cta_pricing": "View pricing",
-      "cta_exams": "Try an exam"
+  "hero": {
+    "badge": "About us",
+    "title": "Preparation designed to help you pass your German exam",
+    "subtitle": "GoToGermany trains you on papers in the format of the Goethe, telc, ÖSD, TestDaF and ECL exams, with clear results so you know where you stand before exam day."
+  },
+  "mission": {
+    "eyebrow": "Our mission",
+    "title": "No surprises on exam day",
+    "p1": "For many candidates, a German certificate is the first step towards studying, training or working in Germany. Failing costs time and money.",
+    "p2": "GoToGermany lets you practise in exam conditions, from a phone or a computer, and know exactly which modules to work on."
+  },
+  "values": {
+    "title": "What guides us",
+    "items": {
+      "format": { "title": "True to the format", "desc": "Structure, timing and task types follow those of the chosen exam." },
+      "clarity": { "title": "Clear results", "desc": "A score per module so you instantly see your strengths and weaknesses." },
+      "access": { "title": "Accessible to everyone", "desc": "Mobile Money payment and a platform that works on your phone." }
     }
   },
+  "offer": {
+    "eyebrow": "What we offer",
+    "title": "Everything you need to practise seriously",
+    "subtitle": "Each paper is a complete exam with all four modules.",
+    "items": {
+      "exams": { "title": "Papers in the official format", "desc": "Lesen, Hören, Schreiben and Sprechen, organised as on exam day, for Goethe, telc, ÖSD, TestDaF and ECL." },
+      "audio": { "title": "Hören with real audio", "desc": "Listening tasks use audio files, in the same conditions as the exam." },
+      "correction": { "title": "Writing and speaking correction", "desc": "Your written work is corrected with feedback, and a simulator helps you practise speaking." },
+      "progress": { "title": "Progress tracking", "desc": "Your scores per module and your history show what is left to work on." },
+      "payment": { "title": "Mobile Money payment", "desc": "Pay with MTN Mobile Money or Orange Money, no bank card needed. Access is activated as soon as payment is confirmed." },
+      "centres": { "title": "For language centres", "desc": "Partner centres enrol their learners and follow their results." }
+    }
+  },
+  "independence": {
+    "title": "An independent platform",
+    "text": "GoToGermany is not affiliated with the Goethe-Institut, telc, ÖSD, TestDaF or ECL. Our papers follow the format of their exams, but only the official body issues the certificate."
+  },
+  "centres": {
+    "title": "Do you run a language centre?",
+    "text": "Offer GoToGermany to your learners and follow their preparation from your centre dashboard.",
+    "cta": "Contact us"
+  },
+  "cta": {
+    "title": "Ready to start?",
+    "subtitle": "Choose your exam and your plan, access is immediate.",
+    "pricing": "See pricing",
+    "faq": "FAQ"
+  }
+},
   "contact": {
     "badge": "Contact us",
     "title": "Get in touch",
     "subtitle": "Have a question about our German exams? We're here to help.",
+    "whatsapp_greeting": "Hello GoToGermany,",
     "form": {
       "name": "Full name",
       "name_placeholder": "Your name",
@@ -256,7 +269,12 @@
       "submit": "Send message",
       "error_fill": "Please fill in all fields",
       "success_summary": "Message sent",
-      "success_detail": "We will get back to you as soon as possible"
+      "success_detail": "We will get back to you as soon as possible",
+      "email": "Email",
+      "email_invalid": "Invalid email address",
+      "submit_whatsapp": "Send on WhatsApp",
+      "note": "Your message opens in WhatsApp, ready to send.",
+      "or_email": "or send by email"
     },
     "subjects": {
       "inscription": "Exam registration",
@@ -276,7 +294,8 @@
       "faq_title": "Need quick help?",
       "faq_desc": "Check our FAQ for immediate answers to common questions.",
       "faq_btn": "View FAQ",
-      "phone": "Phone"
+      "phone": "Phone",
+      "email": "Email"
     }
   },
   "dashboard_exams": {
@@ -335,7 +354,8 @@
   "sidebar": {
     "main": "Main",
     "account": "Account",
-    "logout": "Logout"
+    "logout": "Log out",
+    "collapse": "Collapse"
   },
   "session": {
     "loading": "Loading session...",
@@ -749,6 +769,8 @@
     "badge": "Help center",
     "title": "Frequently asked questions",
     "subtitle": "Quickly find answers to your questions about DeutschTest",
+    "search_placeholder": "Search a question (payment, exam, account…)",
+    "no_results": "No question matches your search. Contact us and we will get back to you quickly.",
     "categories": {
       "all": "All",
       "exams": "Exams",
@@ -952,6 +974,33 @@
       "download_button": "Download my assignment (PDF)",
       "time_up_title": "Time's up",
       "time_up_description": "Your assignment was automatically downloaded with your answers as they stand."
+    }
+  },
+  "modules_section": {
+    "eyebrow": "Complete exam",
+    "title": "Every paper covers all 4 exam modules",
+    "subtitle": "No isolated exercises: you train on complete papers, structured exactly like the exam you are going to sit.",
+    "center": {
+      "title": "One paper = one complete exam",
+      "description": "All 4 modules in the official format, to work on one at a time or take back to back in real conditions."
+    },
+    "items": {
+      "lesen": {
+        "label": "Reading",
+        "description": "Official-format texts and questions, marked automatically with a breakdown of your mistakes."
+      },
+      "hoeren": {
+        "label": "Listening",
+        "description": "Audio included for every part, so you get used to the pace and voices of the exam."
+      },
+      "schreiben": {
+        "label": "Writing",
+        "description": "Detailed AI correction of your texts, with a score and tips to improve."
+      },
+      "sprechen": {
+        "label": "Speaking",
+        "description": "Speaking simulator with an AI examiner who answers you, follows up and assesses you."
+      }
     }
   }
 }

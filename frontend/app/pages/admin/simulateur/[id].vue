@@ -175,7 +175,7 @@
 import { SchreibenSimulatorService, OpenAPI } from '#shared/api'
 import type { SchreibenSubjectResponse } from '#shared/api'
 
-definePageMeta({ layout: 'admin', middleware: ['auth', 'admin'] })
+definePageMeta({ layout: 'admin' })
 
 const route  = useRouter()
 const router = useRouter()

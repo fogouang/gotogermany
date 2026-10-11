@@ -148,7 +148,7 @@
 <script setup lang="ts">
 import ImportLogPanel from "~/components/admin/ImportLogPanel.vue";
 
-definePageMeta({ layout: "admin", middleware: "admin" });
+definePageMeta({ layout: "admin" });
 
 const { t } = useI18n();
 const store = useStartDeutschSessionStore();

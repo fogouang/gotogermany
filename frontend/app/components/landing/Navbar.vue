@@ -1,276 +1,305 @@
 <template>
   <div
-    class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100"
+    class="fixed inset-x-0 top-0 z-50 border-b transition-all duration-300"
+    :class="
+      scrolled || mobileMenuOpen
+        ? 'border-line bg-card/85 shadow-soft backdrop-blur-md'
+        : 'border-transparent bg-card/60 backdrop-blur-sm'
+    "
   >
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between gap-4">
         <!-- Logo -->
         <NuxtLink
-          to="/"
-          class="flex items-center hover:opacity-80 transition-opacity shrink-0"
+          :to="localePath('/')"
+          class="group flex shrink-0 items-center gap-2.5"
+          :aria-label="SITE.name"
         >
-          <img
-            src="/images/logo.png"
-            alt="DeutschTest"
-            class="h-10 object-contain"
-          />
+          <span class="flex flex-col leading-none">
+            <span
+              class="font-heading text-lg font-bold tracking-tight text-ink"
+            >
+              GoTo<span class="text-accent-500">Germany</span>
+            </span>
+            <span class="flag-stripe mt-1 h-0.5 w-full rounded-full" />
+          </span>
         </NuxtLink>
 
-        <!-- Desktop Nav -->
-        <nav class="hidden md:flex items-center gap-1">
+        <!-- Desktop nav -->
+        <nav class="hidden items-center gap-1 md:flex">
           <NuxtLink
             v-for="item in mainItems"
             :key="item.key"
-            :to="item.to"
-            class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-medium flex items-center gap-2"
-            active-class="text-white bg-primary-600"
+            :to="localePath(item.to)"
+            class="relative px-3.5 py-2 text-sm font-medium transition-colors"
+            :class="
+              isActive(item.to) ? 'text-ink' : 'text-muted hover:text-ink'
+            "
           >
-            <i :class="[item.icon, 'text-xs']"></i>
-            <span>{{ item.label }}</span>
+            {{ item.label }}
+            <span
+              class="absolute inset-x-3.5 -bottom-0.5 h-0.5 origin-left rounded-full bg-accent-500 transition-transform duration-300 ease-spring"
+              :class="isActive(item.to) ? 'scale-x-100' : 'scale-x-0'"
+            />
           </NuxtLink>
         </nav>
 
-        <!-- Right side -->
-        <div class="hidden md:flex items-center gap-2">
-          <!-- Lang switcher -->
+        <!-- Right side desktop -->
+        <div class="hidden items-center gap-2 md:flex">
+          <!-- Langues -->
           <div
-            class="flex items-center gap-0.5 border border-gray-200 rounded-lg p-0.5"
+            class="flex items-center rounded-leaf border border-line bg-card p-0.5"
           >
             <button
               v-for="loc in locales"
               :key="loc.code"
-              :class="[
-                'text-xs font-bold px-2 py-1 rounded-md transition-colors uppercase',
+              type="button"
+              class="rounded-lg px-2 py-1 text-[11px] font-bold uppercase transition-colors"
+              :class="
                 locale === loc.code
-                  ? 'bg-primary-600 text-white'
-                  : 'text-gray-400 hover:text-gray-600',
-              ]"
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-faint hover:text-ink'
+              "
               @click="changeLocale(loc.code)"
             >
               {{ loc.code }}
             </button>
           </div>
 
-          <!-- Authenticated -->
+          <ThemeToggle />
+
+          <!-- Connecté -->
           <template v-if="authStore.isAuthenticated">
-            <span
-              class="text-sm text-gray-600 font-medium flex items-center gap-1.5"
-            >
-              <i class="pi pi-user text-primary-600 text-xs"></i>
-              {{ authStore.userName }}
-            </span>
-            <div class="w-px h-4 bg-gray-200 mx-1" />
-            <Button
-              :label="t('nav.dashboard')"
+            <AppButton
+              variant="gradient"
+              size="small"
               icon="pi pi-th-large"
-              size="small"
-              class="bg-primary-600! hover:bg-primary-700! border-0! text-white! font-semibold!"
-              @click="navigateTo('/dashboard')"
+              :label="t('nav.dashboard')"
+              @click="navigateTo(dashboardPath)"
             />
-            <Button
-              icon="pi pi-sign-out"
-              text
-              rounded
-              size="small"
-              severity="danger"
+            <button
               v-tooltip.bottom="t('nav.logout')"
+              type="button"
+              class="flex size-10 items-center justify-center rounded-leaf text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400"
+              :aria-label="t('nav.logout')"
               @click="handleLogout"
-            />
+            >
+              <i class="pi pi-sign-out text-sm" />
+            </button>
           </template>
 
-          <!-- Guest -->
+          <!-- Invité -->
           <template v-else>
-            <button
-              class="px-4 py-2 text-sm font-semibold text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            <AppButton
+              variant="ghost"
+              size="small"
+              :label="t('nav.login')"
               @click="openLogin"
-            >
-              {{ t("nav.login") }}
-            </button>
-            <button
-              class="bg-primary-600 flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-              
+            />
+            <AppButton
+              variant="gradient"
+              size="small"
+              icon="pi pi-arrow-right"
+              icon-pos="right"
+              :label="t('nav.signup')"
               @click="openSignup"
-            >
-              {{ t("nav.signup") }}
-              <i class="pi pi-arrow-right text-xs"></i>
-            </button>
+            />
           </template>
         </div>
 
-        <!-- Mobile toggle -->
-        <button
-          class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-          @click="toggleMobileMenu"
-        >
-          <i :class="mobileMenuOpen ? 'pi pi-times' : 'pi pi-bars'"></i>
-        </button>
+        <!-- Mobile : thème + menu -->
+        <div class="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            class="flex size-10 items-center justify-center rounded-leaf border border-line bg-card text-ink"
+            :aria-label="mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'"
+            :aria-expanded="mobileMenuOpen"
+            @click="toggleMobileMenu"
+          >
+            <i :class="mobileMenuOpen ? 'pi pi-times' : 'pi pi-bars'" />
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Mobile Menu -->
+    <!-- Mobile menu -->
     <Transition name="slide-down">
-      <div
-        v-if="mobileMenuOpen"
-        class="md:hidden bg-white border-t border-gray-100 shadow-lg"
-      >
-        <nav class="px-4 py-4 space-y-1">
+      <div v-if="mobileMenuOpen" class="border-t border-line bg-card md:hidden">
+        <nav class="space-y-1 px-4 py-4">
           <NuxtLink
             v-for="item in mainItems"
             :key="item.key"
-            :to="item.to"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
-            @click="closeMobileMenu"
+            :to="localePath(item.to)"
+            class="flex items-center gap-3 rounded-leaf px-4 py-3 text-sm font-medium transition-colors"
+            :class="
+              isActive(item.to)
+                ? 'bg-primary-50 text-primary-700'
+                : 'text-muted hover:bg-card-2 hover:text-ink'
+            "
           >
-            <i :class="item.icon"></i>
+            <i :class="[item.icon, 'text-sm']" />
             <span>{{ item.label }}</span>
           </NuxtLink>
         </nav>
 
-        <div class="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
-          <!-- Lang switcher mobile -->
-          <div class="flex items-center gap-1 px-4">
+        <div class="space-y-4 border-t border-line px-4 pt-4 pb-5">
+          <!-- Langues -->
+          <div class="flex gap-2">
             <button
               v-for="loc in locales"
               :key="loc.code"
-              :class="[
-                'text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors uppercase',
+              type="button"
+              class="flex-1 rounded-leaf border px-3 py-2 text-xs font-bold uppercase transition-colors"
+              :class="
                 locale === loc.code
-                  ? 'bg-primary-600 text-white border-primary-600'
-                  : 'text-gray-400 border-gray-200 hover:text-gray-600',
-              ]"
+                  ? 'border-primary/30 bg-primary-50 text-primary-700'
+                  : 'border-line text-faint hover:text-ink'
+              "
               @click="changeLocale(loc.code)"
             >
               {{ loc.code }}
             </button>
           </div>
 
-          <!-- Authenticated mobile -->
-          <div v-if="authStore.isAuthenticated" class="space-y-1">
-            <div
-              class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700"
-            >
-              <i class="pi pi-user text-primary-600"></i>
-              {{ authStore.userName }}
+          <!-- Connecté -->
+          <div v-if="authStore.isAuthenticated" class="space-y-2">
+            <div class="flex items-center gap-3 rounded-leaf bg-card-2 p-3">
+              <span
+                class="brand-gradient flex size-9 items-center justify-center rounded-full font-heading text-sm font-bold"
+              >
+                {{ authStore.userName?.[0]?.toUpperCase() }}
+              </span>
+              <span class="truncate text-sm font-semibold text-ink">
+                {{ authStore.userName }}
+              </span>
             </div>
-            <NuxtLink
-              to="/dashboard"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
-              @click="closeMobileMenu"
-            >
-              <i class="pi pi-th-large"></i>
-              <span>{{ t("nav.dashboard") }}</span>
-            </NuxtLink>
+            <AppButton
+              variant="gradient"
+              block
+              icon="pi pi-th-large"
+              :label="t('nav.dashboard')"
+              @click="navigateTo(dashboardPath)"
+            />
             <button
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium text-sm w-full"
+              type="button"
+              class="flex h-11 w-full items-center justify-center gap-2 rounded-leaf text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400"
               @click="handleLogout"
             >
-              <i class="pi pi-sign-out"></i>
-              <span>{{ t("nav.logout") }}</span>
+              <i class="pi pi-sign-out text-sm" />
+              {{ t("nav.logout") }}
             </button>
           </div>
 
-          <!-- Guest mobile -->
+          <!-- Invité -->
           <div v-else class="space-y-2">
-            <button
-              class="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            <AppButton
+              variant="secondary"
+              block
+              :label="t('nav.login')"
               @click="
                 openLogin();
                 closeMobileMenu();
               "
-            >
-              {{ t("nav.login") }}
-            </button>
-            <button
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-              style="background-color: #1cb098"
+            />
+            <AppButton
+              variant="gradient"
+              block
+              icon="pi pi-arrow-right"
+              icon-pos="right"
+              :label="t('nav.signup')"
               @click="
                 openSignup();
                 closeMobileMenu();
               "
-            >
-              {{ t("nav.signup") }}
-              <i class="pi pi-arrow-right text-xs"></i>
-            </button>
+            />
           </div>
         </div>
       </div>
     </Transition>
 
-    <!-- Login Dialog -->
-    <Dialog
+    <!-- Connexion -->
+    <AppDialog
       v-model:visible="loginVisible"
-      :header="t('auth.login_title')"
-      :style="{ width: '90vw', maxWidth: '420px' }"
-      :modal="true"
+      :title="t('auth.login_title')"
+      icon="pi pi-sign-in"
+      width="26rem"
+      hide-footer
     >
-      <Message v-if="loginError" severity="error" :closable="false">{{
-        loginError
-      }}</Message>
-      <div class="flex flex-col gap-4 mt-4">
-        <div>
-          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+      <form class="flex flex-col gap-4" @submit.prevent="handleLogin">
+        <Message v-if="loginError" severity="error" :closable="false">
+          {{ loginError }}
+        </Message>
+
+        <div class="space-y-1.5">
+          <label class="text-sm font-medium text-ink">{{
             t("auth.email")
           }}</label>
           <InputText
             v-model="loginForm.email"
             type="email"
-            class="w-full"
+            autocomplete="email"
             placeholder="jean@example.com"
-            @keyup.enter="handleLogin"
+            fluid
           />
         </div>
-        <div>
-          <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
+
+        <div class="space-y-1.5">
+          <label class="text-sm font-medium text-ink">{{
             t("auth.password")
           }}</label>
           <Password
             v-model="loginForm.password"
-            class="w-full"
             :feedback="false"
-            toggleMask
-            @keyup.enter="handleLogin"
+            toggle-mask
+            autocomplete="current-password"
+            fluid
           />
         </div>
-        <Button
+
+        <AppButton
+          type="submit"
+          variant="gradient"
+          block
           :label="t('auth.login_btn')"
           :loading="authStore.loading"
-          class="w-full mt-1 bg-primary-600 border-0"
-          @click="handleLogin"
         />
-        <p class="text-xs text-gray-500 text-center">
+
+        <p class="text-center text-xs text-muted">
           {{ t("auth.no_account") }}
           <a
             href="#"
-            class="text-primary-600 hover:underline font-medium"
+            class="font-semibold text-primary hover:underline"
             @click.prevent="openSignup"
           >
             {{ t("auth.register_link") }}
           </a>
         </p>
-      </div>
-    </Dialog>
+      </form>
+    </AppDialog>
 
-    <!-- Signup Dialog -->
-    <Dialog
+    <!-- Inscription -->
+    <AppDialog
       v-model:visible="signupVisible"
-      :header="t('auth.signup_title')"
-      :style="{ width: '90vw', maxWidth: '420px' }"
-      :modal="true"
+      :title="t('auth.signup_title')"
+      icon="pi pi-user-plus"
+      width="26rem"
+      hide-footer
     >
       <SignupForm
         @success="
           () => {
             signupVisible = false;
-            navigateTo('/dashboard');
+            navigateTo(cheminApresConnexion());
           }
         "
       >
         <template #footer>
-          <p class="text-xs text-gray-500 text-center">
+          <p class="text-center text-xs text-muted">
             {{ t("auth.have_account") }}
             <a
               href="#"
-              class="text-primary-600 hover:underline font-medium"
+              class="font-semibold text-primary hover:underline"
               @click.prevent="openLogin"
             >
               {{ t("auth.login_link") }}
@@ -278,19 +307,23 @@
           </p>
         </template>
       </SignupForm>
-    </Dialog>
+    </AppDialog>
   </div>
 
   <!-- Spacer -->
-  <div class="h-16"></div>
+  <div class="h-16" />
 </template>
 
 <script setup lang="ts">
 import { useAuthDialog } from "~/composables/useAuthDialog";
+import { SITE } from "~/config/site";
 
 const { t, locale, locales, setLocale } = useI18n();
+const localePath = useLocalePath();
+const route = useRoute();
 const authStore = useAuthStore();
 const { loginVisible, signupVisible, openLogin, openSignup } = useAuthDialog();
+const { cheminApresConnexion } = useChoixExamen();
 
 const mobileMenuOpen = ref(false);
 const loginError = ref("");
@@ -319,6 +352,40 @@ const mainItems = computed(() => [
     to: "/contact",
   },
 ]);
+
+// Chemin sans préfixe de langue (/fr/tarifs -> /tarifs) pour l'état actif
+const cheminSansLangue = computed(
+  () => route.path.replace(/^\/(fr|de)(?=\/|$)/, "").replace(/\/$/, "") || "/",
+);
+
+function isActive(to: string) {
+  if (to === "/") return cheminSansLangue.value === "/";
+  return (
+    cheminSansLangue.value === to || cheminSansLangue.value.startsWith(`${to}/`)
+  );
+}
+
+// Espace de l'utilisateur connecté (même logique que la redirection après connexion)
+const dashboardPath = computed(() => espaceAccueil(authStore));
+
+// Ombre de la barre uniquement après défilement
+const scrolled = ref(false);
+function surScroll() {
+  scrolled.value = window.scrollY > 8;
+}
+onMounted(() => {
+  surScroll();
+  window.addEventListener("scroll", surScroll, { passive: true });
+});
+onBeforeUnmount(() => window.removeEventListener("scroll", surScroll));
+
+// Fermer le menu mobile au changement de page
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false;
+  },
+);
 
 const localeCookie = useCookie("app_locale", { maxAge: 60 * 60 * 24 * 365 });
 
@@ -359,7 +426,7 @@ const handleLogin = async () => {
     } else if (authStore.isTeacher) {
       navigateTo("/enseignant/sessions");
     } else {
-      navigateTo("/dashboard");
+      navigateTo(cheminApresConnexion());
     }
   } else {
     loginError.value = result.error || t("auth.login_error");
@@ -386,7 +453,7 @@ const handleSignup = async () => {
 };
 
 const handleLogout = async () => {
-  authStore.logout();
+  await authStore.logout();
   closeMobileMenu();
   await navigateTo("/");
 };

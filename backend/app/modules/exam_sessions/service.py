@@ -159,9 +159,105 @@ class ExamSessionService:
             await self.submit_answer(session_id, user_id, answer)
             for answer in data.answers
         ]
+        
+    @staticmethod
+    def _pass_rules(level: Level | None, provider: str) -> dict:
+        rules = dict((level.exam_config or {}) if level else {})
+        rules.setdefault("pass_rule", "global_and_modules" if provider == "TELC" else "global")
+        return rules
 
+    @staticmethod
+    def _tdn_level(score: float | None, rules: dict) -> str | None:
+        if score is None:
+            return None
+        thresholds = rules.get("tdn_thresholds") or {"5": 78, "4": 63, "3": 45}
+        for tdn in ("5", "4", "3"):
+            if score >= thresholds.get(tdn, 101):
+                return f"TDN {tdn}"
+        return "unter TDN 3"
+    
     # ── Soumission finale ────────────────────────────────
+    async def _evaluate(
+        self, subject: Subject, exam: Exam | None, answers: list[ExamSessionAnswer]
+    ) -> dict:
+        """Score par module, score global, statut et réussite (logique commune
+        à la soumission et à la correction par l'enseignant)."""
+        provider = exam.provider if exam else "TELC"
+        score_breakdown, has_pending = self._compute_scores(subject, answers, provider=provider)
 
+        corrected = [v for v in score_breakdown.values() if v is not None]
+        global_score = sum(corrected) / len(corrected) if corrected else None
+
+        level = await self._get_level(subject.level_id)
+        total_pass_score = level.total_pass_score if level else None
+
+        rules = self._pass_rules(level, provider)
+        module_scores = [v for v in score_breakdown.values() if v is not None]
+
+        passed = None
+        if not has_pending and global_score is not None and level:
+            rule = rules["pass_rule"]
+            if rule == "each_module":          # ECL : chaque module >= 60 %
+                passed = all(v >= rules.get("module_min", 60) for v in module_scores)
+            elif rule == "tdn_levels":         # TestDaF : pas de réussite globale
+                passed = None
+            elif rule == "global_and_modules": # TELC
+                passed = global_score >= total_pass_score and all(v >= 60.0 for v in module_scores)
+            else:                               # Goethe / ÖSD
+                passed = global_score >= total_pass_score
+
+        return {
+            "status": "PENDING_REVIEW" if has_pending else "COMPLETED",
+            "score": global_score,
+            "score_breakdown": score_breakdown,
+            "passed": passed,
+            "total_pass_score": total_pass_score,
+        }
+
+    async def rescore_session(self, session_id: UUID) -> ExamSession:
+        """Recalcule une session après correction manuelle (enseignant)."""
+        session = await self.repo.get_by_id(session_id)
+        if not session:
+            raise NotFoundException(resource="Session", identifier=str(session_id))
+        answers = await self.answer_repo.get_by_session(session_id)
+        subject = await self._load_subject_full(session.subject_id)
+        exam = await self.exam_repo.get_by_id(session.exam_id)
+        ev = await self._evaluate(subject, exam, answers)
+        return await self.repo.update(
+            session_id,
+            status=ev["status"],
+            score=ev["score"],
+            score_breakdown=ev["score_breakdown"],
+            passed=ev["passed"],
+        )
+
+    def _private_result(
+        self, session: ExamSession, exam: Exam | None, subject: Subject, total_pass_score: int | None
+    ) -> SessionResultResponse:
+        """Réponse élève pour un devoir : aucun détail, seulement le statut."""
+        graded = session.status == "COMPLETED"
+        return SessionResultResponse(
+            session_id=session.id,
+            exam_id=session.exam_id,
+            exam_name=exam.name if exam else "",
+            subject_id=session.subject_id,
+            subject_number=subject.subject_number,
+            status=session.status,
+            score=session.score if graded else None,
+            score_breakdown=None,
+            passed=None,
+            total_pass_score=total_pass_score or 0,
+            started_at=session.started_at,
+            submitted_at=session.submitted_at,
+            duration_seconds=session.duration_seconds,
+            modules=[],
+            result_message=(
+                "Devoir rendu et noté. Retrouvez votre note finale dans vos devoirs."
+                if graded
+                else "Devoir rendu. Votre enseignant va le corriger : votre note apparaîtra dans vos devoirs."
+            ),
+        )
+        
     async def submit_session(
         self, session_id: UUID, user_id: UUID
     ) -> SessionResultResponse:
@@ -174,58 +270,28 @@ class ExamSessionService:
         subject = await self._load_subject_full(session.subject_id)
         exam = await self.exam_repo.get_by_id(session.exam_id)
 
-        provider = exam.provider if exam else "TELC"
-        score_breakdown, has_pending = self._compute_scores(subject, answers, provider=provider)
-
-        corrected_scores = [v for v in score_breakdown.values() if v is not None]
-        global_score = (
-            sum(corrected_scores) / len(corrected_scores)
-            if corrected_scores else None
-        )
-
-        status = "PENDING_REVIEW" if has_pending else "COMPLETED"
-
-        passed = None
-        total_pass_score = None
-        if not has_pending and global_score is not None:
-            level = subject.level if hasattr(subject, "level") else None
-            if not level:
-                level = await self._get_level(subject.level_id)
-            if level:
-                total_pass_score = level.total_pass_score
-                provider = exam.provider if exam else "TELC"
-
-                # Seuil 60% par module pour tous les providers
-                all_modules_pass = all(
-                    v >= 60.0
-                    for v in score_breakdown.values()
-                    if v is not None
-                )
-
-                if provider == "TELC":
-                    # TELC : score global >= seuil ET chaque module >= 60%
-                    passed = global_score >= total_pass_score and all_modules_pass
-                else:
-                    # Goethe / ÖSD : score global >= seuil suffit
-                    passed = global_score >= total_pass_score
+        ev = await self._evaluate(subject, exam, answers)
 
         now = datetime.now(timezone.utc)
-        duration = int((now - session.started_at).total_seconds())
-
         session = await self.repo.update(
             session_id,
-            status=status,
-            score=global_score,
-            score_breakdown=score_breakdown,
-            passed=passed,
+            status=ev["status"],
+            score=ev["score"],
+            score_breakdown=ev["score_breakdown"],
+            passed=ev["passed"],
             submitted_at=now,
-            duration_seconds=duration,
+            duration_seconds=int((now - session.started_at).total_seconds()),
         )
+
+        # Devoir (sujet privé) : on met à jour la copie et on ne révèle rien
+        if subject.is_private:
+            from app.modules.assignments.service import AssignmentService
+            await AssignmentService(self.db).on_session_submitted(session)
+            return self._private_result(session, exam, subject, ev["total_pass_score"])
 
         return await self._build_result_response(
-            session, exam, subject, answers, total_pass_score
+            session, exam, subject, answers, ev["total_pass_score"]
         )
-
     # ── Résultat ─────────────────────────────────────────
 
     async def get_result(
@@ -238,6 +304,12 @@ class ExamSessionService:
 
         answers = await self.answer_repo.get_by_session(session_id)
         subject = await self._load_subject_full(session.subject_id)
+        
+        if subject.is_private:
+            raise ForbiddenException(
+                detail="Le résultat de ce devoir se consulte dans votre espace Devoirs."
+            )
+            
         exam = await self.exam_repo.get_by_id(session.exam_id)
         level = await self._get_level(subject.level_id)
         total_pass_score = level.total_pass_score if level else None
@@ -278,6 +350,9 @@ class ExamSessionService:
         for s in sessions:
             exam = await self.exam_repo.get_by_id(s.exam_id)
             subject = await self._get_subject(s.subject_id)
+            # Les devoirs ont leur propre espace : pas dans l'historique d'entraînement
+            if subject and subject.is_private:
+                continue
             result.append(SessionListResponse(
                 id=s.id,
                 exam_id=s.exam_id,
@@ -360,7 +435,7 @@ class ExamSessionService:
         result = await self.db.execute(
             select(Subject)
             .join(Level, Level.id == Subject.level_id)
-            .where(Level.exam_id == exam_id, Subject.is_active == True)
+            .where(Level.exam_id == exam_id, Subject.is_active == True,Subject.is_private == False)
             .order_by(Subject.subject_number)
         )
         all_subjects = list(result.scalars().all())
@@ -489,6 +564,9 @@ class ExamSessionService:
         answer_map = {a.question_id: a for a in answers}
         modules_result = []
         provider = exam.provider if exam else "TELC"
+        level = await self._get_level(subject.level_id)
+        rules = self._pass_rules(level, exam.provider if exam else "TELC")
+        is_tdn = rules["pass_rule"] == "tdn_levels"
 
         for module in subject.modules:
             teil_results = []
@@ -564,14 +642,15 @@ class ExamSessionService:
                 questions_incorrect=questions_incorrect,
                 questions_total=questions_total,
                 teile=teil_results,
+                tdn_level=self._tdn_level(score_on_100, rules) if is_tdn else None,
             ))
 
         # Calculer module_passed pour mode module seul
         module_passed = None
-        if len(modules_result) == 1:
+        if len(modules_result) == 1 and not is_tdn:
             m = modules_result[0]
             if m.score_obtained is not None:
-                module_passed = m.score_obtained >= 60.0
+                module_passed = m.score_obtained >= rules.get("module_min", 60)
 
         # Messages enrichis
         result_message = None
@@ -601,7 +680,11 @@ class ExamSessionService:
                     result_message = "Vous n'avez pas atteint le score requis. Continuez à vous entraîner !"
             elif session.status == "PENDING_REVIEW":
                 result_message = "Résultat partiel, certaines parties sont en attente de correction."
-
+                
+        if is_tdn and session.status == "COMPLETED":
+            levels = ", ".join(f"{m.name} : {m.tdn_level}" for m in modules_result if m.tdn_level)
+            result_message = f"Niveaux estimés : {levels}. Les seuils officiels varient légèrement selon la session."
+            
         return SessionResultResponse(
             session_id=session.id,
             exam_id=session.exam_id,

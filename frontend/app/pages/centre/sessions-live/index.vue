@@ -111,7 +111,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff", // autorise branch_secretary ET center_director
 });
 
 const centerStaffStore = useCenterStaffStore();

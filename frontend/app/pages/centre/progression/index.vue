@@ -66,7 +66,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff",
 });
 
 import type { StudentProgressResponse } from "#shared/api";

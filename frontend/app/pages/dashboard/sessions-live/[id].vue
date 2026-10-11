@@ -416,7 +416,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 import { useLiveSession } from "~/composables/useLiveSession";
 // createBrowserAudioIO() est typé pour SprechenAudioIO côté source, mais

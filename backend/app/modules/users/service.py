@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.users.models import User, UserRole
 from app.modules.users.repository import UserRepository
 from app.modules.users.schemas import (
-    StudentAccessDatesUpdateRequest,
     StudentCreditAdjustRequest,
     StudentDetailedProgressResponse,
     StudentQuickCreateRequest,
@@ -18,9 +17,8 @@ from app.modules.users.schemas import (
     DirectorCreateRequest,
     SecretaryCreateRequest,
     StudentCreateRequest,
-    StudentTargetUpdateRequest,
 )
-from app.shared.exceptions.http import BadRequestException, ForbiddenException, NotFoundException
+from app.shared.exceptions.http import BadRequestException, ForbiddenException
 from app.shared.security.password import hash_password, verify_password
 
 # Normalise les différents slugs de module selon le provider
@@ -186,20 +184,15 @@ class UserService:
         return await self.repo.update(teacher_id, is_active=not teacher.is_active)
       
     async def create_student(self, data: StudentCreateRequest, secretary: User) -> User:
-        """Créé par la secrétaire — vérifie le quota, puis prélève les crédits
-        par défaut du centre sur le pool."""
+        """Créé par la secrétaire. Le compte n'a pas encore accès aux sujets :
+        l'accès s'ouvre à l'activation (POST /sales/activations)."""
         from app.modules.centers.service import CenterService
         from app.modules.centers.repository import BranchRepository
-        from app.modules.exams.repository import LevelRepository
 
-        branch_repo = BranchRepository(self.db)
-        branch = await branch_repo.get_by_id_or_404(secretary.branch_id)
-
-        center_service = CenterService(self.db)
-        await center_service.check_quota_available(branch.center_id)
-        await LevelRepository(self.db).get_by_id_or_404(data.target_level_id)
+        branch = await BranchRepository(self.db).get_by_id_or_404(secretary.branch_id)
         await self._check_email_available(data.email)
 
+        center_service = CenterService(self.db)
         center = await center_service.center_repo.get_by_id_or_404(branch.center_id)
         default_credits = center.default_credits_per_student
 
@@ -208,7 +201,7 @@ class UserService:
                 detail=(
                     f"Pool de crédits insuffisant pour créer un nouvel étudiant "
                     f"({center.ai_credit_pool_balance} restants, {default_credits} requis). "
-                    "Contactez ITIA pour un rechargement."
+                    "Contactez GoToGermany pour un rechargement."
                 )
             )
 
@@ -222,28 +215,21 @@ class UserService:
             is_verified=True,
             role=UserRole.student,
             branch_id=secretary.branch_id,
-            target_level_id=data.target_level_id,
             ai_credits=default_credits,
-            access_duration_days=data.access_duration_days or 30,
         )
 
-        # Prélèvement du pool + journalisation de la création elle-même
-        await center_service.center_repo.update(
-            branch.center_id,
-            ai_credit_pool_balance=center.ai_credit_pool_balance - default_credits,
-        )
+        new_balance = center.ai_credit_pool_balance - default_credits
+        await center_service.center_repo.update(branch.center_id, ai_credit_pool_balance=new_balance)
         await center_service.credit_txn_repo.create(
             center_id=branch.center_id,
             student_id=student.id,
             performed_by=secretary.id,
             amount=default_credits,
-            pool_balance_after=center.ai_credit_pool_balance - default_credits,
+            pool_balance_after=new_balance,
             reason="Attribution initiale à la création du compte",
         )
-
         return student
-
-
+    
     async def adjust_student_credits(
         self, student_id: UUID, data: StudentCreditAdjustRequest, performer: User
     ) -> User:
@@ -294,33 +280,6 @@ class UserService:
         return await self.repo.update(student_id, is_active=not student.is_active)
 
 
-    async def update_student_access_dates(
-        self, student_id: UUID, data: StudentAccessDatesUpdateRequest, director: User
-    ) -> User:
-        """Directeur ajuste manuellement la fenêtre d'accès d'un étudiant précis."""
-        from app.modules.centers.repository import BranchRepository
-
-        student = await self.repo.get_by_id_or_404(student_id)
-        if student.role != UserRole.student:
-            raise BadRequestException(detail="Cet utilisateur n'est pas un étudiant.")
-
-        branch_repo = BranchRepository(self.db)
-        branch = await branch_repo.get_by_id_or_404(student.branch_id)
-        if branch.center_id != director.center_id:
-            raise ForbiddenException(detail="Cet étudiant n'appartient pas à votre centre.")
-
-        update_data = {}
-        if data.access_expires_at is not None:
-            update_data["access_expires_at"] = data.access_expires_at
-        if data.access_duration_days is not None:
-            update_data["access_duration_days"] = data.access_duration_days
-
-        if not update_data:
-            return student
-
-        return await self.repo.update(student_id, **update_data)
-
-
     async def get_student_progress_for_secretary(self, secretary: User) -> list[dict]:
         """Progression des étudiants — restreinte à la succursale de la secrétaire."""
         from app.modules.exam_sessions.repository import ExamSessionRepository
@@ -361,24 +320,6 @@ class UserService:
             })
         return rows
 
-    async def update_student_target(
-            self, student_id: UUID, data: StudentTargetUpdateRequest, secretary: User
-        ) -> User:
-            """Modifie le level ciblé — ne consomme pas une nouvelle place de quota."""
-            from app.modules.exams.repository import LevelRepository
-
-            student = await self.repo.get_by_id_or_404(student_id)
-            if student.branch_id != secretary.branch_id:
-                raise ForbiddenException(detail="Cet étudiant n'appartient pas à votre succursale.")
-            if student.role != UserRole.student:
-                raise BadRequestException(detail="Cet utilisateur n'est pas un étudiant.")
-
-            await LevelRepository(self.db).get_by_id_or_404(data.target_level_id)
-
-            return await self.repo.update(
-                student.id,
-                target_level_id=data.target_level_id,
-            )
 
     async def list_students_for_secretary(self, secretary: User) -> list[User]:
         return await self.repo.find_students_by_branch(secretary.branch_id)
@@ -563,7 +504,6 @@ class UserService:
     async def create_student_quick(
         self, data: StudentQuickCreateRequest, staff: User
     ) -> User:
-        from app.modules.centers.service import CenterService
         from app.modules.centers.repository import BranchRepository
         from uuid import uuid4
         from app.shared.security.password import hash_password
@@ -582,10 +522,7 @@ class UserService:
             branch = await branch_repo.get_by_id_or_404(staff.branch_id)
             target_branch_id = staff.branch_id
 
-        center_service = CenterService(self.db)
-        await center_service.check_quota_available(branch.center_id)
-
-        placeholder_email = f"cursus-{uuid4().hex[:12]}@internal.gotogermany"
+        placeholder_email = f"eleve-{uuid4().hex[:12]}@internal.gotogermany"
         placeholder_password = secrets.token_urlsafe(24)
 
         return await self.repo.create(
@@ -598,9 +535,7 @@ class UserService:
             is_verified=False,
             role=UserRole.student,
             branch_id=target_branch_id,
-            target_level_id=None,
             ai_credits=0,
-            access_duration_days=30,
         )
         
     async def list_teachers_for_director(self, director: User) -> list[User]:

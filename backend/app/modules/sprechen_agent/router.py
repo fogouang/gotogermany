@@ -38,6 +38,7 @@ router = APIRouter()
 
 _inbound_adapter: TypeAdapter[InboundMessage] = TypeAdapter(InboundMessage)
 
+SPRECHEN_PROVIDERS = {"goethe", "telc", "ösd", "osd", "oesd", "ecl", "testdaf"}
 
 # ---------------------------------------------------------------------------
 # Dependencies (unchanged from before)
@@ -49,9 +50,10 @@ async def get_subject_data(
     from app.modules.exams.repository import ExamRepository, LevelRepository, SubjectRepository
 
     subject = await SubjectRepository(db).get_with_modules(subject_id)
-    if subject is None:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Subject not found.")
+    
+    # Sujet privé : réservé à la banque des enseignants
+    if subject and subject.is_private and not CurrentUser.is_admin:
+        raise HTTPException(status_code=404, detail="Sujet introuvable.")
 
     level = await LevelRepository(db).get_by_id_or_404(subject.level_id)
     exam = await ExamRepository(db).get_by_id_or_404(level.exam_id)

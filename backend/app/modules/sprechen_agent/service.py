@@ -239,6 +239,7 @@ class SprechenAgentService:
             total_score=result.total_score,
             total_max_score=result.total_max_score,
             passed=result.passed,
+            level_estimate=result.level_estimate,
             strengths=result.strengths,
             improvement_areas=result.improvement_areas,
             transcript=[e.model_dump(mode="json") for e in session.transcript],

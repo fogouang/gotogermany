@@ -197,7 +197,7 @@
 <script setup lang="ts">
 import type { PartnerDetailResponse, PartnerStatsResponse } from '#shared/api'
 
-definePageMeta({ layout: 'admin', middleware: 'admin' })
+definePageMeta({ layout: 'admin' })
 
 const store = useAdminPartnersStore()
 const toast = useToast()

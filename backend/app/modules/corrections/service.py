@@ -48,6 +48,8 @@ _REQUIRED_FIELDS_BY_SHAPE = {
     "nested": {"global_assessment", "criteria_scores", "task_feedbacks"},
     "flat": {"overall_score", "passed"},
     "osd_b2": {"global_assessment", "task1", "task2"},
+    "ecl": {"global_assessment", "task1", "task2"},
+    "testdaf": {"global_assessment", "task1", "task2"},
 }
 
 
@@ -85,10 +87,19 @@ class CorrectionService:
 
         # 2. Charger la session avec toutes ses relations
         session = await self._load_session(request.exam_session_id, current_user_id)
-
+        
+        # Les devoirs sont corrigés par l'enseignant, jamais par l'IA
+        if session.subject.is_private:
+            raise ValueError("Ce devoir est corrigé par votre enseignant.")
+        
         # 3. Extraire provider + level depuis la hiérarchie
         provider, level = await self._extract_exam_context(session)
-
+        
+        if (provider, level) not in CRITERIA_CONFIG:
+            raise ValueError(
+                f"La correction IA n'est pas encore disponible pour {provider.upper()} {level.upper()}."
+            )
+            
         # 4. Extraire les réponses free_text triées par teil_number
         tasks = await self._extract_tasks(session.id, provider, level)
 
@@ -199,7 +210,7 @@ class CorrectionService:
         level_obj = session.subject.level
         exam_obj = level_obj.exam
 
-        provider = exam_obj.provider.lower().strip()
+        provider = exam_obj.provider.lower().strip().replace("ö", "o")
         level = level_obj.cefr_code.lower().strip()
 
         return provider, level
@@ -256,7 +267,9 @@ class CorrectionService:
                 bullet_points=content.get("prompts", []),
                 opinion_quote=content.get("opinion_quote", ""),
                 topic=content.get("topic", ""),
-                context_ad=content.get("context_ad", ""),
+                context_ad=content.get("context_ad", "") or "\n\n".join(
+                    filter(None, [content.get("source_text", ""), content.get("graph_description", "")])
+                ),
             )
             tasks.append(task)
 

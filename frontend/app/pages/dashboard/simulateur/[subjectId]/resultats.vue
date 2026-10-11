@@ -225,7 +225,7 @@
 <script setup lang="ts">
 import { useSimulatorStore } from '~/stores/simulator'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'dashboard' })
 
 const { t }  = useI18n()
 const route  = useRoute()

@@ -298,7 +298,7 @@
 import { useSimulatorStore } from "~/stores/simulator";
 import type { SimulatorResultResponse } from "#shared/api";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 useHead({ title: t("simulator.page_title") });

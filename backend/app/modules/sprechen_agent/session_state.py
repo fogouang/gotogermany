@@ -140,7 +140,7 @@ class SessionState(BaseModel):
     session_id: UUID = Field(default_factory=uuid4)
     student_id: UUID
     subject_id: UUID          # FK to the exam subject row already in DB
-    provider: str              # "goethe" | "telc" | "oesd"
+    provider: str              # "goethe" | "telc" | "oesd" | "ecl" | "testdaf"
     level: str                 # "B1" | "B2" | ...
     cefr_target: str           # usually == level, kept separate for A1/A2 J-variants etc.
     pass_threshold_percent: float = 60.0
@@ -217,3 +217,6 @@ class GradingResult(BaseModel):
     strengths: list[str] = Field(default_factory=list)
     improvement_areas: list[str] = Field(default_factory=list)
     graded_at: datetime = Field(default_factory=datetime.utcnow)
+    # TestDaF uniquement : niveau estimé ("TDN 5" ... "unter TDN 3"),
+    # le TestDaF n'ayant pas de "réussi" officiel. None pour les autres examens.
+    level_estimate: str | None = None

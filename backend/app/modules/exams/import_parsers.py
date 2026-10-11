@@ -204,7 +204,13 @@ def parse_free_text(teil_data: dict) -> list[dict]:
                 }
         content["opinion_variants"] = variants
         content["leitpunkte"] = teil_data.get("leitpunkte", [])
-
+        
+    # TestDaF Aufgabe 2 (Zusammenfassung) : texte source + description du graphique
+    if teil_data.get("source_text"):
+        content["source_text"] = teil_data["source_text"]
+    if teil_data.get("graph_description"):
+        content["graph_description"] = teil_data["graph_description"]
+        
     return [{
         "question_number": 1,
         "question_type": "free_text",
@@ -540,6 +546,28 @@ def parse_oral_meinungsaustausch(teil_data: dict) -> list[dict]:
         "points": teil_data.get("max_score", 10),
         "audio_file": None,
     }]
+ 
+def parse_oral_semidirect(teil_data: dict) -> list[dict]:
+    """TestDaF digital (ESQUISSE) : tâche orale semi-directe, réponse à un interlocuteur fictif."""
+    content = {
+        "scenario": teil_data.get("scenario", ""),
+        "prompts": teil_data.get("prompts") or teil_data.get("leitpunkte", []),
+        "partner_line": teil_data.get("partner_line", ""),
+    }
+    # Tâches intégrées : texte à lire / extrait de cours à écouter
+    if teil_data.get("text"):
+        content["text"] = teil_data["text"]
+    if teil_data.get("transcription"):
+        content["transcription"] = teil_data["transcription"]
+    return [{
+        "question_number": 1,
+        "question_type": "oral_semidirect",
+        "content": content,
+        "correct_answer": {"scoring_criteria": teil_data.get("scoring_criteria", {})},
+        "points": teil_data.get("max_score", 5),
+        "audio_file": None,
+    }]  
+    
     
 PARSERS = {
     "richtig_falsch":           parse_richtig_falsch,
@@ -568,4 +596,5 @@ PARSERS = {
     "tableau_mixed":            parse_tableau_mixed,          
     "bildbeschreibung":         parse_bildbeschreibung,        
     "oral_meinungsaustausch":   parse_oral_meinungsaustausch,  
+    "oral_semidirect":          parse_oral_semidirect,
 }

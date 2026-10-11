@@ -15,6 +15,7 @@ from app.modules.exam_access.service import ExamAccessService
 from app.modules.exam_access.repository import ExamAccessRepository
 from app.shared.database.session import get_db
 from app.shared.schemas.responses import SuccessResponse
+from fastapi import Depends, Query
 
 router = APIRouter()
 
@@ -49,10 +50,14 @@ async def admin_grant_access(
     user_id: UUID,
     level_id: UUID,
     _: CurrentAdmin,
+    days: int | None = Query(
+        default=None, ge=1, le=365,
+        description="Nombre de jours offerts. Omis = accès permanent.",
+    ),
     db: AsyncSession = Depends(get_db),
 ):
-    """Accorde manuellement un accès à un level — admin uniquement."""
-    return await ExamAccessService(db).grant_admin_access(user_id, level_id)
+    """Accorde ou prolonge l'accès d'un utilisateur à un niveau, sans paiement."""
+    return await ExamAccessService(db).grant_admin_access(user_id, level_id, days)
 
 
 @router.delete("/admin/revoke", response_model=SuccessResponse)

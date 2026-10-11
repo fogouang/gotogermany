@@ -114,7 +114,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "enseignant",
-  middleware: "teacher",
 });
 
 const route = useRoute();

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
 import enum
-from sqlalchemy import String, Integer, Boolean, DateTime, Enum, ForeignKey
+from sqlalchemy import String, Integer, Boolean, DateTime, Enum, ForeignKey, true
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.shared.database.base import Base, UUIDMixin, TimestampMixin
@@ -45,6 +45,18 @@ class Center(Base, UUIDMixin, TimestampMixin):
     # paramétrable par le directeur, prélevé du pool à chaque création.
     default_credits_per_student: Mapped[int] = mapped_column(
         Integer, default=2, nullable=False, server_default="2"
+    )
+    
+        # ── Partenariat (ventes) ──
+    # Le centre peut-il activer des comptes ? (coupé par l'admin si besoin)
+    partner_can_activate: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, server_default=true()
+    )
+    # Plafond d'impayés en FCFA. NULL = pas de plafond (seul le délai s'applique)
+    partner_unpaid_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Délai de paiement d'une vente, en heures (24 h par contrat)
+    partner_payment_delay_hours: Mapped[int] = mapped_column(
+        Integer, default=24, nullable=False, server_default="24"
     )
 
     branches: Mapped[list["Branch"]] = relationship(

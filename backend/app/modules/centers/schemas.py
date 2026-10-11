@@ -5,14 +5,13 @@ import uuid
 from datetime import datetime
 from pydantic import Field, field_validator
 from app.shared.schemas.base import BaseSchema
-from app.modules.centers.models import LicenseStatus, PaymentMethod
 
 
 # ─────────────────────────────────────────────
 # Requests
 # ─────────────────────────────────────────────
 class CenterCreateRequest(BaseSchema):
-    """Création d'un centre — admin ITIA uniquement."""
+    """Création d'un centre : admin uniquement."""
     name: str = Field(min_length=2, max_length=255)
     contact_email: str | None = Field(default=None, max_length=255)
     contact_phone: str | None = Field(default=None, max_length=20)
@@ -24,7 +23,7 @@ class CenterCreateRequest(BaseSchema):
 
 
 class BranchCreateRequest(BaseSchema):
-    """Création d'une succursale — admin ITIA (initiale) ou directeur (supplémentaire)."""
+    """Création d'une succursale : admin (initiale) ou directeur (supplémentaire)."""
     name: str = Field(min_length=2, max_length=255)
     is_main: bool = False
 
@@ -34,51 +33,24 @@ class BranchCreateRequest(BaseSchema):
         return v.strip()
 
 
-class LicenseFormulaCreateRequest(BaseSchema):
-    """Création d'une formule de licence — admin ITIA uniquement."""
-    label: str = Field(min_length=2, max_length=100)
-    duration_months: int = Field(gt=0, le=24)
-    max_students: int = Field(gt=0)
+class CenterCreditPoolRechargeRequest(BaseSchema):
+    """Rechargement manuel du pool : admin uniquement."""
+    amount: int = Field(gt=0)
+    reason: str | None = Field(default=None, max_length=255)
 
 
-class CenterLicenseActivateRequest(BaseSchema):
-    """Activation d'une licence pour un centre — admin ITIA uniquement."""
-    formula_id: uuid.UUID
-    payment_method: PaymentMethod
-    payment_reference: str | None = Field(default=None, max_length=255)
+class CenterDefaultCreditsUpdateRequest(BaseSchema):
+    """Le directeur ajuste le nombre de crédits par défaut à la création d'un étudiant."""
+    default_credits_per_student: int = Field(ge=0, le=100)
 
 
-class CenterLicenseExtendRequest(BaseSchema):
-    """Extension du quota d'une licence active — admin ITIA uniquement."""
-    additional_students: int = Field(gt=0)
-    payment_method: PaymentMethod
-    payment_reference: str | None = Field(default=None, max_length=255)
+class CenterUpdateRequest(BaseSchema):
+    address: str | None = Field(default=None, max_length=255)
 
 
 # ─────────────────────────────────────────────
 # Responses
 # ─────────────────────────────────────────────
-class LicenseFormulaResponse(BaseSchema):
-    id: uuid.UUID
-    label: str
-    duration_months: int
-    max_students: int
-    is_active: bool
-
-
-class CenterLicenseResponse(BaseSchema):
-    id: uuid.UUID
-    center_id: uuid.UUID
-    formula_id: uuid.UUID
-    start_date: datetime
-    end_date: datetime
-    max_students: int
-    status: LicenseStatus
-    payment_method: PaymentMethod | None
-    payment_reference: str | None
-    created_at: datetime
-
-
 class BranchResponse(BaseSchema):
     id: uuid.UUID
     center_id: uuid.UUID
@@ -95,35 +67,17 @@ class CenterResponse(BaseSchema):
     is_active: bool
     address: str | None = None
     logo_path: str | None = None
-    ai_credit_pool_balance: int  
-    default_credits_per_student: int  
+    ai_credit_pool_balance: int
+    default_credits_per_student: int
+    # Partenariat (ventes)
+    partner_can_activate: bool = True
+    partner_unpaid_limit: int | None = None
+    partner_payment_delay_hours: int = 24
     created_at: datetime
 
 
 class CenterDetailResponse(CenterResponse):
     branches: list[BranchResponse] = []
-    active_license: CenterLicenseResponse | None = None
-
-
-class LicenseUsageResponse(BaseSchema):
-    """Vue consolidée pour le panel directeur."""
-    license: CenterLicenseResponse | None
-    formula_label: str | None          
-    students_used: int
-    students_remaining: int
-    days_remaining: int | None
-    branches_breakdown: dict[str, int]  
-    
-    
-class CenterCreditPoolRechargeRequest(BaseSchema):
-    """Rechargement manuel du pool — admin ITIA uniquement."""
-    amount: int = Field(gt=0)
-    reason: str | None = Field(default=None, max_length=255)
-
-
-class CenterDefaultCreditsUpdateRequest(BaseSchema):
-    """Le directeur ajuste le nombre de crédits par défaut à la création d'un étudiant."""
-    default_credits_per_student: int = Field(ge=0, le=100)
 
 
 class CenterCreditTransactionResponse(BaseSchema):
@@ -141,14 +95,3 @@ class CenterCreditTransactionResponse(BaseSchema):
 class CenterPoolResponse(BaseSchema):
     ai_credit_pool_balance: int
     default_credits_per_student: int
-    
-
-class CenterUpdateRequest(BaseSchema):
-    address: str | None = Field(default=None, max_length=255)
-    
-
-class CenterLicenseDatesUpdateRequest(BaseSchema):
-    """Ajustement manuel des dates de début/fin d'une licence active — admin ITIA
-    (ex: alignement sur un accord commercial négocié hors plateforme)."""
-    start_date: datetime
-    end_date: datetime

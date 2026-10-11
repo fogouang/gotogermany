@@ -229,7 +229,7 @@
 import { useSimulatorStore } from "~/stores/simulator";
 import type { SchreibenSubjectResponse } from "#shared/api";
 
-definePageMeta({ layout: "admin", middleware: ["auth", "admin"] });
+definePageMeta({ layout: "admin" });
 useHead({ title: "Admin — Sujets simulateur" });
 
 const router = useRouter();

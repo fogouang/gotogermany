@@ -282,7 +282,7 @@
 <script setup lang="ts">
 import type { PlanResponse } from "#shared/api";
 
-definePageMeta({ layout: "admin", middleware: "admin" });
+definePageMeta({ layout: "admin" });
 
 const toast = useToast();
 const {

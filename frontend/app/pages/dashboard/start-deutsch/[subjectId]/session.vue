@@ -158,7 +158,7 @@ import SchreibenDownloadButton from "~/components/start-deutsch/SchreibenDownloa
 // ⚠️ À adapter : chemin réel de ton Header/Timer existant (B1/B2)
 import SessionHeader from "~/components/session/SessionHeader.vue";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const route = useRoute();

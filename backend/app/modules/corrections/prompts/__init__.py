@@ -5,13 +5,17 @@ Router central : reçoit les données extraites de la DB et retourne
 le prompt complet prêt à envoyer à l'IA.
 
 Mapping :
-    telc   + b1 → get_telc_b1_prompt
-    telc   + b2 → get_telc_b2_prompt
-    goethe + b1 → get_goethe_osd_b1_prompt
-    goethe + b2 → get_goethe_b2_prompt
-    osd    + b1 → get_goethe_osd_b1_prompt  (structure identique à Goethe B1)
-    osd    + b2 → get_osd_b2_prompt
+    telc    + b1      → get_telc_b1_prompt
+    telc    + b2      → get_telc_b2_prompt
+    goethe  + b1      → get_goethe_osd_b1_prompt
+    goethe  + b2      → get_goethe_b2_prompt
+    osd     + b1      → get_goethe_osd_b1_prompt  (structure identique à Goethe B1)
+    osd     + b2      → get_osd_b2_prompt
+    ecl     + b1/b2   → get_ecl_prompt             (ESQUISSE à valider)
+    testdaf + b2/c1   → get_testdaf_prompt         (ESQUISSE à valider)
 """
+from app.modules.corrections.testdaf_prompt import get_testdaf_prompt
+from app.modules.corrections.ecl_prompt import get_ecl_prompt
 from dataclasses import dataclass, field
 
 from app.modules.corrections.prompts.b1.telc_b1_prompt import get_telc_b1_prompt
@@ -33,35 +37,48 @@ class TaskData:
     bullet_points: list[str] = field(default_factory=list)   # Points à traiter
     opinion_quote: str = ""             # Goethe B1 Teil 2 : citation du forum
     topic: str = ""                     # Goethe/ÖSD B2 Teil 1 : thème
-    context_ad: str = ""                # Telc B2 / ÖSD B2 : annonce publicitaire
+    context_ad: str = ""                # Telc B2 / ÖSD B2 : annonce ; TestDaF A2 : texte source + graphique
 
 
 # ─────────────────────────────────────────────────────────
-# Constantes — providers et niveaux supportés
+# Constantes : providers et niveaux supportés
 # ─────────────────────────────────────────────────────────
 
-SUPPORTED_PROVIDERS = {"telc", "goethe", "osd"}
-SUPPORTED_LEVELS    = {"b1", "b2"}
+SUPPORTED_PROVIDERS = {"telc", "goethe", "osd", "ecl", "testdaf"}
+SUPPORTED_LEVELS    = {"b1", "b2", "c1"}
 
 # Nombre de tâches attendues par (provider, level)
 EXPECTED_TASK_COUNT = {
-    ("telc",   "b1"): 1,
-    ("telc",   "b2"): 1,
-    ("goethe", "b1"): 3,
-    ("goethe", "b2"): 2,
-    ("osd",    "b1"): 3,
-    ("osd",    "b2"): 2,
+    ("telc",    "b1"): 1,
+    ("telc",    "b2"): 1,
+    ("goethe",  "b1"): 3,
+    ("goethe",  "b2"): 2,
+    ("osd",     "b1"): 3,
+    ("osd",     "b2"): 2,
+    ("ecl",     "b1"): 2,
+    ("ecl",     "b2"): 2,
+    ("testdaf", "b2"): 2,
+    ("testdaf", "c1"): 2,
 }
 
 # Score maximum par (provider, level)
 MAX_SCORES = {
-    ("telc",   "b1"): 45,
-    ("telc",   "b2"): 45,
-    ("goethe", "b1"): 100,
-    ("goethe", "b2"): 100,
-    ("osd",    "b1"): 100,
-    ("osd",    "b2"): 30,
+    ("telc",    "b1"): 45,
+    ("telc",    "b2"): 45,
+    ("goethe",  "b1"): 100,
+    ("goethe",  "b2"): 100,
+    ("osd",     "b1"): 100,
+    ("osd",     "b2"): 30,
+    ("ecl",     "b1"): 25,
+    ("ecl",     "b2"): 25,
+    ("testdaf", "b2"): 20,
+    ("testdaf", "c1"): 20,
 }
+
+
+def _normalize_provider(provider: str) -> str:
+    """"ÖSD" / "ösd" -> "osd" ; le reste en minuscules."""
+    return provider.lower().strip().replace("ö", "o")
 
 
 # ─────────────────────────────────────────────────────────
@@ -76,18 +93,10 @@ def build_correction_prompt(
     """
     Construire le prompt de correction selon le provider et le niveau.
 
-    Args:
-        provider: "telc" | "goethe" | "osd"
-        level:    "b1" | "b2"
-        tasks:    Liste de TaskData (1, 2 ou 3 selon l'examen)
-
-    Returns:
-        Prompt complet prêt à envoyer à l'IA
-
     Raises:
         ValueError: Provider/niveau non supporté ou nombre de tâches incorrect
     """
-    provider = provider.lower().strip()
+    provider = _normalize_provider(provider)
     level    = level.lower().strip()
 
     _validate(provider, level, tasks)
@@ -151,17 +160,41 @@ def build_correction_prompt(
             context_ad=t2.context_ad,
         )
 
+    # ── ECL B1 / B2 (esquisse) ──────────────────────────
+    if provider == "ecl":
+        t1, t2 = tasks[0], tasks[1]
+        return get_ecl_prompt(
+            level=level,
+            task1_text=t1.text,
+            task1_instruction=t1.instruction,
+            task1_bullets=t1.bullet_points,
+            task2_text=t2.text,
+            task2_instruction=t2.instruction,
+            task2_bullets=t2.bullet_points,
+        )
+
+    # ── TestDaF (esquisse) ──────────────────────────────
+    if provider == "testdaf":
+        t1, t2 = tasks[0], tasks[1]
+        return get_testdaf_prompt(
+            task1_text=t1.text,
+            task1_instruction=t1.instruction,
+            task2_text=t2.text,
+            task2_instruction=t2.instruction,
+            task2_source=t2.context_ad,
+        )
+
     raise ValueError(f"Combinaison non gérée : provider={provider}, level={level}")
 
 
 def get_max_score(provider: str, level: str) -> int:
     """Retourner le score maximum pour un examen donné."""
-    return MAX_SCORES[(provider.lower(), level.lower())]
+    return MAX_SCORES[(_normalize_provider(provider), level.lower())]
 
 
 def get_expected_task_count(provider: str, level: str) -> int:
     """Retourner le nombre de tâches attendues pour un examen donné."""
-    return EXPECTED_TASK_COUNT[(provider.lower(), level.lower())]
+    return EXPECTED_TASK_COUNT[(_normalize_provider(provider), level.lower())]
 
 
 # ─────────────────────────────────────────────────────────
@@ -183,7 +216,11 @@ def _validate(provider: str, level: str, tasks: list[TaskData]) -> None:
             f"Valeurs acceptées : {SUPPORTED_LEVELS}"
         )
 
-    expected = EXPECTED_TASK_COUNT[(provider, level)]
+    expected = EXPECTED_TASK_COUNT.get((provider, level))
+    if expected is None:
+        raise ValueError(
+            f"La correction IA n'est pas disponible pour {provider.upper()} {level.upper()}."
+        )
     if len(tasks) != expected:
         raise ValueError(
             f"Examen {provider.upper()} {level.upper()} attend {expected} tâche(s), "

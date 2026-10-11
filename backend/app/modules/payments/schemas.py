@@ -10,7 +10,7 @@ Flow complet :
 import uuid
 from datetime import datetime
 from typing import Any
-from pydantic import Field
+from pydantic import Field,model_validator
 from app.shared.schemas.base import BaseSchema
 
 
@@ -106,12 +106,19 @@ class ManualPaymentRequest(BaseSchema):
     user_id: uuid.UUID
     level_id: uuid.UUID
     plan_id: uuid.UUID
+    # Pass journalier : nombre de jours au prix "daily_pass_price"
+    days: int | None = Field(default=None, ge=1, le=60)
     note: str | None = Field(
         None,
         max_length=500,
         description="Ex: 'Virement Orange Money reçu le 16/06/2026'",
     )
 
+    @model_validator(mode="after")
+    def plan_or_days(self):
+        if (self.plan_id is None) == (self.days is None):
+            raise ValueError("Indiquez soit une formule (plan_id), soit un nombre de jours (days).")
+        return self
 
 class ManualPaymentResponse(BaseSchema):
     """Réponse après création d'un paiement manuel."""

@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-canvas text-ink">
+    <!-- Liseré noir-rouge-or : seul rappel de marque pendant l'épreuve -->
+    <div class="flag-stripe h-0.5 w-full" />
     <slot />
   </div>
 </template>

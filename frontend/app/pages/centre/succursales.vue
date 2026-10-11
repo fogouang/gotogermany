@@ -112,7 +112,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "director",
 });
 
 import type { BranchResponse } from "#shared/api";

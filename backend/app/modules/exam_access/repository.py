@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.modules.exam_access.models import ExamAccess
 from app.shared.database.repository import BaseRepository
+from app.modules.exams.models import Level
 
 
 class ExamAccessRepository(BaseRepository[ExamAccess]):
@@ -50,7 +51,7 @@ class ExamAccessRepository(BaseRepository[ExamAccess]):
         """Tous les accès d'un user avec info exam."""
         result = await self.db.execute(
             select(ExamAccess)
-            .options(selectinload(ExamAccess.level))
+            .options(selectinload(ExamAccess.level).selectinload(Level.exam))
             .where(ExamAccess.user_id == user_id)
             .order_by(ExamAccess.granted_at.desc())
         )

@@ -36,14 +36,14 @@ class ExamService:
     async def get_catalog(self) -> list[Exam]:
         return await self.repo.get_all_with_levels()
 
-    async def get_detail(self, exam_id: UUID) -> Exam:
-        exam = await self.repo.get_full(exam_id)
+    async def get_detail(self, exam_id: UUID, include_private: bool = True) -> Exam:
+        exam = await self.repo.get_full(exam_id, include_private=include_private)
         if not exam:
             raise NotFoundException(resource="Exam", identifier=str(exam_id))
         return exam
 
-    async def get_by_slug(self, slug: str) -> Exam:
-        exam = await self.repo.get_full_by_slug(slug)
+    async def get_by_slug(self, slug: str, include_private: bool = True) -> Exam:
+        exam = await self.repo.get_full_by_slug(slug, include_private=include_private)
         if not exam:
             raise NotFoundException(resource="Exam", identifier=slug)
         return exam
@@ -121,6 +121,7 @@ class ExamService:
                 subject_number=subject.subject_number,
                 name=subject.name,
                 is_active=subject.is_active,
+                is_private=subject.is_private,
                 has_audio=has_audio,
             ))
 
@@ -134,6 +135,7 @@ class ExamService:
             subject_number=next_number,
             name=data.name or f"Sujet {next_number}",
             is_active=data.is_active,
+            is_private=data.is_private,
         )
 
     async def update_subject(self, subject_id: UUID, data: SubjectUpdateRequest) -> Subject:

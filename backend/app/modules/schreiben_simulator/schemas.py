@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # ─────────────────────────────────────────────────────────
@@ -57,8 +57,11 @@ class TaskSchema(BaseModel):
     info_comparison: InfoComparisonSchema | None = None
     leitpunkte: list[str] = Field(default_factory=list)
     word_count_target: int | None = None
-    register: str = ""
+    register_: str = Field(default="", alias="register")
     recipient: str = ""
+    # TestDaF Aufgabe 2 (Zusammenfassung) : texte source + description du graphique
+    source_text: str = ""
+    graph_description: str = ""
 
 
 # ─────────────────────────────────────────────────────────
@@ -66,13 +69,14 @@ class TaskSchema(BaseModel):
 # ─────────────────────────────────────────────────────────
 
 class SchreibenSubjectCreate(BaseModel):
-    provider: Literal["telc", "goethe", "osd"]
-    level: Literal["b1", "b2"]
+    provider: Literal["telc", "goethe", "osd", "ecl", "testdaf"]
+    level: Literal["b1", "b2", "c1"]
     title: str
     description: str | None = None
     tasks: list[TaskSchema]
     display_order: int = 0
     is_active: bool = True
+    
 
 
 class SchreibenSubjectUpdate(BaseModel):
@@ -94,7 +98,7 @@ class SchreibenSubjectResponse(BaseModel):
     is_active: bool
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(populate_by_name=True)
 
 
 # ─────────────────────────────────────────────────────────

@@ -210,7 +210,6 @@ import type {
 
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff",
 });
 
 const route = useRoute();

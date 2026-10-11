@@ -86,28 +86,11 @@ class AuthService:
             if not center.is_active:
                 raise UnauthorizedException(detail="Ce centre est actuellement désactivé.")
 
-        # Accès expiré (fenêtre de 2 mois) — pertinent surtout pour les students de centre
-        if user.access_expires_at and user.access_expires_at < datetime.now(timezone.utc):
-            raise UnauthorizedException(detail="Cet accès n'est plus disponible.")
-
         # Gestion des appareils — max 5 par compte (libéré au logout)
         if data.device_fingerprint:
             await self.device_repo.register_device_or_raise(
                 user_id=user.id,
                 fingerprint=data.device_fingerprint,
-            )
-
-        # ── Déclenchement de la fenêtre d'accès à la toute première connexion
-        if user.first_login_at is None:
-            now = datetime.now(timezone.utc)
-            user = await self.repo.update(
-                user.id,
-                first_login_at=now,
-                # Utilise access_duration_days (30 par défaut) au lieu des
-                # 2 mois fixes précédents. Le directeur peut aussi écraser
-                # access_expires_at directement après coup, indépendamment
-                # de cette valeur - cf. update_student_access_dates().
-                access_expires_at=now + timedelta(days=user.access_duration_days),
             )
 
         access_token = create_access_token({"sub": str(user.id)})

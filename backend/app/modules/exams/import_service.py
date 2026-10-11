@@ -13,14 +13,22 @@ from sqlalchemy import select, delete, func, or_
 from app.modules.exams.models import Exam, Level, Subject, Module, Teil
 from app.modules.questions.models import Question
 from app.shared.exceptions.http import BadRequestException, NotFoundException
-
+import re
 
 def _extract_provider(data: dict) -> str:
+    mapping = {
+        "telc": "TELC", "goethe": "Goethe", "ösd": "ÖSD", "osd": "ÖSD",
+        "testdaf": "TestDaF", "ecl": "ECL",
+    }
     provider = data.get("provider", "").lower().strip()
-    if provider in ("telc", "goethe", "ösd", "osd"):
-        return {"telc": "TELC", "goethe": "Goethe", "ösd": "ÖSD", "osd": "ÖSD"}[provider]
+    if provider in mapping:
+        return mapping[provider]
 
     name = data.get("name", "").lower()
+    if "testdaf" in name:
+        return "TestDaF"
+    if re.search(r"\becl\b", name):
+        return "ECL"
     if "telc" in name:
         return "TELC"
     if "ösd" in name or "osd" in name:
@@ -28,6 +36,14 @@ def _extract_provider(data: dict) -> str:
     if "goethe" in name:
         return "Goethe"
     return "Unknown"
+
+
+# Règles de réussite par défaut, écrites dans Level.exam_config à l'import
+DEFAULT_PASS_RULES = {
+    "ECL": {"pass_rule": "each_module", "module_min": 60},
+    # Seuils indicatifs en % (les seuils officiels varient selon la session)
+    "TestDaF": {"pass_rule": "tdn_levels", "tdn_thresholds": {"5": 78, "4": 63, "3": 45}},
+}
 
 
 def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
@@ -219,6 +235,7 @@ class ExamImportService:
                 exam_config={
                     "scoring_model": data.get("scoring_model"),
                     "pass_threshold": data.get("pass_threshold"),
+                    **DEFAULT_PASS_RULES.get(exam.provider, {}),
                 },
             )
             self.db.add(level)

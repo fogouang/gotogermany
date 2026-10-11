@@ -1,14 +1,9 @@
 <template>
-  <div class="min-h-screen flex flex-col">
-    <Navbar />
+  <div class="flex min-h-screen flex-col bg-canvas text-ink">
+    <!-- <Navbar /> -->
     <main class="flex-1">
       <slot />
     </main>
-    <Footer />
+    <!-- <Footer /> -->
   </div>
 </template>
-
-<script setup lang="ts">
-import Navbar from "~/components/landing/Navbar.vue";
-import Footer from "~/components/landing/Footer.vue";
-</script>

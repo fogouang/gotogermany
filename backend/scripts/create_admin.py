@@ -26,7 +26,7 @@ async def create_admin(email: str, password: str, full_name: str):
 
 if __name__ == "__main__":
     asyncio.run(create_admin(
-        email="admin@deutschtest.com",
+        email="admin@gtg.com",
         password="Admin1234",
         full_name="Admin DeutschTest",
     ))

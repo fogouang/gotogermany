@@ -303,7 +303,7 @@ import type {
   LevelWithSubjectsResponse,
 } from "#shared/api";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const route = useRoute();

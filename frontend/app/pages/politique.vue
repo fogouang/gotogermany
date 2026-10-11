@@ -1,302 +1,234 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-12">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Header -->
-      <div class="text-center mb-12">
-        <div
-          class="inline-flex items-center gap-2 bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-semibold mb-4"
-        >
-          <i class="pi pi-shield"></i>
-          <span>Vos données sont protégées</span>
-        </div>
-        <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-          Politique de confidentialité
-        </h1>
-        <p class="text-lg text-gray-600">
-          Dernière mise à jour : 15 avril 2026
-        </p>
-      </div>
+  <div class="bg-canvas">
+    <!-- En-tête -->
+    <AppPageHero
+      icon="pi pi-shield"
+      watermark="Datenschutz"
+      :eyebrow="c.badge"
+      :title="c.titre"
+    >
+      <p class="mt-4 inline-flex items-center gap-2 text-sm text-faint">
+        <i class="pi pi-calendar text-xs" />
+        {{ c.majLabel }} {{ c.maj }}
+      </p>
+    </AppPageHero>
 
-      <!-- Content -->
-      <div class="bg-white rounded-2xl shadow-lg p-8 sm:p-12 space-y-12">
-        <!-- Introduction -->
-        <div>
-          <p class="text-gray-700 leading-relaxed text-lg">
-            Chez <strong>DeutschTest</strong>, nous prenons la protection de vos
-            données personnelles très au sérieux. Cette politique de
-            confidentialité explique quelles informations nous collectons,
-            comment nous les utilisons, et quels sont vos droits concernant vos
-            données.
-          </p>
-        </div>
-
-        <Divider />
-
-        <!-- Section 1 -->
-        <div>
-          <div class="flex items-start gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
+    <section class="pb-16 sm:pb-24">
+      <div
+        class="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[16rem_1fr] lg:gap-12"
+      >
+        <!-- Sommaire -->
+        <nav class="lg:sticky lg:top-24 lg:self-start" :aria-label="c.sommaire">
+          <div class="rounded-card border border-line bg-card p-5 shadow-soft">
+            <p
+              class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-faint"
             >
-              <i class="pi pi-database text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">
-              1. Données collectées
-            </h2>
-          </div>
-
-          <div class="space-y-4 text-gray-700 ml-13">
-            <div>
-              <h3 class="font-semibold text-gray-900 mb-2">
-                Données d'identification
-              </h3>
-              <ul class="list-disc list-inside space-y-1 ml-4">
-                <li>Nom et prénom</li>
-                <li>Adresse email</li>
-                <li>Numéro de téléphone (optionnel)</li>
-                <li>Pays de résidence</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 class="font-semibold text-gray-900 mb-2">
-                Données de navigation
-              </h3>
-              <ul class="list-disc list-inside space-y-1 ml-4">
-                <li>Adresse IP</li>
-                <li>Type de navigateur et appareil</li>
-                <li>Pages visitées et durée de visite</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 class="font-semibold text-gray-900 mb-2">Données d'examen</h3>
-              <ul class="list-disc list-inside space-y-1 ml-4">
-                <li>Réponses aux questions d'examen</li>
-                <li>Enregistrements audio (expression orale)</li>
-                <li>Productions écrites</li>
-                <li>Scores et résultats détaillés</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <Divider />
-
-        <!-- Section 2 -->
-        <div>
-          <div class="flex items-start gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
-            >
-              <i class="pi pi-cog text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">
-              2. Utilisation des données
-            </h2>
-          </div>
-
-          <div class="space-y-3 text-gray-700 ml-13">
-            <p>Nous utilisons vos données pour :</p>
-            <ul class="list-disc list-inside space-y-2 ml-4">
-              <li>
-                <strong>Fournir nos services</strong> : créer votre compte,
-                gérer vos examens, générer vos corrections IA
-              </li>
-              <li>
-                <strong>Améliorer notre plateforme</strong> : analyser les
-                performances, identifier les bugs
-              </li>
-              <li>
-                <strong>Communiquer avec vous</strong> : emails de confirmation,
-                notifications de résultats
-              </li>
-              <li>
-                <strong>Sécurité</strong> : prévenir la fraude, protéger contre
-                les abus
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <Divider />
-
-        <!-- Section 3 -->
-        <div>
-          <div class="flex items-start gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
-            >
-              <i class="pi pi-share-alt text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">
-              3. Partage des données
-            </h2>
-          </div>
-
-          <div class="space-y-3 text-gray-700 ml-13">
-            <p class="font-semibold text-lg">
-              <strong>Nous ne vendons jamais vos données personnelles.</strong>
+              {{ c.sommaire }}
             </p>
-            <p>Nous partageons vos données uniquement avec :</p>
-            <ul class="list-disc list-inside space-y-2 ml-4">
-              <li>
-                <strong>Prestataires de services</strong> : hébergement,
-                paiement, email, IA
-              </li>
-              <li><strong>Autorités légales</strong> : si requis par la loi</li>
-            </ul>
-          </div>
-        </div>
-
-        <Divider />
-
-        <!-- Section 4 -->
-        <div>
-          <div class="flex items-start gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
-            >
-              <i class="pi pi-user text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">4. Vos droits</h2>
-          </div>
-
-          <div class="space-y-4 text-gray-700 ml-13">
-            <p>Vous disposez des droits suivants :</p>
-            <div class="grid sm:grid-cols-2 gap-4">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 mb-2">
-                  ✓ Droit d'accès
-                </h4>
-                <p class="text-sm">Consulter vos données personnelles</p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 mb-2">
-                  ✓ Droit de rectification
-                </h4>
-                <p class="text-sm">Corriger vos informations</p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 mb-2">
-                  ✓ Droit d'effacement
-                </h4>
-                <p class="text-sm">Supprimer votre compte</p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 mb-2">
-                  ✓ Droit à la portabilité
-                </h4>
-                <p class="text-sm">Récupérer vos données</p>
-              </div>
-            </div>
-            <div class="bg-teal-50 border-l-4 border-teal-600 p-4 rounded">
-              <p class="font-semibold">Pour exercer vos droits</p>
-              <p class="text-sm mt-1">
-                Contactez-nous à
+            <ol class="space-y-1">
+              <li v-for="(s, i) in sectionsAvecContact" :key="s.id">
                 <a
-                  href="mailto:lfogouang39@gmail.com"
-                  class="text-teal-700 font-semibold"
-                  >lfogouang39@gmail.com</a
-                >. Nous répondons sous 30 jours maximum.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <Divider />
-
-        <!-- Section 5 -->
-        <div>
-          <div class="flex items-start gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
-            >
-              <i class="pi pi-lock text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">5. Sécurité</h2>
-          </div>
-
-          <div class="space-y-3 text-gray-700 ml-13">
-            <p>Nous mettons en œuvre des mesures de sécurité strictes :</p>
-            <ul class="list-disc list-inside space-y-2 ml-4">
-              <li>
-                <strong>Chiffrement SSL/TLS</strong> pour toutes les
-                communications
-              </li>
-              <li>
-                <strong>Mots de passe hashés</strong> avec algorithmes sécurisés
-              </li>
-              <li>
-                <strong>Authentification à deux facteurs</strong> (2FA)
-                disponible
-              </li>
-              <li><strong>Sauvegardes cryptées</strong> quotidiennes</li>
-            </ul>
-          </div>
-        </div>
-
-        <Divider />
-
-        <!-- Contact -->
-        <div
-          class="bg-linear-to-br from-teal-50 to-teal-100 p-8 rounded-xl border-2 border-teal-200"
-        >
-          <div class="flex items-start gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0"
-            >
-              <i class="pi pi-envelope text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">Nous contacter</h2>
-          </div>
-
-          <div class="space-y-3 text-gray-700 ml-13">
-            <p>
-              Pour toute question concernant cette politique de confidentialité
-              :
-            </p>
-            <div class="bg-white p-4 rounded-lg border border-teal-200">
-              <p>
-                <strong>Email</strong> :
-                <a
-                  href="mailto:lfogouang39@gmail.com"
-                  class="text-teal-700 font-semibold"
-                  >lfogouang39@gmail.com</a
+                  :href="`#${s.id}`"
+                  class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted transition-colors hover:bg-card-2 hover:text-ink"
                 >
-              </p>
-              <p>
-                <strong>Téléphone</strong> : +237 691 85 09 13 / +237 670 88 62
-                88
-              </p>
-              <p><strong>Adresse</strong> : Yaoundé, Cameroun</p>
-            </div>
+                  <span
+                    class="font-heading text-xs font-bold text-accent-600 dark:text-accent-400"
+                  >
+                    {{ String(i + 1).padStart(2, "0") }}
+                  </span>
+                  {{ s.titre }}
+                </a>
+              </li>
+            </ol>
           </div>
-        </div>
+        </nav>
+
+        <!-- Contenu -->
+        <article class="legal space-y-6">
+          <p
+            class="rounded-card border border-line bg-card p-6 text-base leading-relaxed text-ink shadow-soft sm:p-8"
+            v-html="c.introduction"
+          />
+
+          <section
+            v-for="(s, i) in c.sections"
+            :id="s.id"
+            :key="s.id"
+            class="scroll-mt-24 rounded-card border border-line bg-card p-6 shadow-soft sm:p-8"
+          >
+            <div class="mb-5 flex items-center gap-3">
+              <span
+                class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-primary-50 text-primary-700"
+              >
+                <i :class="s.icone" />
+              </span>
+              <h2 class="font-heading text-xl font-bold text-ink sm:text-2xl">
+                {{ i + 1 }}. {{ s.titre }}
+              </h2>
+            </div>
+
+            <p
+              v-if="s.important"
+              class="mb-4 flex items-center gap-2 rounded-leaf bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-800 dark:text-emerald-300"
+            >
+              <i class="pi pi-check-circle text-xs" />
+              {{ s.important }}
+            </p>
+            <p
+              v-if="s.intro"
+              class="mb-4 text-sm leading-relaxed text-muted sm:text-base"
+            >
+              {{ s.intro }}
+            </p>
+
+            <!-- Listes -->
+            <div v-if="s.groupes" class="space-y-5">
+              <div v-for="(g, gi) in s.groupes" :key="gi">
+                <h3 v-if="g.titre" class="mb-2 text-sm font-semibold text-ink">
+                  {{ g.titre }}
+                </h3>
+                <ul class="space-y-2">
+                  <li
+                    v-for="(item, ii) in g.items"
+                    :key="ii"
+                    class="flex items-start gap-2.5 text-sm leading-relaxed text-muted"
+                  >
+                    <i
+                      class="pi pi-angle-right mt-1 text-[10px] text-accent-500"
+                    />
+                    <span v-html="item" />
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Droits -->
+            <div v-if="s.droits" class="grid gap-3 sm:grid-cols-2">
+              <div
+                v-for="d in s.droits"
+                :key="d.titre"
+                class="rounded-leaf border border-line bg-card-2 p-4"
+              >
+                <p
+                  class="flex items-center gap-2 text-sm font-semibold text-ink"
+                >
+                  <i
+                    class="pi pi-check text-xs text-emerald-600 dark:text-emerald-400"
+                  />
+                  {{ d.titre }}
+                </p>
+                <p class="mt-1 text-sm text-muted">{{ d.texte }}</p>
+              </div>
+            </div>
+
+            <!-- Encadré -->
+            <div
+              v-if="s.encadre"
+              class="mt-5 rounded-leaf border-l-4 border-accent-500 bg-accent-500/10 px-4 py-3"
+            >
+              <p class="text-sm font-semibold text-ink">
+                {{ s.encadre.titre }}
+              </p>
+              <p class="mt-1 text-sm text-muted" v-html="s.encadre.texte" />
+            </div>
+          </section>
+
+          <!-- Contact -->
+          <section
+            id="contact"
+            class="relative scroll-mt-24 overflow-hidden rounded-card bg-zinc-950 p-6 text-white shadow-lift sm:p-8"
+          >
+            <div
+              class="flag-stripe absolute inset-x-0 top-0 h-1"
+              aria-hidden="true"
+            />
+            <div class="mb-5 flex items-center gap-3">
+              <span
+                class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-accent-500 text-accent-950"
+              >
+                <i class="pi pi-envelope" />
+              </span>
+              <h2 class="font-heading text-xl font-bold sm:text-2xl">
+                {{ c.sections.length + 1 }}. {{ c.contact.titre }}
+              </h2>
+            </div>
+            <p class="mb-5 text-sm text-white/70">{{ c.contact.intro }}</p>
+            <dl class="grid gap-4 text-sm sm:grid-cols-3">
+              <div>
+                <dt class="text-xs uppercase tracking-wider text-white/50">
+                  {{ c.contact.email }}
+                </dt>
+                <dd class="mt-1">
+                  <a
+                    :href="`mailto:${CONTACT_POLITIQUE.email}`"
+                    class="font-semibold text-accent-400 hover:underline"
+                  >
+                    {{ CONTACT_POLITIQUE.email }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-wider text-white/50">
+                  {{ c.contact.telephone }}
+                </dt>
+                <dd class="mt-1 space-y-0.5">
+                  <a
+                    v-for="tel in CONTACT_POLITIQUE.telephones"
+                    :key="tel"
+                    :href="`tel:${tel.replace(/\s/g, '')}`"
+                    class="block font-semibold hover:text-accent-400"
+                  >
+                    {{ tel }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-wider text-white/50">
+                  {{ c.contact.adresse }}
+                </dt>
+                <dd class="mt-1 font-semibold">
+                  {{ c.contact.adresseValeur }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        </article>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import { POLITIQUE, CONTACT_POLITIQUE } from "~/content/politique";
+
+const { locale } = useI18n();
+
+// Version de la langue active (repli sur le français)
+const c = computed(
+  () => POLITIQUE[locale.value as keyof typeof POLITIQUE] ?? POLITIQUE.fr,
+);
+
+const sectionsAvecContact = computed(() => [
+  ...c.value.sections.map((s) => ({ id: s.id, titre: s.titre })),
+  { id: "contact", titre: c.value.contact.titre },
+]);
+
 useHead({
-  title: "Politique de confidentialité - DeutschTest",
-  meta: [
-    {
-      name: "description",
-      content:
-        "Politique de confidentialité de DeutschTest : protection des données, utilisation, conservation et vos droits.",
-    },
-  ],
+  title: () => c.value.metaTitre,
+  meta: [{ name: "description", content: () => c.value.metaDescription }],
 });
 </script>
 
 <style scoped>
-.bg-gradient-primary {
-  background: linear-gradient(
-    135deg,
-    hsl(145 63% 32%) 0%,
-    hsl(145 50% 22%) 100%
-  );
+/* Liens et gras dans le texte HTML du contenu */
+.legal :deep(a) {
+  color: var(--color-accent-600);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal :deep(strong) {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 </style>

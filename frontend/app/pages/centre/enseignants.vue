@@ -183,7 +183,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff",
 });
 
 import type { UserAdminResponse, BranchResponse } from "#shared/api";

@@ -14,6 +14,7 @@ from app.modules.training_sessions.models import (
 )
 from app.modules.centers.models import Branch
 from app.shared.database.repository import BaseRepository
+from app.modules.exams.models import Level
 
 
 class TrainingSessionRepository(BaseRepository[TrainingSession]):
@@ -25,7 +26,7 @@ class TrainingSessionRepository(BaseRepository[TrainingSession]):
             select(TrainingSession)
             .options(
                 selectinload(TrainingSession.branch),
-                selectinload(TrainingSession.level),
+                selectinload(TrainingSession.level).selectinload(Level.exam),
                 selectinload(TrainingSession.teacher_links).selectinload(TrainingSessionTeacher.teacher),
                 selectinload(TrainingSession.student_links).selectinload(TrainingSessionStudent.student),
             )
@@ -41,7 +42,7 @@ class TrainingSessionRepository(BaseRepository[TrainingSession]):
         result = await self.db.execute(
             select(TrainingSession)
             .options(
-                selectinload(TrainingSession.level),
+                selectinload(TrainingSession.level).selectinload(Level.exam),
                 selectinload(TrainingSession.teacher_links).selectinload(TrainingSessionTeacher.teacher),
                 selectinload(TrainingSession.student_links).selectinload(TrainingSessionStudent.student),
             )
@@ -91,7 +92,7 @@ class TrainingSessionTeacherRepository(BaseRepository[TrainingSessionTeacher]):
             )
             .options(
                 selectinload(TrainingSession.branch),
-                selectinload(TrainingSession.level),
+                selectinload(TrainingSession.level).selectinload(Level.exam),
                 selectinload(TrainingSession.teacher_links).selectinload(TrainingSessionTeacher.teacher),
                 selectinload(TrainingSession.student_links).selectinload(TrainingSessionStudent.student),
             )

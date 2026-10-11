@@ -76,11 +76,13 @@ class ModuleWithQuestionsResponse(ModuleResponse):
 class SubjectCreateRequest(BaseSchema):
     name: str | None = Field(default=None, max_length=100)
     is_active: bool = True
+    is_private: bool = False
 
 
 class SubjectUpdateRequest(BaseSchema):
     name: str | None = None
     is_active: bool | None = None
+    is_private: bool | None = None
 
 
 class SubjectResponse(BaseSchema):
@@ -90,6 +92,7 @@ class SubjectResponse(BaseSchema):
     name: str | None
     is_active: bool
     has_audio: bool = False  # ← True si au moins 1 question a audio_file
+    is_private: bool = False
 
 
 class SubjectWithModulesResponse(SubjectResponse):

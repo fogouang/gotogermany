@@ -325,7 +325,7 @@
 import type { PromoCodeResponse } from '#shared/api'
 import { PromoCodeCreateRequest } from '#shared/api'
 
-definePageMeta({ layout: 'admin', middleware: 'admin' })
+definePageMeta({ layout: 'admin' })
 
 const store = useAdminPromoCodesStore()
 const partnersStore = useAdminPartnersStore()

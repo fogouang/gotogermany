@@ -168,7 +168,7 @@ import SessionHeader from "~/components/session/SessionHeader.vue";
 import SessionFooter from "~/components/session/SessionFooter.vue";
 import { useCorrectionStore } from "~/stores/correction";
 
-definePageMeta({ layout: false, middleware: "auth" });
+definePageMeta({ layout: false });
 
 const route = useRoute();
 const session = useSession();

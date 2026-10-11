@@ -344,7 +344,7 @@
 <script setup lang="ts">
 import { useCorrectionStore } from "~/stores/correction";
 
-definePageMeta({ layout: "default", middleware: "auth" });
+definePageMeta({ layout: "default" });
 
 const { t } = useI18n();
 const route = useRoute();

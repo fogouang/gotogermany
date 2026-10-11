@@ -1,48 +1,71 @@
 <!-- components/SignupForm.vue -->
 <template>
-  <div class="flex flex-col gap-5">
-    <Message v-if="signupError" severity="error" :closable="false">{{
-      signupError
-    }}</Message>
+  <form class="flex flex-col gap-4" @submit.prevent="handleSignup">
+    <Message v-if="signupError" severity="error" :closable="false">
+      {{ signupError }}
+    </Message>
 
-    <div v-if="referralCode" class="text-center text-sm text-teal-700 bg-teal-50 rounded-lg py-2 px-3">
+    <div
+      v-if="referralCode"
+      class="flex items-center gap-2.5 rounded-leaf border border-accent-500/30 bg-accent-500/10 px-3 py-2.5 text-sm font-medium text-accent-800 dark:text-accent-300"
+    >
+      <i class="pi pi-gift text-sm" />
       {{ t("auth.referred_by_message") }}
     </div>
 
-    <div>
-      <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-        t("auth.full_name")
-      }}</label>
-      <InputText v-model="signupForm.fullName" class="w-full" placeholder="Jean Dupont" />
+    <div class="space-y-1.5">
+      <label class="text-sm font-medium text-ink">{{ t("auth.full_name") }}</label>
+      <InputText
+        v-model="signupForm.fullName"
+        autocomplete="name"
+        placeholder="Jean Dupont"
+        fluid
+      />
     </div>
-    <div>
-      <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-        t("auth.email")
-      }}</label>
-      <InputText v-model="signupForm.email" type="email" class="w-full" placeholder="jean@example.com" />
+
+    <div class="space-y-1.5">
+      <label class="text-sm font-medium text-ink">{{ t("auth.email") }}</label>
+      <InputText
+        v-model="signupForm.email"
+        type="email"
+        autocomplete="email"
+        placeholder="jean@example.com"
+        fluid
+      />
     </div>
-    <div>
-      <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-        t("auth.phone")
-      }}</label>
-      <InputText v-model="signupForm.phone" class="w-full" placeholder="+237 6XX XXX XXX" />
+
+    <div class="space-y-1.5">
+      <label class="text-sm font-medium text-ink">{{ t("auth.phone") }}</label>
+      <InputText
+        v-model="signupForm.phone"
+        type="tel"
+        autocomplete="tel"
+        placeholder="+237 6XX XXX XXX"
+        fluid
+      />
     </div>
-    <div>
-      <label class="block text-sm font-semibold mb-1.5 text-gray-700">{{
-        t("auth.password")
-      }}</label>
-      <Password v-model="signupForm.password" class="w-full" toggleMask />
+
+    <div class="space-y-1.5">
+      <label class="text-sm font-medium text-ink">{{ t("auth.password") }}</label>
+      <Password
+        v-model="signupForm.password"
+        toggle-mask
+        autocomplete="new-password"
+        fluid
+      />
     </div>
-    <Button
+
+    <AppButton
+      type="submit"
+      variant="gradient"
+      block
       :label="t('auth.signup_btn')"
       :loading="authStore.loading"
-      class="w-full mt-1"
-      style="background-color: #076152; border: none"
-      @click="handleSignup"
+      class="mt-1"
     />
 
     <slot name="footer" />
-  </div>
+  </form>
 </template>
 
 <script setup lang="ts">

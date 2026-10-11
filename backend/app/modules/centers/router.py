@@ -10,17 +10,9 @@ from app.modules.auth.dependencies import CurrentAdmin, CurrentDirector, Current
 from app.modules.centers.schemas import (
     CenterCreateRequest,
     CenterResponse,
-    CenterDetailResponse,
     BranchCreateRequest,
     BranchResponse,
     CenterUpdateRequest,
-    LicenseFormulaCreateRequest,
-    LicenseFormulaResponse,
-    CenterLicenseActivateRequest,
-    CenterLicenseExtendRequest,
-    CenterLicenseDatesUpdateRequest,
-    CenterLicenseResponse,
-    LicenseUsageResponse,
     CenterCreditPoolRechargeRequest,
     CenterDefaultCreditsUpdateRequest,
     CenterCreditTransactionResponse,
@@ -28,31 +20,27 @@ from app.modules.centers.schemas import (
 )
 from app.modules.centers.service import CenterService
 from app.shared.database.session import get_db
-from app.modules.centers.repository import CenterLicenseRepository
 from app.shared.exceptions.http import BadRequestException
-from app.modules.centers.certificate_service import CenterLicenseCertificateService
 
 router = APIRouter()
 
 
-# ── Directeur (routes /me/... — toujours déclarées avant /{center_id}/...) ──
+# ── Directeur (routes /me/... déclarées avant /{center_id}/...) ──
 
 @router.get("/me", response_model=CenterResponse)
 async def get_my_center(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Détails du centre du directeur connecté — adresse et logo actuels."""
     return await CenterService(db).center_repo.get_by_id_or_404(current_director.center_id)
+
 
 @router.get("/me/branches", response_model=list[BranchResponse])
 async def list_my_branches(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Liste les succursales du centre du directeur connecté."""
     return await CenterService(db).list_my_branches(current_director.center_id)
-
 
 
 @router.post("/me/branches", response_model=BranchResponse, status_code=201)
@@ -61,30 +49,7 @@ async def create_my_branch(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Le directeur crée une succursale supplémentaire pour son propre centre."""
     return await CenterService(db).create_branch(current_director.center_id, data)
-
-
-@router.get("/me/usage", response_model=LicenseUsageResponse)
-async def get_my_center_usage(
-    current_director: CurrentDirector,
-    db: AsyncSession = Depends(get_db),
-):
-    """Vue consolidée pour le panel directeur : quota, jours restants, répartition par succursale."""
-    return await CenterService(db).get_usage_for_center(current_director.center_id)
-
-
-@router.get("/me/license/certificate")
-async def get_my_license_certificate(
-    current_director: CurrentDirector,
-    db: AsyncSession = Depends(get_db),
-):
-    """Le directeur génère/télécharge l'attestation de la licence active de son propre centre."""
-    license_ = await CenterLicenseRepository(db).get_active_for_center(current_director.center_id)
-    if not license_:
-        raise BadRequestException(detail="Aucune licence active pour votre centre.")
-    url = await CenterLicenseCertificateService(db).generate_for_license(license_.id)
-    return {"certificate_url": url}
 
 
 @router.get("/me/pool", response_model=CenterPoolResponse)
@@ -92,9 +57,7 @@ async def get_my_center_pool(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Le directeur consulte le solde du pool et le défaut par étudiant de son centre."""
-    center = await CenterService(db).center_repo.get_by_id_or_404(current_director.center_id)
-    return center
+    return await CenterService(db).center_repo.get_by_id_or_404(current_director.center_id)
 
 
 @router.patch("/me/default-credits", response_model=CenterPoolResponse)
@@ -103,8 +66,6 @@ async def update_default_credits(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Le directeur fixe le nombre de crédits attribués par défaut à chaque
-    nouvel étudiant créé dans son centre."""
     return await CenterService(db).update_default_credits(
         current_director.center_id, data.default_credits_per_student, current_director
     )
@@ -115,8 +76,6 @@ async def get_my_center_credit_transactions(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Vue d'audit complète pour le directeur — tout l'historique des
-    ajustements de crédits de son centre, toutes secrétaires confondues."""
     return await CenterService(db).get_credit_transactions_for_director(
         current_director.center_id
     )
@@ -127,11 +86,8 @@ async def get_my_credit_transactions(
     current_user: CurrentCenterStaff,
     db: AsyncSession = Depends(get_db),
 ):
-    """Historique restreint aux propres actions de l'utilisateur connecté
-    (secrétaire : ses ajustements uniquement). Un directeur qui appelle cette
-    route ne voit également que ses propres actions — pour la vue complète
-    du centre, utiliser /me/credit-transactions."""
     return await CenterService(db).get_credit_transactions_for_secretary(current_user)
+
 
 @router.patch("/me", response_model=CenterResponse)
 async def update_my_center(
@@ -139,7 +95,6 @@ async def update_my_center(
     current_director: CurrentDirector,
     db: AsyncSession = Depends(get_db),
 ):
-    """Le directeur renseigne/modifie l'adresse de son centre (affichée sur les reçus)."""
     return await CenterService(db).update_my_center(current_director.center_id, data)
 
 
@@ -149,8 +104,7 @@ async def upload_my_logo(
     db: AsyncSession = Depends(get_db),
     file: UploadFile = File(...),
 ):
-    """Upload du logo du centre — affiché en en-tête des reçus PDF."""
-    import os
+    """Upload du logo du centre, affiché en en-tête des reçus PDF."""
     from pathlib import Path
 
     allowed_ext = {".png", ".jpg", ".jpeg"}
@@ -161,16 +115,15 @@ async def upload_my_logo(
     logos_dir = Path("storage/center_logos")
     logos_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"{current_director.center_id}{ext}"
-    file_path = logos_dir / filename
-
+    file_path = logos_dir / f"{current_director.center_id}{ext}"
     content = await file.read()
     with open(file_path, "wb") as f:
         f.write(content)
 
     return await CenterService(db).update_my_logo(current_director.center_id, str(file_path))
 
-# ── Admin ITIA ────────────────────────────────
+
+# ── Admin ─────────────────────────────────────
 
 @router.post("", response_model=CenterResponse, status_code=201)
 async def create_center(
@@ -178,7 +131,7 @@ async def create_center(
     _: CurrentAdmin = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Créer un centre — crée aussi sa branch principale automatiquement."""
+    """Créer un centre (crée aussi sa succursale principale)."""
     return await CenterService(db).create_center(data)
 
 
@@ -189,27 +142,7 @@ async def list_centers(
     _: CurrentAdmin = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Liste tous les centres — admin ITIA."""
     return await CenterService(db).list_centers(skip=skip, limit=limit)
-
-
-@router.get("/formulas", response_model=list[LicenseFormulaResponse])
-async def list_formulas(
-    _: CurrentAdmin = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Liste les formules de licence actives — admin ITIA."""
-    return await CenterService(db).list_active_formulas()
-
-
-@router.post("/formulas", response_model=LicenseFormulaResponse, status_code=201)
-async def create_formula(
-    data: LicenseFormulaCreateRequest,
-    _: CurrentAdmin = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Créer une formule de licence (durée × plafond)."""
-    return await CenterService(db).create_formula(data)
 
 
 @router.post("/{center_id}/branches", response_model=BranchResponse, status_code=201)
@@ -219,8 +152,8 @@ async def create_branch(
     _: CurrentAdmin = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Créer une succursale supplémentaire — admin ITIA."""
     return await CenterService(db).create_branch(center_id, data)
+
 
 @router.patch("/{center_id}/toggle-active", response_model=CenterResponse)
 async def toggle_center_active(
@@ -228,66 +161,7 @@ async def toggle_center_active(
     _: CurrentAdmin = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Désactive/réactive un centre — admin ITIA uniquement."""
     return await CenterService(db).toggle_active(center_id)
-
-@router.post("/{center_id}/license/activate", response_model=CenterLicenseResponse, status_code=201)
-async def activate_license(
-    center_id: UUID,
-    data: CenterLicenseActivateRequest,
-    current_admin: CurrentAdmin,
-    db: AsyncSession = Depends(get_db),
-):
-    """Activer une licence pour un centre — après confirmation du paiement."""
-    return await CenterService(db).activate_license(center_id, data, current_admin)
-
-
-@router.post("/{center_id}/license/extend", response_model=CenterLicenseResponse)
-async def extend_license(
-    center_id: UUID,
-    data: CenterLicenseExtendRequest,
-    _: CurrentAdmin = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Étendre le quota d'une licence active — prorata jusqu'à la fin existante."""
-    return await CenterService(db).extend_license(center_id, data)
-
-
-@router.get("/{center_id}/license", response_model=CenterLicenseResponse | None)
-async def get_center_license(
-    center_id: UUID,
-    _: CurrentAdmin = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Licence active du centre, ou null si aucune — admin ITIA. Sert à
-    afficher les dates de début/fin dans le tableau de gestion des centres."""
-    return await CenterLicenseRepository(db).get_active_for_center(center_id)
-
-
-@router.patch("/{center_id}/license/dates", response_model=CenterLicenseResponse)
-async def update_license_dates(
-    center_id: UUID,
-    data: CenterLicenseDatesUpdateRequest,
-    _: CurrentAdmin = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Ajuster manuellement les dates de début/fin de la licence active d'un
-    centre — admin ITIA (ex: alignement sur un accord commercial négocié)."""
-    return await CenterService(db).update_license_dates(center_id, data)
-
-
-@router.get("/{center_id}/license/certificate")
-async def get_license_certificate_admin(
-    center_id: UUID,
-    _: CurrentAdmin = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Génère et retourne l'attestation PDF de la licence active du centre — admin ITIA."""
-    license_ = await CenterLicenseRepository(db).get_active_for_center(center_id)
-    if not license_:
-        raise BadRequestException(detail="Aucune licence active pour ce centre.")
-    url = await CenterLicenseCertificateService(db).generate_for_license(license_.id)
-    return {"certificate_url": url}
 
 
 @router.post("/{center_id}/credit-pool/recharge", response_model=CenterPoolResponse)
@@ -297,8 +171,6 @@ async def recharge_credit_pool(
     current_admin: CurrentAdmin,
     db: AsyncSession = Depends(get_db),
 ):
-    """Rechargement manuel du pool de crédits IA d'un centre — admin ITIA
-    uniquement, validé après négociation/paiement hors plateforme."""
     return await CenterService(db).recharge_pool(
         center_id, data.amount, current_admin, data.reason
     )

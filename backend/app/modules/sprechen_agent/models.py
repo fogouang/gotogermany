@@ -57,7 +57,9 @@ class SprechenSession(Base):
     total_score: Mapped[float] = mapped_column(Numeric(6, 2), nullable=False)
     total_max_score: Mapped[float] = mapped_column(Numeric(6, 2), nullable=False)
     passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
-
+    # TestDaF uniquement : niveau estimé ("TDN 5" ... "unter TDN 3"). NULL ailleurs.
+    level_estimate: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    
     strengths: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
     improvement_areas: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
 

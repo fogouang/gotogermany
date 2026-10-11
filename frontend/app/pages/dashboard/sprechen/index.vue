@@ -255,7 +255,7 @@
 import { SprechenSimulatorService, OpenAPI } from "#shared/api";
 import type { SessionHistoryItem } from "#shared/api";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 useHead({ title: t("sprechen.page_title") });

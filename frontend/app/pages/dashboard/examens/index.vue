@@ -189,7 +189,7 @@
 <script setup lang="ts">
 import type { ExamCatalogResponse } from "#shared/api";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const examsStore = useExamsStore();

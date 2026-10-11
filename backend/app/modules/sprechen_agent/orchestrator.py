@@ -38,6 +38,9 @@ PROVIDER_SCORING_SYSTEM: dict[str, ScoringSystem] = {
     "goethe": ScoringSystem.LETTER_TIER,
     "telc": ScoringSystem.POINT_TIER,
     "oesd": ScoringSystem.CONTINUOUS,
+    # Esquisses : notes libres 0..max par critère (cf. mapping.py, oral_semidirect)
+    "ecl": ScoringSystem.CONTINUOUS,
+    "testdaf": ScoringSystem.CONTINUOUS,
 }
 DEFAULT_SCORING_SYSTEM = ScoringSystem.CONTINUOUS
 

@@ -76,7 +76,7 @@ async def get_active_session(
     answer_repo = ExamSessionAnswerRepository(db)
     exam_repo = ExamRepository(db)
 
-    session = await repo.get_active_by_exam(current_user.id, exam_id)
+    session = await repo.get_active_session(current_user.id, exam_id)
     if not session:
         return None
 

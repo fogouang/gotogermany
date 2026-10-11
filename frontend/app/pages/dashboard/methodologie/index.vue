@@ -327,7 +327,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 useHead({ title: "Méthodologie Schreiben - DeutschTest" });
 
 const activeExam = ref("telc");

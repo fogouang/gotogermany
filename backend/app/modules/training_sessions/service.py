@@ -62,7 +62,15 @@ class TrainingSessionService:
 
         await LevelRepository(self.db).get_by_id_or_404(data.level_id)
 
-        return await self.session_repo.create(
+        # On valide tout le monde AVANT de créer la classe : pas de classe à moitié créée
+        teacher_ids = list(dict.fromkeys(data.teacher_ids))
+        student_ids = list(dict.fromkeys(data.student_ids))
+        for teacher_id in teacher_ids:
+            await self._validate_teacher(branch.center_id, teacher_id)
+        for student_id in student_ids:
+            await self._validate_student(branch.id, student_id)
+
+        session = await self.session_repo.create(
             branch_id=branch.id,
             level_id=data.level_id,
             label=data.label,
@@ -70,6 +78,15 @@ class TrainingSessionService:
             end_date=data.end_date,
             created_by=staff.id,
         )
+
+        now = datetime.now(timezone.utc)
+        for teacher_id in teacher_ids:
+            await self.teacher_link_repo.create(training_session_id=session.id, teacher_id=teacher_id)
+        for student_id in student_ids:
+            await self.student_link_repo.create(
+                training_session_id=session.id, student_id=student_id, enrolled_at=now
+            )
+        return session
 
     async def update_session(
         self, session_id: UUID, data: TrainingSessionUpdateRequest, staff: User
@@ -81,17 +98,56 @@ class TrainingSessionService:
         return await self.session_repo.update(session_id, **update_data)
 
     async def assign_teacher(self, session_id: UUID, teacher_id: UUID, staff: User) -> None:
+        from app.modules.centers.repository import BranchRepository
+
+        session = await self._get_session_scoped(session_id, staff)
+        branch = await BranchRepository(self.db).get_by_id_or_404(session.branch_id)
+        await self._validate_teacher(branch.center_id, teacher_id)
+
+        if await self.teacher_link_repo.find_link(session_id, teacher_id):
+            return
+        await self.teacher_link_repo.create(training_session_id=session_id, teacher_id=teacher_id)
+
+    async def enroll_student(self, session_id: UUID, student_id: UUID, staff: User) -> None:
+        session = await self._get_session_scoped(session_id, staff)
+        await self._validate_student(session.branch_id, student_id)
+
+        if await self.student_link_repo.find_link(session_id, student_id):
+            return
+        await self.student_link_repo.create(
+            training_session_id=session_id,
+            student_id=student_id,
+            enrolled_at=datetime.now(timezone.utc),
+        )
+
+    async def _validate_teacher(self, center_id: UUID, teacher_id: UUID) -> User:
+        """L'enseignant doit exister et appartenir au même centre que la classe."""
+        from app.modules.centers.repository import BranchRepository
         from app.modules.users.repository import UserRepository
 
-        await self._get_session_scoped(session_id, staff)
         teacher = await UserRepository(self.db).get_by_id_or_404(teacher_id)
         if teacher.role != UserRole.teacher:
             raise BadRequestException(detail="Cet utilisateur n'est pas un enseignant.")
+        if not teacher.branch_id:
+            raise ForbiddenException(detail="Cet enseignant n'appartient pas à votre centre.")
+        teacher_branch = await BranchRepository(self.db).get_by_id_or_404(teacher.branch_id)
+        if teacher_branch.center_id != center_id:
+            raise ForbiddenException(detail="Cet enseignant n'appartient pas à votre centre.")
+        return teacher
 
-        existing = await self.teacher_link_repo.find_link(session_id, teacher_id)
-        if existing:
-            return
-        await self.teacher_link_repo.create(training_session_id=session_id, teacher_id=teacher_id)
+    async def _validate_student(self, branch_id: UUID, student_id: UUID) -> User:
+        """L'élève doit exister et appartenir à la succursale de la classe."""
+        from app.modules.users.repository import UserRepository
+
+        student = await UserRepository(self.db).get_by_id_or_404(student_id)
+        if student.role != UserRole.student:
+            raise BadRequestException(detail="Cet utilisateur n'est pas un étudiant.")
+        if student.branch_id != branch_id:
+            raise BadRequestException(
+                detail="Cet étudiant n'appartient pas à la succursale de la classe."
+            )
+        return student
+    
 
     async def remove_teacher(self, session_id: UUID, teacher_id: UUID, staff: User) -> None:
         await self._get_session_scoped(session_id, staff)
@@ -99,24 +155,6 @@ class TrainingSessionService:
         if link:
             await self.teacher_link_repo.delete(link.id)
 
-    async def enroll_student(self, session_id: UUID, student_id: UUID, staff: User) -> None:
-        from app.modules.users.repository import UserRepository
-
-        session = await self._get_session_scoped(session_id, staff)
-        student = await UserRepository(self.db).get_by_id_or_404(student_id)
-        if student.role != UserRole.student:
-            raise BadRequestException(detail="Cet utilisateur n'est pas un étudiant.")
-        if student.branch_id != session.branch_id:
-            raise BadRequestException(detail="Cet étudiant n'appartient pas à la succursale de la session.")
-
-        existing = await self.student_link_repo.find_link(session_id, student_id)
-        if existing:
-            return
-        await self.student_link_repo.create(
-            training_session_id=session_id,
-            student_id=student_id,
-            enrolled_at=datetime.now(timezone.utc),
-        )
 
     async def end_student(
         self, session_id: UUID, student_id: UUID, ended_at: datetime | None, staff: User
@@ -158,7 +196,7 @@ class TrainingSessionService:
 
     async def list_for_teacher(self, teacher: User) -> list[TrainingSessionResponse]:
         sessions = await self.teacher_link_repo.find_sessions_for_teacher(teacher.id)
-        return [_to_response(s) for s in sessions]
+        return [_to_response(s) for s in sessions if not _is_draft(s)]
 
     async def get_stats(self, session_id: UUID, staff: User) -> TrainingSessionStatsResponse:
         await self._get_session_scoped(session_id, staff)
@@ -276,17 +314,31 @@ class TrainingSessionService:
         ]
 
 
+def _is_draft(session: TrainingSession) -> bool:
+    """Brouillon : aucun élève actif (jamais inscrit, ou tous terminés)."""
+    return not any(link.ended_at is None for link in session.student_links)
+
+
+def _level_label(session: TrainingSession) -> str:
+    level = session.level
+    if not level:
+        return ""
+    exam = getattr(level, "exam", None)
+    return exam.name if exam else level.cefr_code
+
+
 def _to_response(session: TrainingSession) -> TrainingSessionResponse:
     return TrainingSessionResponse(
         id=session.id,
         branch_id=session.branch_id,
         branch_name=session.branch.name if session.branch else "",
         level_id=session.level_id,
-        level_name=getattr(session.level, "name", "") or getattr(session.level, "label", "") or "",
+        level_name=_level_label(session),
         label=session.label,
         start_date=session.start_date,
         end_date=session.end_date,
         created_at=session.created_at,
+        is_draft=_is_draft(session),
         teachers=[
             TrainingSessionTeacherResponse(teacher_id=t.teacher_id, teacher_name=t.teacher.full_name)
             for t in session.teacher_links

@@ -463,7 +463,7 @@
 import type { ModuleResultResponse, SessionResultResponse } from "#shared/api";
 import { useCorrectionStore } from "~/stores/correction";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const route = useRoute();
 const router = useRouter();

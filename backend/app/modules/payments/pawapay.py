@@ -32,6 +32,7 @@ class PawapayClient:
         provider: str,
         client_reference_id: str,
         customer_message: str = "GoToGermany",
+        metadata: dict | None = None,
     ) -> dict:
         payload = {
             "depositId": deposit_id,
@@ -47,6 +48,10 @@ class PawapayClient:
             "clientReferenceId": client_reference_id,
             "customerMessage": customer_message,
         }
+        # API v2 : metadata est une liste d'objets à une clé, ex. [{"app": "gotogermany"}]
+        if metadata:
+            payload["metadata"] = [{key: value} for key, value in metadata.items()]
+
         logger.info(f"pawaPay initiate_deposit payload: {payload}")
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(

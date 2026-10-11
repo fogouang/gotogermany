@@ -482,7 +482,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "centre",
-  middleware: "centre-staff",
 });
 
 import { useLiveSession } from "~/composables/useLiveSession";

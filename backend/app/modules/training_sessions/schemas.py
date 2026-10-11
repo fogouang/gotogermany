@@ -17,6 +17,9 @@ class TrainingSessionCreateRequest(BaseSchema):
     label: str | None = Field(default=None, max_length=150)
     start_date: datetime
     end_date: datetime | None = None
+    # Création en une étape : enseignants et élèves affectés directement
+    teacher_ids: list[uuid.UUID] = []
+    student_ids: list[uuid.UUID] = []
 
 
 class TrainingSessionUpdateRequest(BaseSchema):
@@ -60,6 +63,8 @@ class TrainingSessionResponse(BaseSchema):
     start_date: datetime
     end_date: datetime | None
     created_at: datetime
+    # Brouillon = aucun élève actif : la classe est masquée aux enseignants
+    is_draft: bool = False
     teachers: list[TrainingSessionTeacherResponse] = []
     students: list[TrainingSessionStudentResponse] = []
 

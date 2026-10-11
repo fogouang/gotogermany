@@ -37,31 +37,34 @@ class ExamRepository(BaseRepository[Exam]):
         )
         return result.scalar_one_or_none()
 
-    async def get_full(self, exam_id: UUID) -> Exam | None:
+    def _full_options(self, include_private: bool):
+        """Chargement complet ; les sujets privés sont exclus si include_private=False."""
+        subjects_rel = (
+            Level.subjects
+            if include_private
+            else Level.subjects.and_(Subject.is_private == False)
+        )
+        return (
+            selectinload(Exam.levels)
+            .selectinload(subjects_rel)
+            .selectinload(Subject.modules)
+            .selectinload(Module.teile)
+            .selectinload(Teil.questions)
+        )
+
+    async def get_full(self, exam_id: UUID, include_private: bool = True) -> Exam | None:
         """Exam + levels + subjects + modules + teile + questions."""
         result = await self.db.execute(
             select(Exam)
-            .options(
-                selectinload(Exam.levels)
-                .selectinload(Level.subjects)
-                .selectinload(Subject.modules)
-                .selectinload(Module.teile)
-                .selectinload(Teil.questions)  # ← questions incluses
-            )
+            .options(self._full_options(include_private))
             .where(Exam.id == exam_id)
         )
         return result.scalar_one_or_none()
 
-    async def get_full_by_slug(self, slug: str) -> Exam | None:
+    async def get_full_by_slug(self, slug: str, include_private: bool = True) -> Exam | None:
         result = await self.db.execute(
             select(Exam)
-            .options(
-                selectinload(Exam.levels)
-                .selectinload(Level.subjects)
-                .selectinload(Subject.modules)
-                .selectinload(Module.teile)
-                .selectinload(Teil.questions)  # ← questions incluses
-            )
+            .options(self._full_options(include_private))
             .where(Exam.slug == slug)
         )
         return result.scalar_one_or_none()

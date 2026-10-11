@@ -787,7 +787,7 @@ import AvatarExaminer from "~/components/sprechen/AvatarExaminer.vue";
 import AvatarStudent from "~/components/sprechen/AvatarStudent.vue";
 import ThemeChoicePanel from "~/components/sprechen/ThemeChoicePanel.vue";
 
-definePageMeta({ layout: "dashboard", middleware: "auth" });
+definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const route = useRoute();

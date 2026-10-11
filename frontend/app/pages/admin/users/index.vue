@@ -346,7 +346,7 @@
 <script setup lang="ts">
 import type { UserAdminResponse } from "#shared/api";
 
-definePageMeta({ layout: "admin", middleware: "admin" });
+definePageMeta({ layout: "admin" });
 
 const store = useAdminUsersStore();
 const examsStore = useExamsStore();

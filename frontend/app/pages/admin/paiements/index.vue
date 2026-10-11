@@ -193,7 +193,7 @@
 <script setup lang="ts">
 import type { PaymentSummaryResponse } from '#shared/api'
 
-definePageMeta({ layout: 'admin', middleware: 'admin' })
+definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
 const { currentInvoice, fetchInvoice, generateInvoice, downloadInvoice, formatDate } = useInvoices()

@@ -22,7 +22,7 @@ from app.modules.schreiben_simulator.schemas import (
 from app.modules.schreiben_simulator.repository import SchreibenSubjectRepository
 from app.modules.corrections.ai_providers.gemini import GeminiProvider
 from app.modules.corrections.ai_providers.claude import ClaudeProvider
-from app.modules.corrections.prompts import build_correction_prompt, TaskData
+from app.modules.corrections.prompts import build_correction_prompt, TaskData, EXPECTED_TASK_COUNT
 from app.modules.corrections.response_normalizer import normalize_correction_result
 from app.config import get_settings
 
@@ -108,10 +108,9 @@ class SchreibenSimulatorService:
         user_id: uuid.UUID,
     ) -> SimulatorCorrectResponse:
         """
-        Lancer la correction IA depuis un sujet simulateur.
-        Pas de session — les textes sont envoyés directement.
+        Correction IA depuis un sujet simulateur (sans session).
+        Tout est validé AVANT de débiter le crédit.
         """
-        # ── Vérifier et déduire le crédit ───────────────────
         from app.modules.users.models import User
         from app.shared.exceptions.http import ForbiddenException
 
@@ -119,21 +118,11 @@ class SchreibenSimulatorService:
         if not user:
             raise ValueError("Utilisateur introuvable.")
 
-        if user.ai_credits <= 0:
-            raise ForbiddenException(
-                detail="Vous n'avez plus de crédits IA. Achetez des crédits pour continuer."
-            )
-
-        # Déduire 1 crédit avant l'appel IA
-        user.ai_credits -= 1
-        await self.db.flush()
-
-        # ── Correction ────────────────────────────────────────
+        # ── Sujet ────────────────────────────────────────────
         subject = await self.repo.get_by_id(request.subject_id)
         if subject is None:
             unified = await self.repo.get_by_id_unified(request.subject_id)
             if unified is None:
-                await self.db.rollback()
                 raise ValueError(f"Sujet {request.subject_id} introuvable.")
             subject = SimpleNamespace(
                 id=unified["id"],
@@ -144,9 +133,9 @@ class SchreibenSimulatorService:
                 title=unified["title"],
             )
         if not subject.is_active:
-            await self.db.rollback()
             raise ValueError("Ce sujet n'est plus disponible.")
 
+        # ── Validation + prompt (lève ValueError si texte vide, etc.) ──
         self._validate_task_count(subject.provider, subject.level, len(request.task_texts))
         tasks = self._build_tasks(subject, request.task_texts)
         prompt = build_correction_prompt(
@@ -155,25 +144,30 @@ class SchreibenSimulatorService:
             tasks=tasks,
         )
 
-        logger.info(f"Simulateur — correction {subject.provider.upper()} {subject.level.upper()}: {subject.title}")
+        # ── Crédit : vérifié et débité seulement maintenant ──
+        if user.ai_credits <= 0:
+            raise ForbiddenException(
+                detail="Vous n'avez plus de crédits IA. Achetez des crédits pour continuer."
+            )
+        user.ai_credits -= 1
+        await self.db.flush()
+
+        logger.info(f"Simulateur : correction {subject.provider.upper()} {subject.level.upper()} : {subject.title}")
 
         try:
             ai_result = await self.ai.correct(prompt)
         except Exception as e:
-            # ── Rembourser le crédit si l'IA échoue ─────────
             user.ai_credits += 1
             await self.db.flush()
-            logger.error(f"Erreur IA — crédit remboursé pour user {user_id}: {e}")
+            logger.error(f"Erreur IA, crédit remboursé pour user {user_id}: {e}")
             raise e
 
         response = self._build_response(subject, ai_result)
 
-        # ── Persister le résultat ────────────────────────────
         await self.repo.save_result(user_id, response)
         await self.db.commit()
-
         return response
-
+    
     async def list_my_results(self, user_id: uuid.UUID):
         return await self.repo.get_results_by_user(user_id)
 
@@ -193,7 +187,9 @@ class SchreibenSimulatorService:
                 instruction=task_def.get("scenario", ""),
                 bullet_points=task_def.get("prompts", []),
                 topic=task_def.get("topic", ""),
-                context_ad=task_def.get("context_ad", ""),
+                  context_ad=task_def.get("context_ad", "") or "\n\n".join(
+                    filter(None, [task_def.get("source_text", ""), task_def.get("graph_description", "")])
+                ),
                 opinion_quote=task_def.get("opinion_quote", ""),
             ))
         return tasks
@@ -220,14 +216,14 @@ class SchreibenSimulatorService:
 
     @staticmethod
     def _validate_task_count(provider: str, level: str, count: int) -> None:
-        """Vérifier la cohérence nombre de tâches ↔ examen."""
-        expected = {
-            ("telc", "b1"): 1, ("telc", "b2"): 1,
-            ("goethe", "b1"): 3, ("goethe", "b2"): 2,
-            ("osd", "b1"): 3, ("osd", "b2"): 2,
-        }.get((provider.lower(), level.lower()))
-
-        if expected and count != expected:
+        """Vérifier la cohérence nombre de tâches / examen (même table que la correction)."""
+        key = (provider.lower().strip().replace("ö", "o"), level.lower().strip())
+        expected = EXPECTED_TASK_COUNT.get(key)
+        if expected is None:
+            raise ValueError(
+                f"Le simulateur n'est pas disponible pour {provider.upper()} {level.upper()}."
+            )
+        if count != expected:
             raise ValueError(
                 f"{provider.upper()} {level.upper()} attend {expected} tâche(s), "
                 f"{count} fournie(s)."

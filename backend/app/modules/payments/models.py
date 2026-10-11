@@ -70,6 +70,10 @@ class Payment(Base, UUIDMixin, TimestampMixin):
         nullable=True,
         index=True,
     )
+    # Durée achetée en jours quand elle ne vient pas d'une formule (pass journalier admin).
+    # NULL = la durée est celle du plan.
+    duration_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    
     # Montant original avant réduction (en FCFA, entier)
     amount_gross: Mapped[int] = mapped_column(Integer, nullable=False)
 

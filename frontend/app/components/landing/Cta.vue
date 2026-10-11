@@ -1,101 +1,124 @@
 <template>
-  <section>
+  <section class="bg-canvas px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
     <div
-      class="relative bg-cover bg-center bg-no-repeat overflow-hidden"
-      style="background-image: url('/images/cta-card-bg3-1.jpg')"
+      class="relative mx-auto max-w-6xl overflow-hidden rounded-4xl bg-zinc-950 px-6 py-12 text-white shadow-lift sm:px-12 sm:py-16"
     >
-      <!-- Overlay -->
+      <!-- Décor -->
       <div
-        class="absolute inset-0"
-        style="background-color: #1cb098; mix-blend-mode: hue; z-index: 0"
+        class="pointer-events-none absolute -top-32 -right-24 size-96 rounded-full bg-accent-500/25 blur-3xl"
+        aria-hidden="true"
       />
-      <!-- Shape haut-gauche — masqué sur mobile -->
-      <div class="absolute top-0 left-0 pointer-events-none hidden md:block" style="z-index: 1">
-        <img src="/images/cta_shape4_1.png" alt="" />
-      </div>
+      <div
+        class="pointer-events-none absolute -bottom-40 -left-24 size-96 rounded-full bg-accent-500/10 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute inset-0 opacity-[0.07] bg-[linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] bg-size-[48px_48px]"
+        aria-hidden="true"
+      />
+      <div class="flag-stripe absolute inset-x-0 top-0 h-1" aria-hidden="true" />
 
-      <!-- Layout mobile : flex colonne, desktop : relatif avec image absolue -->
-      <div class="relative flex flex-col md:block" style="z-index: 2">
-
+      <div class="relative grid items-center gap-12 lg:grid-cols-[1.2fr_1fr]">
         <!-- Texte -->
-        <div
-          class="max-w-7xl mx-auto px-6 pt-12 pb-8 md:pt-12.5 md:pb-30"
-        >
-          <div style="max-width: 580px">
-            <div class="space-y-6 md:space-y-8">
-              <!-- Sub-title -->
-              <span
-                class="flex items-center gap-2 text-sm font-medium"
-                style="color: #1cb098"
-              >
-                {{ t('cta_section.title') }}
+        <div>
+          <p
+            class="mb-4 inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-accent-400"
+          >
+            <span class="h-px w-6 bg-accent-500" />
+            {{ t("cta_section.title") }}
+          </p>
+
+          <h2 class="font-heading text-3xl leading-tight font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            {{ t("cta_section.title_line1") }}
+            {{ t("cta_section.title_line2") }}
+            <span class="text-accent-400">{{ t("cta_section.title_line3") }}</span>
+          </h2>
+
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <AppButton
+              variant="accent"
+              size="large"
+              icon="pi pi-arrow-right"
+              icon-pos="right"
+              :label="t('cta_section.button')"
+              @click="handleCta"
+            />
+            <a
+              :href="`https://wa.me/${TELEPHONE}`"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex h-12 items-center gap-2 rounded-leaf border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white transition-colors hover:border-white/30 hover:bg-white/10"
+            >
+              <i class="pi pi-whatsapp text-base text-emerald-400" />
+              WhatsApp
+            </a>
+          </div>
+
+          <a
+            :href="`tel:+${TELEPHONE}`"
+            class="mt-6 inline-flex items-center gap-2 text-sm text-white/70 transition-colors hover:text-accent-400"
+          >
+            <i class="pi pi-phone text-xs" />
+            {{ t("cta_section.phone") }}
+          </a>
+        </div>
+
+        <!-- Fiche de résultat (illustration en HTML) -->
+        <div class="relative mx-auto w-full max-w-sm">
+          <div
+            class="absolute inset-0 translate-x-3 translate-y-3 rotate-3 rounded-card bg-accent-500/20"
+            aria-hidden="true"
+          />
+          <div
+            class="relative rounded-card border border-white/10 bg-white/6 p-6 backdrop-blur-md"
+            aria-hidden="true"
+          >
+            <div class="mb-5 flex items-center justify-between">
+              <span class="font-heading text-sm font-semibold text-white/80">
+                Prüfungsergebnis
               </span>
-
-              <!-- Titre -->
-              <h2
-                class="font-extrabold text-white leading-tight"
-                style="font-size: clamp(1.8rem, 6vw, 2.8rem)"
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-400"
               >
-                {{ t("cta_section.title_line1") }}<br />
-                {{ t("cta_section.title_line2") }}<br />
-                <span style="color: #f5a623">{{ t("cta_section.title_line3") }}</span>
-              </h2>
+                <i class="pi pi-check-circle text-[11px]" />
+                Bestanden
+              </span>
+            </div>
 
-              <!-- Téléphone -->
-              <a
-                href="tel:+237691850913"
-                class="block font-bold hover:opacity-80 transition-opacity"
-                style="color: #f5a623; font-size: clamp(1.2rem, 4vw, 1.6rem)"
+            <ul class="space-y-3">
+              <li
+                v-for="(module, i) in modules"
+                :key="module"
+                class="flex items-center gap-3"
               >
-                {{ t("cta_section.phone") }}
-              </a>
-
-              <!-- Bouton -->
-              <button
-                class="inline-flex items-center gap-3 text-white font-bold uppercase tracking-widest px-8 py-4 rounded-full transition-all hover:opacity-90"
-                style="background-color: #076152; font-size: 0.75rem; letter-spacing: 0.12em"
-                @click="handleCta"
-              >
-                {{ t("cta_section.button") }}
-                <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-                  <path
-                    d="M7.5264 0C7.5264 0.6962 8.21633 1.738 8.9138 2.61293C9.81193 3.7394 10.8838 4.72347 12.1137 5.4748C13.0351 6.0374 14.154 6.57747 15.0528 6.57747M7.5264 13.1712C7.5264 12.475 8.21633 11.4332 8.9138 10.5583C9.81193 9.43187 10.8838 8.44773 12.1137 7.6964C13.0351 7.1338 14.154 6.59373 15.0528 6.59373M15.0528 6.5856H0"
-                    stroke="currentColor"
-                    stroke-width="1.5"
+                <span
+                  class="flex size-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400"
+                >
+                  <i class="pi pi-check text-xs" />
+                </span>
+                <span class="flex-1 text-sm font-medium text-white">{{ module }}</span>
+                <span class="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                  <span
+                    class="block h-full rounded-full bg-linear-to-r from-accent-500 to-accent-300"
+                    :style="{ width: `${78 + i * 5}%` }"
                   />
-                </svg>
-              </button>
+                </span>
+              </li>
+            </ul>
+
+            <div class="mt-6 flex items-center gap-3 border-t border-white/10 pt-5">
+              <span
+                class="flex size-10 items-center justify-center rounded-leaf bg-accent-500 text-accent-950"
+              >
+                <i class="pi pi-verified" />
+              </span>
+              <div class="leading-tight">
+                <p class="font-heading text-sm font-bold">Zertifikat</p>
+                <p class="flag-stripe mt-1.5 h-0.5 w-12 rounded-full" />
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Image mobile — inline, centrée, visible seulement sur mobile -->
-        <div class="flex justify-center pb-0 md:hidden relative">
-          <!-- Cercles déco -->
-          <div
-            class="absolute inset-0 rounded-full opacity-20"
-            style="background-color: #1cb098; mix-blend-mode: overlay; margin: 0 auto; width: 300px; height: 300px; top: 20px"
-          />
-          <img
-            src="/images/cta-thumb4-1.png"
-            alt="img"
-            class="relative block object-contain object-bottom"
-            style="height: 280px; max-width: 100%"
-          />
-        </div>
-
-        <!-- Image desktop — absolue comme avant -->
-        <div class="cta-img4-1 hidden md:block">
-          <div class="cta-bg-shape4-1"></div>
-          <div class="cta-bg-shape4-2"></div>
-          <img
-            src="/images/cta-thumb4-1.png"
-            alt="img"
-            class="relative block object-contain object-bottom"
-            style="height: 385px; max-width: 600px"
-          />
-        </div>
-
       </div>
     </div>
   </section>
@@ -108,6 +131,11 @@ const authStore = useAuthStore();
 const { openSignup } = useAuthDialog();
 const { t } = useI18n();
 
+// Numéro au format international sans "+" ni espaces (tel: et wa.me)
+const TELEPHONE = "237691850913";
+
+const modules = ["Lesen", "Hören", "Schreiben", "Sprechen"];
+
 const handleCta = () => {
   if (authStore.isAuthenticated) {
     navigateTo("/dashboard/simulateur");
@@ -116,41 +144,3 @@ const handleCta = () => {
   }
 };
 </script>
-
-<style scoped>
-/* ── Desktop uniquement ──────────────────────────── */
-.cta-img4-1 {
-  right: 192px;
-  bottom: 0;
-  position: absolute;
-  z-index: 1;
-}
-.cta-img4-1 .cta-bg-shape4-1 {
-  position: absolute;
-  inset: -30px 35px -163px 24px;
-  background-color: #1cb098;
-  mix-blend-mode: overlay;
-  opacity: 0.2;
-  border-radius: 50%;
-  z-index: -1;
-  height: 578px;
-  max-width: 541px;
-}
-.cta-img4-1 .cta-bg-shape4-2 {
-  position: absolute;
-  inset: -143px -30px -163px;
-  background-color: #1cb098;
-  opacity: 0.1;
-  border-radius: 50%;
-  mix-blend-mode: overlay;
-  z-index: -2;
-  height: 691px;
-  max-width: 660px;
-}
-@media (max-width: 1500px) {
-  .cta-img4-1 { right: 60px; max-width: 500px; }
-}
-@media (max-width: 1299px) {
-  .cta-img4-1 { max-width: 600px; }
-}
-</style>
