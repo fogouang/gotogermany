@@ -17,10 +17,13 @@ export namespace SchreibenSubjectCreate {
         TELC = 'telc',
         GOETHE = 'goethe',
         OSD = 'osd',
+        ECL = 'ecl',
+        TESTDAF = 'testdaf',
     }
     export enum level {
         B1 = 'b1',
         B2 = 'b2',
+        C1 = 'c1',
     }
 }
 

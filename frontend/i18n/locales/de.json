@@ -44,10 +44,11 @@
     "contact": {
       "title": "Kontakt | GoToGermany",
       "description": "Fragen zur Vorbereitung auf Deutschprüfungen? Kontaktieren Sie das GoToGermany-Team per WhatsApp, Telefon oder E-Mail."
-    },"about": {
-    "title": "Über uns | GoToGermany",
-    "description": "GoToGermany bereitet auf die Deutschprüfungen von Goethe, telc, ÖSD, TestDaF und ECL vor, mit Modelltests im offiziellen Format, Audios und Auswertung pro Modul."
-  }
+    },
+    "about": {
+      "title": "Über uns | GoToGermany",
+      "description": "GoToGermany bereitet auf die Deutschprüfungen von Goethe, telc, ÖSD, TestDaF und ECL vor, mit Modelltests im offiziellen Format, Audios und Auswertung pro Modul."
+    }
   },
   "testimonials": {
     "eyebrow": "Sie vertrauen uns",
@@ -71,7 +72,11 @@
     "search": "Suchen",
     "filter": "Filtern",
     "reset": "Zurücksetzen",
-    "close": "Schließen"
+    "close": "Schließen",
+    "create": "Erstellen",
+    "load_error": "Fehler beim Laden.",
+    "language": "Sprache",
+    "add": "Hinzufügen"
   },
   "hero": {
     "title": "Holen Sie sich das Zertifikat, das Ihnen die Türen nach Deutschland öffnet.",
@@ -200,55 +205,82 @@
     "faq_text": "Eine Frage zur Zahlung oder zum Zugang?",
     "faq_link": "Zur FAQ"
   },
- "about": {
-  "hero": {
-    "badge": "Über uns",
-    "title": "Eine Vorbereitung, die Sie zum Bestehen Ihrer Deutschprüfung führt",
-    "subtitle": "GoToGermany trainiert Sie mit Modelltests im Format der Prüfungen von Goethe, telc, ÖSD, TestDaF und ECL, mit klaren Ergebnissen, damit Sie vor dem Prüfungstag wissen, wo Sie stehen."
-  },
-  "mission": {
-    "eyebrow": "Unsere Mission",
-    "title": "Keine Überraschungen am Prüfungstag",
-    "p1": "Für viele Kandidaten ist das Deutschzertifikat der erste Schritt zu einem Studium, einer Ausbildung oder einer Arbeit in Deutschland. Ein Nichtbestehen kostet Zeit und Geld.",
-    "p2": "Mit GoToGermany üben Sie unter Prüfungsbedingungen, am Handy oder am Computer, und wissen genau, welche Module Sie noch trainieren müssen."
-  },
-  "values": {
-    "title": "Was uns leitet",
-    "items": {
-      "format": { "title": "Treue zum Format", "desc": "Aufbau, Dauer und Aufgabentypen entsprechen der gewählten Prüfung." },
-      "clarity": { "title": "Klare Ergebnisse", "desc": "Eine Punktzahl pro Modul, damit Sie Ihre Stärken und Schwächen sofort sehen." },
-      "access": { "title": "Für alle zugänglich", "desc": "Zahlung per Mobile Money und eine Plattform, die auf dem Handy funktioniert." }
+  "about": {
+    "hero": {
+      "badge": "Über uns",
+      "title": "Eine Vorbereitung, die Sie zum Bestehen Ihrer Deutschprüfung führt",
+      "subtitle": "GoToGermany trainiert Sie mit Modelltests im Format der Prüfungen von Goethe, telc, ÖSD, TestDaF und ECL, mit klaren Ergebnissen, damit Sie vor dem Prüfungstag wissen, wo Sie stehen."
+    },
+    "mission": {
+      "eyebrow": "Unsere Mission",
+      "title": "Keine Überraschungen am Prüfungstag",
+      "p1": "Für viele Kandidaten ist das Deutschzertifikat der erste Schritt zu einem Studium, einer Ausbildung oder einer Arbeit in Deutschland. Ein Nichtbestehen kostet Zeit und Geld.",
+      "p2": "Mit GoToGermany üben Sie unter Prüfungsbedingungen, am Handy oder am Computer, und wissen genau, welche Module Sie noch trainieren müssen."
+    },
+    "values": {
+      "title": "Was uns leitet",
+      "items": {
+        "format": {
+          "title": "Treue zum Format",
+          "desc": "Aufbau, Dauer und Aufgabentypen entsprechen der gewählten Prüfung."
+        },
+        "clarity": {
+          "title": "Klare Ergebnisse",
+          "desc": "Eine Punktzahl pro Modul, damit Sie Ihre Stärken und Schwächen sofort sehen."
+        },
+        "access": {
+          "title": "Für alle zugänglich",
+          "desc": "Zahlung per Mobile Money und eine Plattform, die auf dem Handy funktioniert."
+        }
+      }
+    },
+    "offer": {
+      "eyebrow": "Unser Angebot",
+      "title": "Alles für eine ernsthafte Vorbereitung",
+      "subtitle": "Jeder Modelltest ist eine vollständige Prüfung mit allen vier Modulen.",
+      "items": {
+        "exams": {
+          "title": "Modelltests im offiziellen Format",
+          "desc": "Lesen, Hören, Schreiben und Sprechen, aufgebaut wie am Prüfungstag, für Goethe, telc, ÖSD, TestDaF und ECL."
+        },
+        "audio": {
+          "title": "Hören mit echten Audios",
+          "desc": "Das Hörverstehen läuft mit Audiodateien, unter denselben Bedingungen wie in der Prüfung."
+        },
+        "correction": {
+          "title": "Korrektur für Schreiben und Sprechen",
+          "desc": "Ihre Texte werden mit Kommentaren korrigiert, und ein Simulator trainiert Ihr Sprechen."
+        },
+        "progress": {
+          "title": "Fortschrittsanzeige",
+          "desc": "Ihre Punktzahlen pro Modul und Ihr Verlauf zeigen, woran Sie noch arbeiten müssen."
+        },
+        "payment": {
+          "title": "Zahlung per Mobile Money",
+          "desc": "Bezahlen Sie mit MTN Mobile Money oder Orange Money, ohne Bankkarte. Der Zugang wird sofort nach Zahlungsbestätigung freigeschaltet."
+        },
+        "centres": {
+          "title": "Für Sprachschulen",
+          "desc": "Partnerzentren melden ihre Lernenden an und verfolgen deren Ergebnisse."
+        }
+      }
+    },
+    "independence": {
+      "title": "Eine unabhängige Plattform",
+      "text": "GoToGermany ist weder mit dem Goethe-Institut noch mit telc, ÖSD, TestDaF oder ECL verbunden. Unsere Modelltests folgen dem Format ihrer Prüfungen, das Zertifikat stellt jedoch nur die offizielle Institution aus."
+    },
+    "centres": {
+      "title": "Sie leiten eine Sprachschule?",
+      "text": "Bieten Sie GoToGermany Ihren Lernenden an und verfolgen Sie ihre Vorbereitung in Ihrem Zentrumsbereich.",
+      "cta": "Kontakt aufnehmen"
+    },
+    "cta": {
+      "title": "Bereit loszulegen?",
+      "subtitle": "Wählen Sie Ihre Prüfung und Ihren Tarif, der Zugang ist sofort aktiv.",
+      "pricing": "Preise ansehen",
+      "faq": "Häufige Fragen"
     }
   },
-  "offer": {
-    "eyebrow": "Unser Angebot",
-    "title": "Alles für eine ernsthafte Vorbereitung",
-    "subtitle": "Jeder Modelltest ist eine vollständige Prüfung mit allen vier Modulen.",
-    "items": {
-      "exams": { "title": "Modelltests im offiziellen Format", "desc": "Lesen, Hören, Schreiben und Sprechen, aufgebaut wie am Prüfungstag, für Goethe, telc, ÖSD, TestDaF und ECL." },
-      "audio": { "title": "Hören mit echten Audios", "desc": "Das Hörverstehen läuft mit Audiodateien, unter denselben Bedingungen wie in der Prüfung." },
-      "correction": { "title": "Korrektur für Schreiben und Sprechen", "desc": "Ihre Texte werden mit Kommentaren korrigiert, und ein Simulator trainiert Ihr Sprechen." },
-      "progress": { "title": "Fortschrittsanzeige", "desc": "Ihre Punktzahlen pro Modul und Ihr Verlauf zeigen, woran Sie noch arbeiten müssen." },
-      "payment": { "title": "Zahlung per Mobile Money", "desc": "Bezahlen Sie mit MTN Mobile Money oder Orange Money, ohne Bankkarte. Der Zugang wird sofort nach Zahlungsbestätigung freigeschaltet." },
-      "centres": { "title": "Für Sprachschulen", "desc": "Partnerzentren melden ihre Lernenden an und verfolgen deren Ergebnisse." }
-    }
-  },
-  "independence": {
-    "title": "Eine unabhängige Plattform",
-    "text": "GoToGermany ist weder mit dem Goethe-Institut noch mit telc, ÖSD, TestDaF oder ECL verbunden. Unsere Modelltests folgen dem Format ihrer Prüfungen, das Zertifikat stellt jedoch nur die offizielle Institution aus."
-  },
-  "centres": {
-    "title": "Sie leiten eine Sprachschule?",
-    "text": "Bieten Sie GoToGermany Ihren Lernenden an und verfolgen Sie ihre Vorbereitung in Ihrem Zentrumsbereich.",
-    "cta": "Kontakt aufnehmen"
-  },
-  "cta": {
-    "title": "Bereit loszulegen?",
-    "subtitle": "Wählen Sie Ihre Prüfung und Ihren Tarif, der Zugang ist sofort aktiv.",
-    "pricing": "Preise ansehen",
-    "faq": "Häufige Fragen"
-  }
-},
   "contact": {
     "badge": "Kontaktiere uns",
     "title": "Nimm Kontakt auf",
@@ -349,7 +381,9 @@
       "credits": "Guthaben",
       "start_deutsch": "Start Deutsch A1/A2",
       "sessions-live": "Live-Sprechprüfung"
-    }
+    },
+    "space": "Lernbereich",
+    "role": "Lernende(r)"
   },
   "sidebar": {
     "main": "Übersicht",
@@ -1001,6 +1035,451 @@
         "label": "Mündlicher Ausdruck",
         "description": "Sprechsimulator mit einem KI-Prüfer, der antwortet, nachfragt und Sie bewertet."
       }
+    }
+  },
+  "centre": {
+    "branches": {
+      "count": "Keine Zweigstelle | 1 Zweigstelle | {n} Zweigstellen",
+      "students": "keine Lernenden | 1 Lernende(r) | {n} Lernende",
+      "students_label": "Lernende | Lernende(r) | Lernende",
+      "new": "Neue Zweigstelle",
+      "empty_title": "Noch keine Zweigstellen",
+      "empty_text": "Legen Sie Ihre Standorte an, um ihnen Sekretariat, Lehrkräfte und Lernende zuzuordnen.",
+      "main": "Hauptstelle",
+      "secondary": "Nebenstelle",
+      "created_on": "Erstellt am {date}",
+      "name_label": "Name der Zweigstelle",
+      "name_placeholder": "z. B. Alpha-Zentrum - Yaoundé",
+      "name_required": "Der Name ist erforderlich.",
+      "created": "Zweigstelle erstellt",
+      "create_error": "Die Zweigstelle konnte nicht erstellt werden."
+    },
+    "space": "Zentrumsbereich",
+    "roles": {
+      "director": "Zentrumsleitung",
+      "secretary": "Sekretariat"
+    },
+    "nav": {
+      "overview": "Übersicht",
+      "branches": "Meine Zentren",
+      "secretaries": "Sekretariat",
+      "teachers": "Lehrkräfte",
+      "classes": "Klassen",
+      "students": "Lernende",
+      "my_students": "Meine Lernenden",
+      "new_student": "Lernende anlegen",
+      "live": "Live-Sitzung",
+      "progression": "Fortschritt",
+      "credits_history": "Guthabenverlauf",
+      "settings": "Einstellungen"
+    },
+    "pages": {
+      "dashboard": {
+        "title": "Übersicht",
+        "subtitle": "Aktivität und KI-Guthaben Ihres Zentrums"
+      },
+      "branches": {
+        "title": "Meine Zentren",
+        "subtitle": "Verwaltung Ihrer Standorte"
+      },
+      "secretaries": {
+        "title": "Sekretariat",
+        "subtitle": "Verwaltungskonten pro Zweigstelle"
+      },
+      "students": {
+        "title": "Lernende",
+        "subtitle": "Konten, Zugänge und Klassen"
+      },
+      "new_student": {
+        "title": "Lernende anlegen",
+        "subtitle": "Ein Konto für Lernende erstellen"
+      },
+      "teachers": {
+        "title": "Lehrkräfte",
+        "subtitle": "Konten der Lehrkräfte"
+      },
+      "classes": {
+        "title": "Klassen",
+        "subtitle": "Gruppen nach Niveau, mit Lehrkräften und Lernenden"
+      },
+      "live": {
+        "title": "Live-Sitzung",
+        "subtitle": "Eine mündliche Prüfung live starten und begleiten"
+      },
+      "progression": {
+        "title": "Fortschritt",
+        "subtitle": "Ergebnisse und Aktivität der Lernenden"
+      },
+      "credits_history": {
+        "title": "Guthabenverlauf",
+        "subtitle": "Protokoll der KI-Guthaben-Anpassungen"
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "subtitle": "Kontaktdaten und Logo des Zentrums"
+      }
+    },
+    "account": {
+      "active": "Konto aktiv",
+      "disabled": "Konto deaktiviert"
+    },
+    "form": {
+      "name_placeholder": "z. B. Marie Talla",
+      "email_placeholder": "marie{'@'}beispiel.de",
+      "temp_password": "Vorläufiges Passwort",
+      "password_placeholder": "Mind. 8 Zeichen",
+      "generate_password": "Passwort generieren",
+      "password_min": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+      "branch": "Zweigstelle",
+      "branch_placeholder": "Zweigstelle auswählen",
+      "required_fields": "Bitte füllen Sie alle mit Sternchen markierten Felder aus.",
+      "account_created": "Konto erstellt",
+      "credentials": "Zugangsdaten zur Weitergabe: {email} / {password}",
+      "create_error": "Fehler beim Erstellen.",
+      "level": "Prüfung und Niveau",
+      "level_placeholder": "Prüfung und Niveau auswählen",
+      "optional": "(optional)"
+    },
+    "secretaries": {
+      "count": "Kein Sekretariatskonto | 1 Sekretariatskonto | {n} Sekretariatskonten",
+      "new": "Neues Sekretariatskonto",
+      "empty_title": "Noch keine Sekretariatskonten",
+      "empty_text": "Legen Sie pro Zweigstelle ein Konto an, um Anmeldungen und Zugänge der Lernenden zu verwalten."
+    },
+    "teachers": {
+      "count": "Keine Lehrkraft | 1 Lehrkraft | {n} Lehrkräfte",
+      "new": "Neue Lehrkraft",
+      "empty_title": "Noch keine Lehrkräfte",
+      "empty_text": "Fügen Sie Ihre Lehrkräfte hinzu, um ihnen Klassen zuzuweisen und ihre Lernenden zu begleiten.",
+      "deactivate": "Deaktivieren",
+      "reactivate": "Reaktivieren",
+      "deactivate_title": "Lehrkraft deaktivieren",
+      "reactivate_title": "Lehrkraft reaktivieren",
+      "deactivate_message": "{name} deaktivieren? Diese Person kann sich dann nicht mehr anmelden.",
+      "reactivate_message": "{name} reaktivieren? Diese Person erhält wieder Zugang zu ihrem Bereich.",
+      "toggle_error": "Der Status konnte nicht geändert werden.",
+      "no_class": "Ohne Klasse",
+      "detail": {
+        "current_classes": "Laufende Klassen",
+        "active_students": "Betreute Lernende",
+        "classes_title": "Klassen",
+        "assign_title": "Klasse zuweisen",
+        "assign_placeholder": "Klasse auswählen",
+        "no_eligible": "Keine weitere Klasse in dieser Zweigstelle verfügbar.",
+        "unassign": "Aus der Klasse entfernen",
+        "unassign_confirm": "{name} sieht die Klasse „{className}“ und ihre Lernenden nicht mehr. Fortfahren?"
+      }
+    },
+    "classes": {
+      "new": "Neue Klasse",
+      "filter_all": "Alle",
+      "status": {
+        "ongoing": "Laufend",
+        "upcoming": "Geplant",
+        "finished": "Beendet"
+      },
+      "empty_title": "Hier gibt es keine Klassen",
+      "empty_text": "Legen Sie pro Niveau eine Klasse an und weisen Sie ihr eine Lehrkraft und Lernende zu. Lernende ohne aktive Klasse haben keinen Zugang zu den Prüfungsthemen.",
+      "period": "Vom {start} bis {end}",
+      "period_open": "Seit dem {start}",
+      "active_label": "aktive Lernende von {total} | aktive(r) Lernende(r) von {total} | aktive Lernende von {total}",
+      "teachers_label": "Lehrkräfte | Lehrkraft | Lehrkräfte",
+      "active_of": "keine aktiven Lernenden von {total} | 1 aktive(r) Lernende(r) von {total} | {n} aktive Lernende von {total}",
+      "manage": "Klasse verwalten",
+      "name": "Name der Klasse",
+      "name_placeholder": "z. B. B1 Start August",
+      "start_date": "Startdatum",
+      "end_date": "Geplantes Enddatum",
+      "dates_error": "Das Enddatum muss nach dem Startdatum liegen.",
+      "created": "Klasse erstellt",
+      "no_teacher": "Keine Lehrkraft zugewiesen.",
+      "add_teacher": "Lehrkraft hinzufügen",
+      "remove_teacher": "{name} aus der Klasse entfernen",
+      "no_student": "Keine Lernenden eingeschrieben.",
+      "add_student": "Lernende zum Einschreiben auswählen",
+      "enroll": "Einschreiben",
+      "left_on": "Ausgetreten am {date}",
+      "end_student": "Aus der Klasse entfernen",
+      "end_confirm": "{name} aus dieser Klasse entfernen? Ohne weitere aktive Klasse besteht kein Zugang mehr zu den Prüfungsthemen.",
+      "assign_error": "Die Lehrkraft konnte nicht zugewiesen werden.",
+      "remove_error": "Die Lehrkraft konnte nicht entfernt werden.",
+      "enroll_error": "Die Einschreibung ist fehlgeschlagen.",
+      "end_error": "Entfernen aus der Klasse fehlgeschlagen.",
+      "search": "Klasse oder Lehrkraft suchen",
+      "filter_level": "Niveau",
+      "filter_teacher": "Lehrkraft",
+      "filter_branch": "Zweigstelle",
+      "filter_no_teacher": "Ohne Lehrkraft",
+      "reset_filters": "Filter zurücksetzen",
+      "month_count": "keine Klassen | 1 Klasse | {n} Klassen",
+      "open": "Klasse ansehen",
+      "detail": {
+        "back": "Zurück zu den Klassen",
+        "not_found": "Klasse nicht gefunden.",
+        "edit": "Bearbeiten",
+        "edit_title": "Klasse bearbeiten",
+        "edit_hint": "Niveau und Startdatum können nicht geändert werden.",
+        "save": "Speichern",
+        "updated": "Klasse aktualisiert",
+        "update_error": "Die Klasse konnte nicht aktualisiert werden.",
+        "end_class": "Klasse beenden",
+        "end_class_confirm": "Die Klasse wird heute beendet. Die Lernenden haben dann keine aktive Klasse mehr und können keine Themen öffnen, bis sie woanders eingeschrieben sind. Fortfahren?",
+        "stat_active": "Aktive Lernende",
+        "stat_no_access": "Ohne gültigen Zugang",
+        "stat_teachers": "Lehrkräfte",
+        "stat_average": "Durchschnitt",
+        "col_student": "Lernende/r",
+        "col_activity": "Letzte Aktivität",
+        "progress": "Fortschritt ansehen",
+        "remove": "Entfernen",
+        "remove_teacher_confirm": "{name} sieht diese Klasse und ihre Lernenden nicht mehr. Fortfahren?",
+        "ended_toggle": "Keine ehemaligen Lernenden | 1 ehemalige/r Lernende/r | {n} ehemalige Lernende"
+      }
+    },
+    "settings": {
+      "address_title": "Kontaktdaten des Zentrums",
+      "address_text": "Erscheinen im Kopf der PDF-Zahlungsbelege für Ihre Lernenden.",
+      "address_label": "Adresse / Postfach",
+      "address_placeholder": "z. B. Postfach 123, Dschang",
+      "address_saved": "Adresse gespeichert",
+      "logo_title": "Logo des Zentrums",
+      "logo_text": "PNG oder JPG, max. 2 MB. Erscheint oben links auf den PDF-Belegen.",
+      "choose_file": "Datei auswählen",
+      "change_file": "Andere Datei",
+      "upload_logo": "Logo hochladen",
+      "logo_saved": "Logo aktualisiert",
+      "file_type_error": "Format nicht unterstützt: Bitte ein PNG- oder JPG-Bild wählen.",
+      "file_size_error": "Die Datei ist größer als 2 MB.",
+      "preview_title": "Vorschau auf den Belegen",
+      "preview_pending": "Nicht gespeichert",
+      "no_logo": "Kein Logo",
+      "no_address": "Keine Adresse angegeben",
+      "save_error": "Speichern fehlgeschlagen.",
+      "upload_error": "Hochladen des Logos fehlgeschlagen."
+    },
+    "progress": {
+      "search_placeholder": "Lernende oder Zweigstelle suchen",
+      "sort_activity": "Letzte Aktivität",
+      "sort_struggling": "Schwächste zuerst",
+      "sort_name": "Name",
+      "empty_title": "Noch kein Fortschritt",
+      "empty_text": "Die Ergebnisse erscheinen hier, sobald Ihre Lernenden ihre ersten Sitzungen abgeschlossen haben.",
+      "no_results": "Keine Lernenden entsprechen der Suche",
+      "average": "Durchschnitt",
+      "sessions": "Keine Sitzung | 1 Sitzung | {n} Sitzungen",
+      "never": "Nie",
+      "back": "Zurück zum Fortschritt",
+      "trend": "{points} Pkt. seit Beginn",
+      "stat_sessions": "absolvierte Sitzungen",
+      "stat_average": "Gesamtdurchschnitt",
+      "stat_last": "letzte Sitzung",
+      "evolution": "Verlauf der Ergebnisse",
+      "out_of_100": "von 100 Punkten",
+      "not_enough_data": "Noch nicht genügend Daten.",
+      "by_exam": "Details nach Prüfung",
+      "no_completed": "Noch keine abgeschlossene Sitzung.",
+      "last_on": "zuletzt am {date}",
+      "questions": "keine Frage | 1 beantwortete Frage | {n} beantwortete Fragen",
+      "no_subject": "Kein Thema bewertet.",
+      "comments_title": "Kommentare der Lehrkräfte",
+      "no_comments": "Noch keine Kommentare von Lehrkräften."
+    },
+    "dashboard": {
+      "blocked_title": "Freischaltungen sind für Ihr Zentrum gesperrt",
+      "blocked_default": "Kontaktieren Sie GoToGermany, um die Freischaltungen wieder zu aktivieren.",
+      "overdue_alert": "Keine überfälligen Verkäufe. | 1 Verkauf hat die Frist von {hours} Std. überschritten, über {amount}. Begleichen Sie ihn rasch, um eine Sperre der Freischaltungen zu vermeiden. | {n} Verkäufe haben die Frist von {hours} Std. überschritten, über {amount}. Begleichen Sie sie rasch, um eine Sperre der Freischaltungen zu vermeiden.",
+      "kpi_to_pay": "Abzuführen",
+      "kpi_to_pay_hint": "Anteil von GoToGermany an den kassierten Zugängen",
+      "kpi_overdue": "Überfällig",
+      "kpi_overdue_hint": "Kein Verkauf über {hours} Std. | 1 Verkauf über {hours} Std. | {n} Verkäufe über {hours} Std.",
+      "kpi_owed": "Ihnen geschuldet",
+      "kpi_owed_hint": "Zu erhaltende Provisionen",
+      "kpi_activations": "Freischaltungen",
+      "open": "Offen",
+      "suspended": "Gesperrt",
+      "limit_hint": "Limit {amount}",
+      "no_limit": "Kein Limit für offene Beträge",
+      "limit_title": "Limit für offene Beträge",
+      "limit_text": "Oberhalb des Limits sind neue Freischaltungen bis zur nächsten Zahlung gesperrt.",
+      "recent_title": "Letzte Freischaltungen",
+      "recent_text": "Von Ihrem Zentrum verkaufte Zugänge",
+      "empty_title": "Noch keine Freischaltungen",
+      "empty_text": "Die Zugänge, die Sie für Ihre Lernenden freischalten, erscheinen hier.",
+      "col_student": "Lernende(r)",
+      "col_plan": "Tarif",
+      "col_price": "Preis",
+      "col_remaining": "Offen",
+      "col_status": "Status"
+    },
+    "sales": {
+      "status": {
+        "settled": "Beglichen",
+        "overdue": "Überfällig",
+        "partial": "Teilweise",
+        "due": "Fällig"
+      }
+    },
+    "students": {
+      "search_placeholder": "Lernende suchen (Name, E-Mail)",
+      "empty_title": "Noch keine Lernenden",
+      "empty_text": "Von Ihrem Sekretariat angelegte Lernende erscheinen hier.",
+      "no_results_hint": "Ändern Sie die Suche oder den Filter.",
+      "col_target": "Zielprüfung",
+      "col_access": "Zugang",
+      "col_class": "Klasse",
+      "col_actions": "Aktionen",
+      "filter_all": "Alle",
+      "filter_active": "Zugang aktiv",
+      "filter_soon": "Läuft in 7 Tagen ab",
+      "filter_none": "Kein Zugang",
+      "filter_noclass": "Ohne Klasse",
+      "no_class_hint": "Ohne aktive Klasse haben Lernende keinen Zugang zu den Prüfungsthemen.",
+      "activate": "Freischalten",
+      "extend": "Verlängern",
+      "deactivate_account": "Konto deaktivieren",
+      "reactivate_account": "Konto reaktivieren",
+      "access_none": "Kein Zugang",
+      "access_expired": "Abgelaufen am {date}",
+      "access_soon": "Läuft heute ab | Läuft in 1 Tag ab | Läuft in {n} Tagen ab",
+      "access_until": "Bis {date}"
+    },
+    "activation": {
+      "title": "Zugang freischalten",
+      "done_title": "Zugang freigeschaltet",
+      "valid_until": "Zugang gültig bis {date}",
+      "price_paid": "Kassierter Preis",
+      "centre_share": "Anteil des Zentrums",
+      "to_pay": "An GoToGermany abzuführen",
+      "before": "Bis spätestens",
+      "no_class_warning": "Denken Sie daran, diese Person in eine aktive Klasse einzuschreiben: Ohne Klasse besteht kein Zugang zu den Prüfungsthemen.",
+      "no_plans": "Kein Tarif verfügbar. Kontaktieren Sie GoToGermany.",
+      "plan_days": "{n} Tag Zugang | {n} Tag Zugang | {n} Tage Zugang",
+      "to_collect": "Bei der lernenden Person zu kassieren",
+      "estimated": "Voraussichtlicher Zugang bis",
+      "paid_confirm": "Ich habe {amount} von {name} kassiert.",
+      "finish": "Fertig",
+      "submit": "Zugang freischalten",
+      "toast_detail": "{name} hat Zugang bis {date}."
+    },
+    "student_new": {
+      "back": "Zurück zu den Lernenden",
+      "subtitle": "Legen Sie das Konto an und schalten Sie den Zugang direkt frei.",
+      "password_hint": "Geben Sie es zusammen mit der E-Mail-Adresse weiter. Es kann im Profil geändert werden.",
+      "create_only": "Nur anlegen",
+      "create_and_activate": "Anlegen und Zugang freischalten"
+    }
+  },
+  "teacher": {
+    "space": "Lehrkraftbereich",
+    "role": "Lehrkraft",
+    "nav": {
+      "classes": "Meine Klassen",
+      "students": "Meine Lernenden",
+      "live": "Live-Sitzung starten",
+      "assignments": "Hausaufgaben"
+    },
+    "pages": {
+      "classes": {
+        "title": "Meine Klassen",
+        "subtitle": "Ihnen zugewiesene Klassen und Lernende"
+      },
+      "students": {
+        "title": "Meine Lernenden",
+        "subtitle": "Fortschritt und Begleitung Ihrer Lernenden"
+      },
+      "live": {
+        "title": "Live-Sitzung",
+        "subtitle": "Eine mündliche Prüfung live mit Lernenden starten"
+      },
+      "assignments": {
+        "title": "Hausaufgaben",
+        "subtitle": "Themen vergeben und Abgaben korrigieren"
+      }
+    },
+    "assignments": {
+      "search": "Hausaufgabe suchen",
+      "new": "Neue Hausaufgabe",
+      "tabs": {
+        "to_grade": "Zu korrigieren",
+        "ongoing": "Laufend",
+        "closed": "Abgeschlossen",
+        "cancelled": "Storniert"
+      },
+      "empty_title": "Noch keine Hausaufgaben",
+      "empty_text": "Erstellen Sie eine Hausaufgabe für eine Klasse oder einzelne Lernende.",
+      "empty_tab": "Nichts in dieser Kategorie.",
+      "cancelled": "Storniert",
+      "to_grade_badge": "Nichts zu korrigieren | 1 Abgabe zu korrigieren | {n} Abgaben zu korrigieren",
+      "submitted": "Abgegeben",
+      "graded": "Korrigiert",
+      "no_due": "Ohne Frist",
+      "due_on": "Fällig am {date}",
+      "due_passed": "Frist abgelaufen ({date})"
+    },
+    "live": {
+      "loading": "Sitzung wird geladen…",
+      "eyebrow": "Sprechen · Live-Prüfung",
+      "candidate": "Kandidat:in",
+      "you": "Sie",
+      "status": {
+        "idle": "Nicht verbunden",
+        "connecting": "Warten",
+        "preparing": "Vorbereitung",
+        "live": "Live",
+        "ended": "Beendet",
+        "error": "Fehler"
+      },
+      "waiting_title": "Warten auf die Kandidatin oder den Kandidaten…",
+      "waiting_text": "Die Person tritt der Sitzung bei und bereitet die mündliche Prüfung vor. | Die Person tritt der Sitzung bei und bereitet ihren Teil vor. | Die Person tritt der Sitzung bei und bereitet ihre {n} Teile vor.",
+      "preparation_title": "Vorbereitungszeit",
+      "preparation_text": "Die Person bereitet sich vor ({minutes} Min.). | Die Person bereitet ihren Teil vor ({minutes} Min.). | Die Person bereitet ihre {n} Teile vor ({minutes} Min.).",
+      "on_air": "Live",
+      "toggle_camera": "Kamera ein- oder ausschalten",
+      "toggle_mic": "Mikrofon ein- oder ausschalten",
+      "end": "Sitzung beenden",
+      "end_confirm": "Die mündliche Prüfung jetzt beenden? Die Person wird getrennt. Ihre Notizen können Sie danach noch ergänzen.",
+      "ended_title": "Sitzung beendet",
+      "ended_text": "Sie können Ihre Notizen nebenan noch ergänzen.",
+      "notes_title": "Ihre Bewertungsnotizen",
+      "notes_text": "Notieren Sie Ihre Beobachtungen frei, ohne festes Raster. Die lernende Person sieht sie nach der Sitzung in ihrem Bereich.",
+      "notes_placeholder": "Ihre Beobachtungen zur Leistung…",
+      "notes_saved": "Gespeichert",
+      "tabs": { "chat": "Chat", "subject": "Thema", "status": "Status" },
+      "chat_empty": "Noch keine Nachrichten.",
+      "chat_placeholder": "Nachricht schreiben…",
+      "send": "Senden",
+      "subject_empty": "Thema nicht geladen.",
+      "mic": "Mikrofon",
+      "mic_on": "An",
+      "mic_off": "Stumm",
+      "camera": "Kamera",
+      "camera_on": "An",
+      "camera_off": "Aus",
+      "not_found": "Sitzung nicht gefunden."
+    },
+    "launch": {
+      "intro": "Wählen Sie den Lernenden und dann das Sprechen-Thema für die Prüfung.",
+      "step_student": "Lernende/r",
+      "step_subject": "Thema",
+      "no_students": "Noch keine aktiven Lernenden in Ihren Klassen.",
+      "choose_student": "Lernende/n auswählen",
+      "level_hint": "Anhand der Klasse vorausgewählt: {level}",
+      "no_subjects": "Keine Sprechen-Themen für diese Auswahl.",
+      "subjects_hint": "Wählen Sie eine Prüfung, um die Themen zu sehen.",
+      "teile": "kein Teil | 1 Teil | {n} Teile",
+      "subject_fallback": "Thema {n}",
+      "summary_missing": "Wählen Sie Lernende/n und Thema, um die Sitzung zu starten.",
+      "launch": "Sitzung starten",
+      "launch_error": "Die Sitzung konnte nicht gestartet werden."
+    },
+    "classes": {
+      "count": "Keine Klassen zugewiesen | 1 Klasse zugewiesen | {n} Klassen zugewiesen",
+      "empty": "Ihnen wurde noch keine Klasse zugewiesen.",
+      "active_students": "Keine aktiven Lernenden | 1 aktive/r Lernende/r | {n} aktive Lernende",
+      "no_active": "Keine aktiven Lernenden in dieser Klasse.",
+      "finished_toggle": "Keine abgeschlossenen Klassen | 1 abgeschlossene Klasse | {n} abgeschlossene Klassen",
+      "detail": "Fortschritt",
+      "launch_live": "Live-Sitzung starten"
     }
   }
 }

@@ -4,14 +4,11 @@ import { UsersService, CentersService, OpenAPI } from "#shared/api";
 import type {
   StudentResponse,
   StudentCreateRequest,
-  StudentTargetUpdateRequest,
   StudentCreditAdjustRequest,
-  StudentAccessDatesUpdateRequest,
   StudentProgressResponse,
   SecretaryCreateRequest,
   UserAdminResponse,
   BranchCreateRequest,
-  LicenseUsageResponse,
   BranchResponse,
   CenterPoolResponse,
   CenterCreditTransactionResponse,
@@ -84,26 +81,6 @@ export const useCenterStaffStore = defineStore("centerStaff", {
       }
     },
 
-    async fetchMyUsage(): Promise<{
-      success: boolean;
-      usage?: LicenseUsageResponse;
-      error?: string;
-    }> {
-      this._ensureApiConfig();
-      this.loading = true;
-      this.error = null;
-      try {
-        const usage =
-          await CentersService.getMyCenterUsageApiV1CentersMeUsageGet();
-        return { success: true, usage };
-      } catch (error: any) {
-        this.error = error.body?.detail || "Erreur chargement licence";
-        return { success: false, error: this.error ?? undefined };
-      } finally {
-        this.loading = false;
-      }
-    },
-
     async fetchMyBranches(): Promise<{
       success: boolean;
       branches?: BranchResponse[];
@@ -154,27 +131,6 @@ export const useCenterStaffStore = defineStore("centerStaff", {
       }
     },
 
-    async fetchMyCertificate(): Promise<{
-      success: boolean;
-      certificateUrl?: string;
-      error?: string;
-    }> {
-      this._ensureApiConfig();
-      try {
-        const result =
-          await CentersService.getMyLicenseCertificateApiV1CentersMeLicenseCertificateGet();
-        const relativeUrl = (result as any).certificate_url as string;
-        const config = useRuntimeConfig();
-        const base = config.public.apiBaseUrl || "http://localhost:8001";
-        return { success: true, certificateUrl: `${base}${relativeUrl}` };
-      } catch (error: any) {
-        return {
-          success: false,
-          error: error.body?.detail || "Erreur génération attestation",
-        };
-      }
-    },
-
     // ── Directeur : activation/désactivation d'un étudiant ──
     async toggleStudentActivation(studentId: string): Promise<{
       success: boolean;
@@ -194,33 +150,6 @@ export const useCenterStaffStore = defineStore("centerStaff", {
         return {
           success: false,
           error: error.body?.detail || "Erreur activation/désactivation",
-        };
-      }
-    },
-
-    // ── Directeur : ajustement de la fenêtre d'accès ────────
-    async updateStudentAccessDates(
-      studentId: string,
-      data: StudentAccessDatesUpdateRequest,
-    ): Promise<{
-      success: boolean;
-      student?: StudentResponse;
-      error?: string;
-    }> {
-      this._ensureApiConfig();
-      try {
-        const updated =
-          await UsersService.updateStudentAccessDatesApiV1UsersStudentsStudentIdAccessDatesPatch(
-            studentId,
-            data,
-          );
-        const index = this.students.findIndex((s) => s.id === studentId);
-        if (index !== -1) this.students[index] = updated;
-        return { success: true, student: updated };
-      } catch (error: any) {
-        return {
-          success: false,
-          error: error.body?.detail || "Erreur mise à jour des dates",
         };
       }
     },
@@ -404,28 +333,6 @@ export const useCenterStaffStore = defineStore("centerStaff", {
         return { success: false, error: this.error ?? undefined };
       } finally {
         this.loading = false;
-      }
-    },
-
-    async updateStudentTarget(
-      studentId: string,
-      data: StudentTargetUpdateRequest,
-    ) {
-      this._ensureApiConfig();
-      try {
-        const updated =
-          await UsersService.updateStudentTargetApiV1UsersStudentsStudentIdTargetPatch(
-            studentId,
-            data,
-          );
-        const index = this.students.findIndex((s) => s.id === studentId);
-        if (index !== -1) this.students[index] = updated;
-        return { success: true, student: updated };
-      } catch (error: any) {
-        return {
-          success: false,
-          error: error.body?.detail || "Erreur mise à jour cible",
-        };
       }
     },
 

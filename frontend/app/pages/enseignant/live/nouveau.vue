@@ -1,23 +1,21 @@
 <!-- pages/enseignant/live/nouveau.vue -->
 <template>
-  <div class="space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Session Sprechen en direct</h1>
-      <p class="text-sm text-gray-500">
-        Choisissez un étudiant (parmi vos sessions assignées) et un sujet pour
-        lancer une session d'examen oral que vous menez vous-même, en direct.
-      </p>
-    </div>
+  <div class="mx-auto max-w-4xl space-y-5 pb-24">
+    <p class="text-sm text-muted">{{ t("teacher.launch.intro") }}</p>
 
-    <!-- Étape 1 : étudiant -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-      <p class="text-sm font-semibold text-gray-700">1. Étudiant</p>
-      <div v-if="loadingStudents" class="flex items-center gap-2 text-sm text-gray-400">
-        <i class="pi pi-spin pi-spinner" /> Chargement des étudiants…
-      </div>
-      <p v-else-if="myStudents.length === 0" class="text-sm text-gray-400">
-        Aucun étudiant actif dans vos sessions pour l'instant.
+    <!-- ══ Étape 1 : élève ══ -->
+    <section class="rounded-card border border-line bg-card p-5 shadow-soft">
+      <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+        <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+        {{ t("teacher.launch.step_student") }}
+      </h2>
+
+      <div v-if="loadingStudents" class="h-11 animate-pulse rounded-leaf bg-card-2" />
+
+      <p v-else-if="myStudents.length === 0" class="text-sm text-muted">
+        {{ t("teacher.launch.no_students") }}
       </p>
+
       <Select
         v-else
         v-model="selectedStudentId"
@@ -25,97 +23,133 @@
         optionLabel="full_name"
         optionValue="id"
         filter
-        placeholder="Choisir un étudiant"
+        :placeholder="t('teacher.launch.choose_student')"
         class="w-full sm:w-96"
-      />
-    </div>
+      >
+        <template #option="{ option }">
+          <div class="flex min-w-0 flex-col">
+            <span class="truncate">{{ option.full_name }}</span>
+            <span class="truncate text-xs text-muted">{{ option.class_label }}</span>
+          </div>
+        </template>
+      </Select>
+    </section>
 
-    <!-- Étape 2 : sujet (identique au pattern staff) -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-      <p class="text-sm font-semibold text-gray-700">2. Sujet Sprechen</p>
+    <!-- ══ Étape 2 : sujet ══ -->
+    <section class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft">
+      <h2 class="flex items-center gap-2 text-sm font-semibold text-ink">
+        <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+        {{ t("teacher.launch.step_subject") }}
+      </h2>
 
-      <div class="flex flex-wrap gap-2">
+      <p v-if="studentLevelHint" class="flex items-center gap-1.5 text-xs text-muted">
+        <i class="pi pi-info-circle text-[11px]" />
+        {{ studentLevelHint }}
+      </p>
+
+      <!-- Filtres : examen puis niveau -->
+      <div class="flex flex-wrap items-center gap-2">
         <button
           v-for="p in availableProviders"
           :key="p"
-          :class="[
-            'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+          type="button"
+          class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
+          :class="
             selectedProvider === p
-              ? 'bg-teal-600 text-white border-teal-600'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-teal-300',
-          ]"
-          @click="selectedProvider = selectedProvider === p ? '' : p"
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-line bg-card text-muted hover:border-primary/30'
+          "
+          @click="selectProvider(p)"
         >
           {{ p.toUpperCase() }}
         </button>
-        <div class="w-px bg-gray-200 mx-1" />
+        <span class="mx-1 h-6 w-px bg-line" />
         <button
           v-for="l in availableLevels"
           :key="l"
-          :class="[
-            'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+          type="button"
+          class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
+          :class="
             selectedLevel === l
-              ? 'bg-indigo-600 text-white border-indigo-600'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300',
-          ]"
+              ? 'border-ink bg-ink text-card'
+              : 'border-line bg-card text-muted hover:border-ink/30'
+          "
           @click="selectedLevel = selectedLevel === l ? '' : l"
         >
           {{ l }}
         </button>
       </div>
 
-      <div v-if="examsStore.loading" class="flex justify-center py-8">
-        <ProgressSpinner style="width: 40px; height: 40px" />
+      <!-- Sujets -->
+      <div v-if="examsStore.loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div v-for="n in 4" :key="n" class="h-20 animate-pulse rounded-leaf bg-card-2" />
       </div>
 
       <div
         v-else-if="!sprechenSubjects.length"
-        class="text-center py-8 text-sm text-gray-400"
+        class="rounded-leaf border border-dashed border-line py-8 text-center text-sm text-muted"
       >
-        Sélectionnez un provider et un niveau pour voir les sujets disponibles.
+        {{ selectedProvider ? t("teacher.launch.no_subjects") : t("teacher.launch.subjects_hint") }}
       </div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
           v-for="subject in sprechenSubjects"
           :key="subject.id"
-          :class="[
-            'text-left rounded-xl border p-4 transition-all',
+          type="button"
+          class="rounded-leaf border p-4 text-left transition-colors"
+          :class="
             selectedSubjectId === subject.id
-              ? 'border-teal-500 ring-2 ring-teal-100 bg-teal-50'
-              : 'border-gray-100 hover:border-teal-200',
-          ]"
+              ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+              : 'border-line hover:border-primary/30'
+          "
           @click="selectedSubjectId = subject.id"
         >
-          <p class="font-semibold text-gray-900 text-sm">{{ subject.title }}</p>
-          <div class="flex items-center gap-2 mt-2">
-            <Tag :value="subject.provider.toUpperCase()" />
-            <Tag :value="subject.level" severity="info" />
-            <span class="text-xs text-gray-400">{{ subject.teilCount }} Teile</span>
+          <p class="text-sm font-semibold text-ink">{{ subject.title }}</p>
+          <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="rounded-full bg-card-2 px-2 py-0.5 font-semibold text-muted">
+              {{ subject.provider.toUpperCase() }}
+            </span>
+            <span class="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+              {{ subject.level }}
+            </span>
+            <span class="text-muted">{{ t("teacher.launch.teile", subject.teilCount) }}</span>
           </div>
         </button>
       </div>
-    </div>
+    </section>
 
-    <!-- Étape 3 : lancer -->
-    <div class="flex items-center gap-3">
-      <Button
-        label="Lancer la session"
-        icon="pi pi-play"
-        :disabled="!canLaunch"
-        :loading="liveSessionStore.loading"
-        @click="handleLaunch"
-      />
-      <p v-if="launchError" class="text-sm text-red-600">{{ launchError }}</p>
+    <!-- ══ Barre de lancement (toujours visible en bas) ══ -->
+    <div class="sticky bottom-0 z-10 -mx-1">
+      <div
+        class="flex flex-col gap-3 rounded-card border border-line bg-card/95 p-4 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="min-w-0 text-sm">
+          <p v-if="canLaunch" class="truncate text-ink">
+            <i class="pi pi-check-circle mr-1 text-emerald-600" />
+            {{ selectedStudent?.full_name }} · {{ selectedSubject?.title }}
+          </p>
+          <p v-else class="text-muted">{{ t("teacher.launch.summary_missing") }}</p>
+          <p v-if="launchError" class="mt-1 text-xs text-red-600">{{ launchError }}</p>
+        </div>
+        <Button
+          :label="t('teacher.launch.launch')"
+          icon="pi pi-play"
+          class="shrink-0"
+          :disabled="!canLaunch"
+          :loading="liveSessionStore.loading"
+          @click="handleLaunch"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: "enseignant",
-});
+definePageMeta({ layout: "enseignant" });
 
+const { t } = useI18n();
+const localePath = useLocalePath();
 const route = useRoute();
 const teacherPortalStore = useTeacherPortalStore();
 const examsStore = useExamsStore();
@@ -124,43 +158,77 @@ const liveSessionStore = useLiveSessionStore();
 const loadingStudents = ref(true);
 const selectedStudentId = ref<string | null>(null);
 
-// Étudiants actifs (ended_at === null) dans TOUTES les sessions de
-// l'enseignant, dédupliqués — un même étudiant pourrait théoriquement
-// apparaître dans 2 sessions du même enseignant.
+// Élèves actifs (ended_at vide) de toutes les classes de l'enseignant, sans doublon.
+// On garde le niveau de leur classe pour présélectionner les sujets.
 const myStudents = computed(() => {
-  const map = new Map<string, { id: string; full_name: string }>();
+  const map = new Map<string, { id: string; full_name: string; class_label: string; level_id: string | null }>();
   for (const session of teacherPortalStore.mySessions) {
+    const levelId = (session as { level_id?: string | null }).level_id ?? null;
+    const classLabel = session.label ? `${session.level_name} · ${session.label}` : session.level_name;
     for (const s of session.students) {
-      if (!s.ended_at) {
-        map.set(s.student_id, { id: s.student_id, full_name: s.student_name });
+      if (!s.ended_at && !map.has(s.student_id)) {
+        map.set(s.student_id, {
+          id: s.student_id,
+          full_name: s.student_name,
+          class_label: classLabel,
+          level_id: levelId,
+        });
       }
     }
   }
-  return [...map.values()];
+  return [...map.values()].sort((a, b) => a.full_name.localeCompare(b.full_name));
 });
 
+const selectedStudent = computed(
+  () => myStudents.value.find((s) => s.id === selectedStudentId.value) ?? null,
+);
+
+// ── Filtres examen / niveau ──
 const selectedProvider = ref("");
 const selectedLevel = ref("");
 
-watch(selectedProvider, () => {
+// Un clic manuel sur un examen remet le niveau à zéro
+function selectProvider(p: string) {
+  selectedProvider.value = selectedProvider.value === p ? "" : p;
   selectedLevel.value = "";
-});
+}
 
 const selectedSubjectId = ref<string | null>(null);
 const launchError = ref<string | null>(null);
 
-const availableProviders = computed(() => {
-  const set = new Set(examsStore.catalog.map((e: any) => e.provider));
-  return [...set];
-});
+const availableProviders = computed(() => [
+  ...new Set(examsStore.catalog.map((e: any) => e.provider as string)),
+]);
 
 const availableLevels = computed(() => {
   const set = new Set<string>();
-  examsStore.catalog.forEach((e: any) =>
-    e.levels?.forEach((l: any) => set.add(l.cefr_code)),
-  );
+  examsStore.catalog
+    .filter((e: any) => !selectedProvider.value || e.provider === selectedProvider.value)
+    .forEach((e: any) => e.levels?.forEach((l: any) => set.add(l.cefr_code)));
   return [...set];
 });
+
+// ── Présélection d'après la classe de l'élève ──
+const studentLevelHint = ref<string | null>(null);
+
+function presetFromStudent() {
+  studentLevelHint.value = null;
+  const levelId = selectedStudent.value?.level_id;
+  if (!levelId) return;
+  for (const exam of examsStore.catalog as any[]) {
+    const level = (exam.levels ?? []).find((l: any) => l.id === levelId);
+    if (level) {
+      selectedProvider.value = exam.provider;
+      selectedLevel.value = level.cefr_code;
+      studentLevelHint.value = t("teacher.launch.level_hint", {
+        level: `${exam.name} - ${level.cefr_code}`,
+      });
+      return;
+    }
+  }
+}
+
+watch(selectedStudentId, presetFromStudent);
 
 interface SprechenSubjectCard {
   id: string;
@@ -172,7 +240,7 @@ interface SprechenSubjectCard {
 
 const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
   const exam = examsStore.currentExam;
-  if (!exam) return [];
+  if (!exam || exam.provider !== selectedProvider.value) return [];
 
   const cards: SprechenSubjectCard[] = [];
   for (const level of exam.levels ?? []) {
@@ -188,7 +256,7 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
         id: subject.id,
         provider: exam.provider,
         level: level.cefr_code,
-        title: subject.name || `Sujet ${subject.subject_number}`,
+        title: subject.name || t("teacher.launch.subject_fallback", { n: subject.subject_number }),
         teilCount: sprechenModule.teile?.length ?? 0,
       });
     }
@@ -196,11 +264,14 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
   return cards;
 });
 
+const selectedSubject = computed(
+  () => sprechenSubjects.value.find((s) => s.id === selectedSubjectId.value) ?? null,
+);
+
+// Examen à charger pour le couple examen + niveau choisi
 const targetExamSlug = computed(() => {
   if (!selectedProvider.value) return null;
-  const candidates = examsStore.catalog.filter(
-    (e: any) => e.provider === selectedProvider.value,
-  );
+  const candidates = examsStore.catalog.filter((e: any) => e.provider === selectedProvider.value);
   if (!candidates.length) return null;
   if (!selectedLevel.value) return candidates[0]!.slug;
   const match = candidates.find((e: any) =>
@@ -214,15 +285,14 @@ watch(targetExamSlug, async (slug) => {
   await examsStore.fetchExamBySlug(slug);
 });
 
+// Le sujet choisi disparaît de la liste filtrée : on le désélectionne
 watch(sprechenSubjects, (list) => {
   if (selectedSubjectId.value && !list.find((s) => s.id === selectedSubjectId.value)) {
     selectedSubjectId.value = null;
   }
 });
 
-const canLaunch = computed(
-  () => !!selectedStudentId.value && !!selectedSubjectId.value,
-);
+const canLaunch = computed(() => !!selectedStudentId.value && !!selectedSubjectId.value);
 
 async function handleLaunch() {
   if (!selectedStudentId.value || !selectedSubjectId.value) return;
@@ -234,31 +304,29 @@ async function handleLaunch() {
   });
 
   if (result.success && result.session) {
-    await navigateTo(`/enseignant/live/${result.session.id}`);
+    await navigateTo(localePath(`/enseignant/live/${result.session.id}`));
   } else {
-    launchError.value = result.error || "Erreur lors du lancement.";
+    launchError.value = result.error || t("teacher.launch.launch_error");
   }
 }
 
 onMounted(async () => {
-  if (teacherPortalStore.mySessions.length === 0) {
-    await teacherPortalStore.fetchMySessions();
-  }
+  await Promise.all([
+    teacherPortalStore.mySessions.length === 0 ? teacherPortalStore.fetchMySessions() : Promise.resolve(),
+    examsStore.catalog.length === 0 ? examsStore.fetchCatalog() : Promise.resolve(),
+  ]);
   loadingStudents.value = false;
 
-  // Pré-sélection si on vient du bouton "Lancer un live" de la page
-  // "mes sessions" (query ?student_id=...)
+  // Arrivée depuis « Mes classes » (?student_id=...) : élève + niveau présélectionnés
   const preselect = route.query.student_id;
-  if (typeof preselect === "string") {
+  if (typeof preselect === "string" && myStudents.value.some((s) => s.id === preselect)) {
     selectedStudentId.value = preselect;
+    await nextTick(); // laisse presetFromStudent poser examen et niveau
   }
 
-  if (!examsStore.catalog.length) await examsStore.fetchCatalog();
-
+  // Sans élève présélectionné (ou classe sans niveau connu) : Goethe par défaut, sinon le premier examen
   if (!selectedProvider.value) {
-    const goethe = availableProviders.value.find(
-      (p) => p.toLowerCase() === "goethe",
-    );
+    const goethe = availableProviders.value.find((p) => p.toLowerCase() === "goethe");
     selectedProvider.value = goethe ?? availableProviders.value[0] ?? "";
   }
 });

@@ -14,6 +14,7 @@ export type TrainingSessionResponse = {
     start_date: string;
     end_date: (string | null);
     created_at: string;
+    is_draft?: boolean;
     teachers?: Array<TrainingSessionTeacherResponse>;
     students?: Array<TrainingSessionStudentResponse>;
 };

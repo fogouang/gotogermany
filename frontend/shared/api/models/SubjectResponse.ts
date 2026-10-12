@@ -9,5 +9,6 @@ export type SubjectResponse = {
     name: (string | null);
     is_active: boolean;
     has_audio?: boolean;
+    is_private?: boolean;
 };
 

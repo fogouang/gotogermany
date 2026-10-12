@@ -111,22 +111,20 @@ export const useTrainingSessionsStore = defineStore("trainingSessions", {
 
     async updateSession(
       sessionId: string,
-      data: TrainingSessionUpdateRequest,
-    ): Promise<{ success: boolean; error?: string }> {
+      payload: TrainingSessionUpdateRequest,
+    ) {
       this._ensureApiConfig();
       try {
-        const updated =
-          await TrainingSessionsService.updateSessionApiV1TrainingSessionsSessionIdPatch(
-            sessionId,
-            data,
-          );
-        const index = this.sessions.findIndex((s) => s.id === sessionId);
-        if (index !== -1) this.sessions[index] = normalizeSession(updated);
-        return { success: true };
+        await TrainingSessionsService.updateSessionApiV1TrainingSessionsSessionIdPatch(
+          sessionId,
+          payload,
+        );
+        return { success: true as const, error: null };
       } catch (error: any) {
+        const detail = error?.body?.detail;
         return {
-          success: false,
-          error: error.body?.detail || "Erreur mise à jour session",
+          success: false as const,
+          error: typeof detail === "string" ? detail : "",
         };
       }
     },

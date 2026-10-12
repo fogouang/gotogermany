@@ -60,9 +60,10 @@ export class ExamAccessService {
     }
     /**
      * Admin Grant Access
-     * Accorde manuellement un accès à un level — admin uniquement.
+     * Accorde ou prolonge l'accès d'un utilisateur à un niveau, sans paiement.
      * @param userId
      * @param levelId
+     * @param days Nombre de jours offerts. Omis = accès permanent.
      * @param accessToken
      * @returns ExamAccessResponse Successful Response
      * @throws ApiError
@@ -70,6 +71,7 @@ export class ExamAccessService {
     public static adminGrantAccessApiV1AccessAdminGrantPost(
         userId: string,
         levelId: string,
+        days?: (number | null),
         accessToken?: (string | null),
     ): CancelablePromise<ExamAccessResponse> {
         return __request(OpenAPI, {
@@ -81,6 +83,7 @@ export class ExamAccessService {
             query: {
                 'user_id': userId,
                 'level_id': levelId,
+                'days': days,
             },
             errors: {
                 422: `Validation Error`,

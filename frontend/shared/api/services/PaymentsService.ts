@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { app__modules__payments__schemas__PaymentResponse } from '../models/app__modules__payments__schemas__PaymentResponse';
 import type { ManualPaymentRequest } from '../models/ManualPaymentRequest';
 import type { ManualPaymentResponse } from '../models/ManualPaymentResponse';
 import type { PaymentAdminResponse } from '../models/PaymentAdminResponse';
 import type { PaymentInitiateRequest } from '../models/PaymentInitiateRequest';
 import type { PaymentInitiateResponse } from '../models/PaymentInitiateResponse';
+import type { PaymentResponse } from '../models/PaymentResponse';
 import type { PaymentStatusResponse } from '../models/PaymentStatusResponse';
 import type { PaymentSummaryResponse } from '../models/PaymentSummaryResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -79,12 +79,12 @@ export class PaymentsService {
      * Get My Payments
      * Historique des paiements de l'utilisateur connecté.
      * @param accessToken
-     * @returns app__modules__payments__schemas__PaymentResponse Successful Response
+     * @returns PaymentResponse Successful Response
      * @throws ApiError
      */
     public static getMyPaymentsApiV1PaymentsMeGet(
         accessToken?: (string | null),
-    ): CancelablePromise<Array<app__modules__payments__schemas__PaymentResponse>> {
+    ): CancelablePromise<Array<PaymentResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/payments/me',
@@ -97,45 +97,17 @@ export class PaymentsService {
         });
     }
     /**
-     * Create Ambassador Manual Payment
-     * Permet à un ambassadeur de confirmer manuellement un paiement
-     * pour l'un de ses propres filleuls, quand pawaPay est instable —
-     * scope volontairement limité à ses filleuls, contrairement à la
-     * route admin équivalente.
-     * @param requestBody
-     * @param accessToken
-     * @returns any Successful Response
-     * @throws ApiError
-     */
-    public static createAmbassadorManualPaymentApiV1PaymentsManualAmbassadorPost(
-        requestBody: ManualPaymentRequest,
-        accessToken?: (string | null),
-    ): CancelablePromise<Record<string, any>> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/payments/manual/ambassador',
-            cookies: {
-                'access_token': accessToken,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
      * Get Payment
      * Détail d'un paiement.
      * @param paymentId
      * @param accessToken
-     * @returns app__modules__payments__schemas__PaymentResponse Successful Response
+     * @returns PaymentResponse Successful Response
      * @throws ApiError
      */
     public static getPaymentApiV1PaymentsPaymentIdGet(
         paymentId: string,
         accessToken?: (string | null),
-    ): CancelablePromise<app__modules__payments__schemas__PaymentResponse> {
+    ): CancelablePromise<PaymentResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/payments/{payment_id}',

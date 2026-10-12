@@ -5,5 +5,6 @@
 export type SubjectCreateRequest = {
     name?: (string | null);
     is_active?: boolean;
+    is_private?: boolean;
 };
 

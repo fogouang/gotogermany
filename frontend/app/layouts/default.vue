@@ -1,9 +1,9 @@
 <template>
   <div class="flex min-h-screen flex-col bg-canvas text-ink">
-    <!-- <Navbar /> -->
+    <LandingNavbar />
     <main class="flex-1">
       <slot />
     </main>
-    <!-- <Footer /> -->
+    <LandingFooter />
   </div>
 </template>

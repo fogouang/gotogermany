@@ -5,5 +5,6 @@
 export type SubjectUpdateRequest = {
     name?: (string | null);
     is_active?: (boolean | null);
+    is_private?: (boolean | null);
 };
 

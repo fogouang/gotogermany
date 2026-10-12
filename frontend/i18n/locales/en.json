@@ -44,10 +44,11 @@
     "contact": {
       "title": "Contact | GoToGermany",
       "description": "A question about German exam preparation? Contact the GoToGermany team by WhatsApp, phone or email."
-    },"about": {
-    "title": "About us | GoToGermany",
-    "description": "GoToGermany prepares you for the Goethe, telc, ÖSD, TestDaF and ECL German exams with papers in the official format, audio and per-module tracking."
-  }
+    },
+    "about": {
+      "title": "About us | GoToGermany",
+      "description": "GoToGermany prepares you for the Goethe, telc, ÖSD, TestDaF and ECL German exams with papers in the official format, audio and per-module tracking."
+    }
   },
   "testimonials": {
     "eyebrow": "They trust us",
@@ -71,7 +72,11 @@
     "search": "Search",
     "filter": "Filter",
     "reset": "Reset",
-    "close": "Close"
+    "close": "Close",
+    "create": "Create",
+    "load_error": "Failed to load.",
+    "language": "Language",
+    "add": "Add"
   },
   "hero": {
     "title": "Earn the certificate that opens the doors to Germany.",
@@ -201,54 +206,81 @@
     "faq_link": "Read the FAQ"
   },
   "about": {
-  "hero": {
-    "badge": "About us",
-    "title": "Preparation designed to help you pass your German exam",
-    "subtitle": "GoToGermany trains you on papers in the format of the Goethe, telc, ÖSD, TestDaF and ECL exams, with clear results so you know where you stand before exam day."
-  },
-  "mission": {
-    "eyebrow": "Our mission",
-    "title": "No surprises on exam day",
-    "p1": "For many candidates, a German certificate is the first step towards studying, training or working in Germany. Failing costs time and money.",
-    "p2": "GoToGermany lets you practise in exam conditions, from a phone or a computer, and know exactly which modules to work on."
-  },
-  "values": {
-    "title": "What guides us",
-    "items": {
-      "format": { "title": "True to the format", "desc": "Structure, timing and task types follow those of the chosen exam." },
-      "clarity": { "title": "Clear results", "desc": "A score per module so you instantly see your strengths and weaknesses." },
-      "access": { "title": "Accessible to everyone", "desc": "Mobile Money payment and a platform that works on your phone." }
+    "hero": {
+      "badge": "About us",
+      "title": "Preparation designed to help you pass your German exam",
+      "subtitle": "GoToGermany trains you on papers in the format of the Goethe, telc, ÖSD, TestDaF and ECL exams, with clear results so you know where you stand before exam day."
+    },
+    "mission": {
+      "eyebrow": "Our mission",
+      "title": "No surprises on exam day",
+      "p1": "For many candidates, a German certificate is the first step towards studying, training or working in Germany. Failing costs time and money.",
+      "p2": "GoToGermany lets you practise in exam conditions, from a phone or a computer, and know exactly which modules to work on."
+    },
+    "values": {
+      "title": "What guides us",
+      "items": {
+        "format": {
+          "title": "True to the format",
+          "desc": "Structure, timing and task types follow those of the chosen exam."
+        },
+        "clarity": {
+          "title": "Clear results",
+          "desc": "A score per module so you instantly see your strengths and weaknesses."
+        },
+        "access": {
+          "title": "Accessible to everyone",
+          "desc": "Mobile Money payment and a platform that works on your phone."
+        }
+      }
+    },
+    "offer": {
+      "eyebrow": "What we offer",
+      "title": "Everything you need to practise seriously",
+      "subtitle": "Each paper is a complete exam with all four modules.",
+      "items": {
+        "exams": {
+          "title": "Papers in the official format",
+          "desc": "Lesen, Hören, Schreiben and Sprechen, organised as on exam day, for Goethe, telc, ÖSD, TestDaF and ECL."
+        },
+        "audio": {
+          "title": "Hören with real audio",
+          "desc": "Listening tasks use audio files, in the same conditions as the exam."
+        },
+        "correction": {
+          "title": "Writing and speaking correction",
+          "desc": "Your written work is corrected with feedback, and a simulator helps you practise speaking."
+        },
+        "progress": {
+          "title": "Progress tracking",
+          "desc": "Your scores per module and your history show what is left to work on."
+        },
+        "payment": {
+          "title": "Mobile Money payment",
+          "desc": "Pay with MTN Mobile Money or Orange Money, no bank card needed. Access is activated as soon as payment is confirmed."
+        },
+        "centres": {
+          "title": "For language centres",
+          "desc": "Partner centres enrol their learners and follow their results."
+        }
+      }
+    },
+    "independence": {
+      "title": "An independent platform",
+      "text": "GoToGermany is not affiliated with the Goethe-Institut, telc, ÖSD, TestDaF or ECL. Our papers follow the format of their exams, but only the official body issues the certificate."
+    },
+    "centres": {
+      "title": "Do you run a language centre?",
+      "text": "Offer GoToGermany to your learners and follow their preparation from your centre dashboard.",
+      "cta": "Contact us"
+    },
+    "cta": {
+      "title": "Ready to start?",
+      "subtitle": "Choose your exam and your plan, access is immediate.",
+      "pricing": "See pricing",
+      "faq": "FAQ"
     }
   },
-  "offer": {
-    "eyebrow": "What we offer",
-    "title": "Everything you need to practise seriously",
-    "subtitle": "Each paper is a complete exam with all four modules.",
-    "items": {
-      "exams": { "title": "Papers in the official format", "desc": "Lesen, Hören, Schreiben and Sprechen, organised as on exam day, for Goethe, telc, ÖSD, TestDaF and ECL." },
-      "audio": { "title": "Hören with real audio", "desc": "Listening tasks use audio files, in the same conditions as the exam." },
-      "correction": { "title": "Writing and speaking correction", "desc": "Your written work is corrected with feedback, and a simulator helps you practise speaking." },
-      "progress": { "title": "Progress tracking", "desc": "Your scores per module and your history show what is left to work on." },
-      "payment": { "title": "Mobile Money payment", "desc": "Pay with MTN Mobile Money or Orange Money, no bank card needed. Access is activated as soon as payment is confirmed." },
-      "centres": { "title": "For language centres", "desc": "Partner centres enrol their learners and follow their results." }
-    }
-  },
-  "independence": {
-    "title": "An independent platform",
-    "text": "GoToGermany is not affiliated with the Goethe-Institut, telc, ÖSD, TestDaF or ECL. Our papers follow the format of their exams, but only the official body issues the certificate."
-  },
-  "centres": {
-    "title": "Do you run a language centre?",
-    "text": "Offer GoToGermany to your learners and follow their preparation from your centre dashboard.",
-    "cta": "Contact us"
-  },
-  "cta": {
-    "title": "Ready to start?",
-    "subtitle": "Choose your exam and your plan, access is immediate.",
-    "pricing": "See pricing",
-    "faq": "FAQ"
-  }
-},
   "contact": {
     "badge": "Contact us",
     "title": "Get in touch",
@@ -349,7 +381,9 @@
       "credits": "Credits",
       "start_deutsch": "Start Deutsch A1/A2",
       "sessions-live": "Live Sprechen session"
-    }
+    },
+    "space": "Student area",
+    "role": "Student"
   },
   "sidebar": {
     "main": "Main",
@@ -1001,6 +1035,448 @@
         "label": "Speaking",
         "description": "Speaking simulator with an AI examiner who answers you, follows up and assesses you."
       }
+    }
+  },
+  "centre": {
+    "branches": {
+      "count": "No branches | 1 branch | {n} branches",
+      "students": "no students | 1 student | {n} students",
+      "students_label": "students | student | students",
+      "new": "New branch",
+      "empty_title": "No branches yet",
+      "empty_text": "Add your training locations to assign secretaries, teachers and students to them.",
+      "main": "Main",
+      "secondary": "Secondary",
+      "created_on": "Created on {date}",
+      "name_label": "Branch name",
+      "name_placeholder": "e.g. Alpha Centre - Yaoundé",
+      "name_required": "Name is required.",
+      "created": "Branch created",
+      "create_error": "Could not create the branch."
+    },
+    "space": "Centre area",
+    "roles": {
+      "director": "Centre director",
+      "secretary": "Secretary"
+    },
+    "nav": {
+      "overview": "Overview",
+      "branches": "My centres",
+      "secretaries": "Secretaries",
+      "teachers": "Teachers",
+      "classes": "Classes",
+      "students": "Students",
+      "my_students": "My students",
+      "new_student": "New student",
+      "live": "Live session",
+      "progression": "Progress",
+      "credits_history": "Credit history",
+      "settings": "Settings"
+    },
+    "pages": {
+      "dashboard": {
+        "title": "Overview",
+        "subtitle": "Your centre's activity and AI credits"
+      },
+      "branches": {
+        "title": "My centres",
+        "subtitle": "Manage your training locations"
+      },
+      "secretaries": {
+        "title": "Secretaries",
+        "subtitle": "Management accounts per branch"
+      },
+      "students": {
+        "title": "Students",
+        "subtitle": "Accounts, access and classes"
+      },
+      "new_student": {
+        "title": "New student",
+        "subtitle": "Create a student account"
+      },
+      "teachers": { "title": "Teachers", "subtitle": "Teacher accounts" },
+      "classes": {
+        "title": "Classes",
+        "subtitle": "Groups by level, with teachers and students"
+      },
+      "live": {
+        "title": "Live session",
+        "subtitle": "Start and follow a live oral exam"
+      },
+      "progression": {
+        "title": "Progress",
+        "subtitle": "Student scores and activity"
+      },
+      "credits_history": {
+        "title": "Credit history",
+        "subtitle": "Audit of AI credit adjustments"
+      },
+      "settings": {
+        "title": "Settings",
+        "subtitle": "Centre contact details and logo"
+      }
+    },
+    "account": {
+      "active": "Active account",
+      "disabled": "Disabled account"
+    },
+    "form": {
+      "name_placeholder": "e.g. Marie Talla",
+      "email_placeholder": "marie{'@'}example.com",
+      "temp_password": "Temporary password",
+      "password_placeholder": "Min. 8 characters",
+      "generate_password": "Generate a password",
+      "password_min": "The password must be at least 8 characters long.",
+      "branch": "Branch",
+      "branch_placeholder": "Choose a branch",
+      "required_fields": "Please fill in all fields marked with an asterisk.",
+      "account_created": "Account created",
+      "credentials": "Credentials to share: {email} / {password}",
+      "create_error": "Could not create the account.",
+      "level": "Exam and level",
+      "level_placeholder": "Choose an exam and a level",
+      "optional": "(optional)"
+    },
+    "secretaries": {
+      "count": "No secretaries | 1 secretary | {n} secretaries",
+      "new": "New secretary",
+      "empty_title": "No secretaries yet",
+      "empty_text": "Create one account per branch to handle student registrations and access."
+    },
+    "teachers": {
+      "count": "No teachers | 1 teacher | {n} teachers",
+      "new": "New teacher",
+      "empty_title": "No teachers yet",
+      "empty_text": "Add your teachers to assign them classes and follow their students.",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "deactivate_title": "Deactivate teacher",
+      "reactivate_title": "Reactivate teacher",
+      "deactivate_message": "Deactivate {name}? They will no longer be able to sign in.",
+      "reactivate_message": "Reactivate {name}? They will regain access to their area.",
+      "toggle_error": "Could not change the status.",
+      "no_class": "No class",
+      "detail": {
+        "current_classes": "Current classes",
+        "active_students": "Students followed",
+        "classes_title": "Classes",
+        "assign_title": "Assign a class",
+        "assign_placeholder": "Choose a class",
+        "no_eligible": "No other class available in this branch.",
+        "unassign": "Remove from class",
+        "unassign_confirm": "{name} will no longer see the class \"{className}\" or its students. Continue?"
+      }
+    },
+    "classes": {
+      "new": "New class",
+      "filter_all": "All",
+      "status": {
+        "ongoing": "Ongoing",
+        "upcoming": "Upcoming",
+        "finished": "Finished"
+      },
+      "empty_title": "No classes here",
+      "empty_text": "Create one class per level, then assign a teacher and students to it. A student without an active class cannot access the exam subjects.",
+      "period": "From {start} to {end}",
+      "period_open": "Since {start}",
+      "active_label": "active students out of {total} | active student out of {total} | active students out of {total}",
+      "teachers_label": "teachers | teacher | teachers",
+      "active_of": "no active students out of {total} | 1 active student out of {total} | {n} active students out of {total}",
+      "manage": "Manage class",
+      "name": "Class name",
+      "name_placeholder": "e.g. B1 August intake",
+      "start_date": "Start date",
+      "end_date": "Planned end date",
+      "dates_error": "The end date must be after the start date.",
+      "created": "Class created",
+      "no_teacher": "No teacher assigned.",
+      "add_teacher": "Add a teacher",
+      "remove_teacher": "Remove {name} from the class",
+      "no_student": "No students enrolled.",
+      "add_student": "Choose a student to enrol",
+      "enroll": "Enrol",
+      "left_on": "Left on {date}",
+      "end_student": "Remove from class",
+      "end_confirm": "Remove {name} from this class? Without another active class, they will no longer be able to access the exam subjects.",
+      "assign_error": "Could not assign the teacher.",
+      "remove_error": "Could not remove the teacher.",
+      "enroll_error": "Could not enrol the student.",
+      "end_error": "Could not remove the student from the class.",
+      "search": "Search a class or a teacher",
+      "filter_level": "Level",
+      "filter_teacher": "Teacher",
+      "filter_branch": "Branch",
+      "filter_no_teacher": "No teacher",
+      "reset_filters": "Clear filters",
+      "month_count": "no classes | 1 class | {n} classes",
+      "open": "View class",
+      "detail": {
+        "back": "Back to classes",
+        "not_found": "Class not found.",
+        "edit": "Edit",
+        "edit_title": "Edit class",
+        "edit_hint": "The level and the start date cannot be changed.",
+        "save": "Save",
+        "updated": "Class updated",
+        "update_error": "Could not update the class.",
+        "end_class": "End class",
+        "end_class_confirm": "The class will end today. Students will no longer have an active class and cannot open topics until they are enrolled elsewhere. Continue?",
+        "stat_active": "Active students",
+        "stat_no_access": "Without valid access",
+        "stat_teachers": "Teachers",
+        "stat_average": "Average score",
+        "col_student": "Student",
+        "col_activity": "Last activity",
+        "progress": "View progress",
+        "remove": "Remove",
+        "remove_teacher_confirm": "{name} will no longer see this class or its students. Continue?",
+        "ended_toggle": "No former students | 1 former student | {n} former students"
+      }
+    },
+    "settings": {
+      "address_title": "Centre contact details",
+      "address_text": "Shown at the top of the PDF payment receipts given to your students.",
+      "address_label": "Address / P.O. Box",
+      "address_placeholder": "e.g. P.O. Box 123, Dschang",
+      "address_saved": "Address saved",
+      "logo_title": "Centre logo",
+      "logo_text": "PNG or JPG, 2 MB max. Shown at the top left of PDF receipts.",
+      "choose_file": "Choose a file",
+      "change_file": "Change file",
+      "upload_logo": "Upload logo",
+      "logo_saved": "Logo updated",
+      "file_type_error": "Unsupported format: please choose a PNG or JPG image.",
+      "file_size_error": "The file is larger than 2 MB.",
+      "preview_title": "Receipt preview",
+      "preview_pending": "Not saved",
+      "no_logo": "No logo",
+      "no_address": "No address provided",
+      "save_error": "Could not save.",
+      "upload_error": "Could not upload the logo."
+    },
+    "progress": {
+      "search_placeholder": "Search a student or a branch",
+      "sort_activity": "Recent activity",
+      "sort_struggling": "Struggling first",
+      "sort_name": "Name",
+      "empty_title": "No progress yet",
+      "empty_text": "Scores will appear here as soon as your students complete their first sessions.",
+      "no_results": "No student matches your search",
+      "average": "Average score",
+      "sessions": "No sessions | 1 session | {n} sessions",
+      "never": "Never",
+      "back": "Back to progress",
+      "trend": "{points} pts since the start",
+      "stat_sessions": "sessions taken",
+      "stat_average": "overall average score",
+      "stat_last": "last session",
+      "evolution": "Score history",
+      "out_of_100": "out of 100 points",
+      "not_enough_data": "Not enough data yet.",
+      "by_exam": "Details by exam",
+      "no_completed": "No completed sessions yet.",
+      "last_on": "last on {date}",
+      "questions": "no questions | 1 question answered | {n} questions answered",
+      "no_subject": "No subject assessed.",
+      "comments_title": "Teacher comments",
+      "no_comments": "No teacher comments yet."
+    },
+    "dashboard": {
+      "blocked_title": "Activations are suspended for your centre",
+      "blocked_default": "Contact GoToGermany to re-enable activations.",
+      "overdue_alert": "No overdue sales. | 1 sale is past the {hours}-hour deadline, for {amount}. Settle it quickly to avoid activations being suspended. | {n} sales are past the {hours}-hour deadline, for {amount}. Settle them quickly to avoid activations being suspended.",
+      "kpi_to_pay": "To pay over",
+      "kpi_to_pay_hint": "GoToGermany's share of the access you collected",
+      "kpi_overdue": "Overdue",
+      "kpi_overdue_hint": "No sales past {hours} h | 1 sale past {hours} h | {n} sales past {hours} h",
+      "kpi_owed": "Owed to you",
+      "kpi_owed_hint": "Commissions to receive",
+      "kpi_activations": "Activations",
+      "open": "Open",
+      "suspended": "Suspended",
+      "limit_hint": "Limit {amount}",
+      "no_limit": "No unpaid limit",
+      "limit_title": "Unpaid limit",
+      "limit_text": "Beyond the limit, new activations are blocked until the next settlement.",
+      "recent_title": "Latest activations",
+      "recent_text": "Access sold by your centre",
+      "empty_title": "No activations yet",
+      "empty_text": "The access you activate for your students will appear here.",
+      "col_student": "Student",
+      "col_plan": "Plan",
+      "col_price": "Price",
+      "col_remaining": "Remaining",
+      "col_status": "Status"
+    },
+    "sales": {
+      "status": {
+        "settled": "Settled",
+        "overdue": "Overdue",
+        "partial": "Partial",
+        "due": "Due"
+      }
+    },
+    "students": {
+      "search_placeholder": "Search a student (name, email)",
+      "empty_title": "No students yet",
+      "empty_text": "Students created by your secretaries will appear here.",
+      "no_results_hint": "Change the search or the filter.",
+      "col_target": "Target exam",
+      "col_access": "Access",
+      "col_class": "Class",
+      "col_actions": "Actions",
+      "filter_all": "All",
+      "filter_active": "Active access",
+      "filter_soon": "Expires within 7 days",
+      "filter_none": "No access",
+      "filter_noclass": "No class",
+      "no_class_hint": "Without an active class, the student cannot access the exam subjects.",
+      "activate": "Activate",
+      "extend": "Extend",
+      "deactivate_account": "Deactivate account",
+      "reactivate_account": "Reactivate account",
+      "access_none": "No access",
+      "access_expired": "Expired on {date}",
+      "access_soon": "Expires today | Expires in 1 day | Expires in {n} days",
+      "access_until": "Until {date}"
+    },
+    "activation": {
+      "title": "Activate access",
+      "done_title": "Access activated",
+      "valid_until": "Access valid until {date}",
+      "price_paid": "Price collected",
+      "centre_share": "Centre's share",
+      "to_pay": "To pay over to GoToGermany",
+      "before": "Before",
+      "no_class_warning": "Remember to enrol this student in an active class: without a class, they cannot access the exam subjects.",
+      "no_plans": "No plan available. Contact GoToGermany.",
+      "plan_days": "{n} day of access | {n} day of access | {n} days of access",
+      "to_collect": "To collect from the student",
+      "estimated": "Estimated access until",
+      "paid_confirm": "I have collected {amount} from {name}.",
+      "finish": "Done",
+      "submit": "Activate access",
+      "toast_detail": "{name} has access until {date}."
+    },
+    "student_new": {
+      "back": "Back to students",
+      "subtitle": "Create the account, then activate their access right away.",
+      "password_hint": "Give it to the student along with their email. They can change it from their profile.",
+      "create_only": "Create only",
+      "create_and_activate": "Create and activate access"
+    }
+  },
+  "teacher": {
+    "space": "Teacher area",
+    "role": "Teacher",
+    "nav": {
+      "classes": "My classes",
+      "students": "My students",
+      "live": "Start a live session",
+      "assignments": "Assignments"
+    },
+    "pages": {
+      "classes": {
+        "title": "My classes",
+        "subtitle": "Classes and students assigned to you"
+      },
+      "students": {
+        "title": "My students",
+        "subtitle": "Progress and follow-up of your students"
+      },
+      "live": {
+        "title": "Live session",
+        "subtitle": "Start a live oral exam with a student"
+      },
+      "assignments": {
+        "title": "Assignments",
+        "subtitle": "Set topics to work on and grade submissions"
+      }
+    },
+    "assignments": {
+      "search": "Search assignments",
+      "new": "New assignment",
+      "tabs": {
+        "to_grade": "To grade",
+        "ongoing": "Ongoing",
+        "closed": "Closed",
+        "cancelled": "Cancelled"
+      },
+      "empty_title": "No assignments yet",
+      "empty_text": "Create an assignment for a class or a few students.",
+      "empty_tab": "Nothing in this category.",
+      "cancelled": "Cancelled",
+      "to_grade_badge": "Nothing to grade | 1 submission to grade | {n} submissions to grade",
+      "submitted": "Submitted",
+      "graded": "Graded",
+      "no_due": "No deadline",
+      "due_on": "Due {date}",
+      "due_passed": "Deadline passed ({date})"
+    },
+    "live": {
+      "loading": "Loading session…",
+      "eyebrow": "Sprechen · Live exam",
+      "candidate": "Candidate",
+      "you": "You",
+      "status": {
+        "idle": "Not connected",
+        "connecting": "Waiting",
+        "preparing": "Preparation",
+        "live": "Live",
+        "ended": "Ended",
+        "error": "Error"
+      },
+      "waiting_title": "Waiting for the candidate…",
+      "waiting_text": "They are joining the session and preparing their oral. | They are joining the session and preparing their Teil before going live. | They are joining the session and preparing their {n} Teile before going live.",
+      "preparation_title": "Preparation time",
+      "preparation_text": "The candidate is preparing ({minutes} min). | The candidate is preparing their Teil ({minutes} min). | The candidate is preparing their {n} Teile ({minutes} min).",
+      "on_air": "Live",
+      "toggle_camera": "Turn camera on or off",
+      "toggle_mic": "Turn microphone on or off",
+      "end": "End session",
+      "end_confirm": "End the oral now? The candidate will be disconnected. You can still complete your notes.",
+      "ended_title": "Session ended",
+      "ended_text": "You can still complete your notes alongside.",
+      "notes_title": "Your marking notes",
+      "notes_text": "Write your observations freely, with no fixed grid. The student will see them in their area once the session ends.",
+      "notes_placeholder": "Your observations on the candidate's performance…",
+      "notes_saved": "Saved",
+      "tabs": { "chat": "Chat", "subject": "Subject", "status": "Status" },
+      "chat_empty": "No messages yet.",
+      "chat_placeholder": "Write a message…",
+      "send": "Send",
+      "subject_empty": "Subject not loaded.",
+      "mic": "Microphone",
+      "mic_on": "On",
+      "mic_off": "Muted",
+      "camera": "Camera",
+      "camera_on": "On",
+      "camera_off": "Off",
+      "not_found": "Session not found."
+    },
+    "launch": {
+      "intro": "Pick the student, then the Sprechen topic to run with them.",
+      "step_student": "Student",
+      "step_subject": "Topic",
+      "no_students": "No active students in your classes yet.",
+      "choose_student": "Choose a student",
+      "level_hint": "Preselected from their class: {level}",
+      "no_subjects": "No Sprechen topics for this selection.",
+      "subjects_hint": "Pick an exam to see the topics.",
+      "teile": "no Teil | 1 Teil | {n} Teile",
+      "subject_fallback": "Topic {n}",
+      "summary_missing": "Choose a student and a topic to start the session.",
+      "launch": "Start session",
+      "launch_error": "Could not start the session."
+    },
+    "classes": {
+      "count": "No classes assigned | 1 class assigned | {n} classes assigned",
+      "empty": "No classes have been assigned to you yet.",
+      "active_students": "No active students | 1 active student | {n} active students",
+      "no_active": "No active students in this class.",
+      "finished_toggle": "No finished classes | 1 finished class | {n} finished classes",
+      "detail": "Progress",
+      "launch_live": "Start a live session"
     }
   }
 }

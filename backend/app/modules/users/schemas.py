@@ -142,6 +142,8 @@ class UserAdminResponse(UserResponse):
 
 class UserMeResponse(UserResponse):
     """Réponse pour /users/me — inclut le contexte centre/branch si applicable."""
+    is_admin: bool
+    is_ambassador: bool
     center_id: uuid.UUID | None
     branch_id: uuid.UUID | None
     target_level_id: uuid.UUID | None

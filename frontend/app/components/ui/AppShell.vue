@@ -72,7 +72,9 @@ async function deconnecter() {
           @click="deconnecter"
         >
           <i
-            :class="deconnexionEnCours ? 'pi pi-spin pi-spinner' : 'pi pi-sign-out'"
+            :class="
+              deconnexionEnCours ? 'pi pi-spin pi-spinner' : 'pi pi-sign-out'
+            "
             class="text-sm"
           />
           <span v-if="!collapsed">{{ t("sidebar.logout") }}</span>
@@ -95,7 +97,9 @@ async function deconnecter() {
         </button>
 
         <div class="min-w-0 flex-1">
-          <p class="truncate font-heading text-base font-semibold text-ink sm:text-lg">
+          <p
+            class="truncate font-heading text-base font-semibold text-ink sm:text-lg"
+          >
             {{ pageMeta.title }}
           </p>
           <p
@@ -108,6 +112,7 @@ async function deconnecter() {
 
         <div class="flex shrink-0 items-center gap-2">
           <slot name="header-actions" />
+          <AppLangSwitcher />
           <ThemeToggle />
           <span
             class="hidden items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 sm:inline-flex"
@@ -119,8 +124,12 @@ async function deconnecter() {
       </header>
 
       <!-- Contenu : seule zone qui défile -->
-      <main ref="zoneContenu" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        <div class="mx-auto w-full max-w-7xl">
+      <main
+        ref="zoneContenu"
+        class="isolate flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
+      >
+        <div class="mx-auto w-full max-w-400">
+          <PageWatermark />
           <slot />
         </div>
       </main>

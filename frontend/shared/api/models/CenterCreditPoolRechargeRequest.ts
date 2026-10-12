@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Rechargement manuel du pool — admin ITIA uniquement.
+ * Rechargement manuel du pool : admin uniquement.
  */
 export type CenterCreditPoolRechargeRequest = {
     amount: number;

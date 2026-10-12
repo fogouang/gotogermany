@@ -1,112 +1,220 @@
 <!-- pages/enseignant/sessions.vue -->
 <template>
-  <div>
-    <p class="text-sm text-gray-500 mb-6">
-      {{ mySessions.length }} session(s) assignée(s)
+  <div class="mx-auto max-w-5xl space-y-5">
+    <p v-if="!loading && !errorMessage" class="text-sm text-muted">
+      {{ t("teacher.classes.count", { n: sessions.length }, sessions.length) }}
     </p>
 
-    <div v-if="loading" class="flex justify-center py-12">
-      <i class="pi pi-spin pi-spinner text-3xl text-emerald-600"></i>
+    <!-- ── Chargement ── -->
+    <div v-if="loading" class="space-y-4">
+      <div v-for="n in 2" :key="n" class="h-40 animate-pulse rounded-card bg-card-2" />
     </div>
 
-    <div v-else-if="errorMessage" class="text-center py-12">
-      <i class="pi pi-times-circle text-4xl text-red-500 mb-3"></i>
-      <p class="text-gray-600">{{ errorMessage }}</p>
-    </div>
-
+    <!-- ── Erreur ── -->
     <div
-      v-else-if="mySessions.length === 0"
-      class="text-center py-12 text-gray-400"
+      v-else-if="errorMessage"
+      class="rounded-card border border-red-500/30 bg-red-500/5 p-6 text-center text-sm text-red-600"
     >
-      Aucune session ne vous est encore assignée.
+      {{ errorMessage }}
     </div>
 
-    <div v-else class="space-y-4">
-      <div
-        v-for="session in mySessions"
+    <!-- ── Vide ── -->
+    <div
+      v-else-if="sessions.length === 0"
+      class="rounded-card border border-dashed border-line bg-card p-10 text-center"
+    >
+      <i class="pi pi-users mb-3 text-3xl text-faint" />
+      <p class="text-sm text-muted">{{ t("teacher.classes.empty") }}</p>
+    </div>
+
+    <template v-else>
+      <!-- ── Classes en cours et à venir ── -->
+      <article
+        v-for="session in activeSessions"
         :key="session.id"
-        class="bg-white rounded-xl border border-gray-200 p-5"
+        class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
       >
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <h3 class="font-semibold text-gray-900">
+        <header class="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
+          <div class="min-w-0">
+            <h3 class="truncate font-semibold text-ink">
               {{ session.level_name }}
-              <span v-if="session.label" class="text-gray-400 text-sm font-normal">
-                ({{ session.label }})
-              </span>
+              <span v-if="session.label" class="text-sm font-normal text-muted">· {{ session.label }}</span>
             </h3>
-            <p class="text-xs text-gray-400 mt-0.5">
-              Début le {{ formatDate(session.start_date) }}
+            <p class="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
+              <i class="pi pi-calendar text-[11px]" />
+              {{ period(session) }}
             </p>
           </div>
-          <Tag :value="`${activeStudents(session).length} étudiant(s) actif(s)`" severity="info" />
-        </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <span class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              {{ t("teacher.classes.active_students", { n: activeStudents(session).length }, activeStudents(session).length) }}
+            </span>
+            <span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="statusBadge(session).class">
+              {{ statusBadge(session).label }}
+            </span>
+          </div>
+        </header>
 
-        <div class="divide-y divide-gray-50 border-t border-gray-100">
-          <div
+        <p v-if="activeStudents(session).length === 0" class="px-5 py-4 text-sm text-muted">
+          {{ t("teacher.classes.no_active") }}
+        </p>
+
+        <ul v-else class="divide-y divide-line">
+          <li
             v-for="s in activeStudents(session)"
             :key="s.student_id"
-            class="flex items-center justify-between py-2 text-sm"
+            class="flex flex-wrap items-center gap-3 px-5 py-3"
           >
-            <span class="text-gray-800">{{ s.student_name }}</span>
+            <span
+              class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-xs font-bold text-primary"
+            >
+              {{ initials(s.student_name) }}
+            </span>
+            <span class="min-w-0 flex-1 truncate text-sm font-medium text-ink">{{ s.student_name }}</span>
             <div class="flex gap-2">
               <Button
-                label="Détail"
+                :label="t('teacher.classes.detail')"
+                icon="pi pi-chart-line"
                 text
                 size="small"
                 @click="goToDetail(s.student_id)"
               />
               <Button
-                label="Lancer un live"
+                :label="t('teacher.classes.launch_live')"
                 icon="pi pi-microphone"
                 size="small"
                 @click="goToLaunchLive(s.student_id)"
               />
             </div>
+          </li>
+        </ul>
+      </article>
+
+      <!-- ── Classes terminées (repliées) ── -->
+      <section v-if="finishedSessions.length" class="space-y-3">
+        <button
+          type="button"
+          class="flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-ink"
+          :aria-expanded="showFinished"
+          @click="showFinished = !showFinished"
+        >
+          <i class="pi pi-chevron-right text-xs transition-transform" :class="{ 'rotate-90': showFinished }" />
+          {{ t("teacher.classes.finished_toggle", { n: finishedSessions.length }, finishedSessions.length) }}
+        </button>
+
+        <template v-if="showFinished">
+          <div
+            v-for="session in finishedSessions"
+            :key="session.id"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-card px-5 py-4 opacity-75"
+          >
+            <div class="min-w-0">
+              <p class="truncate font-medium text-ink">
+                {{ session.level_name }}
+                <span v-if="session.label" class="text-sm font-normal text-muted">· {{ session.label }}</span>
+              </p>
+              <p class="mt-0.5 text-xs text-muted">{{ period(session) }}</p>
+            </div>
+            <span class="rounded-full bg-card-2 px-2.5 py-1 text-xs font-semibold text-muted">
+              {{ t("centre.classes.status.finished") }}
+            </span>
           </div>
-        </div>
-      </div>
-    </div>
+        </template>
+      </section>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: "enseignant",
-});
+import type { NormalizedTrainingSession } from "~/stores/trainingSessions";
 
-const router = useRouter();
+definePageMeta({ layout: "enseignant" });
+
+const { t, locale } = useI18n();
+const localePath = useLocalePath();
 const teacherPortalStore = useTeacherPortalStore();
 
 const loading = ref(true);
-const mySessions = ref(teacherPortalStore.mySessions);
 const errorMessage = ref<string | null>(null);
+const showFinished = ref(false);
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("fr-FR");
+const sessions = computed(() => teacherPortalStore.mySessions);
+
+type Statut = "upcoming" | "ongoing" | "finished";
+
+function statusOf(session: NormalizedTrainingSession): Statut {
+  const now = Date.now();
+  if (session.end_date && new Date(session.end_date).getTime() < now) return "finished";
+  if (new Date(session.start_date).getTime() > now) return "upcoming";
+  return "ongoing";
 }
 
-function activeStudents(session: (typeof mySessions)["value"][number]) {
+function statusBadge(session: NormalizedTrainingSession) {
+  return statusOf(session) === "upcoming"
+    ? { label: t("centre.classes.status.upcoming"), class: "bg-sky-500/10 text-sky-600" }
+    : { label: t("centre.classes.status.ongoing"), class: "bg-emerald-500/10 text-emerald-600" };
+}
+
+// En cours d'abord, puis à venir ; dans chaque groupe, la plus récente en premier
+const activeSessions = computed(() =>
+  sessions.value
+    .filter((s) => statusOf(s) !== "finished")
+    .sort(
+      (a, b) =>
+        (statusOf(a) === "ongoing" ? 0 : 1) - (statusOf(b) === "ongoing" ? 0 : 1) ||
+        new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
+    ),
+);
+
+const finishedSessions = computed(() =>
+  sessions.value
+    .filter((s) => statusOf(s) === "finished")
+    .sort((a, b) => new Date(b.end_date!).getTime() - new Date(a.end_date!).getTime()),
+);
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString(locale.value, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function period(session: NormalizedTrainingSession) {
+  const start = formatDate(session.start_date);
+  return session.end_date
+    ? t("centre.classes.period", { start, end: formatDate(session.end_date) })
+    : t("centre.classes.period_open", { start });
+}
+
+function activeStudents(session: NormalizedTrainingSession) {
   return session.students.filter((s) => !s.ended_at);
 }
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 function goToDetail(studentId: string) {
-  router.push(`/enseignant/etudiants/${studentId}`);
+  navigateTo(localePath(`/enseignant/etudiants/${studentId}`));
 }
 
 function goToLaunchLive(studentId: string) {
-  // Redirige vers l'écran de lancement live (à confirmer une fois la
-  // page staff équivalente partagée — probablement un paramètre
-  // studentId en query pour pré-sélectionner l'étudiant).
-  router.push(`/enseignant/live/nouveau?student_id=${studentId}`);
+  navigateTo({ path: localePath("/enseignant/live/nouveau"), query: { student_id: studentId } });
 }
 
 async function loadData() {
   loading.value = true;
+  errorMessage.value = null;
   const result = await teacherPortalStore.fetchMySessions();
-  mySessions.value = teacherPortalStore.mySessions;
   if (!result.success) {
-    errorMessage.value = result.error || "Erreur de chargement.";
+    errorMessage.value = result.error || t("common.load_error");
   }
   loading.value = false;
 }

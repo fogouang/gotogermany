@@ -25,5 +25,7 @@ export type TaskSchema = {
     word_count_target?: (number | null);
     register?: string;
     recipient?: string;
+    source_text?: string;
+    graph_description?: string;
 };
 

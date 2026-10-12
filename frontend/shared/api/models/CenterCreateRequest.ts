@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Création d'un centre — admin ITIA uniquement.
+ * Création d'un centre : admin uniquement.
  */
 export type CenterCreateRequest = {
     name: string;

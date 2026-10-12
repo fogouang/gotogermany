@@ -34,10 +34,10 @@
       "title": "Contact | GoToGermany",
       "description": "Une question sur la préparation aux examens d'allemand ? Contactez l'équipe GoToGermany par WhatsApp, téléphone ou e-mail."
     },
-     "about": {
-    "title": "À propos | GoToGermany",
-    "description": "GoToGermany prépare aux examens d'allemand Goethe, telc, ÖSD, TestDaF et ECL avec des sujets au format officiel, des audios et un suivi par module."
-  }
+    "about": {
+      "title": "À propos | GoToGermany",
+      "description": "GoToGermany prépare aux examens d'allemand Goethe, telc, ÖSD, TestDaF et ECL avec des sujets au format officiel, des audios et un suivi par module."
+    }
   },
   "testimonials": {
     "eyebrow": "Ils nous font confiance",
@@ -61,7 +61,11 @@
     "search": "Rechercher",
     "filter": "Filtrer",
     "reset": "Réinitialiser",
-    "close": "Fermer"
+    "close": "Fermer",
+    "create": "Créer",
+    "load_error": "Erreur de chargement.",
+    "language": "Langue",
+    "add": "Ajouter"
   },
   "hero": {
     "title": "Décrochez le certificat qui vous ouvre les portes de l'Allemagne.",
@@ -367,7 +371,9 @@
       "credits": "Crédits",
       "start_deutsch": "Start Deutsch A1/A2",
       "sessions-live": "Session Sprechen en direct"
-    }
+    },
+    "space": "Espace Étudiant",
+    "role": "Étudiant"
   },
   "sidebar": {
     "main": "Principal",
@@ -1027,6 +1033,451 @@
         "label": "Expression orale",
         "description": "Simulateur d'oral avec un examinateur IA qui vous répond, vous relance et vous évalue."
       }
+    }
+  },
+  "centre": {
+    "branches": {
+      "count": "Aucune succursale | 1 succursale | {n} succursales",
+      "students": "aucun élève | 1 élève | {n} élèves",
+      "students_label": "élève | élève | élèves",
+      "new": "Nouvelle succursale",
+      "empty_title": "Aucune succursale pour l'instant",
+      "empty_text": "Ajoutez vos points de formation pour y rattacher secrétaires, enseignants et élèves.",
+      "main": "Principale",
+      "secondary": "Secondaire",
+      "created_on": "Créée le {date}",
+      "name_label": "Nom de la succursale",
+      "name_placeholder": "ex : Centre Alpha - Yaoundé",
+      "name_required": "Le nom est requis.",
+      "created": "Succursale créée",
+      "create_error": "Erreur lors de la création."
+    },
+    "space": "Espace Centre",
+    "roles": {
+      "director": "Directeur de centre",
+      "secretary": "Secrétaire"
+    },
+    "nav": {
+      "overview": "Vue d'ensemble",
+      "branches": "Mes centres",
+      "secretaries": "Secrétaires",
+      "teachers": "Enseignants",
+      "classes": "Classes",
+      "students": "Élèves",
+      "my_students": "Mes élèves",
+      "new_student": "Nouvel élève",
+      "live": "Session live",
+      "progression": "Progression",
+      "credits_history": "Historique crédits",
+      "settings": "Réglages"
+    },
+    "pages": {
+      "dashboard": {
+        "title": "Vue d'ensemble",
+        "subtitle": "Activité et crédits IA de votre centre"
+      },
+      "branches": {
+        "title": "Mes centres",
+        "subtitle": "Gestion de vos points de formation"
+      },
+      "secretaries": {
+        "title": "Secrétaires",
+        "subtitle": "Comptes de gestion par succursale"
+      },
+      "students": {
+        "title": "Élèves",
+        "subtitle": "Comptes, accès et classes"
+      },
+      "new_student": {
+        "title": "Nouvel élève",
+        "subtitle": "Créer un compte élève"
+      },
+      "teachers": {
+        "title": "Enseignants",
+        "subtitle": "Comptes des enseignants"
+      },
+      "classes": {
+        "title": "Classes",
+        "subtitle": "Groupes par niveau, avec enseignants et élèves"
+      },
+      "live": {
+        "title": "Session live",
+        "subtitle": "Lancer et suivre un examen oral en direct"
+      },
+      "progression": {
+        "title": "Progression",
+        "subtitle": "Scores et activité des élèves"
+      },
+      "credits_history": {
+        "title": "Historique des crédits",
+        "subtitle": "Audit des ajustements de crédits IA"
+      },
+      "settings": {
+        "title": "Réglages",
+        "subtitle": "Coordonnées et logo du centre"
+      }
+    },
+    "account": {
+      "active": "Compte actif",
+      "disabled": "Compte désactivé"
+    },
+    "form": {
+      "name_placeholder": "ex : Marie Talla",
+      "email_placeholder": "marie{'@'}exemple.cm",
+      "temp_password": "Mot de passe provisoire",
+      "password_placeholder": "Min. 8 caractères",
+      "generate_password": "Générer un mot de passe",
+      "password_min": "Le mot de passe doit contenir au moins 8 caractères.",
+      "branch": "Succursale",
+      "branch_placeholder": "Choisir une succursale",
+      "required_fields": "Remplissez tous les champs marqués d'un astérisque.",
+      "account_created": "Compte créé",
+      "credentials": "Identifiants à transmettre : {email} / {password}",
+      "create_error": "Erreur lors de la création.",
+      "level": "Examen et niveau",
+      "level_placeholder": "Choisir un examen et un niveau",
+      "optional": "(optionnel)"
+    },
+    "secretaries": {
+      "count": "Aucune secrétaire | 1 secrétaire | {n} secrétaires",
+      "new": "Nouvelle secrétaire",
+      "empty_title": "Aucune secrétaire pour l'instant",
+      "empty_text": "Créez un compte par succursale pour gérer les inscriptions et les accès des élèves."
+    },
+    "teachers": {
+      "count": "Aucun enseignant | 1 enseignant | {n} enseignants",
+      "new": "Nouvel enseignant",
+      "empty_title": "Aucun enseignant pour l'instant",
+      "empty_text": "Ajoutez vos enseignants pour leur assigner des classes et suivre leurs élèves.",
+      "deactivate": "Désactiver",
+      "reactivate": "Réactiver",
+      "deactivate_title": "Désactiver l'enseignant",
+      "reactivate_title": "Réactiver l'enseignant",
+      "deactivate_message": "Désactiver {name} ? Cette personne ne pourra plus se connecter.",
+      "reactivate_message": "Réactiver {name} ? Cette personne retrouvera l'accès à son espace.",
+      "toggle_error": "Erreur lors du changement de statut.",
+      "no_class": "Sans classe",
+      "detail": {
+        "current_classes": "Classes en cours",
+        "active_students": "Élèves suivis",
+        "classes_title": "Ses classes",
+        "assign_title": "Attribuer une classe",
+        "assign_placeholder": "Choisir une classe",
+        "no_eligible": "Aucune autre classe disponible dans sa succursale.",
+        "unassign": "Retirer de la classe",
+        "unassign_confirm": "{name} ne verra plus la classe « {className} » ni ses élèves. Continuer ?"
+      }
+    },
+    "classes": {
+      "new": "Nouvelle classe",
+      "filter_all": "Toutes",
+      "status": {
+        "ongoing": "En cours",
+        "upcoming": "À venir",
+        "finished": "Terminée"
+      },
+      "empty_title": "Aucune classe ici",
+      "empty_text": "Créez une classe par niveau, puis assignez-y un enseignant et des élèves. Un élève sans classe active ne peut pas accéder aux sujets.",
+      "period": "Du {start} au {end}",
+      "period_open": "Depuis le {start}",
+      "active_label": "élève actif sur {total} | élève actif sur {total} | élèves actifs sur {total}",
+      "teachers_label": "enseignant | enseignant | enseignants",
+      "active_of": "aucun élève actif sur {total} | 1 élève actif sur {total} | {n} élèves actifs sur {total}",
+      "manage": "Gérer la classe",
+      "name": "Nom de la classe",
+      "name_placeholder": "ex : B1 Rentrée août",
+      "start_date": "Date de début",
+      "end_date": "Date de fin prévue",
+      "dates_error": "La date de fin doit être après la date de début.",
+      "created": "Classe créée",
+      "no_teacher": "Aucun enseignant assigné.",
+      "add_teacher": "Ajouter un enseignant",
+      "remove_teacher": "Retirer {name} de la classe",
+      "no_student": "Aucun élève inscrit.",
+      "add_student": "Choisir un élève à inscrire",
+      "enroll": "Inscrire",
+      "left_on": "Sorti le {date}",
+      "end_student": "Retirer de la classe",
+      "end_confirm": "Retirer {name} de cette classe ? S'il n'a aucune autre classe active, il ne pourra plus accéder aux sujets.",
+      "assign_error": "Impossible d'assigner l'enseignant.",
+      "remove_error": "Impossible de retirer l'enseignant.",
+      "enroll_error": "Impossible d'inscrire l'élève.",
+      "end_error": "Impossible de retirer l'élève de la classe.",
+      "search": "Rechercher une classe ou un enseignant",
+      "filter_level": "Niveau",
+      "filter_teacher": "Enseignant",
+      "filter_branch": "Succursale",
+      "filter_no_teacher": "Sans enseignant",
+      "reset_filters": "Effacer les filtres",
+      "month_count": "aucune classe | 1 classe | {n} classes",
+      "open": "Voir la classe",
+      "detail": {
+        "back": "Retour aux classes",
+        "not_found": "Classe introuvable.",
+        "edit": "Modifier",
+        "edit_title": "Modifier la classe",
+        "edit_hint": "Le niveau et la date de début ne peuvent pas être modifiés.",
+        "save": "Enregistrer",
+        "updated": "Classe mise à jour",
+        "update_error": "Impossible de mettre à jour la classe.",
+        "end_class": "Terminer la classe",
+        "end_class_confirm": "La classe sera terminée aujourd'hui. Les élèves n'auront plus de classe active et ne pourront plus ouvrir les sujets tant qu'ils ne sont pas inscrits ailleurs. Continuer ?",
+        "stat_active": "Élèves actifs",
+        "stat_no_access": "Sans accès valide",
+        "stat_teachers": "Enseignants",
+        "stat_average": "Score moyen",
+        "col_student": "Élève",
+        "col_activity": "Dernière activité",
+        "progress": "Voir la progression",
+        "remove": "Retirer",
+        "remove_teacher_confirm": "{name} ne verra plus cette classe ni ses élèves. Continuer ?",
+        "ended_toggle": "Aucun élève sorti | 1 élève sorti | {n} élèves sortis"
+      }
+    },
+    "settings": {
+      "address_title": "Coordonnées du centre",
+      "address_text": "Affichées en en-tête des reçus de paiement PDF remis à vos élèves.",
+      "address_label": "Adresse / B.P.",
+      "address_placeholder": "ex : B.P. 123, Dschang",
+      "address_saved": "Adresse enregistrée",
+      "logo_title": "Logo du centre",
+      "logo_text": "PNG ou JPG, 2 Mo maximum. Affiché en haut à gauche des reçus PDF.",
+      "choose_file": "Choisir un fichier",
+      "change_file": "Changer de fichier",
+      "upload_logo": "Envoyer le logo",
+      "logo_saved": "Logo mis à jour",
+      "file_type_error": "Format non accepté : choisissez une image PNG ou JPG.",
+      "file_size_error": "Le fichier dépasse 2 Mo.",
+      "preview_title": "Aperçu sur les reçus",
+      "preview_pending": "Non enregistré",
+      "no_logo": "Aucun logo",
+      "no_address": "Aucune adresse renseignée",
+      "save_error": "Erreur lors de l'enregistrement.",
+      "upload_error": "Erreur lors de l'envoi du logo."
+    },
+    "progress": {
+      "search_placeholder": "Rechercher un élève ou une succursale",
+      "sort_activity": "Activité récente",
+      "sort_struggling": "En difficulté d'abord",
+      "sort_name": "Nom",
+      "empty_title": "Aucune progression pour l'instant",
+      "empty_text": "Les scores apparaîtront ici dès que vos élèves auront passé leurs premières sessions.",
+      "no_results": "Aucun élève ne correspond à la recherche",
+      "average": "Score moyen",
+      "sessions": "Aucune session | 1 session | {n} sessions",
+      "never": "Jamais",
+      "back": "Retour à la progression",
+      "trend": "{points} pts depuis le début",
+      "stat_sessions": "sessions passées",
+      "stat_average": "score moyen global",
+      "stat_last": "dernière session",
+      "evolution": "Évolution des scores",
+      "out_of_100": "sur 100 points",
+      "not_enough_data": "Pas encore assez de données.",
+      "by_exam": "Détail par examen",
+      "no_completed": "Aucune session terminée pour l'instant.",
+      "last_on": "dernière le {date}",
+      "questions": "aucune question | 1 question posée | {n} questions posées",
+      "no_subject": "Aucun sujet évalué.",
+      "comments_title": "Commentaires des enseignants",
+      "no_comments": "Aucun commentaire d'enseignant pour l'instant."
+    },
+    "dashboard": {
+      "blocked_title": "Les activations sont suspendues pour votre centre",
+      "blocked_default": "Contactez GoToGermany pour réactiver les activations.",
+      "overdue_alert": "Aucune vente en retard. | 1 vente dépasse le délai de {hours} h, pour {amount}. Réglez-la rapidement pour éviter la suspension des activations. | {n} ventes dépassent le délai de {hours} h, pour {amount}. Réglez-les rapidement pour éviter la suspension des activations.",
+      "kpi_to_pay": "À reverser",
+      "kpi_to_pay_hint": "Part GoToGermany des accès encaissés",
+      "kpi_overdue": "En retard",
+      "kpi_overdue_hint": "Aucune vente au-delà de {hours} h | 1 vente au-delà de {hours} h | {n} ventes au-delà de {hours} h",
+      "kpi_owed": "Vous est dû",
+      "kpi_owed_hint": "Commissions à recevoir",
+      "kpi_activations": "Activations",
+      "open": "Ouvertes",
+      "suspended": "Suspendues",
+      "limit_hint": "Plafond {amount}",
+      "no_limit": "Pas de plafond d'impayés",
+      "limit_title": "Plafond d'impayés",
+      "limit_text": "Au-delà du plafond, les nouvelles activations sont bloquées jusqu'au prochain règlement.",
+      "recent_title": "Dernières activations",
+      "recent_text": "Accès vendus par votre centre",
+      "empty_title": "Aucune activation pour l'instant",
+      "empty_text": "Les accès que vous activez pour vos élèves apparaîtront ici.",
+      "col_student": "Élève",
+      "col_plan": "Formule",
+      "col_price": "Prix",
+      "col_remaining": "Reste dû",
+      "col_status": "Statut"
+    },
+    "sales": {
+      "status": {
+        "settled": "Réglée",
+        "overdue": "En retard",
+        "partial": "Partielle",
+        "due": "À régler"
+      }
+    },
+    "students": {
+      "search_placeholder": "Rechercher un élève (nom, email)",
+      "empty_title": "Aucun élève pour l'instant",
+      "empty_text": "Les élèves créés par vos secrétaires apparaîtront ici.",
+      "no_results_hint": "Modifiez la recherche ou le filtre.",
+      "col_target": "Examen visé",
+      "col_access": "Accès",
+      "col_class": "Classe",
+      "col_actions": "Actions",
+      "filter_all": "Tous",
+      "filter_active": "Accès actif",
+      "filter_soon": "Expire sous 7 j",
+      "filter_none": "Sans accès",
+      "filter_noclass": "Sans classe",
+      "no_class_hint": "Sans classe active, l'élève ne peut pas accéder aux sujets.",
+      "activate": "Activer",
+      "extend": "Prolonger",
+      "deactivate_account": "Désactiver le compte",
+      "reactivate_account": "Réactiver le compte",
+      "access_none": "Aucun accès",
+      "access_expired": "Expiré le {date}",
+      "access_soon": "Expire aujourd'hui | Expire dans 1 j | Expire dans {n} j",
+      "access_until": "Jusqu'au {date}"
+    },
+    "activation": {
+      "title": "Activer un accès",
+      "done_title": "Accès activé",
+      "valid_until": "Accès valable jusqu'au {date}",
+      "price_paid": "Prix encaissé",
+      "centre_share": "Part du centre",
+      "to_pay": "À reverser à GoToGermany",
+      "before": "Avant le",
+      "no_class_warning": "Pensez à inscrire cet élève dans une classe active : sans classe, il ne peut pas accéder aux sujets.",
+      "no_plans": "Aucune formule disponible. Contactez GoToGermany.",
+      "plan_days": "{n} jour d'accès | {n} jour d'accès | {n} jours d'accès",
+      "to_collect": "À encaisser auprès de l'élève",
+      "estimated": "Accès estimé jusqu'au",
+      "paid_confirm": "J'ai encaissé {amount} auprès de {name}.",
+      "finish": "Terminer",
+      "submit": "Activer l'accès",
+      "toast_detail": "{name} a accès jusqu'au {date}."
+    },
+    "student_new": {
+      "back": "Retour aux élèves",
+      "subtitle": "Créez le compte, puis activez son accès dans la foulée.",
+      "password_hint": "Transmettez-le à l'élève avec son email. Il pourra le changer depuis son profil.",
+      "create_only": "Créer seulement",
+      "create_and_activate": "Créer et activer un accès"
+    }
+  },
+  "teacher": {
+    "space": "Espace Enseignant",
+    "role": "Enseignant",
+    "nav": {
+      "classes": "Mes classes",
+      "students": "Mes élèves",
+      "live": "Lancer un live",
+      "assignments": "Devoirs"
+    },
+    "pages": {
+      "classes": {
+        "title": "Mes classes",
+        "subtitle": "Classes et élèves qui vous sont assignés"
+      },
+      "students": {
+        "title": "Mes élèves",
+        "subtitle": "Progression et suivi de vos élèves"
+      },
+      "live": {
+        "title": "Session live",
+        "subtitle": "Lancer un examen oral en direct avec un élève"
+      },
+      "assignments": {
+        "title": "Devoirs",
+        "subtitle": "Donnez des sujets à faire et corrigez les copies"
+      }
+    },
+    "assignments": {
+      "search": "Rechercher un devoir",
+      "new": "Nouveau devoir",
+      "tabs": {
+        "to_grade": "À corriger",
+        "ongoing": "En cours",
+        "closed": "Terminés",
+        "cancelled": "Annulés"
+      },
+      "empty_title": "Aucun devoir pour le moment",
+      "empty_text": "Créez un devoir pour une classe ou pour quelques élèves.",
+      "empty_tab": "Rien dans cette catégorie.",
+      "cancelled": "Annulé",
+      "to_grade_badge": "Rien à corriger | 1 copie à corriger | {n} copies à corriger",
+      "submitted": "Rendus",
+      "graded": "Corrigés",
+      "no_due": "Sans échéance",
+      "due_on": "À rendre le {date}",
+      "due_passed": "Échéance passée ({date})"
+    },
+    "live": {
+      "loading": "Chargement de la session…",
+      "eyebrow": "Sprechen · Examen en direct",
+      "candidate": "Candidat",
+      "you": "Vous",
+      "status": {
+        "idle": "Non connecté",
+        "connecting": "En attente",
+        "preparing": "Préparation",
+        "live": "En direct",
+        "ended": "Terminée",
+        "error": "Erreur"
+      },
+      "waiting_title": "En attente du candidat…",
+      "waiting_text": "Il rejoint la session et prépare son oral. | Il rejoint la session et prépare son Teil avant le direct. | Il rejoint la session et prépare ses {n} Teile avant le direct.",
+      "preparation_title": "Temps de préparation",
+      "preparation_text": "Le candidat se prépare ({minutes} min). | Le candidat prépare son Teil ({minutes} min). | Le candidat prépare ses {n} Teile ({minutes} min).",
+      "on_air": "En direct",
+      "toggle_camera": "Activer ou couper la caméra",
+      "toggle_mic": "Activer ou couper le micro",
+      "end": "Terminer la session",
+      "end_confirm": "Terminer l'oral maintenant ? Le candidat sera déconnecté. Vous pourrez encore compléter vos notes.",
+      "ended_title": "Session terminée",
+      "ended_text": "Vous pouvez encore compléter vos notes ci-contre.",
+      "notes_title": "Vos notes de correction",
+      "notes_text": "Rédigez librement vos observations, sans grille imposée. L'élève les verra dans son espace à la fin de la session.",
+      "notes_placeholder": "Vos observations sur la prestation du candidat…",
+      "notes_saved": "Enregistré",
+      "tabs": { "chat": "Chat", "subject": "Sujet", "status": "Statut" },
+      "chat_empty": "Aucun message pour l'instant.",
+      "chat_placeholder": "Écrire un message…",
+      "send": "Envoyer",
+      "subject_empty": "Sujet non chargé.",
+      "mic": "Micro",
+      "mic_on": "Actif",
+      "mic_off": "Coupé",
+      "camera": "Caméra",
+      "camera_on": "Active",
+      "camera_off": "Coupée",
+      "not_found": "Session introuvable."
+    },
+    "launch": {
+      "intro": "Choisissez l'élève puis le sujet de Sprechen à lui faire passer.",
+      "step_student": "Élève",
+      "step_subject": "Sujet",
+      "no_students": "Aucun élève actif dans vos classes pour le moment.",
+      "choose_student": "Choisir un élève",
+      "level_hint": "Présélectionné d'après sa classe : {level}",
+      "no_subjects": "Aucun sujet de Sprechen pour ce choix.",
+      "subjects_hint": "Choisissez un examen pour voir les sujets.",
+      "teile": "aucun Teil | 1 Teil | {n} Teile",
+      "subject_fallback": "Sujet {n}",
+      "summary_missing": "Choisissez un élève et un sujet pour lancer la session.",
+      "launch": "Lancer la session",
+      "launch_error": "Impossible de lancer la session."
+    },
+    "classes": {
+      "count": "Aucune classe assignée | 1 classe assignée | {n} classes assignées",
+      "empty": "Aucune classe ne vous est encore assignée.",
+      "active_students": "Aucun élève actif | 1 élève actif | {n} élèves actifs",
+      "no_active": "Aucun élève actif dans cette classe.",
+      "finished_toggle": "Aucune classe terminée | 1 classe terminée | {n} classes terminées",
+      "detail": "Progression",
+      "launch_live": "Lancer un live"
     }
   }
 }

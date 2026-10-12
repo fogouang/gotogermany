@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Création d'une succursale — admin ITIA (initiale) ou directeur (supplémentaire).
+ * Création d'une succursale : admin (initiale) ou directeur (supplémentaire).
  */
 export type BranchCreateRequest = {
     name: string;

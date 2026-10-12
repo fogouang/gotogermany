@@ -1,128 +1,175 @@
 <!-- pages/centre/reglages.vue -->
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-    <!-- Colonne gauche : formulaires -->
+  <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+    <!-- ── Colonne gauche : formulaires ── -->
     <div class="space-y-6">
       <!-- Adresse -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-700">
-          Coordonnées du centre
-        </h3>
-        <p class="text-xs text-gray-400">
-          Affichées en en-tête des reçus de paiement PDF générés pour vos élèves.
-        </p>
+      <section class="space-y-4 rounded-card border border-line bg-card p-6 shadow-soft">
+        <header class="flex items-start gap-3">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-primary">
+            <i class="pi pi-map-marker" />
+          </span>
+          <div>
+            <h3 class="font-semibold text-ink">{{ t("centre.settings.address_title") }}</h3>
+            <p class="text-xs text-muted">{{ t("centre.settings.address_text") }}</p>
+          </div>
+        </header>
 
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block">Adresse / B.P.</label>
-          <InputText
-            v-model="addressForm"
-            class="w-full"
-            placeholder="ex: B.P. 123, Dschang"
+        <form class="space-y-4" @submit.prevent="handleSaveAddress">
+          <div>
+            <label for="center-address" class="mb-1.5 block text-sm font-medium text-ink">
+              {{ t("centre.settings.address_label") }}
+            </label>
+            <InputText
+              id="center-address"
+              v-model="addressForm"
+              class="w-full"
+              :placeholder="t('centre.settings.address_placeholder')"
+            />
+          </div>
+
+          <Message v-if="addressError" severity="error" :closable="false">{{ addressError }}</Message>
+
+          <Button
+            type="submit"
+            :label="t('common.save')"
+            icon="pi pi-check"
+            :loading="savingAddress"
+            :disabled="addressForm.trim() === (currentAddress ?? '')"
           />
-        </div>
-
-        <Message v-if="addressError" severity="error" :closable="false">
-          {{ addressError }}
-        </Message>
-        <Message v-if="addressSuccess" severity="success" :closable="false">
-          Adresse mise à jour.
-        </Message>
-
-        <Button
-          label="Enregistrer l'adresse"
-          icon="pi pi-check"
-          :loading="savingAddress"
-          @click="handleSaveAddress"
-        />
-      </div>
+        </form>
+      </section>
 
       <!-- Logo -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-700">Logo du centre</h3>
-        <p class="text-xs text-gray-400">
-          PNG ou JPG, affiché en haut à gauche des reçus PDF.
-        </p>
+      <section class="space-y-4 rounded-card border border-line bg-card p-6 shadow-soft">
+        <header class="flex items-start gap-3">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-primary">
+            <i class="pi pi-image" />
+          </span>
+          <div>
+            <h3 class="font-semibold text-ink">{{ t("centre.settings.logo_title") }}</h3>
+            <p class="text-xs text-muted">{{ t("centre.settings.logo_text") }}</p>
+          </div>
+        </header>
 
-        <FileUpload
-          mode="basic"
+        <input
+          ref="fileInput"
+          type="file"
           accept="image/png,image/jpeg"
-          :maxFileSize="2000000"
-          chooseLabel="Choisir un fichier"
-          customUpload
-          @select="handleLogoSelect"
+          class="hidden"
+          @change="handleLogoSelect"
         />
 
-        <Message v-if="logoError" severity="error" :closable="false">
-          {{ logoError }}
-        </Message>
-        <Message v-if="logoSuccess" severity="success" :closable="false">
-          Logo mis à jour.
-        </Message>
+        <div class="flex flex-wrap items-center gap-3">
+          <Button
+            :label="selectedLogoFile ? t('centre.settings.change_file') : t('centre.settings.choose_file')"
+            icon="pi pi-folder-open"
+            outlined
+            @click="fileInput?.click()"
+          />
+          <span v-if="selectedLogoFile" class="min-w-0 truncate text-sm text-muted">
+            {{ selectedLogoFile.name }}
+          </span>
+        </div>
+
+        <Message v-if="logoError" severity="error" :closable="false">{{ logoError }}</Message>
 
         <Button
           v-if="selectedLogoFile"
-          label="Envoyer le logo"
+          :label="t('centre.settings.upload_logo')"
           icon="pi pi-upload"
           :loading="uploadingLogo"
           @click="handleUploadLogo"
         />
-      </div>
+      </section>
     </div>
 
-    <!-- Colonne droite : aperçu en direct, style en-tête du reçu -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 class="text-sm font-semibold text-gray-700 mb-4">
-        Aperçu sur les reçus
-      </h3>
-
-      <div v-if="loadingPreview" class="flex justify-center py-8">
-        <i class="pi pi-spin pi-spinner text-2xl text-emerald-600"></i>
+    <!-- ── Colonne droite : aperçu de l'en-tête du reçu ── -->
+    <section class="rounded-card border border-line bg-card p-6 shadow-soft lg:sticky lg:top-0">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <h3 class="font-semibold text-ink">{{ t("centre.settings.preview_title") }}</h3>
+        <span
+          v-if="hasPendingChanges"
+          class="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
+        >
+          {{ t("centre.settings.preview_pending") }}
+        </span>
       </div>
 
-      <div v-else class="border border-gray-100 rounded-lg p-6 bg-gray-50">
-        <img
-          v-if="currentLogoUrl"
-          :src="currentLogoUrl"
-          alt="Logo du centre"
-          class="h-14 object-contain mb-3"
-        />
-        <p v-else class="text-xs text-gray-400 italic mb-3">Aucun logo envoyé</p>
+      <div v-if="loadingPreview" class="h-40 animate-pulse rounded-leaf bg-card-2" />
 
-        <p class="text-lg font-bold text-emerald-700">{{ centerName }}</p>
-        <p v-if="currentAddress" class="text-sm text-gray-500 mt-1">
-          {{ currentAddress }}
-        </p>
-        <p v-else class="text-sm text-gray-300 italic mt-1">
-          Aucune adresse renseignée
-        </p>
+      <!-- Un reçu est toujours imprimé sur fond blanc : l'aperçu reste clair en mode sombre -->
+      <div v-else class="rounded-leaf border border-line bg-white p-6 text-gray-900 shadow-sm">
+        <div class="flex items-start justify-between gap-4 border-b border-gray-200 pb-4">
+          <div class="min-w-0">
+            <img
+              v-if="previewLogoUrl"
+              :src="previewLogoUrl"
+              :alt="t('centre.settings.logo_title')"
+              class="mb-3 h-14 max-w-48 object-contain"
+            />
+            <p v-else class="mb-3 text-xs italic text-gray-400">
+              {{ t("centre.settings.no_logo") }}
+            </p>
+            <p class="truncate text-lg font-bold">{{ centerName }}</p>
+            <p v-if="previewAddress" class="mt-1 text-sm text-gray-500">{{ previewAddress }}</p>
+            <p v-else class="mt-1 text-sm italic text-gray-300">
+              {{ t("centre.settings.no_address") }}
+            </p>
+          </div>
+          <i class="pi pi-receipt text-2xl text-gray-300" />
+        </div>
+        <div class="mt-4 space-y-2">
+          <div class="h-2.5 w-2/3 rounded bg-gray-100" />
+          <div class="h-2.5 w-1/2 rounded bg-gray-100" />
+          <div class="h-2.5 w-3/4 rounded bg-gray-100" />
+        </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: "centre",
-});
+definePageMeta({ layout: "centre", watermark: "Einstellungen" });
 
+const { t } = useI18n();
 const centerStaffStore = useCenterStaffStore();
+const toast = useToast();
 
-const addressForm = ref("");
-const savingAddress = ref(false);
-const addressError = ref<string | null>(null);
-const addressSuccess = ref(false);
+const TAILLE_MAX = 2 * 1024 * 1024; // 2 Mo
+const TYPES_ACCEPTES = ["image/png", "image/jpeg"];
 
-const selectedLogoFile = ref<File | null>(null);
-const uploadingLogo = ref(false);
-const logoError = ref<string | null>(null);
-const logoSuccess = ref(false);
-
+// ── État courant (enregistré) ──
 const loadingPreview = ref(true);
 const centerName = ref("");
 const currentAddress = ref<string | null>(null);
 const currentLogoUrl = ref<string | null>(null);
 
-async function loadCurrentSettings() {
+// ── Adresse ──
+const addressForm = ref("");
+const savingAddress = ref(false);
+const addressError = ref<string | null>(null);
+
+// ── Logo ──
+const fileInput = ref<HTMLInputElement | null>(null);
+const selectedLogoFile = ref<File | null>(null);
+const localLogoUrl = ref<string | null>(null);
+const uploadingLogo = ref(false);
+const logoError = ref<string | null>(null);
+
+// L'aperçu montre ce qui est en cours de saisie, avant enregistrement
+const previewLogoUrl = computed(() => localLogoUrl.value ?? currentLogoUrl.value);
+const previewAddress = computed(() => addressForm.value.trim() || null);
+const hasPendingChanges = computed(
+  () => !!selectedLogoFile.value || (previewAddress.value ?? "") !== (currentAddress.value ?? ""),
+);
+
+function libererApercuLocal() {
+  if (localLogoUrl.value) URL.revokeObjectURL(localLogoUrl.value);
+  localLogoUrl.value = null;
+}
+
+async function loadCurrentSettings(remplirFormulaire = true) {
   loadingPreview.value = true;
 
   const result = await centerStaffStore.fetchMyCenterDetails();
@@ -130,16 +177,17 @@ async function loadCurrentSettings() {
   if (result.success && result.center) {
     centerName.value = result.center.name;
     currentAddress.value = result.center.address ?? null;
-    addressForm.value = result.center.address ?? "";
+    // Après l'envoi du logo, on ne touche pas à une adresse en cours de saisie
+    if (remplirFormulaire) addressForm.value = result.center.address ?? "";
 
     if (result.center.logo_path) {
       const config = useRuntimeConfig();
       const base = config.public.apiBaseUrl || "http://localhost:8001";
-      // logo_path est un chemin disque local (storage/center_logos/xxx) —
-      // exposé publiquement via le mount /center-logos, on ne garde
-      // que le nom de fichier pour reconstruire l'URL publique.
+      // logo_path est un chemin disque local (storage/center_logos/xxx),
+      // exposé via le mount /center-logos : on ne garde que le nom de fichier.
+      // Le paramètre ?v= évite l'ancienne image en cache après un nouvel envoi.
       const filename = result.center.logo_path.split(/[\\/]/).pop();
-      currentLogoUrl.value = `${base}/center-logos/${filename}`;
+      currentLogoUrl.value = `${base}/center-logos/${filename}?v=${Date.now()}`;
     }
   }
 
@@ -149,26 +197,40 @@ async function loadCurrentSettings() {
 async function handleSaveAddress() {
   savingAddress.value = true;
   addressError.value = null;
-  addressSuccess.value = false;
 
-  const result = await centerStaffStore.updateMyCenter({
-    address: addressForm.value.trim() || null,
-  });
+  const address = addressForm.value.trim() || null;
+  const result = await centerStaffStore.updateMyCenter({ address });
 
   savingAddress.value = false;
 
   if (result.success) {
-    addressSuccess.value = true;
-    currentAddress.value = addressForm.value.trim() || null;
+    currentAddress.value = address;
+    toast.add({ severity: "success", summary: t("centre.settings.address_saved"), life: 3000 });
   } else {
-    addressError.value = result.error || "Erreur lors de l'enregistrement.";
+    addressError.value = result.error || t("centre.settings.save_error");
   }
 }
 
-function handleLogoSelect(event: any) {
-  selectedLogoFile.value = event.files[0];
+function handleLogoSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = ""; // permet de rechoisir le même fichier
+  if (!file) return;
+
   logoError.value = null;
-  logoSuccess.value = false;
+
+  if (!TYPES_ACCEPTES.includes(file.type)) {
+    logoError.value = t("centre.settings.file_type_error");
+    return;
+  }
+  if (file.size > TAILLE_MAX) {
+    logoError.value = t("centre.settings.file_size_error");
+    return;
+  }
+
+  libererApercuLocal();
+  selectedLogoFile.value = file;
+  localLogoUrl.value = URL.createObjectURL(file);
 }
 
 async function handleUploadLogo() {
@@ -182,15 +244,15 @@ async function handleUploadLogo() {
   uploadingLogo.value = false;
 
   if (result.success) {
-    logoSuccess.value = true;
     selectedLogoFile.value = null;
-    await loadCurrentSettings();
+    libererApercuLocal();
+    toast.add({ severity: "success", summary: t("centre.settings.logo_saved"), life: 3000 });
+    await loadCurrentSettings(false);
   } else {
-    logoError.value = result.error || "Erreur lors de l'envoi.";
+    logoError.value = result.error || t("centre.settings.upload_error");
   }
 }
 
-onMounted(() => {
-  loadCurrentSettings();
-});
+onMounted(() => loadCurrentSettings());
+onBeforeUnmount(libererApercuLocal);
 </script>

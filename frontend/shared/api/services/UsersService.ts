@@ -4,14 +4,12 @@
 /* eslint-disable */
 import type { DirectorCreateRequest } from '../models/DirectorCreateRequest';
 import type { SecretaryCreateRequest } from '../models/SecretaryCreateRequest';
-import type { StudentAccessDatesUpdateRequest } from '../models/StudentAccessDatesUpdateRequest';
 import type { StudentCreateRequest } from '../models/StudentCreateRequest';
 import type { StudentCreditAdjustRequest } from '../models/StudentCreditAdjustRequest';
 import type { StudentDetailedProgressResponse } from '../models/StudentDetailedProgressResponse';
 import type { StudentProgressResponse } from '../models/StudentProgressResponse';
 import type { StudentQuickCreateRequest } from '../models/StudentQuickCreateRequest';
 import type { StudentResponse } from '../models/StudentResponse';
-import type { StudentTargetUpdateRequest } from '../models/StudentTargetUpdateRequest';
 import type { SuccessResponse } from '../models/SuccessResponse';
 import type { TeacherCreateRequest } from '../models/TeacherCreateRequest';
 import type { UserAdminResponse } from '../models/UserAdminResponse';
@@ -438,36 +436,6 @@ export class UsersService {
         });
     }
     /**
-     * Update Student Access Dates
-     * Le directeur ajuste manuellement la fenêtre d'accès d'un étudiant précis.
-     * @param studentId
-     * @param requestBody
-     * @param accessToken
-     * @returns StudentResponse Successful Response
-     * @throws ApiError
-     */
-    public static updateStudentAccessDatesApiV1UsersStudentsStudentIdAccessDatesPatch(
-        studentId: string,
-        requestBody: StudentAccessDatesUpdateRequest,
-        accessToken?: (string | null),
-    ): CancelablePromise<StudentResponse> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/api/v1/users/students/{student_id}/access-dates',
-            path: {
-                'student_id': studentId,
-            },
-            cookies: {
-                'access_token': accessToken,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
      * Create Student
      * La secrétaire crée un compte étudiant — bloqué si quota licence atteint,
      * ou si le pool de crédits IA du centre est insuffisant.
@@ -483,36 +451,6 @@ export class UsersService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/users/students',
-            cookies: {
-                'access_token': accessToken,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
-     * Update Student Target
-     * Modifie l'examen/niveau ciblé d'un étudiant — sans consommer une nouvelle place.
-     * @param studentId
-     * @param requestBody
-     * @param accessToken
-     * @returns StudentResponse Successful Response
-     * @throws ApiError
-     */
-    public static updateStudentTargetApiV1UsersStudentsStudentIdTargetPatch(
-        studentId: string,
-        requestBody: StudentTargetUpdateRequest,
-        accessToken?: (string | null),
-    ): CancelablePromise<StudentResponse> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/api/v1/users/students/{student_id}/target',
-            path: {
-                'student_id': studentId,
-            },
             cookies: {
                 'access_token': accessToken,
             },

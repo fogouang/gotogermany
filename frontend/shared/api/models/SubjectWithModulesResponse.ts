@@ -13,6 +13,7 @@ export type SubjectWithModulesResponse = {
     name: (string | null);
     is_active: boolean;
     has_audio?: boolean;
+    is_private?: boolean;
     modules?: Array<ModuleWithTeilenResponse>;
 };
 

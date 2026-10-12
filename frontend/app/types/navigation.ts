@@ -33,13 +33,21 @@ export interface NavSection {
 export interface EspaceConfig {
   /** Nom de l'espace sous le logo, ex. "Espace Centre" */
   label: string;
+  /** Clé i18n du nom de l'espace : prioritaire sur label */
+  labelKey?: string;
   /** Libellé du rôle (pied de sidebar, badge du header) */
   roleLabel: string;
+  /** Clé i18n du rôle : prioritaire sur roleLabel */
+  roleLabelKey?: string;
   /** Icône de l'espace */
   icon: string;
 }
 
 export interface PageMeta {
-  title: string;
+  title?: string;
+  /** Clé i18n du titre : prioritaire sur title */
+  titleKey?: string;
   subtitle?: string;
+  /** Clé i18n du sous-titre : prioritaire sur subtitle */
+  subtitleKey?: string;
 }

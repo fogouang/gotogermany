@@ -1,165 +1,194 @@
 <!-- pages/centre/succursales.vue -->
 <template>
-  <div>
-    <div
-      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6"
-    >
-      <p class="text-sm text-gray-500">{{ branches.length }} succursale(s)</p>
+  <div class="space-y-5">
+    <!-- ── En-tête ── -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm text-muted">
+        {{ t("centre.branches.count", branches.length) }}
+        <span v-if="branches.length" class="text-faint">
+          · {{ t("centre.branches.students", totalStudents) }}
+        </span>
+      </p>
       <Button
-        label="Nouvelle succursale"
+        :label="t('centre.branches.new')"
         icon="pi pi-plus"
-        size="small"
         class="w-full sm:w-auto"
-        @click="showCreateDialog = true"
+        @click="openCreateDialog"
       />
     </div>
 
-    <div v-if="loading" class="flex justify-center py-12">
-      <i class="pi pi-spin pi-spinner text-3xl text-emerald-600"></i>
+    <!-- ── Chargement ── -->
+    <div v-if="loading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div v-for="n in 3" :key="n" class="h-36 animate-pulse rounded-card bg-card-2" />
     </div>
 
-    <div v-else-if="errorMessage" class="text-center py-12">
-      <i class="pi pi-times-circle text-4xl text-red-500 mb-3"></i>
-      <p class="text-gray-600">{{ errorMessage }}</p>
+    <!-- ── Erreur ── -->
+    <div
+      v-else-if="errorMessage"
+      class="rounded-card border border-red-500/30 bg-red-500/5 p-6 text-center text-sm text-red-600"
+    >
+      {{ errorMessage }}
     </div>
 
+    <!-- ── Vide ── -->
     <div
       v-else-if="branches.length === 0"
-      class="text-center py-12 text-gray-400"
+      class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      Aucune succursale pour l'instant.
+      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <i class="pi pi-sitemap" />
+      </span>
+      <p class="text-sm font-medium text-ink">{{ t("centre.branches.empty_title") }}</p>
+      <p class="max-w-sm text-xs text-muted">{{ t("centre.branches.empty_text") }}</p>
     </div>
 
-    <div
-      v-else
-      class="bg-white rounded-xl border border-gray-200 overflow-hidden"
-    >
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Nom
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Type
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Étudiants inscrits
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Créée le
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="branch in branches"
-              :key="branch.id"
-              class="border-b border-gray-100 last:border-0"
-            >
-              <td class="px-4 py-3 text-gray-900 whitespace-nowrap">
-                {{ branch.name }}
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <Tag
-                  v-if="branch.is_main"
-                  value="Principale"
-                  severity="success"
-                />
-                <span v-else class="text-gray-400">Secondaire</span>
-              </td>
-              <td class="px-4 py-3 text-gray-700 font-medium whitespace-nowrap">
-                {{ studentCount(branch.name) }}
-              </td>
-              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
-                {{ formatDate(branch.created_at) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- ── Succursales ── -->
+    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <article
+        v-for="branch in sortedBranches"
+        :key="branch.id"
+        class="flex flex-col rounded-card border bg-card p-5 shadow-soft"
+        :class="branch.is_main ? 'border-primary/40' : 'border-line'"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <span
+            class="flex size-10 shrink-0 items-center justify-center rounded-leaf"
+            :class="branch.is_main ? 'bg-primary/10 text-primary' : 'bg-card-2 text-muted'"
+          >
+            <i :class="branch.is_main ? 'pi pi-building' : 'pi pi-map-marker'" />
+          </span>
+          <span
+            class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            :class="branch.is_main ? 'bg-primary/10 text-primary' : 'bg-card-2 text-muted'"
+          >
+            {{ branch.is_main ? t("centre.branches.main") : t("centre.branches.secondary") }}
+          </span>
+        </div>
+
+        <h3 class="mt-4 truncate font-semibold text-ink">{{ branch.name }}</h3>
+
+        <div class="mt-auto flex items-end justify-between gap-3 pt-4">
+          <p class="text-2xl font-bold text-ink">
+            {{ studentCount(branch.id) }}
+            <span class="text-xs font-normal text-muted">
+              {{ t("centre.branches.students_label", studentCount(branch.id)) }}
+            </span>
+          </p>
+          <p class="text-xs text-muted">
+            {{ t("centre.branches.created_on", { date: formatDate(branch.created_at) }) }}
+          </p>
+        </div>
+      </article>
     </div>
 
-    <!-- Dialog création -->
+    <!-- ── Création ── -->
     <Dialog
       v-model:visible="showCreateDialog"
-      header="Nouvelle succursale"
+      :header="t('centre.branches.new')"
       modal
-      :style="{ width: '90vw', maxWidth: '28rem' }"
+      :style="{ width: '95vw', maxWidth: '28rem' }"
     >
-      <div class="space-y-4">
+      <form class="space-y-4" @submit.prevent="handleCreate">
         <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Nom de la succursale</label
-          >
+          <label for="branch-name" class="mb-1.5 block text-sm font-medium text-ink">
+            {{ t("centre.branches.name_label") }}
+          </label>
           <InputText
+            id="branch-name"
             v-model="newBranchName"
             class="w-full"
-            placeholder="ex: Centre Alpha - Yaoundé"
+            :placeholder="t('centre.branches.name_placeholder')"
+            autofocus
           />
         </div>
-        <p v-if="createError" class="text-sm text-red-600">{{ createError }}</p>
-      </div>
+        <Message v-if="createError" severity="error" :closable="false">{{ createError }}</Message>
+      </form>
       <template #footer>
-        <Button label="Annuler" text @click="showCreateDialog = false" />
-        <Button label="Créer" :loading="creating" @click="handleCreate" />
+        <Button :label="t('common.cancel')" text @click="showCreateDialog = false" />
+        <Button :label="t('common.create')" icon="pi pi-check" :loading="creating" @click="handleCreate" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: "centre",
-});
-
 import type { BranchResponse } from "#shared/api";
 
+definePageMeta({ layout: "centre", watermark: "Zweigstellen" });
+
+const { t, locale } = useI18n();
 const centerStaffStore = useCenterStaffStore();
+const toast = useToast();
 
 const loading = ref(true);
 const branches = ref<BranchResponse[]>([]);
-const branchesBreakdown = ref<Record<string, number>>({});
+const countsByBranch = ref<Record<string, number>>({});
 const errorMessage = ref<string | null>(null);
 
-const showCreateDialog = ref(false);
-const newBranchName = ref("");
-const creating = ref(false);
-const createError = ref<string | null>(null);
+// La succursale principale d'abord, puis par ordre alphabétique
+const sortedBranches = computed(() =>
+  [...branches.value].sort(
+    (a, b) => Number(b.is_main) - Number(a.is_main) || a.name.localeCompare(b.name),
+  ),
+);
 
-function studentCount(branchName: string) {
-  return branchesBreakdown.value[branchName] ?? 0;
+const totalStudents = computed(() =>
+  Object.values(countsByBranch.value).reduce((sum, n) => sum + n, 0),
+);
+
+function studentCount(branchId: string) {
+  return countsByBranch.value[branchId] ?? 0;
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("fr-FR");
+  return new Date(dateStr).toLocaleDateString(locale.value, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 async function loadBranches() {
   loading.value = true;
 
-  const [branchResult, usageResult] = await Promise.all([
+  const [branchResult, studentsResult] = await Promise.all([
     centerStaffStore.fetchMyBranches(),
-    centerStaffStore.fetchMyUsage(),
+    centerStaffStore.fetchStudentsByCenter(),
   ]);
 
   if (branchResult.success) {
     branches.value = branchResult.branches ?? [];
+    errorMessage.value = null;
   } else {
-    errorMessage.value = branchResult.error || "Erreur de chargement.";
+    errorMessage.value = branchResult.error || t("common.load_error");
   }
 
-  if (usageResult.success && usageResult.usage) {
-    branchesBreakdown.value = usageResult.usage.branches_breakdown ?? {};
+  if (studentsResult.success) {
+    const counts: Record<string, number> = {};
+    for (const s of studentsResult.students ?? []) {
+      if (s.branch_id) counts[s.branch_id] = (counts[s.branch_id] ?? 0) + 1;
+    }
+    countsByBranch.value = counts;
   }
 
   loading.value = false;
 }
 
+// ── Création ──
+const showCreateDialog = ref(false);
+const newBranchName = ref("");
+const creating = ref(false);
+const createError = ref<string | null>(null);
+
+function openCreateDialog() {
+  newBranchName.value = "";
+  createError.value = null;
+  showCreateDialog.value = true;
+}
+
 async function handleCreate() {
   if (!newBranchName.value.trim()) {
-    createError.value = "Le nom est requis.";
+    createError.value = t("centre.branches.name_required");
     return;
   }
   creating.value = true;
@@ -170,10 +199,10 @@ async function handleCreate() {
   creating.value = false;
   if (result.success) {
     showCreateDialog.value = false;
-    newBranchName.value = "";
+    toast.add({ severity: "success", summary: t("centre.branches.created"), life: 3000 });
     await loadBranches();
   } else {
-    createError.value = result.error || "Erreur lors de la création.";
+    createError.value = result.error || t("centre.branches.create_error");
   }
 }
 

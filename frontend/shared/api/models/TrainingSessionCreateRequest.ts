@@ -11,5 +11,7 @@ export type TrainingSessionCreateRequest = {
     label?: (string | null);
     start_date: string;
     end_date?: (string | null);
+    teacher_ids?: Array<string>;
+    student_ids?: Array<string>;
 };
 

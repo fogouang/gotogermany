@@ -1,42 +1,47 @@
+<!-- components/admin/FreeAccessToggle.vue -->
 <template>
   <div
-    class="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4"
+    class="flex flex-col gap-4 rounded-card border bg-card p-5 shadow-soft transition-colors sm:flex-row sm:items-center sm:justify-between"
+    :class="isFree ? 'border-emerald-500/40' : 'border-line'"
   >
     <div class="flex items-center gap-3">
-      <div
-        :class="[
-          'w-10 h-10 rounded-xl flex items-center justify-center',
-          isFree ? 'bg-green-100' : 'bg-gray-100',
-        ]"
+      <span
+        class="flex size-10 shrink-0 items-center justify-center rounded-leaf transition-colors"
+        :class="
+          isFree ? 'bg-emerald-500/10 text-emerald-600' : 'bg-card-2 text-muted'
+        "
       >
-        <i
-          :class="[
-            'pi',
-            isFree ? 'pi-lock-open text-green-600' : 'pi-lock text-gray-400',
-          ]"
-        ></i>
-      </div>
+        <i :class="isFree ? 'pi pi-lock-open' : 'pi pi-lock'" />
+      </span>
       <div>
-        <p class="font-semibold text-gray-900 text-sm">Mode accès libre</p>
-        <p class="text-xs text-gray-400 mt-0.5">
+        <p class="text-sm font-semibold text-ink">Mode accès libre</p>
+        <p class="mt-0.5 text-xs text-muted">
           {{
             isFree
               ? "Tous les sujets sont ouverts à tous"
-              : "Accès normal - paiement requis"
+              : "Accès normal, paiement requis"
           }}
         </p>
       </div>
     </div>
+
     <div class="flex items-center gap-3">
-      <Tag
-        :value="isFree ? 'Activé' : 'Désactivé'"
-        :severity="isFree ? 'success' : 'secondary'"
-      />
+      <span
+        class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+        :class="
+          isFree
+            ? 'bg-emerald-500/10 text-emerald-600'
+            : 'bg-card-2 text-muted'
+        "
+      >
+        {{ isFree ? "Activé" : "Désactivé" }}
+      </span>
       <Button
         :label="isFree ? 'Fermer' : 'Ouvrir'"
         :severity="isFree ? 'danger' : 'success'"
         :icon="isFree ? 'pi pi-lock' : 'pi pi-lock-open'"
         size="small"
+        :outlined="isFree"
         :loading="toggling"
         @click="toggle"
       />
@@ -51,7 +56,7 @@ const toggling = ref(false);
 const toast = useToast();
 const appStore = useAppStore();
 
-// isFree est un computed qui lit directement le store
+// isFree lit directement le store
 const isFree = computed(() => appStore.freeAccessMode);
 
 // fetchStatus met à jour le store
@@ -72,7 +77,7 @@ const toggle = async () => {
       severity: isFree.value ? "success" : "warn",
       summary: isFree.value ? "Accès libre activé" : "Accès libre désactivé",
       detail: isFree.value
-        ? "Tous les users ont accès à tous les sujets."
+        ? "Tous les utilisateurs ont accès à tous les sujets."
         : "Le paiement est à nouveau requis.",
       life: 4000,
     });

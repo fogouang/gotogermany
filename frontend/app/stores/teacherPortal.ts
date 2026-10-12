@@ -9,11 +9,8 @@ import type {
   TeacherCommentResponse,
   StudentProgressResponse,
 } from "#shared/api";
+import type { NormalizedTrainingSession } from "./trainingSessions";
 
-export type NormalizedTrainingSession = TrainingSessionResponse & {
-  teachers: TrainingSessionTeacherResponse[];
-  students: TrainingSessionStudentResponse[];
-};
 
 function normalizeSession(
   s: TrainingSessionResponse,

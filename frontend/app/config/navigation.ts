@@ -7,37 +7,49 @@ import type {
 } from "~/types/navigation";
 
 // ── Espaces ─────────────────────────────────────────────
+// label / roleLabel servent de repli si la clé i18n est absente.
 export const ESPACES: Record<NavRole, EspaceConfig> = {
   admin: { label: "Admin Panel", roleLabel: "Admin", icon: "pi pi-shield" },
   directeur: {
     label: "Espace Centre",
+    labelKey: "centre.space",
     roleLabel: "Directeur de centre",
+    roleLabelKey: "centre.roles.director",
     icon: "pi pi-building",
   },
   secretaire: {
     label: "Espace Centre",
+    labelKey: "centre.space",
     roleLabel: "Secrétaire",
+    roleLabelKey: "centre.roles.secretary",
     icon: "pi pi-building",
   },
   enseignant: {
     label: "Espace Enseignant",
+    labelKey: "teacher.space",
     roleLabel: "Enseignant",
+    roleLabelKey: "teacher.role",
     icon: "pi pi-user",
   },
   ambassadeur: {
     label: "Espace Ambassadeur",
+    labelKey: "ambassador.space",
     roleLabel: "Ambassadeur",
+    roleLabelKey: "ambassador.role",
     icon: "pi pi-star",
   },
   etudiant: {
     label: "Espace Étudiant",
+    labelKey: "dashboard.space",
     roleLabel: "Étudiant",
+    roleLabelKey: "dashboard.role",
     icon: "pi pi-graduation-cap",
   },
 };
 
 // ── Menus par rôle ──────────────────────────────────────
 export const NAVIGATION: Record<NavRole, NavSection[]> = {
+  // Admin : en français uniquement (usage interne)
   admin: [
     {
       title: "Général",
@@ -87,81 +99,81 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
 
   directeur: [
     {
-      title: "Général",
+      titleKey: "sidebar.main",
       items: [
         {
-          label: "Vue d'ensemble",
+          labelKey: "centre.nav.overview",
           to: "/centre/dashboard",
           icon: "pi pi-chart-bar",
         },
         {
-          label: "Succursales",
+          labelKey: "centre.nav.branches",
           to: "/centre/succursales",
           icon: "pi pi-sitemap",
         },
         {
-          label: "Secrétaires",
+          labelKey: "centre.nav.secretaries",
           to: "/centre/secretaires",
           icon: "pi pi-users",
         },
         {
-          label: "Enseignants",
+          labelKey: "centre.nav.teachers",
           to: "/centre/enseignants",
           icon: "pi pi-user-edit",
         },
-        { label: "Sessions", to: "/centre/sessions", icon: "pi pi-calendar" },
-        { label: "Étudiants", to: "/centre/etudiants", icon: "pi pi-user" },
         {
-          label: "Session live",
-          to: "/centre/sessions-live",
-          icon: "pi pi-microphone",
+          labelKey: "centre.nav.classes",
+          to: "/centre/sessions",
+          icon: "pi pi-calendar",
         },
         {
-          label: "Progression",
+          labelKey: "centre.nav.students",
+          to: "/centre/etudiants",
+          icon: "pi pi-user",
+        },
+        {
+          labelKey: "centre.nav.progression",
           to: "/centre/progression",
           icon: "pi pi-chart-line",
         },
         {
-          label: "Historique crédits",
-          to: "/centre/credits-historique",
-          icon: "pi pi-history",
+          labelKey: "centre.nav.settings",
+          to: "/centre/reglages",
+          icon: "pi pi-cog",
         },
-        { label: "Ma licence", to: "/centre/licence", icon: "pi pi-verified" },
-        { label: "Réglages", to: "/centre/reglages", icon: "pi pi-cog" },
       ],
     },
   ],
 
   secretaire: [
     {
-      title: "Général",
+      titleKey: "sidebar.main",
       items: [
         {
-          label: "Mes étudiants",
+          labelKey: "centre.nav.my_students",
           to: "/centre/etudiants",
           icon: "pi pi-user",
           exact: true,
         },
         {
-          label: "Nouvel étudiant",
+          labelKey: "centre.nav.new_student",
           to: "/centre/etudiants/nouveau",
           icon: "pi pi-user-plus",
         },
         {
-          label: "Enseignants",
+          labelKey: "centre.nav.teachers",
           to: "/centre/enseignants",
           icon: "pi pi-user-edit",
         },
-        { label: "Sessions", to: "/centre/sessions", icon: "pi pi-calendar" },
         {
-          label: "Progression",
-          to: "/centre/progression",
-          icon: "pi pi-chart-line",
+          labelKey: "centre.nav.classes",
+          to: "/centre/sessions",
+          icon: "pi pi-calendar",
         },
         {
-          label: "Historique crédits",
-          to: "/centre/credits-historique",
-          icon: "pi pi-history",
+          labelKey: "centre.nav.progression",
+          to: "/centre/progression",
+          icon: "pi pi-chart-line",
         },
       ],
     },
@@ -169,22 +181,27 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
 
   enseignant: [
     {
-      title: "Général",
+      titleKey: "sidebar.main",
       items: [
         {
-          label: "Mes sessions",
+          labelKey: "teacher.nav.classes",
           to: "/enseignant/sessions",
           icon: "pi pi-users",
         },
         {
-          label: "Mes étudiants",
+          labelKey: "teacher.nav.students",
           to: "/enseignant/etudiants",
           icon: "pi pi-user",
         },
         {
-          label: "Lancer un live",
+          labelKey: "teacher.nav.live",
           to: "/enseignant/live/nouveau",
           icon: "pi pi-microphone",
+        },
+        {
+          labelKey: "teacher.nav.assignments",
+          to: "/enseignant/devoirs",
+          icon: "pi pi-file-edit",
         },
       ],
     },
@@ -194,7 +211,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
     {
       items: [
         {
-          label: "Programme de parrainage",
+          labelKey: "ambassador.nav.program",
           to: "/referrals",
           icon: "pi pi-users",
         },
@@ -203,7 +220,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
     {
       items: [
         {
-          label: "Espace étudiant",
+          labelKey: "dashboard.space",
           to: "/dashboard",
           icon: "pi pi-arrow-left",
         },
@@ -284,7 +301,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
 
 // ── Titres et sous-titres des pages (header des layouts) ─
 export const PAGE_META: Record<string, PageMeta> = {
-  // Admin
+  // Admin : en français uniquement (usage interne)
   "/admin": { title: "Dashboard", subtitle: "Vue d'ensemble de la plateforme" },
   "/admin/users": {
     title: "Utilisateurs",
@@ -321,78 +338,72 @@ export const PAGE_META: Record<string, PageMeta> = {
 
   // Centre
   "/centre/dashboard": {
-    title: "Vue d'ensemble",
-    subtitle: "Quota et statut de votre licence",
+    titleKey: "centre.pages.dashboard.title",
+    subtitleKey: "centre.pages.dashboard.subtitle",
   },
   "/centre/succursales": {
-    title: "Succursales",
-    subtitle: "Gestion de vos points de formation",
+    titleKey: "centre.pages.branches.title",
+    subtitleKey: "centre.pages.branches.subtitle",
   },
   "/centre/secretaires": {
-    title: "Secrétaires",
-    subtitle: "Comptes de gestion par succursale",
+    titleKey: "centre.pages.secretaries.title",
+    subtitleKey: "centre.pages.secretaries.subtitle",
   },
   "/centre/etudiants": {
-    title: "Étudiants",
-    subtitle: "Comptes étudiants inscrits",
+    titleKey: "centre.pages.students.title",
+    subtitleKey: "centre.pages.students.subtitle",
   },
   "/centre/etudiants/nouveau": {
-    title: "Nouvel étudiant",
-    subtitle: "Créer un compte étudiant",
+    titleKey: "centre.pages.new_student.title",
+    subtitleKey: "centre.pages.new_student.subtitle",
   },
   "/centre/enseignants": {
-    title: "Enseignants",
-    subtitle: "Comptes de gestion enseignant",
+    titleKey: "centre.pages.teachers.title",
+    subtitleKey: "centre.pages.teachers.subtitle",
   },
   "/centre/sessions": {
-    title: "Sessions",
-    subtitle: "Cohortes par niveau, avec enseignants et étudiants",
+    titleKey: "centre.pages.classes.title",
+    subtitleKey: "centre.pages.classes.subtitle",
   },
   "/centre/sessions-live": {
-    title: "Session live",
-    subtitle: "Lancer et suivre un examen oral en direct",
+    titleKey: "centre.pages.live.title",
+    subtitleKey: "centre.pages.live.subtitle",
   },
   "/centre/progression": {
-    title: "Progression",
-    subtitle: "Scores et activité des étudiants",
+    titleKey: "centre.pages.progression.title",
+    subtitleKey: "centre.pages.progression.subtitle",
   },
-  "/centre/credits-historique": {
-    title: "Historique des crédits",
-    subtitle: "Audit des ajustements de crédits IA",
+
+  "/centre/reglages": {
+    titleKey: "centre.pages.settings.title",
+    subtitleKey: "centre.pages.settings.subtitle",
   },
-  "/centre/licence": {
-    title: "Ma licence",
-    subtitle: "Détails et attestation",
-  },
-  "/centre/reglages": { title: "Réglages", subtitle: "Réglages du compte" },
 
   // Enseignant
   "/enseignant/sessions": {
-    title: "Mes sessions",
-    subtitle: "Classes et étudiants qui vous sont assignés",
+    titleKey: "teacher.pages.classes.title",
+    subtitleKey: "teacher.pages.classes.subtitle",
   },
   "/enseignant/etudiants": {
-    title: "Mes étudiants",
-    subtitle: "Progression et suivi de vos étudiants",
+    titleKey: "teacher.pages.students.title",
+    subtitleKey: "teacher.pages.students.subtitle",
   },
   "/enseignant/live/nouveau": {
-    title: "Session live",
-    subtitle: "Lancer un examen oral en direct avec un étudiant",
+    titleKey: "teacher.pages.live.title",
+    subtitleKey: "teacher.pages.live.subtitle",
   },
 
-  // Ambassadeur (route à confirmer : /referrals ou /dashboard/parrainage)
+  // Ambassadeur
   "/referrals": {
-    title: "Programme de parrainage",
-    subtitle: "Votre lien, vos filleuls, vos gains",
-  },
-  referrals: {
-    title: "Programme de parrainage",
-    subtitle: "Votre lien, vos filleuls, vos gains",
+    titleKey: "ambassador.pages.referrals.title",
+    subtitleKey: "ambassador.pages.referrals.subtitle",
   },
 };
 
 /** Titre/sous-titre de la page courante, avec repli sur le nom de l'espace */
 export function getPageMeta(path: string, fallback: string): PageMeta {
-  const clean = path.length > 1 ? path.replace(/\/$/, "") : path;
+  const sansLangue = path.replace(/^\/(fr|de)(?=\/|$)/, "") || "/";
+  const clean =
+    sansLangue.length > 1 ? sansLangue.replace(/\/$/, "") : sansLangue;
   return PAGE_META[clean] ?? { title: fallback };
 }

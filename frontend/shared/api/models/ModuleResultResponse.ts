@@ -13,5 +13,6 @@ export type ModuleResultResponse = {
     questions_incorrect: number;
     questions_total: number;
     teile?: Array<TeilResultResponse>;
+    tdn_level?: (string | null);
 };
 

@@ -12,6 +12,9 @@ export type CenterResponse = {
     logo_path?: (string | null);
     ai_credit_pool_balance: number;
     default_credits_per_student: number;
+    partner_can_activate?: boolean;
+    partner_unpaid_limit?: (number | null);
+    partner_payment_delay_hours?: number;
     created_at: string;
 };
 
