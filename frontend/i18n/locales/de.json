@@ -947,7 +947,17 @@
     "note_optional": "Notiz (optional)",
     "note_placeholder": "Z. B.: Zahlung per Orange Money erhalten am...",
     "cancel": "Abbrechen",
-    "confirm_validation": "Bestätigung abschließen"
+    "confirm_validation": "Bestätigung abschließen",
+    "blocked_title": "Aktivierungen gesperrt",
+    "blocked_text": "Begleichen Sie überfällige Beträge, um wieder Zugänge zu aktivieren.",
+    "overdue_notice": "Nichts überfällig | 1 überfälliger Verkauf: {amount} zu überweisen | {n} überfällige Verkäufe: {amount} zu überweisen",
+    "owed_to_platform": "An die Plattform zu überweisen",
+    "owed_to_you": "Die Plattform schuldet Ihnen",
+    "filter_all": "Alle",
+    "empty_filter": "Keine Geworbenen in dieser Kategorie.",
+    "joined_on": "Registriert am {date}",
+    "activation_hint": "Kassieren Sie den Planpreis bei der/dem Lernenden. Der Zugang öffnet sich sofort und der Betrag wird, abzüglich Ihrer Provision, zu Ihrem Saldo gegenüber der Plattform addiert.",
+    "activated": "Zugang für {name} aktiviert"
   },
   "live_session": {
     "title": "Live-Sitzungen",
@@ -1414,7 +1424,63 @@
       "graded": "Korrigiert",
       "no_due": "Ohne Frist",
       "due_on": "Fällig am {date}",
-      "due_passed": "Frist abgelaufen ({date})"
+      "due_passed": "Frist abgelaufen ({date})",
+      "form": {
+        "back": "Zurück zu den Hausaufgaben",
+        "step_targets": "Für wen",
+        "no_classes": "Sie haben keine laufenden Klassen.",
+        "extra_students": "Einzelne Lernende hinzufügen",
+        "students_placeholder": "Lernende auswählen",
+        "in_selected_class": "Bereits über eine gewählte Klasse enthalten",
+        "step_subject": "Welches Thema",
+        "no_subjects": "Keine Themen für dieses Niveau verfügbar.",
+        "level_mismatch": "Dieses Thema hat nicht das Niveau der gewählten Klassen.",
+        "step_details": "Details",
+        "title": "Titel",
+        "title_placeholder": "z. B. Lesen und Hören, Thema 3",
+        "instructions": "Hinweise",
+        "instructions_placeholder": "Was die Lernenden vor dem Start wissen sollten",
+        "due_at": "Abgabe bis",
+        "due_hint": "Nach diesem Datum ist die Abgabe noch möglich, wird aber als verspätet markiert.",
+        "summary": "Keine Lernenden | 1 Lernende/r | {n} Lernende",
+        "summary_missing": "Wählen Sie mindestens eine Klasse oder eine/n Lernende/n und dann ein Thema.",
+        "create": "Hausaufgabe vergeben",
+        "created": "Hausaufgabe verschickt",
+        "create_error": "Die Hausaufgabe konnte nicht erstellt werden.",
+        "all_covered": "Alle Ihre Lernenden sind über die gewählten Klassen bereits enthalten."
+      },
+      "detail": {
+        "not_found": "Hausaufgabe nicht gefunden.",
+        "download_zip": "Schreiben herunterladen",
+        "download_error": "Die Abgaben konnten nicht heruntergeladen werden.",
+        "cancel": "Hausaufgabe stornieren",
+        "cancel_confirm": "Die Lernenden können sie dann weder beginnen noch abgeben. Bereits abgegebene Arbeiten bleiben einsehbar. Fortfahren?",
+        "cancelled_done": "Hausaufgabe storniert",
+        "cancel_error": "Die Hausaufgabe konnte nicht storniert werden.",
+        "stat_expected": "Erwartet",
+        "stat_late": "Verspätet",
+        "stat_average": "Durchschnitt",
+        "submissions": "Abgaben",
+        "filter": {
+          "all": "Alle",
+          "to_grade": "Zu korrigieren",
+          "graded": "Korrigiert",
+          "missing": "Nicht abgegeben"
+        },
+        "state": {
+          "not_started": "Nicht begonnen",
+          "in_progress": "In Bearbeitung",
+          "submitted": "Zu korrigieren",
+          "graded": "Korrigiert"
+        },
+        "submitted_on": "Abgegeben am {date}",
+        "started_on": "Begonnen am {date}",
+        "late": "Verspätet",
+        "annotated": "Annotierte Kopie angehängt",
+        "grade": "Korrigieren",
+        "review": "Ansehen",
+        "empty_filter": "Keine Abgaben in dieser Kategorie."
+      }
     },
     "live": {
       "loading": "Sitzung wird geladen…",
@@ -1479,7 +1545,26 @@
       "no_active": "Keine aktiven Lernenden in dieser Klasse.",
       "finished_toggle": "Keine abgeschlossenen Klassen | 1 abgeschlossene Klasse | {n} abgeschlossene Klassen",
       "detail": "Fortschritt",
-      "launch_live": "Live-Sitzung starten"
+      "launch_live": "Live-Sitzung starten",
+      "give_assignment": "Hausaufgabe vergeben"
+    },
+    "students": {
+      "count": "Keine Lernenden | 1 Lernende/r | {n} Lernende",
+      "search": "Lernende/n suchen",
+      "all_classes": "Alle Klassen",
+      "empty": "Noch keine aktiven Lernenden in Ihren Klassen.",
+      "no_results": "Keine Lernenden entsprechen Ihrer Suche."
+    },
+    "student_detail": {
+      "back": "Zurück zu meinen Lernenden",
+      "see_detail": "Details ansehen",
+      "module_counts": "{correct} richtig · {wrong} falsch / {total}",
+      "comment_placeholder": "Kommentar zu dieser/m Lernenden hinzufügen (z. B. eine festgestellte Schwäche)",
+      "publish": "Veröffentlichen",
+      "publish_error": "Der Kommentar konnte nicht veröffentlicht werden.",
+      "result_title": "Sitzungsdetails",
+      "correct_count": "{correct}/{total} richtig",
+      "question": "F{n}"
     }
   }
 }

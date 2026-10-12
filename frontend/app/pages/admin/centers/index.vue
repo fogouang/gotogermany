@@ -1,163 +1,207 @@
 <!-- pages/admin/centers/index.vue -->
 <template>
-  <div>
-    <div class="flex items-center justify-between mb-6">
-      <p class="text-sm text-gray-500">
-        {{ adminCenters.centers.length }} centre(s)
-      </p>
+  <div class="space-y-5">
+    <!-- ── Tuiles (servent aussi de filtre) ── -->
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <button
+        v-for="tile in tiles"
+        :key="tile.key"
+        type="button"
+        class="flex items-center gap-3 rounded-card border bg-card p-4 text-left shadow-soft transition-colors"
+        :class="
+          statusFilter === tile.key
+            ? 'border-primary ring-1 ring-primary/30'
+            : 'border-line hover:border-primary/30'
+        "
+        @click="statusFilter = tile.key"
+      >
+        <span
+          class="flex size-10 shrink-0 items-center justify-center rounded-leaf"
+          :class="tile.iconClass"
+        >
+          <i :class="tile.icon" />
+        </span>
+        <div>
+          <p class="text-2xl font-bold leading-none text-ink">
+            {{ tile.count }}
+          </p>
+          <p class="mt-1 text-xs text-muted">{{ tile.label }}</p>
+        </div>
+      </button>
+    </div>
+
+    <!-- ── Barre d'outils ── -->
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <IconField class="w-full sm:max-w-sm">
+        <InputIcon class="pi pi-search" />
+        <InputText
+          v-model="search"
+          class="w-full"
+          placeholder="Rechercher un centre (nom, email, téléphone)"
+        />
+      </IconField>
       <Button
         label="Nouveau centre"
         icon="pi pi-plus"
-        size="small"
+        class="w-full sm:w-auto"
         @click="openCreateCenterDialog"
       />
     </div>
 
-    <div v-if="loadingCenters" class="flex justify-center py-12">
-      <i class="pi pi-spin pi-spinner text-3xl text-teal-600"></i>
-    </div>
-
-    <div
-      v-else-if="adminCenters.centers.length === 0"
-      class="text-center py-12 text-gray-400"
-    >
-      Aucun centre pour l'instant.
-    </div>
-
-    <div
-      v-else
-      class="bg-white rounded-xl border border-gray-200 overflow-hidden"
-    >
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Nom
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Contact
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Pool crédits IA
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Statut
-              </th>
-              <th class="text-right px-4 py-3 font-semibold text-gray-600">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="center in paginatedCenters"
-              :key="center.id"
-              class="border-b border-gray-100 last:border-0"
-            >
-              <td
-                class="px-4 py-3 text-gray-900 font-medium whitespace-nowrap"
-              >
-                {{ center.name }}
-              </td>
-              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
-                <div>{{ center.contact_email || "—" }}</div>
-                <div class="text-xs text-gray-400">
-                  {{ center.contact_phone || "" }}
-                </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <span
-                  class="font-semibold"
-                  :class="
-                    center.ai_credit_pool_balance <
-                    center.default_credits_per_student
-                      ? 'text-red-600'
-                      : 'text-gray-900'
-                  "
-                >
-                  {{ center.ai_credit_pool_balance }}
-                </span>
-                <span class="text-xs text-gray-400 ml-1">
-                  (défaut: {{ center.default_credits_per_student }}/étudiant)
-                </span>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap">
-                <Tag
-                  :value="center.is_active ? 'Actif' : 'Inactif'"
-                  :severity="center.is_active ? 'success' : 'danger'"
-                />
-              </td>
-              <td class="px-4 py-3 text-right whitespace-nowrap">
-                <Button
-                  label="Directeur"
-                  icon="pi pi-user-plus"
-                  text
-                  size="small"
-                  @click="openDirectorDialog(center)"
-                />
-                <Button
-                  label="Recharger crédits"
-                  icon="pi pi-sparkles"
-                  text
-                  size="small"
-                  @click="openRechargeDialog(center)"
-                />
-                <Button
-                  :label="center.is_active ? 'Désactiver' : 'Réactiver'"
-                  :icon="center.is_active ? 'pi pi-ban' : 'pi pi-check-circle'"
-                  text
-                  size="small"
-                  :severity="center.is_active ? 'danger' : 'success'"
-                  @click="confirmToggleActive(center)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <Paginator
-        v-model:first="centersFirst"
-        v-model:rows="centersRows"
-        :totalRecords="adminCenters.centers.length"
-        :rowsPerPageOptions="[10, 20, 50]"
-        class="border-t border-gray-200"
+    <!-- ── Chargement ── -->
+    <div v-if="loadingCenters" class="space-y-3">
+      <div
+        v-for="n in 4"
+        :key="n"
+        class="h-16 animate-pulse rounded-card bg-card-2"
       />
     </div>
 
-    <!-- Dialog création centre -->
+    <!-- ── Vide ── -->
+    <div
+      v-else-if="filteredCenters.length === 0"
+      class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
+    >
+      <span
+        class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+      >
+        <i class="pi pi-building" />
+      </span>
+      <p class="text-sm font-medium text-ink">
+        {{
+          adminCenters.centers.length === 0
+            ? "Aucun centre pour l'instant."
+            : "Aucun centre ne correspond."
+        }}
+      </p>
+    </div>
+
+    <!-- ── Liste ── -->
+    <template v-else>
+      <ul
+        class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft"
+      >
+        <li
+          v-for="center in paginatedCenters"
+          :key="center.id"
+          class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-5"
+        >
+          <span
+            class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-sm font-bold"
+            :class="
+              center.is_active
+                ? 'bg-primary/10 text-primary'
+                : 'bg-card-2 text-muted'
+            "
+          >
+            {{ initials(center.name) }}
+          </span>
+
+          <div
+            class="min-w-48 flex-1"
+            :class="{ 'opacity-60': !center.is_active }"
+          >
+            <p class="truncate font-medium text-ink">{{ center.name }}</p>
+            <p class="flex flex-wrap gap-x-3 text-xs text-muted">
+              <span
+                v-if="center.contact_email"
+                class="inline-flex items-center gap-1"
+              >
+                <i class="pi pi-envelope text-[10px]" />{{
+                  center.contact_email
+                }}
+              </span>
+              <span
+                v-if="center.contact_phone"
+                class="inline-flex items-center gap-1"
+              >
+                <i class="pi pi-phone text-[10px]" />{{ center.contact_phone }}
+              </span>
+              <span v-if="!center.contact_email && !center.contact_phone"
+                >Aucun contact</span
+              >
+            </p>
+          </div>
+
+          <span
+            class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            :class="
+              center.is_active
+                ? 'bg-emerald-500/10 text-emerald-600'
+                : 'bg-red-500/10 text-red-600'
+            "
+          >
+            {{ center.is_active ? "Actif" : "Désactivé" }}
+          </span>
+
+          <div class="flex items-center gap-1">
+            <Button
+              label="Directeur"
+              icon="pi pi-user-plus"
+              text
+              size="small"
+              @click="openDirectorDialog(center)"
+            />
+            <Button
+              :icon="center.is_active ? 'pi pi-ban' : 'pi pi-check-circle'"
+              text
+              rounded
+              size="small"
+              :severity="center.is_active ? 'danger' : 'success'"
+              v-tooltip.top="center.is_active ? 'Désactiver' : 'Réactiver'"
+              :aria-label="center.is_active ? 'Désactiver' : 'Réactiver'"
+              @click="confirmToggleActive(center)"
+            />
+          </div>
+        </li>
+      </ul>
+
+      <Paginator
+        v-if="filteredCenters.length > 10"
+        v-model:first="centersFirst"
+        v-model:rows="centersRows"
+        :totalRecords="filteredCenters.length"
+        :rowsPerPageOptions="[10, 20, 50]"
+        class="rounded-card border border-line"
+      />
+    </template>
+
+    <!-- ══ Création centre ══ -->
     <Dialog
       v-model:visible="showCreateCenterDialog"
       header="Nouveau centre"
       modal
-      :style="{ width: '28rem' }"
+      :style="{ width: '95vw', maxWidth: '28rem' }"
     >
-      <div class="space-y-4">
+      <form class="space-y-4" @submit.prevent="handleCreateCenter">
         <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Nom du centre</label
-          >
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Nom du centre <span class="text-red-600">*</span>
+          </label>
           <InputText
             v-model="centerForm.name"
             class="w-full"
-            placeholder="ex: Centre Alpha Formation"
+            placeholder="ex. Centre Alpha Formation"
           />
         </div>
         <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Email de contact (optionnel)</label
-          >
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Email de contact
+            <span class="font-normal text-muted">(optionnel)</span>
+          </label>
           <InputText
             v-model="centerForm.contact_email"
+            type="email"
             class="w-full"
             placeholder="contact@centre-alpha.cm"
           />
         </div>
         <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Téléphone (optionnel)</label
-          >
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Téléphone <span class="font-normal text-muted">(optionnel)</span>
+          </label>
           <InputText
             v-model="centerForm.contact_phone"
             class="w-full"
@@ -167,84 +211,126 @@
         <Message v-if="centerFormError" severity="error" :closable="false">{{
           centerFormError
         }}</Message>
-      </div>
+      </form>
       <template #footer>
         <Button label="Annuler" text @click="showCreateCenterDialog = false" />
         <Button
           label="Créer"
+          icon="pi pi-check"
           :loading="creatingCenter"
           @click="handleCreateCenter"
         />
       </template>
     </Dialog>
 
-    <!-- Dialog création directeur -->
+    <!-- ══ Création directeur ══ -->
     <Dialog
       v-model:visible="showDirectorDialog"
       header="Créer le directeur"
       modal
-      :style="{ width: '28rem' }"
+      :style="{ width: '95vw', maxWidth: '28rem' }"
     >
       <div v-if="selectedCenter" class="space-y-4">
-        <div class="p-3 bg-gray-50 rounded-lg">
-          <p class="font-semibold text-gray-900">{{ selectedCenter.name }}</p>
+        <div class="flex items-center gap-3 rounded-leaf bg-card-2 px-4 py-3">
+          <i class="pi pi-building text-muted" />
+          <p class="font-semibold text-ink">{{ selectedCenter.name }}</p>
         </div>
 
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Nom complet</label
+        <!-- Identifiants à transmettre -->
+        <div
+          v-if="directorCredentials"
+          class="space-y-3 rounded-leaf border border-emerald-500/30 bg-emerald-500/10 p-4"
+        >
+          <p
+            class="flex items-center gap-2 text-sm font-semibold text-emerald-600"
           >
-          <InputText
-            v-model="directorForm.full_name"
-            class="w-full"
-            placeholder="ex: M. Jean Talla"
-          />
-        </div>
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Email</label
+            <i class="pi pi-check-circle" /> Compte créé
+          </p>
+          <p class="text-xs text-muted">
+            Transmettez ces identifiants à {{ directorForm.full_name }} :
+          </p>
+          <div
+            class="space-y-1 rounded-leaf bg-card px-3 py-2 font-mono text-sm text-ink"
           >
-          <InputText
-            v-model="directorForm.email"
-            class="w-full"
-            placeholder="directeur@cfm.cm"
-          />
-        </div>
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Téléphone (optionnel)</label
-          >
-          <InputText
-            v-model="directorForm.phone"
-            class="w-full"
-            placeholder="+237 6XX XXX XXX"
-          />
-        </div>
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Mot de passe provisoire</label
-          >
-          <Password
-            v-model="directorForm.password"
-            class="w-full"
-            inputClass="w-full"
-            toggleMask
-            :feedback="false"
-            placeholder="Min. 8 caractères"
+            <p>{{ directorForm.email }}</p>
+            <p>{{ directorForm.password }}</p>
+          </div>
+          <Button
+            label="Copier"
+            icon="pi pi-copy"
+            size="small"
+            outlined
+            @click="copyCredentials"
           />
         </div>
 
-        <Message v-if="directorFormError" severity="error" :closable="false">{{
-          directorFormError
-        }}</Message>
-        <Message v-if="directorSuccess" severity="success" :closable="false">{{
-          directorSuccess
-        }}</Message>
+        <form v-else class="space-y-4" @submit.prevent="handleCreateDirector">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">
+              Nom complet <span class="text-red-600">*</span>
+            </label>
+            <InputText
+              v-model="directorForm.full_name"
+              class="w-full"
+              placeholder="ex. M. Jean Talla"
+            />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">
+              Email <span class="text-red-600">*</span>
+            </label>
+            <InputText
+              v-model="directorForm.email"
+              type="email"
+              class="w-full"
+              placeholder="directeur@centre.cm"
+            />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">
+              Téléphone <span class="font-normal text-muted">(optionnel)</span>
+            </label>
+            <InputText
+              v-model="directorForm.phone"
+              class="w-full"
+              placeholder="+237 6XX XXX XXX"
+            />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">
+              Mot de passe provisoire <span class="text-red-600">*</span>
+            </label>
+            <div class="flex gap-2">
+              <Password
+                v-model="directorForm.password"
+                class="flex-1"
+                inputClass="w-full"
+                toggleMask
+                :feedback="false"
+                placeholder="Min. 8 caractères"
+              />
+              <Button
+                type="button"
+                icon="pi pi-refresh"
+                outlined
+                v-tooltip.top="'Générer un mot de passe'"
+                aria-label="Générer un mot de passe"
+                @click="directorForm.password = genererMotDePasse()"
+              />
+            </div>
+          </div>
+          <Message
+            v-if="directorFormError"
+            severity="error"
+            :closable="false"
+            >{{ directorFormError }}</Message
+          >
+        </form>
       </div>
       <template #footer>
         <Button label="Fermer" text @click="showDirectorDialog = false" />
         <Button
-          v-if="!directorSuccess"
+          v-if="!directorCredentials"
           label="Créer"
           icon="pi pi-user-plus"
           :loading="creatingDirector"
@@ -252,70 +338,13 @@
         />
       </template>
     </Dialog>
-
-    <!-- Dialog rechargement du pool de crédits IA -->
-    <Dialog
-      v-model:visible="showRechargeDialog"
-      header="Recharger le pool de crédits IA"
-      modal
-      :style="{ width: '28rem' }"
-    >
-      <div v-if="selectedCenter" class="space-y-4">
-        <div class="p-3 bg-gray-50 rounded-lg">
-          <p class="font-semibold text-gray-900">{{ selectedCenter.name }}</p>
-          <p class="text-xs text-gray-500 mt-1">
-            Solde actuel :
-            <strong>{{ selectedCenter.ai_credit_pool_balance }}</strong> crédits
-          </p>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Quantité à ajouter</label
-          >
-          <InputNumber
-            v-model="rechargeForm.amount"
-            class="w-full"
-            :min="1"
-            showButtons
-          />
-        </div>
-        <div>
-          <label class="text-sm font-medium text-gray-700 mb-1 block"
-            >Motif / référence (optionnel)</label
-          >
-          <InputText
-            v-model="rechargeForm.reason"
-            class="w-full"
-            placeholder="ex: Rechargement négocié le 09/07, 20000 FCFA"
-          />
-        </div>
-
-        <Message v-if="rechargeFormError" severity="error" :closable="false">{{
-          rechargeFormError
-        }}</Message>
-        <Message v-if="rechargeSuccess" severity="success" :closable="false">{{
-          rechargeSuccess
-        }}</Message>
-      </div>
-      <template #footer>
-        <Button label="Fermer" text @click="showRechargeDialog = false" />
-        <Button
-          v-if="!rechargeSuccess"
-          label="Recharger"
-          icon="pi pi-sparkles"
-          :loading="recharging"
-          @click="handleRechargePool"
-        />
-      </template>
-    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "admin" });
-
 import type { CenterResponse } from "#shared/api";
+
+definePageMeta({ layout: "admin" });
 
 const adminCenters = useAdminCentersStore();
 const adminUsers = useAdminUsersStore();
@@ -325,24 +354,91 @@ const confirm = useConfirm();
 const loadingCenters = ref(true);
 const selectedCenter = ref<CenterResponse | null>(null);
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+// ── Filtres ──
+type StatusFilter = "all" | "active" | "inactive";
+const statusFilter = ref<StatusFilter>("all");
+const search = ref("");
+
+const tiles = computed(() => {
+  const all = adminCenters.centers;
+  return [
+    {
+      key: "all" as const,
+      label: "Centres",
+      count: all.length,
+      icon: "pi pi-building",
+      iconClass: "bg-primary/10 text-primary",
+    },
+    {
+      key: "active" as const,
+      label: "Actifs",
+      count: all.filter((c) => c.is_active).length,
+      icon: "pi pi-check-circle",
+      iconClass: "bg-emerald-500/10 text-emerald-600",
+    },
+    {
+      key: "inactive" as const,
+      label: "Désactivés",
+      count: all.filter((c) => !c.is_active).length,
+      icon: "pi pi-ban",
+      iconClass: "bg-red-500/10 text-red-600",
+    },
+  ];
+});
+
+// Plus récents en tête (le dernier créé est en fin de liste côté store)
+const filteredCenters = computed(() => {
+  const q = search.value.trim().toLowerCase();
+  return [...adminCenters.centers]
+    .reverse()
+    .filter(
+      (c) =>
+        statusFilter.value === "all" ||
+        (statusFilter.value === "active") === c.is_active,
+    )
+    .filter(
+      (c) =>
+        !q ||
+        c.name.toLowerCase().includes(q) ||
+        (c.contact_email ?? "").toLowerCase().includes(q) ||
+        (c.contact_phone ?? "").includes(q),
+    );
+});
+
 // ── Pagination (client) ──
 const centersFirst = ref(0);
 const centersRows = ref(10);
 const paginatedCenters = computed(() =>
-  adminCenters.centers.slice(
+  filteredCenters.value.slice(
     centersFirst.value,
     centersFirst.value + centersRows.value,
   ),
 );
 
+watch([statusFilter, search], () => {
+  centersFirst.value = 0;
+});
+
 // ── Activation / désactivation ──
 function confirmToggleActive(center: CenterResponse) {
   confirm.require({
     message: center.is_active
-      ? `Désactiver "${center.name}" ? Tout le personnel et les étudiants de ce centre perdront l'accès immédiatement.`
-      : `Réactiver "${center.name}" ? Le personnel et les étudiants retrouveront l'accès.`,
+      ? `Désactiver « ${center.name} » ? Tout le personnel et les étudiants de ce centre perdront l'accès immédiatement.`
+      : `Réactiver « ${center.name} » ? Le personnel et les étudiants retrouveront l'accès.`,
     header: center.is_active ? "Désactiver le centre" : "Réactiver le centre",
     icon: "pi pi-exclamation-triangle",
+    acceptLabel: center.is_active ? "Désactiver" : "Réactiver",
+    rejectLabel: "Annuler",
     acceptClass: center.is_active ? "p-button-danger" : undefined,
     accept: async () => {
       const result = await adminCenters.toggleCenterActive(center.id);
@@ -390,12 +486,16 @@ async function handleCreateCenter() {
   creatingCenter.value = false;
   if (result.success) {
     showCreateCenterDialog.value = false;
-    // Le nouveau centre est ajouté en fin de liste : on saute à la
-    // dernière page pour qu'il soit visible immédiatement.
-    centersFirst.value =
-      Math.floor((adminCenters.centers.length - 1) / centersRows.value) *
-      centersRows.value;
-    toast.add({ severity: "success", summary: "Centre créé", life: 3000 });
+    // Le nouveau centre apparaît en tête : on revient à la première page, sans filtre
+    statusFilter.value = "all";
+    search.value = "";
+    centersFirst.value = 0;
+    toast.add({
+      severity: "success",
+      summary: "Centre créé",
+      detail: "Créez maintenant son directeur.",
+      life: 4000,
+    });
   } else {
     centerFormError.value = result.error || "Erreur lors de la création.";
   }
@@ -405,25 +505,32 @@ async function handleCreateCenter() {
 const showDirectorDialog = ref(false);
 const creatingDirector = ref(false);
 const directorFormError = ref<string | null>(null);
-const directorSuccess = ref<string | null>(null);
+const directorCredentials = ref(false);
 const directorForm = ref({ full_name: "", email: "", phone: "", password: "" });
 
 function openDirectorDialog(center: CenterResponse) {
   selectedCenter.value = center;
-  directorForm.value = { full_name: "", email: "", phone: "", password: "" };
+  directorForm.value = {
+    full_name: "",
+    email: "",
+    phone: "",
+    password: genererMotDePasse(),
+  };
   directorFormError.value = null;
-  directorSuccess.value = null;
+  directorCredentials.value = false;
   showDirectorDialog.value = true;
 }
 
 async function handleCreateDirector() {
   if (!selectedCenter.value) return;
-  if (
-    !directorForm.value.full_name.trim() ||
-    !directorForm.value.email.trim() ||
-    !directorForm.value.password
-  ) {
+  const f = directorForm.value;
+  if (!f.full_name.trim() || !f.email.trim() || !f.password) {
     directorFormError.value = "Nom, email et mot de passe sont requis.";
+    return;
+  }
+  if (f.password.length < 8) {
+    directorFormError.value =
+      "Le mot de passe doit faire au moins 8 caractères.";
     return;
   }
 
@@ -431,73 +538,38 @@ async function handleCreateDirector() {
   directorFormError.value = null;
 
   const result = await adminUsers.createDirector({
-    email: directorForm.value.email.trim(),
-    password: directorForm.value.password,
-    full_name: directorForm.value.full_name.trim(),
-    phone: directorForm.value.phone.trim() || null,
+    email: f.email.trim(),
+    password: f.password,
+    full_name: f.full_name.trim(),
+    phone: f.phone.trim() || null,
     center_id: selectedCenter.value.id,
   });
 
   creatingDirector.value = false;
 
   if (result.success) {
-    directorSuccess.value = `Compte créé. Transmettez ces identifiants à ${directorForm.value.full_name} : ${directorForm.value.email} / ${directorForm.value.password}`;
+    directorCredentials.value = true;
   } else {
     directorFormError.value =
       result.error || "Erreur lors de la création du directeur.";
   }
 }
 
-// ── Rechargement du pool de crédits IA ──
-const showRechargeDialog = ref(false);
-const recharging = ref(false);
-const rechargeFormError = ref<string | null>(null);
-const rechargeSuccess = ref<string | null>(null);
-const rechargeForm = ref({ amount: 50, reason: "" });
-
-function openRechargeDialog(center: CenterResponse) {
-  selectedCenter.value = center;
-  rechargeForm.value = { amount: 50, reason: "" };
-  rechargeFormError.value = null;
-  rechargeSuccess.value = null;
-  showRechargeDialog.value = true;
-}
-
-async function handleRechargePool() {
-  if (!selectedCenter.value || !rechargeForm.value.amount) {
-    rechargeFormError.value = "La quantité est requise.";
-    return;
-  }
-
-  const center = selectedCenter.value;
-
-  recharging.value = true;
-  rechargeFormError.value = null;
-
-  const result = await adminCenters.rechargeCreditPool(center.id, {
-    amount: rechargeForm.value.amount,
-    reason: rechargeForm.value.reason.trim() || null,
-  });
-
-  recharging.value = false;
-
-  if (result.success && result.pool) {
-    rechargeSuccess.value = `Pool rechargé avec succès. Nouveau solde : ${result.pool.ai_credit_pool_balance} crédits.`;
-
-    const index = adminCenters.centers.findIndex((c) => c.id === center.id);
-    if (index !== -1) {
-      adminCenters.centers[index] = {
-        ...center,
-        ai_credit_pool_balance: result.pool.ai_credit_pool_balance,
-      };
-    }
-
-    selectedCenter.value = {
-      ...center,
-      ai_credit_pool_balance: result.pool.ai_credit_pool_balance,
-    };
-  } else {
-    rechargeFormError.value = result.error || "Erreur lors du rechargement.";
+async function copyCredentials() {
+  const f = directorForm.value;
+  try {
+    await navigator.clipboard.writeText(`${f.email}\n${f.password}`);
+    toast.add({
+      severity: "success",
+      summary: "Identifiants copiés",
+      life: 2000,
+    });
+  } catch {
+    toast.add({
+      severity: "warn",
+      summary: "Copie impossible, notez-les à la main.",
+      life: 3000,
+    });
   }
 }
 

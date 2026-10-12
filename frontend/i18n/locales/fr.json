@@ -938,7 +938,17 @@
     "note_optional": "Note (optionnel)",
     "note_placeholder": "Ex: Paiement reçu par Orange Money le...",
     "cancel": "Annuler",
-    "confirm_validation": "Confirmer la validation"
+    "confirm_validation": "Confirmer la validation",
+    "blocked_title": "Activations suspendues",
+    "blocked_text": "Réglez les sommes en retard pour pouvoir activer de nouveaux accès.",
+    "overdue_notice": "Aucun montant en retard | 1 vente en retard : {amount} à reverser | {n} ventes en retard : {amount} à reverser",
+    "owed_to_platform": "À reverser à la plateforme",
+    "owed_to_you": "La plateforme vous doit",
+    "filter_all": "Tous",
+    "empty_filter": "Aucun filleul dans cette catégorie.",
+    "joined_on": "Inscrit le {date}",
+    "activation_hint": "Encaissez le prix du plan auprès de l'élève. Son accès s'ouvre aussitôt et le montant s'ajoute à ce que vous reversez à la plateforme, commission déduite.",
+    "activated": "Accès activé pour {name}"
   },
   "live_session": {
     "title": "Sessions en direct",
@@ -1412,7 +1422,63 @@
       "graded": "Corrigés",
       "no_due": "Sans échéance",
       "due_on": "À rendre le {date}",
-      "due_passed": "Échéance passée ({date})"
+      "due_passed": "Échéance passée ({date})",
+      "form": {
+        "back": "Retour aux devoirs",
+        "step_targets": "Pour qui",
+        "no_classes": "Vous n'avez aucune classe en cours.",
+        "extra_students": "Ajouter des élèves un par un",
+        "students_placeholder": "Choisir des élèves",
+        "in_selected_class": "Déjà inclus via une classe cochée",
+        "step_subject": "Quel sujet",
+        "no_subjects": "Aucun sujet disponible pour ce niveau.",
+        "level_mismatch": "Ce sujet n'est pas du même niveau que les classes choisies.",
+        "step_details": "Détails",
+        "title": "Titre",
+        "title_placeholder": "Ex. Lesen et Hören, sujet 3",
+        "instructions": "Consignes",
+        "instructions_placeholder": "Ce que les élèves doivent savoir avant de commencer",
+        "due_at": "À rendre avant",
+        "due_hint": "Après cette date, la copie reste possible mais elle est marquée en retard.",
+        "summary": "Aucun élève | 1 élève concerné | {n} élèves concernés",
+        "summary_missing": "Choisissez au moins une classe ou un élève, puis un sujet.",
+        "create": "Donner le devoir",
+        "created": "Devoir envoyé",
+        "create_error": "Impossible de créer le devoir.",
+        "all_covered": "Tous vos élèves sont déjà inclus via les classes cochées."
+      },
+      "detail": {
+        "not_found": "Devoir introuvable.",
+        "download_zip": "Télécharger les Schreiben",
+        "download_error": "Impossible de télécharger les copies.",
+        "cancel": "Annuler le devoir",
+        "cancel_confirm": "Les élèves ne pourront plus le commencer ni le rendre. Les copies déjà rendues restent consultables. Continuer ?",
+        "cancelled_done": "Devoir annulé",
+        "cancel_error": "Impossible d'annuler le devoir.",
+        "stat_expected": "Attendus",
+        "stat_late": "En retard",
+        "stat_average": "Moyenne",
+        "submissions": "Copies",
+        "filter": {
+          "all": "Toutes",
+          "to_grade": "À corriger",
+          "graded": "Corrigées",
+          "missing": "Non rendues"
+        },
+        "state": {
+          "not_started": "Pas commencé",
+          "in_progress": "En cours",
+          "submitted": "À corriger",
+          "graded": "Corrigé"
+        },
+        "submitted_on": "Rendu le {date}",
+        "started_on": "Commencé le {date}",
+        "late": "En retard",
+        "annotated": "Copie annotée jointe",
+        "grade": "Corriger",
+        "review": "Revoir",
+        "empty_filter": "Aucune copie dans cette catégorie."
+      }
     },
     "live": {
       "loading": "Chargement de la session…",
@@ -1477,7 +1543,26 @@
       "no_active": "Aucun élève actif dans cette classe.",
       "finished_toggle": "Aucune classe terminée | 1 classe terminée | {n} classes terminées",
       "detail": "Progression",
-      "launch_live": "Lancer un live"
+      "launch_live": "Lancer un live",
+      "give_assignment": "Donner un devoir"
+    },
+    "students": {
+      "count": "Aucun élève | 1 élève | {n} élèves",
+      "search": "Rechercher un élève",
+      "all_classes": "Toutes les classes",
+      "empty": "Aucun élève actif dans vos classes pour le moment.",
+      "no_results": "Aucun élève ne correspond à votre recherche."
+    },
+    "student_detail": {
+      "back": "Retour à mes élèves",
+      "see_detail": "Voir le détail",
+      "module_counts": "{correct} correctes · {wrong} échouées / {total}",
+      "comment_placeholder": "Ajouter un commentaire sur cet élève (ex. une faiblesse constatée)",
+      "publish": "Publier",
+      "publish_error": "Impossible de publier le commentaire.",
+      "result_title": "Détail de la session",
+      "correct_count": "{correct}/{total} correctes",
+      "question": "Q{n}"
     }
   }
 }

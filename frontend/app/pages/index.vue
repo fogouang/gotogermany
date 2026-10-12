@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div>
     <LandingHero />
     <LandingLevelsSection />
@@ -17,11 +17,11 @@ definePageMeta({ layout: "default" });
 const { t } = useI18n();
 
 useSeo({
-  title: t("seo.home.title"),
-  description: t("seo.home.description"),
+  title: () => t("seo.home.title"),
+  description: () => t("seo.home.description"),
 });
 
-// DonnÃ©es structurÃ©es JSON-LD pour Google
+// Données structurées JSON-LD pour Google
 useHead({
   script: [
     {
@@ -33,7 +33,7 @@ useHead({
         url: SITE.url,
         logo: `${SITE.url}${SITE.logo}`,
         description:
-          "Online preparation platform for Goethe, telc, Ã–SD, TestDaF and ECL German language certifications, from B1 to C1.",
+          "Online preparation platform for Goethe, telc, ÖSD, TestDaF and ECL German language certifications, from B1 to C1.",
         sameAs: [],
         offers: {
           "@type": "Offer",
@@ -46,7 +46,7 @@ useHead({
           "German Language C1",
           "Goethe-Zertifikat",
           "telc Deutsch",
-          "Ã–SD Zertifikat",
+          "ÖSD Zertifikat",
           "TestDaF",
           "ECL German exam",
         ],

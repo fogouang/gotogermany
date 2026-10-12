@@ -1,6 +1,11 @@
 // stores/referrals.ts
 import { defineStore } from "pinia";
-import { ReferralsService, OpenAPI, PaymentsService } from "#shared/api";
+import {
+  ReferralsService,
+  OpenAPI,
+  PaymentsService,
+  SalesService,
+} from "#shared/api";
 import type { ReferralDashboardResponse } from "#shared/api";
 
 interface ReferralsState {
@@ -75,30 +80,29 @@ export const useReferralsStore = defineStore("referrals", {
         this.settingAmbassador = false;
       }
     },
+
+    // Activation d'un accès par l'ambassadeur : même circuit que les centres,
+    // la vente (et sa commission) est créée côté backend.
     async validateManualPayment(
       userId: string,
       levelId: string,
       planId: string,
-      note?: string,
+      _note?: string,
     ) {
-      const accessToken = this._ensureApiConfig();
+      this._ensureApiConfig();
       this.settingAmbassador = true; // réutilise l'indicateur de chargement existant
       this.ambassadorError = null;
       try {
-        await PaymentsService.createAmbassadorManualPaymentApiV1PaymentsManualAmbassadorPost(
-          {
-            user_id: userId,
-            level_id: levelId,
-            plan_id: planId,
-            note: note || null,
-          },
-          accessToken,
-        );
+        await SalesService.activateAccountApiV1SalesActivationsPost({
+          student_id: userId,
+          level_id: levelId,
+          plan_id: planId,
+        });
         await this.fetchDashboard(); // rafraîchit la liste + les gains après validation
         return { success: true };
       } catch (e: any) {
         this.ambassadorError =
-          e.body?.detail || "Erreur lors de la validation du paiement";
+          e.body?.detail || "Erreur lors de l'activation de l'accès";
         return { success: false, error: this.ambassadorError };
       } finally {
         this.settingAmbassador = false;

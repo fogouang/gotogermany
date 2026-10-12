@@ -1,152 +1,164 @@
 <!-- pages/enseignant/live/nouveau.vue -->
 <template>
-  <div class="mx-auto max-w-4xl space-y-5 pb-24">
+  <div class="space-y-5">
     <p class="text-sm text-muted">{{ t("teacher.launch.intro") }}</p>
 
-    <!-- ══ Étape 1 : élève ══ -->
-    <section class="rounded-card border border-line bg-card p-5 shadow-soft">
-      <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
-        <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
-        {{ t("teacher.launch.step_student") }}
-      </h2>
+    <div class="grid items-start gap-5 lg:grid-cols-3">
+      <!-- ══════════ Colonne droite (en premier sur mobile) : élève + lancement ══════════ -->
+      <div class="space-y-5 lg:sticky lg:top-0 lg:order-last">
+        <!-- Étape 1 : élève -->
+        <section class="rounded-card border border-line bg-card p-5 shadow-soft">
+          <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+            <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+            {{ t("teacher.launch.step_student") }}
+          </h2>
 
-      <div v-if="loadingStudents" class="h-11 animate-pulse rounded-leaf bg-card-2" />
+          <div v-if="loadingStudents" class="h-11 animate-pulse rounded-leaf bg-card-2" />
 
-      <p v-else-if="myStudents.length === 0" class="text-sm text-muted">
-        {{ t("teacher.launch.no_students") }}
-      </p>
-
-      <Select
-        v-else
-        v-model="selectedStudentId"
-        :options="myStudents"
-        optionLabel="full_name"
-        optionValue="id"
-        filter
-        :placeholder="t('teacher.launch.choose_student')"
-        class="w-full sm:w-96"
-      >
-        <template #option="{ option }">
-          <div class="flex min-w-0 flex-col">
-            <span class="truncate">{{ option.full_name }}</span>
-            <span class="truncate text-xs text-muted">{{ option.class_label }}</span>
-          </div>
-        </template>
-      </Select>
-    </section>
-
-    <!-- ══ Étape 2 : sujet ══ -->
-    <section class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft">
-      <h2 class="flex items-center gap-2 text-sm font-semibold text-ink">
-        <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
-        {{ t("teacher.launch.step_subject") }}
-      </h2>
-
-      <p v-if="studentLevelHint" class="flex items-center gap-1.5 text-xs text-muted">
-        <i class="pi pi-info-circle text-[11px]" />
-        {{ studentLevelHint }}
-      </p>
-
-      <!-- Filtres : examen puis niveau -->
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          v-for="p in availableProviders"
-          :key="p"
-          type="button"
-          class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-          :class="
-            selectedProvider === p
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-line bg-card text-muted hover:border-primary/30'
-          "
-          @click="selectProvider(p)"
-        >
-          {{ p.toUpperCase() }}
-        </button>
-        <span class="mx-1 h-6 w-px bg-line" />
-        <button
-          v-for="l in availableLevels"
-          :key="l"
-          type="button"
-          class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-          :class="
-            selectedLevel === l
-              ? 'border-ink bg-ink text-card'
-              : 'border-line bg-card text-muted hover:border-ink/30'
-          "
-          @click="selectedLevel = selectedLevel === l ? '' : l"
-        >
-          {{ l }}
-        </button>
-      </div>
-
-      <!-- Sujets -->
-      <div v-if="examsStore.loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div v-for="n in 4" :key="n" class="h-20 animate-pulse rounded-leaf bg-card-2" />
-      </div>
-
-      <div
-        v-else-if="!sprechenSubjects.length"
-        class="rounded-leaf border border-dashed border-line py-8 text-center text-sm text-muted"
-      >
-        {{ selectedProvider ? t("teacher.launch.no_subjects") : t("teacher.launch.subjects_hint") }}
-      </div>
-
-      <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <button
-          v-for="subject in sprechenSubjects"
-          :key="subject.id"
-          type="button"
-          class="rounded-leaf border p-4 text-left transition-colors"
-          :class="
-            selectedSubjectId === subject.id
-              ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-              : 'border-line hover:border-primary/30'
-          "
-          @click="selectedSubjectId = subject.id"
-        >
-          <p class="text-sm font-semibold text-ink">{{ subject.title }}</p>
-          <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span class="rounded-full bg-card-2 px-2 py-0.5 font-semibold text-muted">
-              {{ subject.provider.toUpperCase() }}
-            </span>
-            <span class="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-              {{ subject.level }}
-            </span>
-            <span class="text-muted">{{ t("teacher.launch.teile", subject.teilCount) }}</span>
-          </div>
-        </button>
-      </div>
-    </section>
-
-    <!-- ══ Barre de lancement (toujours visible en bas) ══ -->
-    <div class="sticky bottom-0 z-10 -mx-1">
-      <div
-        class="flex flex-col gap-3 rounded-card border border-line bg-card/95 p-4 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div class="min-w-0 text-sm">
-          <p v-if="canLaunch" class="truncate text-ink">
-            <i class="pi pi-check-circle mr-1 text-emerald-600" />
-            {{ selectedStudent?.full_name }} · {{ selectedSubject?.title }}
+          <p v-else-if="myStudents.length === 0" class="text-sm text-muted">
+            {{ t("teacher.launch.no_students") }}
           </p>
-          <p v-else class="text-muted">{{ t("teacher.launch.summary_missing") }}</p>
-          <p v-if="launchError" class="mt-1 text-xs text-red-600">{{ launchError }}</p>
-        </div>
-        <Button
-          :label="t('teacher.launch.launch')"
-          icon="pi pi-play"
-          class="shrink-0"
-          :disabled="!canLaunch"
-          :loading="liveSessionStore.loading"
-          @click="handleLaunch"
-        />
+
+          <Select
+            v-else
+            v-model="selectedStudentId"
+            :options="myStudents"
+            optionLabel="full_name"
+            optionValue="id"
+            filter
+            :placeholder="t('teacher.launch.choose_student')"
+            class="w-full"
+          >
+            <template #option="{ option }">
+              <div class="flex min-w-0 flex-col">
+                <span class="truncate">{{ option.full_name }}</span>
+                <span class="truncate text-xs text-muted">{{ option.class_label }}</span>
+              </div>
+            </template>
+          </Select>
+
+          <p v-if="studentLevelHint" class="mt-3 flex items-start gap-1.5 text-xs text-muted">
+            <i class="pi pi-info-circle mt-0.5 text-[11px]" />
+            {{ studentLevelHint }}
+          </p>
+        </section>
+
+        <!-- Récapitulatif + lancement -->
+        <section class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft">
+          <div v-if="canLaunch" class="space-y-2 text-sm">
+            <p class="flex items-center gap-2 text-ink">
+              <i class="pi pi-user text-xs text-muted" />
+              <span class="truncate">{{ selectedStudent?.full_name }}</span>
+            </p>
+            <p class="flex items-center gap-2 text-ink">
+              <i class="pi pi-microphone text-xs text-muted" />
+              <span class="truncate">{{ selectedSubject?.title }}</span>
+            </p>
+            <p class="flex items-center gap-2 text-xs text-muted">
+              <i class="pi pi-list text-[11px]" />
+              {{ selectedSubject?.provider.toUpperCase() }} · {{ selectedSubject?.level }} ·
+              {{ t("teacher.launch.teile", selectedSubject?.teilCount ?? 0) }}
+            </p>
+          </div>
+          <p v-else class="text-sm text-muted">{{ t("teacher.launch.summary_missing") }}</p>
+
+          <Message v-if="launchError" severity="error" :closable="false">{{ launchError }}</Message>
+
+          <Button
+            :label="t('teacher.launch.launch')"
+            icon="pi pi-play"
+            class="w-full"
+            :disabled="!canLaunch"
+            :loading="liveSessionStore.loading"
+            @click="handleLaunch"
+          />
+        </section>
       </div>
+
+      <!-- ══════════ Colonne gauche : sujets ══════════ -->
+      <section class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft lg:col-span-2">
+        <h2 class="flex items-center gap-2 text-sm font-semibold text-ink">
+          <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+          {{ t("teacher.launch.step_subject") }}
+        </h2>
+
+        <!-- Filtres : examen puis niveau -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            v-for="p in availableProviders"
+            :key="p"
+            type="button"
+            class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
+            :class="
+              selectedProvider === p
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-line bg-card text-muted hover:border-primary/30'
+            "
+            @click="selectProvider(p)"
+          >
+            {{ p.toUpperCase() }}
+          </button>
+          <span class="mx-1 h-6 w-px bg-line" />
+          <button
+            v-for="l in availableLevels"
+            :key="l"
+            type="button"
+            class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
+            :class="
+              selectedLevel === l
+                ? 'border-ink bg-ink text-card'
+                : 'border-line bg-card text-muted hover:border-ink/30'
+            "
+            @click="selectedLevel = selectedLevel === l ? '' : l"
+          >
+            {{ l }}
+          </button>
+        </div>
+
+        <!-- Sujets -->
+        <div v-if="examsStore.loading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div v-for="n in 6" :key="n" class="h-20 animate-pulse rounded-leaf bg-card-2" />
+        </div>
+
+        <div
+          v-else-if="!sprechenSubjects.length"
+          class="rounded-leaf border border-dashed border-line py-8 text-center text-sm text-muted"
+        >
+          {{ selectedProvider ? t("teacher.launch.no_subjects") : t("teacher.launch.subjects_hint") }}
+        </div>
+
+        <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <button
+            v-for="subject in sprechenSubjects"
+            :key="subject.id"
+            type="button"
+            class="rounded-leaf border p-4 text-left transition-colors"
+            :class="
+              selectedSubjectId === subject.id
+                ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                : 'border-line hover:border-primary/30'
+            "
+            @click="selectedSubjectId = subject.id"
+          >
+            <p class="text-sm font-semibold text-ink">{{ subject.title }}</p>
+            <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span class="rounded-full bg-card-2 px-2 py-0.5 font-semibold text-muted">
+                {{ subject.provider.toUpperCase() }}
+              </span>
+              <span class="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                {{ subject.level }}
+              </span>
+              <span class="text-muted">{{ t("teacher.launch.teile", subject.teilCount) }}</span>
+            </div>
+          </button>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "enseignant" });
+definePageMeta({ layout: "enseignant", watermark: "Sprechen" });
 
 const { t } = useI18n();
 const localePath = useLocalePath();

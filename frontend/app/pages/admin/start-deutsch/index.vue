@@ -1,50 +1,73 @@
 <!-- pages/admin/start-deutsch/index.vue -->
 <template>
-  <div class="space-y-6 pb-10">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-ink">Sujets Start Deutsch</h1>
-        <p class="text-sm text-ink-secondary mt-1">
-          Gestion des sujets A1/A2 importés.
-        </p>
+  <div class="space-y-5 pb-10">
+    <!-- ── Tuiles ── -->
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div v-for="tile in tiles" :key="tile.label" class="rounded-card border border-line bg-card p-4 shadow-soft">
+        <div class="mb-3 flex size-9 items-center justify-center rounded-leaf" :class="tile.iconClass">
+          <i :class="tile.icon" class="text-sm" />
+        </div>
+        <p class="text-xl font-bold leading-none text-ink">{{ tile.value }}</p>
+        <p class="mt-1.5 text-xs text-muted">{{ tile.label }}</p>
       </div>
-      <Button
-        label="Nouveau sujet"
-        icon="pi pi-plus"
-        @click="navigateTo('/admin/start-deutsch/import')"
-      />
     </div>
 
-    <!-- Filtre niveau -->
-    <div class="flex gap-2">
-      <button
-        v-for="opt in levelOptions"
-        :key="opt.value"
-        class="rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors"
-        :class="
-          filterLevel === opt.value
-            ? 'border-primary-500 bg-primary-500 text-white'
-            : 'border-line bg-card text-ink-secondary hover:bg-hover'
-        "
-        @click="filterLevel = opt.value"
-      >
-        {{ opt.label }}
-      </button>
+    <!-- ── Barre d'outils ── -->
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="opt in levelOptions"
+          :key="opt.value"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="filterLevel === opt.value ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+          @click="filterLevel = opt.value"
+        >
+          {{ opt.label }} · {{ opt.count }}
+        </button>
+        <span class="mx-1 hidden h-7 w-px bg-line sm:block" />
+        <button
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="onlyInactive ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+          @click="onlyInactive = !onlyInactive"
+        >
+          Inactifs · {{ inactiveCount }}
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <IconField class="w-full sm:w-64">
+          <InputIcon class="pi pi-search" />
+          <InputText v-model="search" class="w-full" placeholder="Rechercher un sujet" />
+        </IconField>
+        <Button
+          label="Nouveau sujet"
+          icon="pi pi-plus"
+          class="w-full shrink-0 sm:w-auto"
+          @click="navigateTo('/admin/start-deutsch/import')"
+        />
+      </div>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-16">
-      <ProgressSpinner style="width: 50px; height: 50px" />
+    <!-- ── Chargement ── -->
+    <div v-if="loading" class="space-y-3">
+      <div v-for="n in 4" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
     </div>
 
-    <!-- Empty -->
+    <!-- ── Vide ── -->
     <div
       v-else-if="filteredSubjects.length === 0"
-      class="text-center py-16 bg-card rounded-xl border border-line"
+      class="flex flex-col items-center gap-3 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      <i class="pi pi-inbox text-4xl text-ink-tertiary mb-3 block"></i>
-      <p class="text-sm text-ink-secondary mb-4">Aucun sujet pour l'instant.</p>
+      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <i class="pi pi-inbox" />
+      </span>
+      <p class="text-sm font-medium text-ink">
+        {{ subjects.length === 0 ? "Aucun sujet pour l'instant." : "Aucun sujet ne correspond aux filtres." }}
+      </p>
       <Button
+        v-if="subjects.length === 0"
         label="Créer le premier sujet"
         icon="pi pi-plus"
         outlined
@@ -53,109 +76,108 @@
       />
     </div>
 
-    <!-- Liste -->
-    <div
-      v-else
-      class="bg-card border border-line rounded-xl overflow-hidden divide-y divide-line"
-    >
-      <div
-        v-for="subject in filteredSubjects"
-        :key="subject.id"
-        class="flex items-center gap-4 px-5 py-4"
-      >
-        <span
-          class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-secondary-50 text-secondary-700 font-bold text-sm shrink-0"
-        >
-          {{ subject.level }}
-        </span>
+    <!-- ── Liste groupée par niveau ── -->
+    <div v-else class="space-y-5">
+      <section v-for="group in groups" :key="group.level" class="space-y-2">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-ink">
+          Niveau {{ group.level }}
+          <span class="font-normal text-muted">· {{ group.items.length }}</span>
+        </h3>
 
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <p class="font-semibold text-ink truncate">{{ subject.title }}</p>
-            <span
-              class="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
-              :class="
-                subject.is_active
-                  ? 'bg-success-100 text-success-700'
-                  : 'bg-hover text-ink-tertiary'
-              "
-            >
-              {{ subject.is_active ? "Actif" : "Inactif" }}
+        <ul class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft">
+          <li
+            v-for="subject in group.items"
+            :key="subject.id"
+            class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5 sm:px-5"
+            :class="{ 'opacity-70': !subject.is_active }"
+          >
+            <span class="flex size-11 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-sm font-bold text-primary">
+              {{ subject.level }}
             </span>
-          </div>
-          <p class="text-xs text-ink-tertiary mt-0.5">
-            Sujet n°{{ subject.subject_number }} · {{ subject.id }}
-          </p>
-        </div>
 
-        <div class="flex items-center gap-2 shrink-0">
-          <Button
-            icon="pi pi-volume-up"
-            text
-            rounded
-            size="small"
-            v-tooltip.top="'Importer audio pour ce sujet'"
-            @click="
-              navigateTo(`/admin/start-deutsch/import?subjectId=${subject.id}`)
-            "
-          />
-          <Button
-            icon="pi pi-trash"
-            text
-            rounded
-            size="small"
-            severity="danger"
-            v-tooltip.top="'Supprimer'"
-            @click="openDelete(subject)"
-          />
-        </div>
-      </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="truncate font-medium text-ink">{{ subject.title }}</p>
+                <span
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                  :class="subject.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-card-2 text-muted'"
+                >
+                  {{ subject.is_active ? "Actif" : "Inactif" }}
+                </span>
+              </div>
+              <p class="mt-0.5 truncate text-xs text-faint">
+                Sujet n°{{ subject.subject_number }}
+                <span class="hidden sm:inline">· {{ subject.id }}</span>
+              </p>
+              <p v-if="subject.description" class="mt-1 line-clamp-1 text-xs text-muted">{{ subject.description }}</p>
+            </div>
+
+            <div class="flex shrink-0 items-center gap-1">
+              <Button
+                icon="pi pi-images"
+                label="Audio et images"
+                size="small"
+                outlined
+                class="hidden! sm:inline-flex!"
+                @click="goToMedia(subject)"
+              />
+              <Button
+                icon="pi pi-images"
+                text
+                rounded
+                size="small"
+                class="sm:hidden!"
+                aria-label="Audio et images"
+                @click="goToMedia(subject)"
+              />
+              <Button
+                icon="pi pi-trash"
+                text
+                rounded
+                size="small"
+                severity="danger"
+                v-tooltip.top="'Supprimer'"
+                aria-label="Supprimer"
+                @click="openDelete(subject)"
+              />
+            </div>
+          </li>
+        </ul>
+      </section>
     </div>
 
-    <!-- ─── Dialog Supprimer ──────────────────────────── -->
+    <!-- ══════════ Dialogue suppression ══════════ -->
     <Dialog
       v-model:visible="deleteDialog"
       header="Supprimer le sujet ?"
-      :modal="true"
-      :style="{ width: '90vw', maxWidth: '420px' }"
+      modal
+      :style="{ width: '28rem', maxWidth: '95vw' }"
     >
-      <div class="space-y-3 mt-2">
+      <div class="space-y-3">
         <Message severity="error" :closable="false">
-          Cette action est <strong>irréversible</strong>. Toutes les questions,
-          sessions et corrections liées à ce sujet seront supprimées.
+          Cette action est <strong>irréversible</strong>. Toutes les questions, sessions et corrections liées à ce sujet
+          seront supprimées.
         </Message>
-        <div class="bg-hover rounded-lg p-3 flex items-center gap-3">
-          <div
-            class="w-9 h-9 bg-secondary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
-          >
+        <div class="flex items-center gap-3 rounded-leaf bg-card-2 p-3">
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-sm font-bold text-primary">
             {{ selectedSubject?.level }}
-          </div>
+          </span>
           <div class="min-w-0">
-            <p class="font-medium text-sm text-ink truncate">
-              {{ selectedSubject?.title }}
-            </p>
-            <p class="text-xs text-ink-tertiary">
-              Sujet n°{{ selectedSubject?.subject_number }}
-            </p>
+            <p class="truncate text-sm font-medium text-ink">{{ selectedSubject?.title }}</p>
+            <p class="text-xs text-muted">Sujet n°{{ selectedSubject?.subject_number }}</p>
           </div>
         </div>
       </div>
       <template #footer>
-        <Button label="Annuler" text @click="deleteDialog = false" />
-        <Button
-          label="Supprimer"
-          severity="danger"
-          icon="pi pi-trash"
-          :loading="deleting"
-          @click="handleDelete"
-        />
+        <Button label="Annuler" text severity="secondary" @click="deleteDialog = false" />
+        <Button label="Supprimer" severity="danger" icon="pi pi-trash" :loading="deleting" @click="handleDelete" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "admin" });
+definePageMeta({ layout: "admin", watermark: "Start Deutsch" });
 
 const toast = useToast();
 const store = useStartDeutschSessionStore();
@@ -170,20 +192,7 @@ interface AdminSubject {
 }
 
 const subjects = ref<AdminSubject[]>([]);
-const loading = ref(false);
-
-const filterLevel = ref<"A1" | "A2" | "">("");
-const levelOptions = [
-  { label: "Tous niveaux", value: "" as const },
-  { label: "A1", value: "A1" as const },
-  { label: "A2", value: "A2" as const },
-];
-
-const filteredSubjects = computed(() =>
-  filterLevel.value
-    ? subjects.value.filter((s) => s.level === filterLevel.value)
-    : subjects.value,
-);
+const loading = ref(true);
 
 async function fetchSubjects() {
   loading.value = true;
@@ -191,12 +200,59 @@ async function fetchSubjects() {
   if (result.success) {
     subjects.value = result.data as AdminSubject[];
   } else {
-    console.error("Impossible de charger les sujets", result.error);
+    toast.add({ severity: "error", summary: "Impossible de charger les sujets", detail: result.error, life: 4000 });
   }
   loading.value = false;
 }
 
-// ── Supprimer ─────────────────────────────────────────
+// ── Tuiles ──
+const countLevel = (lvl: string) => subjects.value.filter((s) => s.level === lvl).length;
+const inactiveCount = computed(() => subjects.value.filter((s) => !s.is_active).length);
+
+const tiles = computed(() => [
+  { label: "Sujets", value: subjects.value.length, icon: "pi pi-book", iconClass: "bg-primary/10 text-primary" },
+  { label: "Sujets A1", value: countLevel("A1"), icon: "pi pi-flag", iconClass: "bg-sky-500/10 text-sky-600" },
+  { label: "Sujets A2", value: countLevel("A2"), icon: "pi pi-flag-fill", iconClass: "bg-violet-500/10 text-violet-600" },
+  {
+    label: "Actifs",
+    value: subjects.value.length - inactiveCount.value,
+    icon: "pi pi-check-circle",
+    iconClass: "bg-emerald-500/10 text-emerald-600",
+  },
+]);
+
+// ── Filtres ──
+const filterLevel = ref<"A1" | "A2" | "">("");
+const onlyInactive = ref(false);
+const search = ref("");
+
+const levelOptions = computed(() => [
+  { label: "Tous", value: "" as const, count: subjects.value.length },
+  { label: "A1", value: "A1" as const, count: countLevel("A1") },
+  { label: "A2", value: "A2" as const, count: countLevel("A2") },
+]);
+
+const filteredSubjects = computed(() => {
+  const q = search.value.trim().toLowerCase();
+  return subjects.value
+    .filter((s) => !filterLevel.value || s.level === filterLevel.value)
+    .filter((s) => !onlyInactive.value || !s.is_active)
+    .filter((s) => !q || `${s.title} ${s.subject_number} ${s.description ?? ""}`.toLowerCase().includes(q))
+    .sort((a, b) => a.level.localeCompare(b.level) || a.subject_number - b.subject_number);
+});
+
+const groups = computed(() => {
+  const map = new Map<string, AdminSubject[]>();
+  for (const s of filteredSubjects.value) {
+    if (!map.has(s.level)) map.set(s.level, []);
+    map.get(s.level)!.push(s);
+  }
+  return [...map.entries()].map(([level, items]) => ({ level, items }));
+});
+
+const goToMedia = (subject: AdminSubject) => navigateTo(`/admin/start-deutsch/import?subjectId=${subject.id}`);
+
+// ── Suppression ──
 const deleteDialog = ref(false);
 const deleting = ref(false);
 const selectedSubject = ref<AdminSubject | null>(null);
@@ -210,19 +266,14 @@ const handleDelete = async () => {
   if (!selectedSubject.value) return;
   deleting.value = true;
 
-  const result = await store.adminDeleteSubject(selectedSubject.value.id);
+  const id = selectedSubject.value.id;
+  const result = await store.adminDeleteSubject(id);
   if (result.success) {
-    subjects.value = subjects.value.filter(
-      (s) => s.id !== selectedSubject.value?.id,
-    );
+    subjects.value = subjects.value.filter((s) => s.id !== id);
     deleteDialog.value = false;
     toast.add({ severity: "success", summary: "Sujet supprimé", life: 3000 });
   } else {
-    toast.add({
-      severity: "error",
-      summary: result.error || "Erreur",
-      life: 4000,
-    });
+    toast.add({ severity: "error", summary: result.error || "Erreur", life: 4000 });
   }
   deleting.value = false;
 };

@@ -60,7 +60,8 @@
               <p class="text-sm text-gray-500">
                 Niveau {{ targetLevel.cefr_code }} -
                 <span class="text-teal-600 font-medium"
-                  >{{ targetLevel.subject_count }} {{ t("payment.subjet") }}</span
+                  >{{ targetLevel.subject_count }}
+                  {{ t("payment.subjet") }}</span
                 >
               </p>
             </div>
@@ -142,45 +143,6 @@
                 {{ t(`payment.features.${key}`) }}
               </li>
             </ul>
-          </div>
-
-          <!-- Code promo -->
-          <div>
-            <p
-              class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"
-            >
-              {{ t("payment.promo_code") }}
-            </p>
-            <div v-if="!promoApplied" class="flex gap-2">
-              <InputText
-                v-model="promoCode"
-                :placeholder="t('payment.promo_placeholder')"
-                class="flex-1 text-sm"
-                @keyup.enter="applyPromo"
-              />
-              <Button
-                :label="t('payment.apply')"
-                size="small"
-                outlined
-                :disabled="!promoCode"
-                @click="applyPromo"
-              />
-            </div>
-            <div
-              v-else
-              class="flex items-center justify-between text-sm bg-green-50 border border-green-200 rounded-xl px-4 py-2.5"
-            >
-              <span class="text-green-700 flex items-center gap-1.5">
-                <i class="pi pi-check-circle"></i>
-                Code <strong>{{ promoCode.toUpperCase() }}</strong> appliqué
-              </span>
-              <button
-                class="text-xs text-gray-400 hover:text-red-500 transition-colors"
-                @click="removePromo"
-              >
-                {{ t("payment.remove") }}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -430,7 +392,7 @@
           <div class="flex items-start gap-2">
             <i class="pi pi-mobile text-amber-500 mt-0.5"></i>
             <p class="text-sm text-amber-800">
-             {{ t("payment.message") }}
+              {{ t("payment.message") }}
               <strong>{{ form.phone_number }}</strong
               >. {{ t("payment.pin") }} {{ form.operator }} Mobile Money.
             </p>
@@ -508,8 +470,6 @@ const loadingData = ref(true);
 const selectedPlan = ref<PlanResponse | null>(null);
 const paymentMethod = ref<"mobile">("mobile");
 const confirmDialog = ref(false);
-const promoCode = ref("");
-const promoApplied = ref(false);
 
 const form = ref({ operator: "", phone_number: "" });
 
@@ -580,7 +540,6 @@ const handlePay = async () => {
     plan_id: selectedPlan.value.id,
     operator: form.value.operator,
     phone_number: form.value.phone_number,
-    promo_code: promoApplied.value ? promoCode.value : null,
   });
 
   if (!res.success) {
@@ -597,14 +556,6 @@ const goToExams = () => {
   stopPolling();
   confirmDialog.value = false;
   navigateTo("/dashboard/examens");
-};
-
-const applyPromo = () => {
-  if (promoCode.value.trim()) promoApplied.value = true;
-};
-const removePromo = () => {
-  promoApplied.value = false;
-  promoCode.value = "";
 };
 
 onUnmounted(() => stopPolling());

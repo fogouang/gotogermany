@@ -947,7 +947,17 @@
     "note_optional": "Note (optional)",
     "note_placeholder": "E.g.: Payment received via Orange Money on...",
     "cancel": "Cancel",
-    "confirm_validation": "Confirm validation"
+    "confirm_validation": "Confirm validation",
+    "blocked_title": "Activations suspended",
+    "blocked_text": "Settle overdue amounts to activate new accesses again.",
+    "overdue_notice": "Nothing overdue | 1 overdue sale: {amount} to pay back | {n} overdue sales: {amount} to pay back",
+    "owed_to_platform": "To pay back to the platform",
+    "owed_to_you": "The platform owes you",
+    "filter_all": "All",
+    "empty_filter": "No referrals in this category.",
+    "joined_on": "Joined {date}",
+    "activation_hint": "Collect the plan price from the student. Their access opens right away and the amount is added to what you pay back to the platform, minus your commission.",
+    "activated": "Access activated for {name}"
   },
   "live_session": {
     "title": "Live sessions",
@@ -1411,7 +1421,63 @@
       "graded": "Graded",
       "no_due": "No deadline",
       "due_on": "Due {date}",
-      "due_passed": "Deadline passed ({date})"
+      "due_passed": "Deadline passed ({date})",
+      "form": {
+        "back": "Back to assignments",
+        "step_targets": "Who for",
+        "no_classes": "You have no ongoing classes.",
+        "extra_students": "Add individual students",
+        "students_placeholder": "Choose students",
+        "in_selected_class": "Already included through a selected class",
+        "step_subject": "Which topic",
+        "no_subjects": "No topics available for this level.",
+        "level_mismatch": "This topic is not at the same level as the selected classes.",
+        "step_details": "Details",
+        "title": "Title",
+        "title_placeholder": "e.g. Lesen and Hören, topic 3",
+        "instructions": "Instructions",
+        "instructions_placeholder": "What students should know before they start",
+        "due_at": "Due before",
+        "due_hint": "After this date, students can still submit but it is marked as late.",
+        "summary": "No students | 1 student | {n} students",
+        "summary_missing": "Choose at least one class or student, then a topic.",
+        "create": "Assign",
+        "created": "Assignment sent",
+        "create_error": "Could not create the assignment.",
+        "all_covered": "All your students are already included through the selected classes."
+      },
+      "detail": {
+        "not_found": "Assignment not found.",
+        "download_zip": "Download Schreiben",
+        "download_error": "Could not download the submissions.",
+        "cancel": "Cancel assignment",
+        "cancel_confirm": "Students will no longer be able to start or submit it. Submissions already handed in remain available. Continue?",
+        "cancelled_done": "Assignment cancelled",
+        "cancel_error": "Could not cancel the assignment.",
+        "stat_expected": "Expected",
+        "stat_late": "Late",
+        "stat_average": "Average",
+        "submissions": "Submissions",
+        "filter": {
+          "all": "All",
+          "to_grade": "To grade",
+          "graded": "Graded",
+          "missing": "Not submitted"
+        },
+        "state": {
+          "not_started": "Not started",
+          "in_progress": "In progress",
+          "submitted": "To grade",
+          "graded": "Graded"
+        },
+        "submitted_on": "Submitted {date}",
+        "started_on": "Started {date}",
+        "late": "Late",
+        "annotated": "Annotated copy attached",
+        "grade": "Grade",
+        "review": "Review",
+        "empty_filter": "No submissions in this category."
+      }
     },
     "live": {
       "loading": "Loading session…",
@@ -1476,7 +1542,26 @@
       "no_active": "No active students in this class.",
       "finished_toggle": "No finished classes | 1 finished class | {n} finished classes",
       "detail": "Progress",
-      "launch_live": "Start a live session"
+      "launch_live": "Start a live session",
+      "give_assignment": "Assign homework"
+    },
+    "students": {
+      "count": "No students | 1 student | {n} students",
+      "search": "Search a student",
+      "all_classes": "All classes",
+      "empty": "No active students in your classes yet.",
+      "no_results": "No student matches your search."
+    },
+    "student_detail": {
+      "back": "Back to my students",
+      "see_detail": "View details",
+      "module_counts": "{correct} correct · {wrong} wrong / {total}",
+      "comment_placeholder": "Add a comment about this student (e.g. a weakness you noticed)",
+      "publish": "Publish",
+      "publish_error": "Could not publish the comment.",
+      "result_title": "Session details",
+      "correct_count": "{correct}/{total} correct",
+      "question": "Q{n}"
     }
   }
 }

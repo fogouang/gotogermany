@@ -1,225 +1,197 @@
+<!-- pages/admin/simulateur/index.vue -->
 <template>
-  <div class="space-y-6">
-    <!-- Toolbar -->
-    <div
-      class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-    >
-      <InputText
-        v-model="search"
-        placeholder="Rechercher un sujet..."
-        class="w-full sm:w-72"
-      />
-      <div class="flex gap-2">
-        <Select
-          v-model="filterProvider"
-          :options="providerOptions"
-          optionLabel="label"
-          optionValue="value"
-          class="w-40"
-          @change="reload"
-        />
-        <Select
-          v-model="filterLevel"
-          :options="levelOptions"
-          optionLabel="label"
-          optionValue="value"
-          class="w-32"
-          @change="reload"
-        />
-        <div
-          class="flex items-center gap-2 px-3 bg-white border border-gray-200 rounded-lg"
-        >
-          <label class="text-sm text-gray-500 whitespace-nowrap"
-            >Inactifs</label
-          >
-          <InputSwitch v-model="showInactive" @change="reload" />
+  <div class="space-y-5 pb-10">
+    <!-- ── Tuiles ── -->
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div v-for="tile in tiles" :key="tile.label" class="rounded-card border border-line bg-card p-4 shadow-soft">
+        <div class="mb-3 flex size-9 items-center justify-center rounded-leaf" :class="tile.iconClass">
+          <i :class="tile.icon" class="text-sm" />
         </div>
+        <p class="text-xl font-bold leading-none text-ink">{{ tile.value }}</p>
+        <p class="mt-1.5 text-xs text-muted">{{ tile.label }}</p>
+      </div>
+    </div>
+
+    <!-- ── Barre d'outils ── -->
+    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="opt in providerOptions"
+          :key="opt.label"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="filterProvider === opt.value ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+          @click="setProvider(opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+        <span class="mx-1 hidden h-7 w-px bg-line sm:block" />
+        <button
+          v-for="opt in levelOptions"
+          :key="opt.label"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="filterLevel === opt.value ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+          @click="setLevel(opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+        <span class="mx-1 hidden h-7 w-px bg-line sm:block" />
+        <button
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="showInactive ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+          @click="toggleInactive"
+        >
+          <i class="pi mr-1 text-[10px]" :class="showInactive ? 'pi-eye' : 'pi-eye-slash'" />
+          Inclure les inactifs
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <IconField class="w-full sm:w-64">
+          <InputIcon class="pi pi-search" />
+          <InputText v-model="search" class="w-full" placeholder="Rechercher un sujet" />
+        </IconField>
         <Button
           label="Nouveau sujet"
           icon="pi pi-plus"
+          class="w-full shrink-0 sm:w-auto"
           @click="router.push('/admin/simulateur/nouveau')"
         />
       </div>
     </div>
 
-    <!-- Loading -->
-    <div v-if="store.loading" class="flex justify-center py-12">
-      <ProgressSpinner style="width: 50px; height: 50px" />
+    <!-- ── Chargement ── -->
+    <div v-if="store.loading && store.subjects.length === 0" class="space-y-3">
+      <div v-for="n in 4" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
     </div>
 
-    <!-- Table -->
+    <!-- ── Vide ── -->
     <div
-      v-else
-      class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+      v-else-if="filtered.length === 0"
+      class="flex flex-col items-center gap-3 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-100">
-          <tr>
-            <th
-              class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase"
-            >
-              Titre
-            </th>
-            <th
-              class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell"
-            >
-              Provider
-            </th>
-            <th
-              class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell"
-            >
-              Niveau
-            </th>
-            <th
-              class="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell"
-            >
-              Tâches
-            </th>
-            <th
-              class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase"
-            >
-              Statut
-            </th>
-            <th
-              class="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase"
-            >
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-50">
-          <tr
-            v-for="s in filtered"
-            :key="s.id"
-            class="hover:bg-gray-50 transition-colors"
-          >
-            <!-- Titre -->
-            <td class="px-5 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
-                  :class="providerBg(s.provider)"
-                >
-                  {{ s.provider.slice(0, 2).toUpperCase() }}
-                </div>
-                <div>
-                  <p class="font-medium text-gray-900">{{ s.title }}</p>
-                  <p
-                    v-if="s.description"
-                    class="text-xs text-gray-400 truncate max-w-xs"
-                  >
-                    {{ s.description }}
-                  </p>
-                  <div class="flex gap-1 mt-1 sm:hidden">
-                    <Tag
-                      :value="s.provider.toUpperCase()"
-                      :class="providerTagClass(s.provider)"
-                    />
-                    <Tag :value="s.level.toUpperCase()" severity="info" />
-                  </div>
-                </div>
-              </div>
-            </td>
-
-            <!-- Provider -->
-            <td class="px-5 py-4 hidden sm:table-cell">
-              <Tag
-                :value="s.provider.toUpperCase()"
-                :class="providerTagClass(s.provider)"
-              />
-            </td>
-
-            <!-- Niveau -->
-            <td class="px-5 py-4 hidden md:table-cell">
-              <Tag :value="s.level.toUpperCase()" severity="info" />
-            </td>
-
-            <!-- Tâches -->
-            <td
-              class="px-5 py-4 text-center text-gray-500 hidden md:table-cell"
-            >
-              {{ s.tasks.length }}
-            </td>
-
-            <!-- Statut -->
-            <td class="px-5 py-4">
-              <Tag
-                :value="s.is_active ? 'Actif' : 'Inactif'"
-                :severity="s.is_active ? 'success' : 'danger'"
-              />
-            </td>
-
-            <!-- Actions -->
-            <td class="px-5 py-4">
-              <div class="flex items-center justify-end gap-1">
-                <Button
-                  icon="pi pi-pencil"
-                  text
-                  rounded
-                  size="small"
-                  severity="secondary"
-                  v-tooltip.top="'Modifier'"
-                  @click="router.push(`/admin/simulateur/${s.id}`)"
-                />
-                <Button
-                  :icon="s.is_active ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                  text
-                  rounded
-                  size="small"
-                  :severity="s.is_active ? 'warn' : 'success'"
-                  v-tooltip.top="s.is_active ? 'Désactiver' : 'Activer'"
-                  :loading="togglingId === s.id"
-                  @click="handleToggle(s)"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  text
-                  rounded
-                  size="small"
-                  severity="danger"
-                  v-tooltip.top="'Supprimer'"
-                  @click="openDeleteDialog(s)"
-                />
-              </div>
-            </td>
-          </tr>
-
-          <!-- Empty -->
-          <tr v-if="filtered.length === 0">
-            <td colspan="6" class="px-5 py-12 text-center text-gray-400">
-              <i class="pi pi-inbox text-3xl mb-2 block"></i>
-              Aucun sujet trouvé
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Footer count -->
-      <div class="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
-        {{ filtered.length }} sujet(s) affiché(s) sur
-        {{ store.subjects.length }}
-      </div>
+      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <i class="pi pi-inbox" />
+      </span>
+      <p class="text-sm font-medium text-ink">
+        {{ store.subjects.length === 0 ? "Aucun sujet pour ces filtres." : "Aucun sujet ne correspond à la recherche." }}
+      </p>
+      <Button
+        v-if="store.subjects.length === 0 && !filterProvider && !filterLevel"
+        label="Créer le premier sujet"
+        icon="pi pi-plus"
+        outlined
+        size="small"
+        @click="router.push('/admin/simulateur/nouveau')"
+      />
     </div>
 
-    <!-- Dialog suppression -->
+    <!-- ── Liste groupée provider + niveau ── -->
+    <div v-else class="space-y-5" :class="{ 'opacity-60': store.loading }">
+      <section v-for="group in groups" :key="group.key" class="space-y-2">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-ink">
+          <span class="size-2 rounded-full" :class="providerStyle(group.provider).dot" />
+          {{ providerLabel(group.provider) }} {{ group.level.toUpperCase() }}
+          <span class="font-normal text-muted">· {{ group.items.length }}</span>
+        </h3>
+
+        <ul class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft">
+          <li
+            v-for="s in group.items"
+            :key="s.id"
+            class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5 sm:px-5"
+          >
+            <button
+              type="button"
+              class="flex min-w-52 flex-1 items-center gap-3 text-left"
+              @click="router.push(`/admin/simulateur/${s.id}`)"
+            >
+              <span
+                class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-xs font-bold"
+                :class="providerStyle(s.provider).badge"
+              >
+                {{ s.level.toUpperCase() }}
+              </span>
+              <span class="min-w-0">
+                <span class="block truncate font-medium text-ink" :class="{ 'text-muted': !s.is_active }">{{ s.title }}</span>
+                <span v-if="s.description" class="block truncate text-xs text-muted">{{ s.description }}</span>
+              </span>
+            </button>
+
+            <div class="flex items-center gap-4 text-xs">
+              <span class="text-muted">
+                <i class="pi pi-list mr-1 text-[10px]" />{{ s.tasks.length }} tâche(s)
+              </span>
+              <span class="hidden text-faint sm:inline">Ordre {{ s.display_order }}</span>
+            </div>
+
+            <label class="flex cursor-pointer items-center gap-2 text-xs text-muted">
+              <ToggleSwitch
+                :modelValue="s.is_active"
+                :disabled="togglingId === s.id"
+                @update:modelValue="handleToggle(s)"
+              />
+              <span class="w-12">{{ s.is_active ? "Actif" : "Inactif" }}</span>
+            </label>
+
+            <div class="flex items-center gap-1">
+              <Button
+                icon="pi pi-pencil"
+                text
+                rounded
+                size="small"
+                severity="secondary"
+                v-tooltip.top="'Modifier'"
+                aria-label="Modifier"
+                @click="router.push(`/admin/simulateur/${s.id}`)"
+              />
+              <Button
+                icon="pi pi-trash"
+                text
+                rounded
+                size="small"
+                severity="danger"
+                v-tooltip.top="'Supprimer'"
+                aria-label="Supprimer"
+                @click="openDeleteDialog(s)"
+              />
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <p class="text-xs text-faint">{{ filtered.length }} sujet(s) affiché(s) sur {{ store.subjects.length }}</p>
+    </div>
+
+    <!-- ══════════ Dialogue suppression ══════════ -->
     <Dialog
       v-model:visible="deleteDialog"
       header="Supprimer ce sujet ?"
-      :modal="true"
-      :style="{ width: '90vw', maxWidth: '400px' }"
+      modal
+      :style="{ width: '28rem', maxWidth: '95vw' }"
     >
-      <p v-if="selectedSubject">
-        Supprimer <strong>{{ selectedSubject.title }}</strong> ? Cette action
-        est irréversible.
-      </p>
+      <div v-if="selectedSubject" class="space-y-3">
+        <Message severity="error" :closable="false">Cette action est <strong>irréversible</strong>.</Message>
+        <div class="flex items-center gap-3 rounded-leaf bg-card-2 p-3">
+          <span
+            class="flex size-9 shrink-0 items-center justify-center rounded-leaf text-xs font-bold"
+            :class="providerStyle(selectedSubject.provider).badge"
+          >
+            {{ selectedSubject.level.toUpperCase() }}
+          </span>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-medium text-ink">{{ selectedSubject.title }}</p>
+            <p class="text-xs text-muted">
+              {{ providerLabel(selectedSubject.provider) }} · {{ selectedSubject.tasks.length }} tâche(s)
+            </p>
+          </div>
+        </div>
+      </div>
       <template #footer>
-        <Button label="Annuler" text @click="deleteDialog = false" />
-        <Button
-          label="Supprimer"
-          severity="danger"
-          :loading="deleting"
-          @click="handleDelete"
-        />
+        <Button label="Annuler" text severity="secondary" @click="deleteDialog = false" />
+        <Button label="Supprimer" severity="danger" icon="pi pi-trash" :loading="deleting" @click="handleDelete" />
       </template>
     </Dialog>
   </div>
@@ -229,8 +201,8 @@
 import { useSimulatorStore } from "~/stores/simulator";
 import type { SchreibenSubjectResponse } from "#shared/api";
 
-definePageMeta({ layout: "admin" });
-useHead({ title: "Admin — Sujets simulateur" });
+definePageMeta({ layout: "admin", watermark: "Schreiben" });
+useHead({ title: "Admin · Sujets simulateur" });
 
 const router = useRouter();
 const toast = useToast();
@@ -246,7 +218,7 @@ const deleteDialog = ref(false);
 const selectedSubject = ref<SchreibenSubjectResponse | null>(null);
 
 const providerOptions = [
-  { label: "Tous les providers", value: null },
+  { label: "Tous", value: null },
   { label: "Goethe", value: "goethe" },
   { label: "TELC", value: "telc" },
   { label: "ÖSD", value: "osd" },
@@ -257,50 +229,92 @@ const levelOptions = [
   { label: "B2", value: "b2" },
 ];
 
-// ── Filtrage local par search ────────────────────────────
+const providerLabel = (p: string) => ({ goethe: "Goethe", telc: "TELC", osd: "ÖSD" })[p] ?? p.toUpperCase();
+
+const providerStyle = (p: string) =>
+  ({
+    goethe: { badge: "bg-sky-500/10 text-sky-600", dot: "bg-sky-500" },
+    telc: { badge: "bg-violet-500/10 text-violet-600", dot: "bg-violet-500" },
+    osd: { badge: "bg-orange-500/10 text-orange-600", dot: "bg-orange-500" },
+  })[p] ?? { badge: "bg-card-2 text-muted", dot: "bg-line" };
+
+// ── Tuiles (sur la liste chargée) ──
+const tiles = computed(() => {
+  const all = store.subjects;
+  const active = all.filter((s) => s.is_active).length;
+  return [
+    { label: "Sujets chargés", value: all.length, icon: "pi pi-pencil", iconClass: "bg-primary/10 text-primary" },
+    { label: "Actifs", value: active, icon: "pi pi-check-circle", iconClass: "bg-emerald-500/10 text-emerald-600" },
+    { label: "Inactifs", value: all.length - active, icon: "pi pi-eye-slash", iconClass: "bg-card-2 text-muted" },
+    {
+      label: "Tâches au total",
+      value: all.reduce((n, s) => n + s.tasks.length, 0),
+      icon: "pi pi-list",
+      iconClass: "bg-amber-500/15 text-amber-600",
+    },
+  ];
+});
+
+// ── Recherche locale + groupement ──
 const filtered = computed(() => {
-  if (!search.value.trim()) return store.subjects;
-  const q = search.value.toLowerCase();
+  const q = search.value.trim().toLowerCase();
+  if (!q) return store.subjects;
   return store.subjects.filter(
-    (s) =>
-      s.title.toLowerCase().includes(q) ||
-      s.description?.toLowerCase().includes(q),
+    (s) => s.title.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q),
   );
 });
 
-// ── Chargement ───────────────────────────────────────────
+const providerOrder = ["goethe", "telc", "osd"];
+
+const groups = computed(() => {
+  const map = new Map<string, { key: string; provider: string; level: string; items: SchreibenSubjectResponse[] }>();
+  for (const s of filtered.value) {
+    const key = `${s.provider}-${s.level}`;
+    if (!map.has(key)) map.set(key, { key, provider: s.provider, level: s.level, items: [] });
+    map.get(key)!.items.push(s);
+  }
+  return [...map.values()]
+    .sort(
+      (a, b) =>
+        providerOrder.indexOf(a.provider) - providerOrder.indexOf(b.provider) || a.level.localeCompare(b.level),
+    )
+    .map((g) => ({ ...g, items: [...g.items].sort((a, b) => a.display_order - b.display_order) }));
+});
+
+// ── Chargement ──
 const reload = async () => {
-  const res = await store.fetchAllSubjects(
-    filterProvider.value,
-    filterLevel.value,
-    !showInactive.value,
-  );
+  const res = await store.fetchAllSubjects(filterProvider.value, filterLevel.value, !showInactive.value);
   if (!res.success) {
-    toast.add({
-      severity: "error",
-      summary: "Erreur",
-      detail: store.error,
-      life: 3000,
-    });
+    toast.add({ severity: "error", summary: "Erreur", detail: store.error, life: 3000 });
   }
 };
 
-// ── Toggle actif/inactif ─────────────────────────────────
+const setProvider = (v: string | null) => {
+  if (filterProvider.value === v) return;
+  filterProvider.value = v;
+  reload();
+};
+const setLevel = (v: string | null) => {
+  if (filterLevel.value === v) return;
+  filterLevel.value = v;
+  reload();
+};
+const toggleInactive = () => {
+  showInactive.value = !showInactive.value;
+  reload();
+};
+
+// ── Actif / inactif ──
 const handleToggle = async (s: SchreibenSubjectResponse) => {
   togglingId.value = s.id;
   const res = await store.toggleActive(s.id);
   togglingId.value = null;
   if (!res.success) {
-    toast.add({
-      severity: "error",
-      summary: "Erreur",
-      detail: res.error,
-      life: 3000,
-    });
+    toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
   }
 };
 
-// ── Suppression ──────────────────────────────────────────
+// ── Suppression ──
 const openDeleteDialog = (s: SchreibenSubjectResponse) => {
   selectedSubject.value = s;
   deleteDialog.value = true;
@@ -308,37 +322,17 @@ const openDeleteDialog = (s: SchreibenSubjectResponse) => {
 
 const handleDelete = async () => {
   if (!selectedSubject.value) return;
+  const title = selectedSubject.value.title;
   deleting.value = true;
   const res = await store.deleteSubject(selectedSubject.value.id);
   deleting.value = false;
-  deleteDialog.value = false;
   if (res.success) {
-    toast.add({
-      severity: "success",
-      summary: "Supprimé",
-      detail: `« ${selectedSubject.value.title} » supprimé.`,
-      life: 3000,
-    });
+    deleteDialog.value = false;
+    toast.add({ severity: "success", summary: "Supprimé", detail: `« ${title} » supprimé.`, life: 3000 });
   } else {
-    toast.add({
-      severity: "error",
-      summary: "Erreur",
-      detail: res.error,
-      life: 3000,
-    });
+    toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
   }
 };
 
-// ── Style helpers ────────────────────────────────────────
-const providerBg = (p: string) =>
-  ({ goethe: "bg-blue-500", telc: "bg-purple-500", osd: "bg-orange-500" })[p] ??
-  "bg-gray-400";
-const providerTagClass = (p: string) =>
-  ({
-    goethe: "bg-blue-100 text-blue-700",
-    telc: "bg-purple-100 text-purple-700",
-    osd: "bg-orange-100 text-orange-700",
-  })[p] ?? "bg-gray-100 text-gray-600";
-
-onMounted(() => reload());
+onMounted(reload);
 </script>

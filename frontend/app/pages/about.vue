@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 const { t } = useI18n();
 const localePath = useLocalePath();
 
@@ -27,7 +27,7 @@ const offre = [
   <div class="bg-canvas">
     <AppPageHero
       icon="pi pi-compass"
-      watermark="Ãœber uns"
+      watermark="Über uns"
       :eyebrow="t('about.hero.badge')"
       :title="t('about.hero.title')"
       :subtitle="t('about.hero.subtitle')"
@@ -110,7 +110,7 @@ const offre = [
     <!-- Examens couverts (composant de la landing, cartes cliquables) -->
     <LevelsSection />
 
-    <!-- IndÃ©pendance -->
+    <!-- Indépendance -->
     <section class="px-4 sm:px-6">
       <div class="mx-auto flex max-w-6xl gap-4 rounded-card border-l-4 border-accent-500 bg-accent-500/10 p-6 sm:p-8">
         <i class="pi pi-info-circle mt-1 text-xl text-accent-600 dark:text-accent-400" />

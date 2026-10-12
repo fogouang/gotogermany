@@ -86,7 +86,6 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
       title: "Partenariat",
       items: [
         { label: "Partenaires", to: "/admin/partners", icon: "pi pi-building" },
-        { label: "Codes Promo", to: "/admin/promo-code", icon: "pi pi-ticket" },
       ],
     },
     {
@@ -321,10 +320,6 @@ export const PAGE_META: Record<string, PageMeta> = {
     subtitle: "Simulateur des examens",
   },
   "/admin/partners": { title: "Partenaires", subtitle: "Centres et affiliés" },
-  "/admin/promo-code": {
-    title: "Codes Promo",
-    subtitle: "Gestion des réductions et commissions",
-  },
   "/admin/settings": {
     title: "Paramètres",
     subtitle: "Configuration de la plateforme",

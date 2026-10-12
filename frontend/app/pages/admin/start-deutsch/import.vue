@@ -1,161 +1,212 @@
 <!-- pages/admin/start-deutsch/import.vue -->
 <template>
-  <div class="space-y-8 pb-10">
-    <div>
-      <h1 class="text-2xl font-bold text-ink">Import Start Deutsch</h1>
-      <p class="text-ink-secondary mt-1 text-sm">
-        Importer un sujet A1/A2 complet (JSON), puis les fichiers audio et
-        images associés.
+  <div class="space-y-5 pb-10">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <NuxtLink
+        to="/admin/start-deutsch"
+        class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink"
+      >
+        <i class="pi pi-arrow-left text-xs" />
+        Retour aux sujets
+      </NuxtLink>
+      <p class="text-sm text-muted">
+        Importe d'abord le sujet (JSON), puis ses fichiers audio et ses images.
       </p>
     </div>
 
-    <!-- ── 1. Import JSON ── -->
-    <section class="bg-card border border-line rounded-xl p-5 space-y-4">
-      <h2 class="font-semibold text-ink flex items-center gap-2">
-        <i class="pi pi-file text-primary-600" /> 1. Sujet (JSON)
-      </h2>
+    <div class="grid items-start gap-4 xl:grid-cols-3">
+      <!-- ══════════ 1. JSON ══════════ -->
+      <section
+        class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft"
+      >
+        <header class="flex items-center gap-3">
+          <span
+            class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-sm font-bold text-primary"
+            >1</span
+          >
+          <div>
+            <h2 class="font-semibold text-ink">Sujet (JSON)</h2>
+            <p class="text-xs text-muted">Un sujet A1 ou A2 complet.</p>
+          </div>
+        </header>
 
-      <div class="flex items-center gap-3">
-        <input
-          ref="jsonInput"
-          type="file"
-          accept="application/json"
-          class="text-sm text-ink-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-hover file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-ink"
-          @change="onJsonFileChange"
+        <FileDropZone
+          v-model="jsonFiles"
+          accept="application/json,.json"
+          icon="pi pi-file"
+          label="Dépose le fichier JSON"
+          hint="Un seul fichier"
+          :disabled="jsonLoading"
         />
-      </div>
 
-      <label class="flex items-center gap-2 text-sm text-ink-secondary">
-        <input
-          v-model="jsonReplace"
-          type="checkbox"
-          class="rounded border-line"
+        <label
+          class="flex cursor-pointer items-center justify-between gap-3 rounded-leaf bg-card-2 px-3 py-2.5 text-sm text-ink"
+        >
+          <span>
+            Remplacer les Teile existants
+            <span class="block text-xs text-muted"
+              >Écrase les Teile déjà importés pour ce sujet.</span
+            >
+          </span>
+          <ToggleSwitch v-model="jsonReplace" />
+        </label>
+
+        <Button
+          label="Importer le sujet"
+          icon="pi pi-upload"
+          class="w-full"
+          :loading="jsonLoading"
+          :disabled="!jsonFiles.length"
+          @click="submitJson"
         />
-        Remplacer les Teile déjà existants (replace=true)
-      </label>
 
-      <Button
-        :label="t('admin.import.submit_json')"
-        icon="pi pi-upload"
-        :loading="jsonLoading"
-        :disabled="!jsonFile"
-        @click="submitJson"
-      />
-
-      <ImportLogPanel
-        :log="jsonResult?.log"
-        :summary="jsonSummary"
-        :error="jsonError"
-      />
-    </section>
-
-    <!-- ── 2. Import Audio ── -->
-    <section class="bg-card border border-line rounded-xl p-5 space-y-4">
-      <h2 class="font-semibold text-ink flex items-center gap-2">
-        <i class="pi pi-volume-up text-secondary-600" /> 2. Fichiers audio
-        (Hören)
-      </h2>
-
-      <div class="flex items-center gap-3">
-        <Select
-          v-model="audioSubjectId"
-          :options="subjectOptions"
-          option-label="label"
-          option-value="id"
-          placeholder="Sujet"
-          class="w-64"
+        <ImportLogPanel
+          :log="jsonResult?.log"
+          :summary="jsonSummary"
+          :error="jsonError"
         />
-        <input
-          ref="audioInput"
-          type="file"
-          accept="audio/mpeg"
+      </section>
+
+      <!-- ══════════ 2. Audio ══════════ -->
+      <section
+        ref="audioSection"
+        class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft"
+      >
+        <header class="flex items-center gap-3">
+          <span
+            class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-sky-500/10 text-sm font-bold text-sky-600"
+            >2</span
+          >
+          <div>
+            <h2 class="font-semibold text-ink">Fichiers audio (Hören)</h2>
+            <p class="text-xs text-muted">Un fichier par Teil.</p>
+          </div>
+        </header>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-muted"
+            >Sujet visé</label
+          >
+          <Select
+            v-model="audioSubjectId"
+            :options="subjectOptions"
+            optionLabel="label"
+            optionValue="id"
+            filter
+            placeholder="Choisir le sujet"
+            class="w-full"
+          />
+        </div>
+
+        <FileDropZone
+          v-model="audioFiles"
+          accept="audio/mpeg,.mp3"
           multiple
-          class="text-sm text-ink-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-hover file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-ink"
-          @change="onAudioFilesChange"
+          icon="pi pi-volume-up"
+          label="Dépose les fichiers MP3"
+          :disabled="audioLoading"
         />
-      </div>
-      <p class="text-xs text-ink-tertiary">
-        Convention de nommage : <code>hoeren_teilN.mp3</code> (un seul fichier
-        par Teil). Choisis bien le <strong>sujet exact</strong> visé — les
-        fichiers sont stockés par sujet, pas seulement par niveau (plusieurs
-        sujets par niveau sont possibles).
-      </p>
 
-      <Button
-        :label="t('admin.import.submit_audio')"
-        icon="pi pi-upload"
-        :loading="audioLoading"
-        :disabled="!audioFiles.length || !audioSubjectId"
-        @click="submitAudio"
-      />
+        <p class="rounded-leaf bg-card-2 px-3 py-2 text-xs text-muted">
+          Nommage : <code class="text-ink">hoeren_teilN.mp3</code>. Les fichiers
+          sont rangés par sujet, pas seulement par niveau : vérifie bien le
+          sujet choisi.
+        </p>
 
-      <ImportLogPanel
-        :log="audioResult?.log"
-        :summary="audioSummary"
-        :error="audioError"
-      />
-    </section>
-
-    <!-- ── 3. Import Images ── -->
-    <section class="bg-card border border-line rounded-xl p-5 space-y-4">
-      <h2 class="font-semibold text-ink flex items-center gap-2">
-        <i class="pi pi-image text-secondary-600" /> 3. Images (Hören mc_image /
-        Sprechen cartes-images)
-      </h2>
-
-      <div class="flex items-center gap-3">
-        <Select
-          v-model="imagesSubjectId"
-          :options="subjectOptions"
-          option-label="label"
-          option-value="id"
-          placeholder="Sujet"
-          class="w-64"
+        <Button
+          label="Importer l'audio"
+          icon="pi pi-upload"
+          class="w-full"
+          :loading="audioLoading"
+          :disabled="!audioFiles.length || !audioSubjectId"
+          @click="submitAudio"
         />
-        <input
-          ref="imagesInput"
-          type="file"
+
+        <ImportLogPanel
+          :log="audioResult?.log"
+          :summary="audioSummary"
+          :error="audioError"
+        />
+      </section>
+
+      <!-- ══════════ 3. Images ══════════ -->
+      <section
+        class="space-y-4 rounded-card border border-line bg-card p-5 shadow-soft"
+      >
+        <header class="flex items-center gap-3">
+          <span
+            class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-violet-500/10 text-sm font-bold text-violet-600"
+            >3</span
+          >
+          <div>
+            <h2 class="font-semibold text-ink">Images</h2>
+            <p class="text-xs text-muted">Hören mc_image et cartes Sprechen.</p>
+          </div>
+        </header>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-muted"
+            >Sujet visé</label
+          >
+          <Select
+            v-model="imagesSubjectId"
+            :options="subjectOptions"
+            optionLabel="label"
+            optionValue="id"
+            filter
+            placeholder="Choisir le sujet"
+            class="w-full"
+          />
+        </div>
+
+        <FileDropZone
+          v-model="imagesFiles"
           accept="image/png,image/jpeg,image/webp"
           multiple
-          class="text-sm text-ink-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-hover file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-ink"
-          @change="onImagesFilesChange"
+          icon="pi pi-image"
+          label="Dépose les images"
+          hint="PNG, JPEG ou WEBP"
+          :disabled="imagesLoading"
         />
-      </div>
-      <p class="text-xs text-ink-tertiary">
-        Les noms de fichiers doivent correspondre exactement à
-        <code>image_file</code> dans le JSON déjà importé (ex.
-        <code>hoeren_teil1_q1_a.png</code>, <code>sprechen_teil3_q1.png</code>).
-        Choisis bien le <strong>sujet exact</strong> visé.
-      </p>
 
-      <Button
-        :label="t('admin.import.submit_images')"
-        icon="pi pi-upload"
-        :loading="imagesLoading"
-        :disabled="!imagesFiles.length || !imagesSubjectId"
-        @click="submitImages"
-      />
+        <p class="rounded-leaf bg-card-2 px-3 py-2 text-xs text-muted">
+          Les noms doivent correspondre exactement à
+          <code class="text-ink">image_file</code> dans le JSON importé (ex.
+          <code class="text-ink">hoeren_teil1_q1_a.png</code>,
+          <code class="text-ink">sprechen_teil3_q1.png</code>).
+        </p>
 
-      <ImportLogPanel
-        :log="imagesResult?.log"
-        :summary="imagesSummary"
-        :error="imagesError"
-      />
-    </section>
+        <Button
+          label="Importer les images"
+          icon="pi pi-upload"
+          class="w-full"
+          :loading="imagesLoading"
+          :disabled="!imagesFiles.length || !imagesSubjectId"
+          @click="submitImages"
+        />
+
+        <ImportLogPanel
+          :log="imagesResult?.log"
+          :summary="imagesSummary"
+          :error="imagesError"
+        />
+      </section>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import ImportLogPanel from "~/components/admin/ImportLogPanel.vue";
 
-definePageMeta({ layout: "admin" });
+definePageMeta({ layout: "admin", watermark: "Hochladen" });
 
-const { t } = useI18n();
+const route = useRoute();
+const toast = useToast();
 const store = useStartDeutschSessionStore();
 
-// ── Liste des sujets (pour les sélecteurs audio/images) ─────
-// Depuis qu'un niveau peut avoir plusieurs sujets, l'audio et les images
-// doivent cibler un sujet précis (subject_id), pas juste "A1"/"A2".
+// ── Sujets (sélecteurs audio et images) ──
 interface SubjectOption {
   id: string;
   label: string;
@@ -163,7 +214,10 @@ interface SubjectOption {
 
 const subjects = ref<any[]>([]);
 const subjectOptions = computed<SubjectOption[]>(() =>
-  subjects.value.map((s) => ({ id: s.id, label: `${s.level} — ${s.title}` })),
+  subjects.value.map((s) => ({
+    id: s.id,
+    label: `${s.level} · n°${s.subject_number} · ${s.title}`,
+  })),
 );
 
 async function fetchSubjects() {
@@ -171,16 +225,32 @@ async function fetchSubjects() {
   if (result.success) {
     subjects.value = result.data;
   } else {
-    console.error("Impossible de charger la liste des sujets", result.error);
+    toast.add({
+      severity: "error",
+      summary: "Impossible de charger les sujets",
+      detail: result.error,
+      life: 4000,
+    });
   }
 }
 
-onMounted(fetchSubjects);
+// Préselection depuis la liste (/admin/start-deutsch/import?subjectId=...)
+const audioSection = ref<HTMLElement | null>(null);
 
-// ── 1. JSON ──────────────────────────────────────────────
+onMounted(async () => {
+  await fetchSubjects();
+  const preset =
+    typeof route.query.subjectId === "string" ? route.query.subjectId : null;
+  if (preset && subjects.value.some((s) => s.id === preset)) {
+    audioSubjectId.value = preset;
+    imagesSubjectId.value = preset;
+    await nextTick();
+    audioSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
 
-const jsonInput = ref<HTMLInputElement | null>(null);
-const jsonFile = ref<File | null>(null);
+// ── 1. JSON ──
+const jsonFiles = ref<File[]>([]);
 const jsonReplace = ref(false);
 const jsonLoading = ref(false);
 const jsonResult = ref<{
@@ -190,36 +260,31 @@ const jsonResult = ref<{
 } | null>(null);
 const jsonError = ref<string | null>(null);
 
-function onJsonFileChange(e: Event) {
-  const files = (e.target as HTMLInputElement).files;
-  jsonFile.value = files?.[0] ?? null;
-}
-
 const jsonSummary = computed(() =>
   jsonResult.value
-    ? `Sujet ${jsonResult.value.level} importé — ${jsonResult.value.total_questions ?? "?"} question(s)`
+    ? `Sujet ${jsonResult.value.level ?? ""} importé : ${jsonResult.value.total_questions ?? "?"} question(s)`
     : null,
 );
 
 async function submitJson() {
-  if (!jsonFile.value) return;
+  const file = jsonFiles.value[0];
+  if (!file) return;
   jsonLoading.value = true;
   jsonError.value = null;
   jsonResult.value = null;
 
-  const result = await store.adminImportJson(jsonFile.value, jsonReplace.value);
+  const result = await store.adminImportJson(file, jsonReplace.value);
   if (result.success) {
     jsonResult.value = result.data;
-    await fetchSubjects(); // le nouveau sujet doit apparaître dans les sélecteurs audio/images
+    jsonFiles.value = [];
+    await fetchSubjects(); // le nouveau sujet apparaît dans les sélecteurs
   } else {
     jsonError.value = result.error || "Erreur lors de l'import.";
   }
   jsonLoading.value = false;
 }
 
-// ── 2. Audio ─────────────────────────────────────────────
-
-const audioInput = ref<HTMLInputElement | null>(null);
+// ── 2. Audio ──
 const audioFiles = ref<File[]>([]);
 const audioSubjectId = ref<string | null>(null);
 const audioLoading = ref(false);
@@ -229,10 +294,6 @@ const audioResult = ref<{
   files_processed?: number;
 } | null>(null);
 const audioError = ref<string | null>(null);
-
-function onAudioFilesChange(e: Event) {
-  audioFiles.value = Array.from((e.target as HTMLInputElement).files ?? []);
-}
 
 const audioSummary = computed(() =>
   audioResult.value
@@ -252,24 +313,19 @@ async function submitAudio() {
   );
   if (result.success) {
     audioResult.value = result.data;
+    audioFiles.value = [];
   } else {
     audioError.value = result.error || "Erreur lors de l'import audio.";
   }
   audioLoading.value = false;
 }
 
-// ── 3. Images ────────────────────────────────────────────
-
-const imagesInput = ref<HTMLInputElement | null>(null);
+// ── 3. Images ──
 const imagesFiles = ref<File[]>([]);
 const imagesSubjectId = ref<string | null>(null);
 const imagesLoading = ref(false);
 const imagesResult = ref<{ log?: string[]; files_saved?: number } | null>(null);
 const imagesError = ref<string | null>(null);
-
-function onImagesFilesChange(e: Event) {
-  imagesFiles.value = Array.from((e.target as HTMLInputElement).files ?? []);
-}
 
 const imagesSummary = computed(() =>
   imagesResult.value
@@ -289,6 +345,7 @@ async function submitImages() {
   );
   if (result.success) {
     imagesResult.value = result.data;
+    imagesFiles.value = [];
   } else {
     imagesError.value = result.error || "Erreur lors de l'import images.";
   }

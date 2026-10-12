@@ -1,11 +1,17 @@
 <!-- pages/enseignant/devoirs/index.vue -->
 <template>
-  <div class="mx-auto max-w-5xl space-y-5">
+  <div class="space-y-5">
     <!-- ── Barre d'action ── -->
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
       <IconField class="w-full sm:w-80">
         <InputIcon class="pi pi-search" />
-        <InputText v-model="search" class="w-full" :placeholder="t('teacher.assignments.search')" />
+        <InputText
+          v-model="search"
+          class="w-full"
+          :placeholder="t('teacher.assignments.search')"
+        />
       </IconField>
       <Button
         :label="t('teacher.assignments.new')"
@@ -31,7 +37,11 @@
         {{ tab.label }}
         <span
           class="rounded-full px-1.5 text-xs"
-          :class="tab.key === 'to_grade' && tab.count > 0 ? 'bg-amber-500/15 text-amber-600' : 'bg-card-2 text-muted'"
+          :class="
+            tab.key === 'to_grade' && tab.count > 0
+              ? 'bg-amber-500/15 text-amber-600'
+              : 'bg-card-2 text-muted'
+          "
         >
           {{ tab.count }}
         </span>
@@ -40,7 +50,11 @@
 
     <!-- ── Chargement ── -->
     <div v-if="loading" class="space-y-3">
-      <div v-for="n in 3" :key="n" class="h-32 animate-pulse rounded-card bg-card-2" />
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="h-32 animate-pulse rounded-card bg-card-2"
+      />
     </div>
 
     <!-- ── Erreur ── -->
@@ -57,8 +71,12 @@
       class="rounded-card border border-dashed border-line bg-card p-10 text-center"
     >
       <i class="pi pi-file-edit mb-3 text-3xl text-faint" />
-      <p class="font-medium text-ink">{{ t("teacher.assignments.empty_title") }}</p>
-      <p class="mt-1 text-sm text-muted">{{ t("teacher.assignments.empty_text") }}</p>
+      <p class="font-medium text-ink">
+        {{ t("teacher.assignments.empty_title") }}
+      </p>
+      <p class="mt-1 text-sm text-muted">
+        {{ t("teacher.assignments.empty_text") }}
+      </p>
     </div>
 
     <!-- ── Onglet vide ── -->
@@ -70,7 +88,7 @@
     </p>
 
     <!-- ── Liste ── -->
-    <div v-else class="space-y-3">
+    <div v-else class="grid gap-3 xl:grid-cols-2">
       <NuxtLink
         v-for="a in visible"
         :key="a.id"
@@ -96,7 +114,13 @@
             v-else-if="toGrade(a) > 0"
             class="shrink-0 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-600"
           >
-            {{ t("teacher.assignments.to_grade_badge", { n: toGrade(a) }, toGrade(a)) }}
+            {{
+              t(
+                "teacher.assignments.to_grade_badge",
+                { n: toGrade(a) },
+                toGrade(a),
+              )
+            }}
           </span>
         </div>
 
@@ -107,7 +131,10 @@
             :key="`${target.type}-${target.id}`"
             class="inline-flex items-center gap-1 rounded-full bg-card-2 px-2 py-0.5 text-[11px] font-medium text-muted"
           >
-            <i :class="target.type === 'class' ? 'pi pi-users' : 'pi pi-user'" class="text-[10px]" />
+            <i
+              :class="target.type === 'class' ? 'pi pi-users' : 'pi pi-user'"
+              class="text-[10px]"
+            />
             {{ target.name }}
           </span>
         </div>
@@ -116,21 +143,35 @@
           <!-- Rendus -->
           <div>
             <div class="mb-1 flex justify-between text-xs">
-              <span class="text-muted">{{ t("teacher.assignments.submitted") }}</span>
-              <span class="font-semibold text-ink">{{ a.submitted_count ?? 0 }}/{{ a.expected_count ?? 0 }}</span>
+              <span class="text-muted">{{
+                t("teacher.assignments.submitted")
+              }}</span>
+              <span class="font-semibold text-ink"
+                >{{ a.submitted_count ?? 0 }}/{{ a.expected_count ?? 0 }}</span
+              >
             </div>
             <div class="h-1.5 overflow-hidden rounded-full bg-card-2">
-              <div class="h-full rounded-full bg-primary" :style="{ width: pct(a.submitted_count, a.expected_count) }" />
+              <div
+                class="h-full rounded-full bg-primary"
+                :style="{ width: pct(a.submitted_count, a.expected_count) }"
+              />
             </div>
           </div>
           <!-- Corrigés -->
           <div>
             <div class="mb-1 flex justify-between text-xs">
-              <span class="text-muted">{{ t("teacher.assignments.graded") }}</span>
-              <span class="font-semibold text-ink">{{ a.graded_count ?? 0 }}/{{ a.submitted_count ?? 0 }}</span>
+              <span class="text-muted">{{
+                t("teacher.assignments.graded")
+              }}</span>
+              <span class="font-semibold text-ink"
+                >{{ a.graded_count ?? 0 }}/{{ a.submitted_count ?? 0 }}</span
+              >
             </div>
             <div class="h-1.5 overflow-hidden rounded-full bg-card-2">
-              <div class="h-full rounded-full bg-emerald-500" :style="{ width: pct(a.graded_count, a.submitted_count) }" />
+              <div
+                class="h-full rounded-full bg-emerald-500"
+                :style="{ width: pct(a.graded_count, a.submitted_count) }"
+              />
             </div>
           </div>
           <!-- Échéance -->
@@ -146,8 +187,7 @@
 
 <script setup lang="ts">
 import type { AssignmentSummaryResponse } from "#shared/api";
-
-definePageMeta({ layout: "enseignant" });
+definePageMeta({ layout: "enseignant", watermark: "Hausaufgaben" });
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
@@ -177,12 +217,15 @@ function tabOf(a: AssignmentSummaryResponse): TabKey {
 }
 
 const tabs = computed(() => {
-  const count = (k: TabKey) => store.teaching.filter((a) => tabOf(a) === k).length;
-  return (["to_grade", "ongoing", "closed", "cancelled"] as const).map((key) => ({
-    key,
-    label: t(`teacher.assignments.tabs.${key}`),
-    count: count(key),
-  }));
+  const count = (k: TabKey) =>
+    store.teaching.filter((a) => tabOf(a) === k).length;
+  return (["to_grade", "ongoing", "closed", "cancelled"] as const).map(
+    (key) => ({
+      key,
+      label: t(`teacher.assignments.tabs.${key}`),
+      count: count(key),
+    }),
+  );
 });
 
 const visible = computed(() => {
@@ -194,9 +237,14 @@ const visible = computed(() => {
         !q ||
         a.title.toLowerCase().includes(q) ||
         a.subject_name.toLowerCase().includes(q) ||
-        (a.targets ?? []).some((target) => target.name.toLowerCase().includes(q)),
+        (a.targets ?? []).some((target) =>
+          target.name.toLowerCase().includes(q),
+        ),
     )
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 });
 
 function pct(part?: number, total?: number) {

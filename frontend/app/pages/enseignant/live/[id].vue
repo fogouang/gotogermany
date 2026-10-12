@@ -1,6 +1,6 @@
 <!-- pages/enseignant/live/[id].vue -->
 <template>
-  <div class="mx-auto max-w-6xl">
+  <div>
     <!-- ── Chargement ── -->
     <div v-if="loadingSession" class="flex flex-col items-center gap-3 py-20">
       <ProgressSpinner style="width: 42px; height: 42px" stroke-width="3" />
@@ -27,22 +27,34 @@
         </span>
       </div>
 
-      <div class="lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-6">
+      <div
+        class="lg:grid lg:grid-cols-[1fr_380px] lg:items-start lg:gap-6 2xl:grid-cols-[1fr_440px]"
+      >
         <!-- ══ Colonne gauche : état / vidéo (reste visible au défilement) ══ -->
-        <div class="space-y-4 lg:sticky lg:top-4">
+        <div class="space-y-4 lg:sticky lg:top-0">
           <!-- En attente du candidat -->
           <div
-            v-if="connectionStatus === 'connecting' || connectionStatus === 'idle'"
+            v-if="
+              connectionStatus === 'connecting' || connectionStatus === 'idle'
+            "
             class="rounded-card border border-line bg-card px-6 py-14 text-center shadow-soft"
           >
             <div class="relative mx-auto mb-5 size-14">
-              <span class="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-              <span class="relative flex size-14 items-center justify-center rounded-full bg-primary/10">
+              <span
+                class="absolute inset-0 animate-ping rounded-full bg-primary/30"
+              />
+              <span
+                class="relative flex size-14 items-center justify-center rounded-full bg-primary/10"
+              >
                 <i class="pi pi-wifi text-lg text-primary" />
               </span>
             </div>
-            <p class="text-sm font-medium text-ink">{{ t("teacher.live.waiting_title") }}</p>
-            <p class="mt-1 text-xs text-muted">{{ t("teacher.live.waiting_text", teileCount) }}</p>
+            <p class="text-sm font-medium text-ink">
+              {{ t("teacher.live.waiting_title") }}
+            </p>
+            <p class="mt-1 text-xs text-muted">
+              {{ t("teacher.live.waiting_text", teileCount) }}
+            </p>
           </div>
 
           <!-- Préparation du candidat -->
@@ -50,9 +62,13 @@
             v-else-if="connectionStatus === 'preparing'"
             class="overflow-hidden rounded-card border border-amber-500/30 bg-card shadow-soft"
           >
-            <div class="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-6 py-3">
+            <div
+              class="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-6 py-3"
+            >
               <i class="pi pi-pencil text-xs text-amber-600" />
-              <p class="text-xs font-bold uppercase tracking-wide text-amber-600">
+              <p
+                class="text-xs font-bold uppercase tracking-wide text-amber-600"
+              >
                 {{ t("teacher.live.preparation_title") }}
               </p>
             </div>
@@ -62,7 +78,10 @@
                 {{
                   t(
                     "teacher.live.preparation_text",
-                    { minutes: live.preparationInfo.value?.duration_minutes ?? "-" },
+                    {
+                      minutes:
+                        live.preparationInfo.value?.duration_minutes ?? "-",
+                    },
                     teileCount,
                   )
                 }}
@@ -93,8 +112,16 @@
 
             <!-- Flux principal : candidat -->
             <div class="relative aspect-video w-full bg-gray-950">
-              <video ref="remoteVideoEl" autoplay playsinline class="h-full w-full object-cover" />
-              <div v-if="live.peerSpeaking.value" class="absolute top-16 left-4 flex items-end gap-1">
+              <video
+                ref="remoteVideoEl"
+                autoplay
+                playsinline
+                class="h-full w-full object-cover"
+              />
+              <div
+                v-if="live.peerSpeaking.value"
+                class="absolute top-16 left-4 flex items-end gap-1"
+              >
                 <span
                   v-for="i in 5"
                   :key="i"
@@ -122,23 +149,36 @@
                   muted
                   playsinline
                   class="h-full w-full object-cover"
-                  :class="live.localSpeaking.value ? 'ring-2 ring-inset ring-primary' : ''"
+                  :class="
+                    live.localSpeaking.value
+                      ? 'ring-2 ring-inset ring-primary'
+                      : ''
+                  "
                 />
                 <span
                   class="absolute bottom-1.5 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white"
                 >
-                  <i class="pi pi-microphone text-[10px]" :class="{ 'text-red-400': !micEnabled }" />
+                  <i
+                    class="pi pi-microphone text-[10px]"
+                    :class="{ 'text-red-400': !micEnabled }"
+                  />
                   {{ t("teacher.live.you") }}
                 </span>
               </div>
             </div>
 
             <!-- Commandes -->
-            <div class="flex items-center justify-center gap-3 bg-gray-900 py-4">
+            <div
+              class="flex items-center justify-center gap-3 bg-gray-900 py-4"
+            >
               <button
                 type="button"
                 class="flex size-11 items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-primary"
-                :class="cameraEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'"
+                :class="
+                  cameraEnabled
+                    ? 'bg-gray-700 hover:bg-gray-600'
+                    : 'bg-red-500 hover:bg-red-600'
+                "
                 :aria-label="t('teacher.live.toggle_camera')"
                 v-tooltip.top="t('teacher.live.toggle_camera')"
                 @click="toggleCamera"
@@ -148,7 +188,11 @@
               <button
                 type="button"
                 class="flex size-11 items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-primary"
-                :class="micEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'"
+                :class="
+                  micEnabled
+                    ? 'bg-gray-700 hover:bg-gray-600'
+                    : 'bg-red-500 hover:bg-red-600'
+                "
                 :aria-label="t('teacher.live.toggle_mic')"
                 v-tooltip.top="t('teacher.live.toggle_mic')"
                 @click="toggleMic"
@@ -162,7 +206,10 @@
                 v-tooltip.top="t('teacher.live.end')"
                 @click="confirmEnd"
               >
-                <i class="pi pi-phone text-base text-white" style="transform: rotate(135deg)" />
+                <i
+                  class="pi pi-phone text-base text-white"
+                  style="transform: rotate(135deg)"
+                />
               </button>
             </div>
           </div>
@@ -172,11 +219,17 @@
             v-else-if="connectionStatus === 'ended'"
             class="rounded-card border border-line bg-card px-8 py-10 text-center shadow-soft"
           >
-            <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-emerald-500/10">
+            <div
+              class="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-emerald-500/10"
+            >
               <i class="pi pi-check text-2xl text-emerald-600" />
             </div>
-            <p class="text-lg font-semibold text-ink">{{ t("teacher.live.ended_title") }}</p>
-            <p class="mt-1 text-sm text-muted">{{ t("teacher.live.ended_text") }}</p>
+            <p class="text-lg font-semibold text-ink">
+              {{ t("teacher.live.ended_title") }}
+            </p>
+            <p class="mt-1 text-sm text-muted">
+              {{ t("teacher.live.ended_text") }}
+            </p>
           </div>
 
           <!-- Erreur -->
@@ -184,7 +237,9 @@
             v-else-if="connectionStatus === 'error'"
             class="rounded-card border border-red-500/30 bg-red-500/5 px-6 py-10 text-center"
           >
-            <i class="pi pi-exclamation-triangle mb-2 block text-2xl text-red-500" />
+            <i
+              class="pi pi-exclamation-triangle mb-2 block text-2xl text-red-500"
+            />
             <p class="text-sm text-red-600">{{ live.errorMessage.value }}</p>
           </div>
         </div>
@@ -192,10 +247,16 @@
         <!-- ══ Colonne droite : notes + onglets ══ -->
         <div class="mt-6 space-y-4 lg:mt-0">
           <!-- Notes de correction -->
-          <section class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft">
+          <section
+            class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft"
+          >
             <div>
-              <h2 class="text-sm font-semibold text-ink">{{ t("teacher.live.notes_title") }}</h2>
-              <p class="mt-0.5 text-xs text-muted">{{ t("teacher.live.notes_text") }}</p>
+              <h2 class="text-sm font-semibold text-ink">
+                {{ t("teacher.live.notes_title") }}
+              </h2>
+              <p class="mt-0.5 text-xs text-muted">
+                {{ t("teacher.live.notes_text") }}
+              </p>
             </div>
             <Textarea
               v-model="notes"
@@ -211,18 +272,29 @@
                 :disabled="notes === savedNotes"
                 @click="handleSaveNotes"
               />
-              <span v-if="notes === savedNotes && savedNotes" class="text-xs text-emerald-600">
-                <i class="pi pi-check text-[10px]" /> {{ t("teacher.live.notes_saved") }}
+              <span
+                v-if="notes === savedNotes && savedNotes"
+                class="text-xs text-emerald-600"
+              >
+                <i class="pi pi-check text-[10px]" />
+                {{ t("teacher.live.notes_saved") }}
               </span>
-              <span v-else-if="notes !== savedNotes" class="text-xs text-amber-600">
+              <span
+                v-else-if="notes !== savedNotes"
+                class="text-xs text-amber-600"
+              >
                 {{ t("centre.settings.preview_pending") }}
               </span>
             </div>
-            <p v-if="notesError" class="text-xs text-red-600">{{ notesError }}</p>
+            <p v-if="notesError" class="text-xs text-red-600">
+              {{ notesError }}
+            </p>
           </section>
 
           <!-- Onglets Chat / Sujet / Statut -->
-          <section class="flex min-h-100 flex-col overflow-hidden rounded-card border border-line bg-card shadow-soft">
+          <section
+            class="flex min-h-100 flex-col overflow-hidden rounded-card border border-line bg-card shadow-soft"
+          >
             <div class="flex gap-1 border-b border-line p-2" role="tablist">
               <button
                 v-for="opt in sideTabs"
@@ -241,7 +313,11 @@
                 <i :class="['pi', opt.icon]" />
                 {{ t(`teacher.live.tabs.${opt.key}`) }}
                 <span
-                  v-if="opt.key === 'chat' && unreadChatCount > 0 && activeSideTab !== 'chat'"
+                  v-if="
+                    opt.key === 'chat' &&
+                    unreadChatCount > 0 &&
+                    activeSideTab !== 'chat'
+                  "
                   class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
                 >
                   {{ unreadChatCount }}
@@ -251,15 +327,23 @@
 
             <!-- Chat : relayé en temps réel par le backend, rien n'est conservé -->
             <div v-if="activeSideTab === 'chat'" class="flex flex-1 flex-col">
-              <div ref="chatScrollEl" class="max-h-80 flex-1 space-y-3 overflow-y-auto p-4">
-                <p v-if="live.chatMessages.value.length === 0" class="py-6 text-center text-xs text-muted">
+              <div
+                ref="chatScrollEl"
+                class="max-h-80 flex-1 space-y-3 overflow-y-auto p-4"
+              >
+                <p
+                  v-if="live.chatMessages.value.length === 0"
+                  class="py-6 text-center text-xs text-muted"
+                >
                   {{ t("teacher.live.chat_empty") }}
                 </p>
                 <div
                   v-for="(m, i) in live.chatMessages.value"
                   :key="i"
                   class="flex"
-                  :class="m.from === 'examiner' ? 'justify-end' : 'justify-start'"
+                  :class="
+                    m.from === 'examiner' ? 'justify-end' : 'justify-start'
+                  "
                 >
                   <div
                     class="max-w-[85%] rounded-2xl px-3.5 py-2 text-sm"
@@ -269,14 +353,20 @@
                         : 'border border-line bg-card-2 text-ink'
                     "
                   >
-                    <p v-if="m.from !== 'examiner'" class="mb-0.5 text-[11px] font-bold text-muted">
+                    <p
+                      v-if="m.from !== 'examiner'"
+                      class="mb-0.5 text-[11px] font-bold text-muted"
+                    >
                       {{ session.student_name || t("teacher.live.candidate") }}
                     </p>
                     {{ m.text }}
                   </div>
                 </div>
               </div>
-              <form class="flex gap-2 border-t border-line p-3" @submit.prevent="handleSendChat">
+              <form
+                class="flex gap-2 border-t border-line p-3"
+                @submit.prevent="handleSendChat"
+              >
                 <InputText
                   v-model="chatDraft"
                   class="min-w-0 flex-1"
@@ -293,8 +383,14 @@
             </div>
 
             <!-- Sujet -->
-            <div v-else-if="activeSideTab === 'subject'" class="max-h-100 flex-1 space-y-3 overflow-y-auto p-4">
-              <p v-if="!subjectContent" class="py-6 text-center text-xs text-muted">
+            <div
+              v-else-if="activeSideTab === 'subject'"
+              class="max-h-100 flex-1 space-y-3 overflow-y-auto p-4"
+            >
+              <p
+                v-if="!subjectContent"
+                class="py-6 text-center text-xs text-muted"
+              >
                 {{ t("teacher.live.subject_empty") }}
               </p>
               <div
@@ -309,48 +405,82 @@
                     {{ teil.teil_number }}
                   </span>
                   <p class="text-sm font-semibold text-ink">
-                    Teil {{ teil.teil_number }}<span v-if="teil.name"> - {{ teil.name }}</span>
+                    Teil {{ teil.teil_number
+                    }}<span v-if="teil.name"> - {{ teil.name }}</span>
                   </p>
                 </div>
-                <p v-if="teil.instructions" class="mb-2 pl-7 text-sm text-muted">{{ teil.instructions }}</p>
+                <p
+                  v-if="teil.instructions"
+                  class="mb-2 pl-7 text-sm text-muted"
+                >
+                  {{ teil.instructions }}
+                </p>
 
                 <!-- Thèmes au choix (ex : telc B2 Teil 1) -->
                 <div v-if="teil.themes" class="mt-2 space-y-2 pl-7">
-                  <div v-for="(theme, key) in teil.themes" :key="key" class="rounded-leaf bg-card px-3 py-2">
-                    <p class="text-sm font-medium text-ink">{{ theme.titel || theme.title }}</p>
+                  <div
+                    v-for="(theme, key) in teil.themes"
+                    :key="key"
+                    class="rounded-leaf bg-card px-3 py-2"
+                  >
+                    <p class="text-sm font-medium text-ink">
+                      {{ theme.titel || theme.title }}
+                    </p>
                     <ul
                       v-if="theme.leitpunkte?.length || theme.punkte?.length"
                       class="mt-1 list-inside list-disc text-sm text-muted"
                     >
-                      <li v-for="(p, i) in theme.leitpunkte || theme.punkte" :key="i">{{ p }}</li>
+                      <li
+                        v-for="(p, i) in theme.leitpunkte || theme.punkte"
+                        :key="i"
+                      >
+                        {{ p }}
+                      </li>
                     </ul>
                   </div>
                 </div>
 
                 <!-- Discussion (ex : telc B2 Teil 2) -->
                 <div v-if="teil.diskussion_titel" class="mt-2 pl-7">
-                  <p class="text-sm font-medium text-ink">{{ teil.diskussion_titel }}</p>
-                  <p v-if="teil.diskussion_thema" class="mt-1 text-sm text-muted">{{ teil.diskussion_thema }}</p>
+                  <p class="text-sm font-medium text-ink">
+                    {{ teil.diskussion_titel }}
+                  </p>
+                  <p
+                    v-if="teil.diskussion_thema"
+                    class="mt-1 text-sm text-muted"
+                  >
+                    {{ teil.diskussion_thema }}
+                  </p>
                 </div>
 
                 <!-- Scénario (ex : Teil « problème à résoudre ») -->
-                <p v-if="teil.scenario" class="mt-2 pl-7 text-sm text-muted">{{ teil.scenario }}</p>
+                <p v-if="teil.scenario" class="mt-2 pl-7 text-sm text-muted">
+                  {{ teil.scenario }}
+                </p>
 
                 <ul
                   v-if="teil.content_points?.length"
                   class="mt-2 list-inside list-disc space-y-0.5 pl-7 text-sm text-muted"
                 >
-                  <li v-for="(point, i) in teil.content_points" :key="i">{{ point }}</li>
+                  <li v-for="(point, i) in teil.content_points" :key="i">
+                    {{ point }}
+                  </li>
                 </ul>
 
-                <ul v-if="teil.tasks?.length" class="mt-2 list-inside list-disc space-y-0.5 pl-7 text-sm text-muted">
+                <ul
+                  v-if="teil.tasks?.length"
+                  class="mt-2 list-inside list-disc space-y-0.5 pl-7 text-sm text-muted"
+                >
                   <li v-for="(task, i) in teil.tasks" :key="i">{{ task }}</li>
                 </ul>
               </div>
             </div>
 
             <!-- Statut : signaux réels uniquement -->
-            <div v-else-if="activeSideTab === 'status'" class="flex-1 space-y-3 overflow-y-auto p-4">
+            <div
+              v-else-if="activeSideTab === 'status'"
+              class="flex-1 space-y-3 overflow-y-auto p-4"
+            >
               <div
                 class="flex items-center justify-between rounded-leaf border p-3 text-sm"
                 :class="
@@ -361,7 +491,11 @@
               >
                 <span class="font-semibold">{{ t("teacher.live.mic") }}</span>
                 <span class="text-xs font-bold uppercase tracking-widest">
-                  {{ micEnabled ? t("teacher.live.mic_on") : t("teacher.live.mic_off") }}
+                  {{
+                    micEnabled
+                      ? t("teacher.live.mic_on")
+                      : t("teacher.live.mic_off")
+                  }}
                 </span>
               </div>
               <div
@@ -372,9 +506,15 @@
                     : 'border-red-500/30 bg-red-500/10 text-red-600'
                 "
               >
-                <span class="font-semibold">{{ t("teacher.live.camera") }}</span>
+                <span class="font-semibold">{{
+                  t("teacher.live.camera")
+                }}</span>
                 <span class="text-xs font-bold uppercase tracking-widest">
-                  {{ cameraEnabled ? t("teacher.live.camera_on") : t("teacher.live.camera_off") }}
+                  {{
+                    cameraEnabled
+                      ? t("teacher.live.camera_on")
+                      : t("teacher.live.camera_off")
+                  }}
                 </span>
               </div>
             </div>
@@ -404,10 +544,13 @@ import { useLiveSession } from "~/composables/useLiveSession";
 // LiveSessionAudioIO a exactement la même forme (mêmes 4 méthodes/signatures) :
 // accepté par typage structurel TS, pas de cast nécessaire.
 import { createBrowserAudioIO } from "~/composables/audioIO";
-import { createLiveVideoCapture, createLiveVideoPlayback } from "~/composables/useLiveVideo";
+import {
+  createLiveVideoCapture,
+  createLiveVideoPlayback,
+} from "~/composables/useLiveVideo";
 import type { LiveSessionResponse } from "#shared/api";
 
-definePageMeta({ layout: "enseignant" });
+definePageMeta({ layout: "enseignant", watermark: "Sprechen" });
 
 const { t } = useI18n();
 const localePath = useLocalePath();
@@ -569,8 +712,10 @@ watch(
   () => live.chatMessages.value.length,
   async () => {
     await nextTick();
-    if (chatScrollEl.value) chatScrollEl.value.scrollTop = chatScrollEl.value.scrollHeight;
-    if (activeSideTab.value === "chat") lastSeenChatCount.value = live.chatMessages.value.length;
+    if (chatScrollEl.value)
+      chatScrollEl.value.scrollTop = chatScrollEl.value.scrollHeight;
+    if (activeSideTab.value === "chat")
+      lastSeenChatCount.value = live.chatMessages.value.length;
   },
 );
 
@@ -594,12 +739,15 @@ function confirmEnd() {
 async function handleSaveNotes() {
   savingNotes.value = true;
   notesError.value = null;
-  const result = await liveSessionStore.submitNotes(liveSessionId, { notes: notes.value });
+  const result = await liveSessionStore.submitNotes(liveSessionId, {
+    notes: notes.value,
+  });
   savingNotes.value = false;
   if (result.success) {
     savedNotes.value = notes.value;
   } else {
-    notesError.value = (result as { error?: string }).error || t("centre.settings.save_error");
+    notesError.value =
+      (result as { error?: string }).error || t("centre.settings.save_error");
   }
 }
 

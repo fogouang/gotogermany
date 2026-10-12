@@ -1,284 +1,190 @@
+<!-- pages/admin/users/index.vue -->
 <template>
-  <div class="space-y-6">
-    <!-- Toolbar -->
-    <div
-      class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-    >
-      <div class="flex-1 max-w-sm">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search text-gray-400" />
-          <InputText
-            v-model="search"
-            placeholder="Rechercher un utilisateur..."
-            class="w-full"
-          />
-        </IconField>
-      </div>
-      <Select
-        v-model="filterStatus"
-        :options="statusOptions"
-        optionLabel="label"
-        optionValue="value"
-        class="w-40"
-      />
-    </div>
-
-    <!-- Loading -->
-    <div v-if="store.loading" class="flex justify-center py-12">
-      <ProgressSpinner style="width: 48px; height: 48px" strokeWidth="3" />
-    </div>
-
-    <!-- Table -->
-    <div
-      v-else
-      class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-    >
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-100">
-          <tr>
-            <th
-              class="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wide"
-            >
-              Utilisateur
-            </th>
-            <th
-              class="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wide hidden sm:table-cell"
-            >
-              Email
-            </th>
-            <th
-              class="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wide hidden md:table-cell"
-            >
-              Inscription
-            </th>
-            <th
-              class="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wide"
-            >
-              Statut
-            </th>
-            <th
-              class="text-right px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wide"
-            >
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-50">
-          <tr
-            v-for="user in paginatedUsers"
-            :key="user.id"
-            class="hover:bg-gray-50/70 transition-colors"
-          >
-            <!-- Nom -->
-            <td class="px-5 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-9 h-9 rounded-xl bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-sm shrink-0"
-                >
-                  {{ user.full_name.charAt(0).toUpperCase() }}
-                </div>
-                <div>
-                  <p class="font-semibold text-gray-900">
-                    {{ user.full_name }}
-                  </p>
-                  <p class="text-xs text-gray-400 sm:hidden">
-                    {{ user.email }}
-                  </p>
-                  <Tag
-                    v-if="user.is_admin"
-                    value="Admin"
-                    severity="danger"
-                    class="mt-1"
-                  />
-                </div>
-              </div>
-            </td>
-
-            <!-- Email -->
-            <td class="px-5 py-4 text-gray-500 hidden sm:table-cell text-xs">
-              {{ user.email }}
-            </td>
-
-            <!-- Date -->
-            <td class="px-5 py-4 text-gray-400 hidden md:table-cell text-xs">
-              {{ formatDate(user.created_at) }}
-            </td>
-
-            <!-- Statut -->
-            <td class="px-5 py-4">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <Tag
-                  :value="user.is_active ? 'Actif' : 'Désactivé'"
-                  :severity="user.is_active ? 'success' : 'danger'"
-                />
-                <Tag v-if="user.is_verified" value="Vérifié" severity="info" />
-                <Tag
-                  v-if="user.is_ambassador"
-                  value="Ambassadeur"
-                  severity="warn"
-                  icon="pi pi-star"
-                />
-              </div>
-            </td>
-
-            <!-- Actions -->
-            <td class="px-5 py-4">
-              <div class="flex items-center justify-end gap-1">
-                <Button
-                  icon="pi pi-key"
-                  text
-                  rounded
-                  size="small"
-                  severity="secondary"
-                  v-tooltip.top="'Gérer les accès'"
-                  @click="openGrantAccess(user)"
-                />
-                <Button
-                  :icon="user.is_ambassador ? 'pi pi-star-fill' : 'pi pi-star'"
-                  text
-                  rounded
-                  size="small"
-                  :severity="user.is_ambassador ? 'warn' : 'secondary'"
-                  v-tooltip.top="
-                    user.is_ambassador
-                      ? 'Retirer le statut ambassadeur'
-                      : 'Rendre ambassadeur'
-                  "
-                  :loading="togglingAmbassadorId === user.id"
-                  @click="handleToggleAmbassador(user)"
-                />
-                <Button
-                  :icon="user.is_active ? 'pi pi-ban' : 'pi pi-check-circle'"
-                  text
-                  rounded
-                  size="small"
-                  :severity="user.is_active ? 'warn' : 'success'"
-                  v-tooltip.top="user.is_active ? 'Désactiver' : 'Activer'"
-                  :loading="togglingId === user.id"
-                  :disabled="user.is_admin"
-                  @click="handleToggle(user)"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  text
-                  rounded
-                  size="small"
-                  severity="danger"
-                  v-tooltip.top="'Supprimer'"
-                  :disabled="user.is_admin"
-                  @click="confirmDelete(user)"
-                />
-              </div>
-            </td>
-          </tr>
-
-          <!-- Empty -->
-          <tr v-if="paginatedUsers.length === 0">
-            <td colspan="5" class="px-5 py-16 text-center">
-              <div class="flex flex-col items-center gap-2">
-                <div
-                  class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center"
-                >
-                  <i class="pi pi-users text-2xl text-gray-300"></i>
-                </div>
-                <p class="text-gray-400 font-medium text-sm">
-                  Aucun utilisateur trouvé
-                </p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Footer pagination -->
-      <div
-        class="px-5 py-3 border-t border-gray-100 flex items-center justify-between"
+  <div class="space-y-5">
+    <!-- ── Tuiles (servent aussi de filtre) ── -->
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <button
+        v-for="tile in tiles"
+        :key="tile.key"
+        type="button"
+        class="flex items-center gap-3 rounded-card border bg-card p-4 text-left shadow-soft transition-colors"
+        :class="filterStatus === tile.key ? 'border-primary ring-1 ring-primary/30' : 'border-line hover:border-primary/30'"
+        @click="filterStatus = tile.key"
       >
-        <span class="text-xs text-gray-400">
-          {{ filteredUsers.length }} utilisateur(s) · page {{ currentPage }} /
-          {{ totalPages }}
+        <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf" :class="tile.iconClass">
+          <i :class="tile.icon" />
         </span>
-        <div class="flex items-center gap-1">
-          <Button
-            icon="pi pi-chevron-left"
-            text
-            rounded
-            size="small"
-            severity="secondary"
-            :disabled="currentPage === 1"
-            @click="currentPage--"
-          />
-          <span class="text-xs text-gray-500 px-2 font-medium">{{
-            currentPage
-          }}</span>
-          <Button
-            icon="pi pi-chevron-right"
-            text
-            rounded
-            size="small"
-            severity="secondary"
-            :disabled="currentPage >= totalPages"
-            @click="currentPage++"
-          />
+        <div class="min-w-0">
+          <p class="text-2xl font-bold leading-none text-ink">{{ tile.count }}</p>
+          <p class="mt-1 truncate text-xs text-muted">{{ tile.label }}</p>
         </div>
-      </div>
+      </button>
     </div>
 
-    <!-- ── Dialog accorder accès ── -->
+    <!-- ── Recherche ── -->
+    <IconField class="w-full sm:max-w-sm">
+      <InputIcon class="pi pi-search" />
+      <InputText v-model="search" placeholder="Rechercher un utilisateur (nom, email)" class="w-full" />
+    </IconField>
+
+    <!-- ── Chargement ── -->
+    <div v-if="store.loading" class="space-y-3">
+      <div v-for="n in 5" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
+    </div>
+
+    <!-- ── Vide ── -->
+    <div
+      v-else-if="filteredUsers.length === 0"
+      class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
+    >
+      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <i class="pi pi-users" />
+      </span>
+      <p class="text-sm font-medium text-ink">Aucun utilisateur trouvé</p>
+    </div>
+
+    <!-- ── Liste ── -->
+    <template v-else>
+      <ul class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft">
+        <li
+          v-for="user in paginatedUsers"
+          :key="user.id"
+          class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3.5 sm:px-5"
+        >
+          <!-- Identité -->
+          <div class="flex min-w-56 flex-1 items-center gap-3" :class="{ 'opacity-60': !user.is_active }">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-sm font-bold"
+              :class="user.is_admin ? 'bg-red-500/10 text-red-600' : 'bg-primary/10 text-primary'"
+            >
+              {{ initials(user.full_name) }}
+            </span>
+            <div class="min-w-0">
+              <p class="truncate font-medium text-ink">{{ user.full_name }}</p>
+              <p class="truncate text-xs text-muted">{{ user.email }}</p>
+            </div>
+          </div>
+
+          <!-- Inscription -->
+          <span class="hidden w-28 text-xs text-muted md:block">{{ formatDate(user.created_at) }}</span>
+
+          <!-- Badges -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span v-if="user.is_admin" class="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+              Admin
+            </span>
+            <span
+              class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+              :class="user.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'"
+            >
+              {{ user.is_active ? "Actif" : "Désactivé" }}
+            </span>
+            <span v-if="user.is_verified" class="rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
+              Vérifié
+            </span>
+            <span
+              v-if="user.is_ambassador"
+              class="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
+            >
+              <i class="pi pi-star-fill text-[9px]" /> Ambassadeur
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="ml-auto flex items-center gap-1">
+            <Button
+              icon="pi pi-key"
+              text
+              rounded
+              size="small"
+              severity="secondary"
+              v-tooltip.top="'Gérer les accès'"
+              aria-label="Gérer les accès"
+              @click="openGrantAccess(user)"
+            />
+            <Button
+              :icon="user.is_ambassador ? 'pi pi-star-fill' : 'pi pi-star'"
+              text
+              rounded
+              size="small"
+              :severity="user.is_ambassador ? 'warn' : 'secondary'"
+              v-tooltip.top="user.is_ambassador ? 'Retirer le statut ambassadeur' : 'Rendre ambassadeur'"
+              :aria-label="user.is_ambassador ? 'Retirer le statut ambassadeur' : 'Rendre ambassadeur'"
+              :loading="togglingAmbassadorId === user.id"
+              @click="handleToggleAmbassador(user)"
+            />
+            <Button
+              :icon="user.is_active ? 'pi pi-ban' : 'pi pi-check-circle'"
+              text
+              rounded
+              size="small"
+              :severity="user.is_active ? 'warn' : 'success'"
+              v-tooltip.top="user.is_active ? 'Désactiver' : 'Activer'"
+              :aria-label="user.is_active ? 'Désactiver' : 'Activer'"
+              :loading="togglingId === user.id"
+              :disabled="user.is_admin"
+              @click="handleToggle(user)"
+            />
+            <Button
+              icon="pi pi-trash"
+              text
+              rounded
+              size="small"
+              severity="danger"
+              v-tooltip.top="'Supprimer'"
+              aria-label="Supprimer"
+              :disabled="user.is_admin"
+              @click="confirmDelete(user)"
+            />
+          </div>
+        </li>
+      </ul>
+
+      <Paginator
+        v-if="filteredUsers.length > 15"
+        v-model:first="first"
+        v-model:rows="rows"
+        :totalRecords="filteredUsers.length"
+        :rowsPerPageOptions="[15, 30, 60]"
+        class="rounded-card border border-line"
+      />
+    </template>
+
+    <!-- ══ Gérer les accès ══ -->
     <Dialog
       v-model:visible="grantDialog"
       header="Gérer les accès"
-      :modal="true"
-      :style="{ width: '90vw', maxWidth: '480px' }"
+      modal
+      :style="{ width: '95vw', maxWidth: '30rem' }"
     >
-      <div v-if="selectedUser" class="space-y-5 mt-2">
-        <!-- User info -->
-        <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-          <div
-            class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center text-teal-700 font-bold shrink-0"
-          >
-            {{ selectedUser.full_name.charAt(0).toUpperCase() }}
-          </div>
-          <div>
-            <p class="font-semibold text-gray-900">
-              {{ selectedUser.full_name }}
-            </p>
-            <p class="text-xs text-gray-500">{{ selectedUser.email }}</p>
+      <div v-if="selectedUser" class="space-y-5">
+        <div class="flex items-center gap-3 rounded-leaf bg-card-2 p-4">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-primary/10 font-bold text-primary">
+            {{ initials(selectedUser.full_name) }}
+          </span>
+          <div class="min-w-0">
+            <p class="truncate font-semibold text-ink">{{ selectedUser.full_name }}</p>
+            <p class="truncate text-xs text-muted">{{ selectedUser.email }}</p>
           </div>
         </div>
 
-        <!-- Grant all -->
-        <div
-          class="bg-teal-50 border border-teal-100 rounded-xl p-4 flex items-center justify-between gap-4"
-        >
+        <!-- Accès complet -->
+        <div class="flex items-center justify-between gap-4 rounded-leaf border border-primary/30 bg-primary/5 p-4">
           <div>
-            <p class="text-sm font-semibold text-teal-800">Accès complet</p>
-            <p class="text-xs text-teal-600 mt-0.5">
-              Donner accès à tous les niveaux disponibles
-            </p>
+            <p class="text-sm font-semibold text-ink">Accès complet</p>
+            <p class="mt-0.5 text-xs text-muted">Donner accès à tous les niveaux disponibles</p>
           </div>
-          <Button
-            label="Tout accorder"
-            icon="pi pi-star"
-            size="small"
-            severity="info"
-            :loading="grantingAll"
-            @click="handleGrantAll"
-          />
+          <Button label="Tout accorder" icon="pi pi-star" size="small" :loading="grantingAll" @click="handleGrantAll" />
         </div>
 
-        <!-- Séparateur -->
         <div class="flex items-center gap-3">
-          <div class="flex-1 h-px bg-gray-100"></div>
-          <span class="text-xs text-gray-400 font-medium">ou par niveau</span>
-          <div class="flex-1 h-px bg-gray-100"></div>
+          <div class="h-px flex-1 bg-line" />
+          <span class="text-xs font-medium text-muted">ou par niveau</span>
+          <div class="h-px flex-1 bg-line" />
         </div>
 
-        <!-- Select level -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2"
-            >Niveau spécifique</label
-          >
+          <label class="mb-1.5 block text-sm font-medium text-ink">Niveau spécifique</label>
           <Select
             v-model="selectedLevelId"
             :options="allLevels"
@@ -290,9 +196,7 @@
           />
         </div>
 
-        <Message v-if="grantError" severity="error" :closable="false">{{
-          grantError
-        }}</Message>
+        <Message v-if="grantError" severity="error" :closable="false">{{ grantError }}</Message>
       </div>
 
       <template #footer>
@@ -307,37 +211,27 @@
       </template>
     </Dialog>
 
-    <!-- ── Dialog suppression ── -->
+    <!-- ══ Suppression ══ -->
     <Dialog
       v-model:visible="deleteDialog"
       header="Supprimer l'utilisateur ?"
-      :modal="true"
-      :style="{ width: '90vw', maxWidth: '400px' }"
+      modal
+      :style="{ width: '95vw', maxWidth: '26rem' }"
     >
-      <div v-if="selectedUser" class="flex items-start gap-3 mt-2">
-        <div
-          class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0"
-        >
-          <i class="pi pi-exclamation-triangle text-red-500"></i>
-        </div>
+      <div v-if="selectedUser" class="flex items-start gap-3">
+        <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-red-500/10">
+          <i class="pi pi-exclamation-triangle text-red-600" />
+        </span>
         <div>
-          <p class="font-semibold text-gray-900">
-            {{ selectedUser.full_name }}
-          </p>
-          <p class="text-sm text-gray-500 mt-1">
-            Cette action est irréversible. Toutes les données de cet utilisateur
-            seront supprimées.
+          <p class="font-semibold text-ink">{{ selectedUser.full_name }}</p>
+          <p class="mt-1 text-sm text-muted">
+            Cette action est irréversible. Toutes les données de cet utilisateur seront supprimées.
           </p>
         </div>
       </div>
       <template #footer>
         <Button label="Annuler" text @click="deleteDialog = false" />
-        <Button
-          label="Supprimer"
-          severity="danger"
-          :loading="deleting"
-          @click="handleDelete"
-        />
+        <Button label="Supprimer" icon="pi pi-trash" severity="danger" :loading="deleting" @click="handleDelete" />
       </template>
     </Dialog>
   </div>
@@ -351,56 +245,50 @@ definePageMeta({ layout: "admin" });
 const store = useAdminUsersStore();
 const examsStore = useExamsStore();
 const toast = useToast();
-const togglingAmbassadorId = ref<string | null>(null);
 
-// ── Filters ──────────────────────────────────────────────
+// ── Filtres ──
+type FilterKey = "all" | "active" | "inactive" | "admin" | "ambassador";
 const search = ref("");
-const filterStatus = ref("");
-const currentPage = ref(1);
-const pageSize = 15;
+const filterStatus = ref<FilterKey>("all");
 
-const statusOptions = [
-  { label: "Tous", value: "" },
-  { label: "Actifs", value: "active" },
-  { label: "Désactivés", value: "inactive" },
-  { label: "Admins", value: "admin" },
-  { label: "Ambassadeurs", value: "ambassador" },
-];
+function matches(u: UserAdminResponse, key: FilterKey) {
+  if (key === "active") return u.is_active;
+  if (key === "inactive") return !u.is_active;
+  if (key === "admin") return u.is_admin;
+  if (key === "ambassador") return u.is_ambassador;
+  return true;
+}
+
+const tiles = computed(() => {
+  const count = (k: FilterKey) => store.users.filter((u) => matches(u, k)).length;
+  return [
+    { key: "all" as const, label: "Utilisateurs", count: count("all"), icon: "pi pi-users", iconClass: "bg-primary/10 text-primary" },
+    { key: "active" as const, label: "Actifs", count: count("active"), icon: "pi pi-check-circle", iconClass: "bg-emerald-500/10 text-emerald-600" },
+    { key: "inactive" as const, label: "Désactivés", count: count("inactive"), icon: "pi pi-ban", iconClass: "bg-red-500/10 text-red-600" },
+    { key: "admin" as const, label: "Admins", count: count("admin"), icon: "pi pi-shield", iconClass: "bg-red-500/10 text-red-600" },
+    { key: "ambassador" as const, label: "Ambassadeurs", count: count("ambassador"), icon: "pi pi-star", iconClass: "bg-amber-500/15 text-amber-600" },
+  ];
+});
 
 const filteredUsers = computed(() => {
-  let list = [...store.users];
-  if (search.value) {
-    const q = search.value.toLowerCase();
-    list = list.filter(
-      (u) =>
-        u.full_name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q),
-    );
-  }
-  if (filterStatus.value === "active") list = list.filter((u) => u.is_active);
-  if (filterStatus.value === "inactive")
-    list = list.filter((u) => !u.is_active);
-  if (filterStatus.value === "admin") list = list.filter((u) => u.is_admin);
-  if (filterStatus.value === "ambassador")
-    list = list.filter((u) => u.is_ambassador);
-  return list;
+  const q = search.value.trim().toLowerCase();
+  return store.users
+    .filter((u) => matches(u, filterStatus.value))
+    .filter((u) => !q || u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
 });
 
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredUsers.value.length / pageSize)),
-);
-const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filteredUsers.value.slice(start, start + pageSize);
-});
+// ── Pagination ──
+const first = ref(0);
+const rows = ref(15);
+const paginatedUsers = computed(() => filteredUsers.value.slice(first.value, first.value + rows.value));
 
-// Reset page quand filtre change
 watch([search, filterStatus], () => {
-  currentPage.value = 1;
+  first.value = 0;
 });
 
-// ── State ─────────────────────────────────────────────────
+// ── État ──
 const togglingId = ref<string | null>(null);
+const togglingAmbassadorId = ref<string | null>(null);
 const deleting = ref(false);
 const granting = ref(false);
 const grantingAll = ref(false);
@@ -410,39 +298,39 @@ const deleteDialog = ref(false);
 const selectedUser = ref<UserAdminResponse | null>(null);
 const selectedLevelId = ref<string>("");
 
-// ── Levels list ──────────────────────────────────────────
+// ── Niveaux ──
 const allLevels = computed(() =>
   examsStore.catalog.flatMap((exam) =>
     (exam.levels ?? []).map((level) => ({
-      label: `${exam.name} — ${level.cefr_code}`,
+      label: `${exam.name} - ${level.cefr_code}`,
       value: level.id,
     })),
   ),
 );
 
-// ── Helpers ──────────────────────────────────────────────
-const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+// ── Utilitaires ──
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
-// ── Actions ──────────────────────────────────────────────
-const handleToggle = async (user: UserAdminResponse) => {
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+
+// ── Actions ──
+async function handleToggle(user: UserAdminResponse) {
   togglingId.value = user.id;
   const res = await store.toggleActive(user.id);
   togglingId.value = null;
-  if (!res.success)
-    toast.add({
-      severity: "error",
-      summary: "Erreur",
-      detail: res.error,
-      life: 3000,
-    });
-};
+  if (!res.success) toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
+}
 
-const handleToggleAmbassador = async (user: UserAdminResponse) => {
+async function handleToggleAmbassador(user: UserAdminResponse) {
   const wasAmbassador = user.is_ambassador;
   togglingAmbassadorId.value = user.id;
   const res = await store.toggleAmbassador(user.id, wasAmbassador);
@@ -450,57 +338,41 @@ const handleToggleAmbassador = async (user: UserAdminResponse) => {
   if (res.success) {
     toast.add({
       severity: "success",
-      summary: wasAmbassador
-        ? "Statut ambassadeur retiré"
-        : "Statut ambassadeur accordé",
+      summary: wasAmbassador ? "Statut ambassadeur retiré" : "Statut ambassadeur accordé",
       detail: `${user.full_name} ${wasAmbassador ? "n'est plus" : "est maintenant"} ambassadeur.`,
       life: 3000,
     });
   } else {
-    toast.add({
-      severity: "error",
-      summary: "Erreur",
-      detail: res.error,
-      life: 3000,
-    });
+    toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
   }
-};
+}
 
-const confirmDelete = (user: UserAdminResponse) => {
+function confirmDelete(user: UserAdminResponse) {
   selectedUser.value = user;
   deleteDialog.value = true;
-};
+}
 
-const handleDelete = async () => {
+async function handleDelete() {
   if (!selectedUser.value) return;
   deleting.value = true;
   const res = await store.deleteUser(selectedUser.value.id);
   deleting.value = false;
   deleteDialog.value = false;
-  if (!res.success)
-    toast.add({
-      severity: "error",
-      summary: "Erreur",
-      detail: res.error,
-      life: 3000,
-    });
-};
+  if (!res.success) toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
+}
 
-const openGrantAccess = (user: UserAdminResponse) => {
+function openGrantAccess(user: UserAdminResponse) {
   selectedUser.value = user;
   selectedLevelId.value = "";
   grantError.value = "";
   grantDialog.value = true;
-};
+}
 
-const handleGrantAccess = async () => {
+async function handleGrantAccess() {
   if (!selectedUser.value || !selectedLevelId.value) return;
   granting.value = true;
   grantError.value = "";
-  const res = await store.grantAccess(
-    selectedUser.value.id,
-    selectedLevelId.value,
-  );
+  const res = await store.grantAccess(selectedUser.value.id, selectedLevelId.value);
   granting.value = false;
   if (res.success) {
     grantDialog.value = false;
@@ -513,9 +385,9 @@ const handleGrantAccess = async () => {
   } else {
     grantError.value = res.error || "Erreur lors de l'attribution";
   }
-};
+}
 
-const handleGrantAll = async () => {
+async function handleGrantAll() {
   if (!selectedUser.value) return;
   grantingAll.value = true;
   grantError.value = "";
@@ -532,7 +404,7 @@ const handleGrantAll = async () => {
   } else {
     grantError.value = res.error || "Erreur lors de l'attribution globale";
   }
-};
+}
 
 onMounted(async () => {
   await store.fetchUsers();

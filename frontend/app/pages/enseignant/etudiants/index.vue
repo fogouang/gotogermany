@@ -1,169 +1,297 @@
 <!-- pages/enseignant/etudiants/index.vue -->
 <template>
-  <div>
-    <p class="text-sm text-gray-500 mb-6">{{ students.length }} étudiant(s)</p>
-
-    <div v-if="loading" class="flex justify-center py-12">
-      <i class="pi pi-spin pi-spinner text-3xl text-emerald-600"></i>
-    </div>
-
-    <div v-else-if="errorMessage" class="text-center py-12">
-      <i class="pi pi-times-circle text-4xl text-red-500 mb-3"></i>
-      <p class="text-gray-600">{{ errorMessage }}</p>
-    </div>
-
-    <div
-      v-else-if="students.length === 0"
-      class="text-center py-12 text-gray-400"
-    >
-      Aucun étudiant assigné pour l'instant.
-    </div>
-
-    <div
-      v-else
-      class="bg-white rounded-xl border border-gray-200 overflow-hidden"
-    >
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Nom
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Cohorte(s)
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Sessions
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Score moyen
-              </th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-600">
-                Dernière session
-              </th>
-              <th class="text-right px-4 py-3 font-semibold text-gray-600"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="s in students"
-              :key="s.student_id"
-              class="border-b border-gray-100 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
-              @click="goToDetail(s.student_id)"
-            >
-              <td class="px-4 py-3 text-gray-900 whitespace-nowrap">
-                {{ s.student_name }}
-              </td>
-              <td class="px-4 py-3 text-gray-500">
-                <span class="flex flex-wrap gap-1">
-                  <Tag
-                    v-for="label in s.cohortLabels"
-                    :key="label"
-                    :value="label"
-                    severity="info"
-                  />
-                </span>
-              </td>
-              <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
-                {{ s.total_sessions ?? "—" }}
-              </td>
-              <td
-                class="px-4 py-3 whitespace-nowrap"
-                :class="scoreClass(s.average_score)"
-              >
-                {{
-                  s.average_score !== null && s.average_score !== undefined
-                    ? s.average_score.toFixed(0) + "/100"
-                    : "—"
-                }}
-              </td>
-              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
-                {{
-                  s.last_session_at ? formatDate(s.last_session_at) : "Aucune session"
-                }}
-              </td>
-              <td class="px-4 py-3 text-right whitespace-nowrap">
-                <i class="pi pi-chevron-right text-gray-300"></i>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <div class="space-y-5">
+    <!-- ── Barre d'outils ── -->
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <IconField class="w-full sm:max-w-xs">
+          <InputIcon class="pi pi-search" />
+          <InputText v-model="search" class="w-full" :placeholder="t('teacher.students.search')" />
+        </IconField>
+        <Select
+          v-if="classOptions.length > 1"
+          v-model="classFilter"
+          :options="classOptions"
+          optionLabel="label"
+          optionValue="value"
+          :placeholder="t('teacher.students.all_classes')"
+          showClear
+          class="w-full sm:w-56"
+        />
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="s in sorts"
+          :key="s.key"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="
+            sortKey === s.key
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-line bg-card text-muted hover:border-primary/30'
+          "
+          @click="sortKey = s.key"
+        >
+          {{ s.label }}
+        </button>
       </div>
     </div>
+
+    <p v-if="!loading && !errorMessage" class="text-sm text-muted">
+      {{ t("teacher.students.count", { n: rows.length }, rows.length) }}
+    </p>
+
+    <!-- ── Chargement ── -->
+    <div v-if="loading" class="space-y-3">
+      <div v-for="n in 5" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
+    </div>
+
+    <!-- ── Erreur ── -->
+    <div
+      v-else-if="errorMessage"
+      class="rounded-card border border-red-500/30 bg-red-500/5 p-6 text-center text-sm text-red-600"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <!-- ── Vide ── -->
+    <div
+      v-else-if="rows.length === 0"
+      class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
+    >
+      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <i class="pi pi-users" />
+      </span>
+      <p class="text-sm font-medium text-ink">
+        {{ students.length === 0 ? t("teacher.students.empty") : t("teacher.students.no_results") }}
+      </p>
+    </div>
+
+    <!-- ── Liste ── -->
+    <template v-else>
+      <ul class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft">
+        <li v-for="row in pagedRows" :key="row.student_id" class="flex items-center gap-2 pr-3 sm:pr-4">
+          <NuxtLink
+            :to="localePath(`/enseignant/etudiants/${row.student_id}`)"
+            class="flex min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3.5 transition-colors hover:bg-card-2 sm:px-5"
+          >
+            <!-- Élève -->
+            <div class="flex min-w-48 flex-1 items-center gap-3">
+              <span
+                class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary"
+              >
+                {{ initials(row.student_name) }}
+              </span>
+              <div class="min-w-0">
+                <p class="truncate font-medium text-ink">{{ row.student_name }}</p>
+                <p class="truncate text-xs text-muted">{{ row.classLabels.join(" · ") }}</p>
+              </div>
+            </div>
+
+            <!-- Score moyen -->
+            <div class="w-36">
+              <div class="flex items-baseline justify-between text-xs">
+                <span class="text-muted">{{ t("centre.progress.average") }}</span>
+                <span class="font-semibold" :class="scoreTone(row.average_score)">
+                  {{ row.average_score !== null ? `${Math.round(row.average_score)}/100` : "-" }}
+                </span>
+              </div>
+              <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-card-2">
+                <div
+                  class="h-full rounded-full"
+                  :class="scoreBar(row.average_score)"
+                  :style="{ width: `${Math.min(100, row.average_score ?? 0)}%` }"
+                />
+              </div>
+            </div>
+
+            <!-- Sessions + activité -->
+            <div class="w-32 text-xs">
+              <p class="font-medium text-ink">{{ t("centre.progress.sessions", row.total_sessions) }}</p>
+              <p :class="isInactive(row.last_session_at) ? 'text-amber-600' : 'text-muted'">
+                {{ lastActivity(row.last_session_at) }}
+              </p>
+            </div>
+          </NuxtLink>
+
+          <Button
+            icon="pi pi-microphone"
+            rounded
+            size="small"
+            class="shrink-0"
+            v-tooltip.left="t('teacher.classes.launch_live')"
+            :aria-label="t('teacher.classes.launch_live')"
+            @click="goToLaunchLive(row.student_id)"
+          />
+        </li>
+      </ul>
+
+      <Paginator
+        v-if="rows.length > 10"
+        :rows="rowsPerPage"
+        :total-records="rows.length"
+        :first="firstRecordIndex"
+        :rows-per-page-options="[10, 20, 50]"
+        class="rounded-card border border-line"
+        @page="onPageChange"
+      />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: "enseignant",
-});
-
 import type { StudentProgressResponse } from "#shared/api";
 
-const router = useRouter();
+definePageMeta({ layout: "enseignant", watermark: "Lernende" });
+
+const { t, locale } = useI18n();
+const localePath = useLocalePath();
 const teacherPortalStore = useTeacherPortalStore();
 
 const loading = ref(true);
 const errorMessage = ref<string | null>(null);
 const progressByStudent = ref<Map<string, StudentProgressResponse>>(new Map());
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("fr-FR");
+const DAY = 24 * 60 * 60 * 1000;
+const SEUIL_INACTIF = 7; // jours sans session avant de signaler l'élève
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-function scoreClass(score: number | null | undefined) {
-  if (score === null || score === undefined) return "text-gray-400";
-  if (score >= 60) return "text-emerald-600 font-medium";
-  return "text-amber-600 font-medium";
+function scoreTone(score: number | null) {
+  if (score === null) return "text-muted";
+  if (score >= 60) return "text-emerald-600";
+  if (score >= 45) return "text-amber-600";
+  return "text-red-600";
 }
 
-// Dédoublonne les étudiants actifs à travers toutes les sessions de
-// l'enseignant, en gardant la liste des cohortes, et fusionne les
-// stats agrégées (score moyen, dernière session) récupérées séparément.
+function scoreBar(score: number | null) {
+  if (score === null) return "bg-transparent";
+  if (score >= 60) return "bg-emerald-500";
+  if (score >= 45) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function isInactive(dateStr: string | null) {
+  if (!dateStr) return true;
+  return Date.now() - new Date(dateStr).getTime() > SEUIL_INACTIF * DAY;
+}
+
+function lastActivity(dateStr: string | null) {
+  if (!dateStr) return t("centre.progress.never");
+  const jours = Math.round((new Date(dateStr).getTime() - Date.now()) / DAY);
+  return new Intl.RelativeTimeFormat(locale.value, { numeric: "auto" }).format(jours, "day");
+}
+
+// Élèves actifs de toutes les classes de l'enseignant, sans doublon,
+// avec leurs classes et leurs statistiques agrégées
 const students = computed(() => {
   const map = new Map<
     string,
     {
       student_id: string;
       student_name: string;
-      cohortLabels: string[];
-      average_score: number | null | undefined;
-      total_sessions: number | undefined;
-      last_session_at: string | null | undefined;
+      classIds: string[];
+      classLabels: string[];
+      average_score: number | null;
+      total_sessions: number;
+      last_session_at: string | null;
     }
   >();
   for (const session of teacherPortalStore.mySessions) {
-    const cohortLabel = session.label
-      ? `${session.level_name} — ${session.label}`
-      : session.level_name;
+    const classLabel = session.label ? `${session.level_name} · ${session.label}` : session.level_name;
     for (const s of session.students) {
       if (s.ended_at) continue;
-      const progress = progressByStudent.value.get(s.student_id);
       const existing = map.get(s.student_id);
       if (existing) {
-        if (!existing.cohortLabels.includes(cohortLabel)) {
-          existing.cohortLabels.push(cohortLabel);
+        if (!existing.classIds.includes(session.id)) {
+          existing.classIds.push(session.id);
+          existing.classLabels.push(classLabel);
         }
-      } else {
-        map.set(s.student_id, {
-          student_id: s.student_id,
-          student_name: s.student_name,
-          cohortLabels: [cohortLabel],
-          average_score: progress?.average_score,
-          total_sessions: progress?.total_sessions,
-          last_session_at: progress?.last_session_at,
-        });
+        continue;
       }
+      const progress = progressByStudent.value.get(s.student_id);
+      map.set(s.student_id, {
+        student_id: s.student_id,
+        student_name: s.student_name,
+        classIds: [session.id],
+        classLabels: [classLabel],
+        average_score: progress?.average_score ?? null,
+        total_sessions: progress?.total_sessions ?? 0,
+        last_session_at: progress?.last_session_at ?? null,
+      });
     }
   }
   return [...map.values()];
 });
 
-function goToDetail(studentId: string) {
-  router.push(`/enseignant/etudiants/${studentId}`);
+// ── Filtres + tri ──
+const search = ref("");
+const classFilter = ref<string | null>(null);
+
+const classOptions = computed(() =>
+  teacherPortalStore.mySessions
+    .filter((s) => s.students.some((x) => !x.ended_at))
+    .map((s) => ({
+      value: s.id,
+      label: s.label ? `${s.level_name} · ${s.label}` : s.level_name,
+    })),
+);
+
+type SortKey = "activity" | "score_asc" | "name";
+const sortKey = ref<SortKey>("activity");
+
+const sorts = computed(() => [
+  { key: "activity" as const, label: t("centre.progress.sort_activity") },
+  { key: "score_asc" as const, label: t("centre.progress.sort_struggling") },
+  { key: "name" as const, label: t("centre.progress.sort_name") },
+]);
+
+const temps = (d: string | null) => (d ? new Date(d).getTime() : 0);
+
+const rows = computed(() => {
+  const q = search.value.trim().toLowerCase();
+  const list = students.value
+    .filter((r) => !classFilter.value || r.classIds.includes(classFilter.value))
+    .filter((r) => !q || r.student_name.toLowerCase().includes(q));
+  return [...list].sort((a, b) => {
+    if (sortKey.value === "name") return a.student_name.localeCompare(b.student_name);
+    if (sortKey.value === "score_asc")
+      // Les élèves en difficulté d'abord ; ceux sans score à la fin
+      return (a.average_score ?? 101) - (b.average_score ?? 101);
+    return temps(b.last_session_at) - temps(a.last_session_at);
+  });
+});
+
+// ── Pagination ──
+const rowsPerPage = ref(8);
+const firstRecordIndex = ref(0);
+
+const pagedRows = computed(() =>
+  rows.value.slice(firstRecordIndex.value, firstRecordIndex.value + rowsPerPage.value),
+);
+
+function onPageChange(event: { first: number; rows: number }) {
+  firstRecordIndex.value = event.first;
+  rowsPerPage.value = event.rows;
 }
 
+watch([search, classFilter, sortKey], () => {
+  firstRecordIndex.value = 0;
+});
+
+function goToLaunchLive(studentId: string) {
+  navigateTo({ path: localePath("/enseignant/live/nouveau"), query: { student_id: studentId } });
+}
+
+// ── Chargement ──
 async function loadData() {
   loading.value = true;
   const [sessionsResult, progressResult] = await Promise.all([
@@ -171,14 +299,10 @@ async function loadData() {
     teacherPortalStore.fetchStudentsProgress(),
   ]);
 
-  if (!sessionsResult.success) {
-    errorMessage.value = sessionsResult.error || "Erreur de chargement.";
-  }
+  errorMessage.value = sessionsResult.success ? null : sessionsResult.error || t("common.load_error");
 
   if (progressResult.success) {
-    progressByStudent.value = new Map(
-      (progressResult.progress ?? []).map((p) => [p.student_id, p]),
-    );
+    progressByStudent.value = new Map((progressResult.progress ?? []).map((p) => [p.student_id, p]));
   }
 
   loading.value = false;
