@@ -18,14 +18,17 @@
   si besoin, mais l'auto ne se redéclenche jamais).
 -->
 <template>
-  <div v-if="isComplete" class="rounded-xl border border-primary-200 bg-primary-50 p-4">
+  <div
+    v-if="isComplete"
+    class="rounded-card border border-primary/30 bg-primary/10 p-4"
+  >
     <div class="flex items-start gap-3">
-      <i class="pi pi-check-circle mt-0.5 text-lg text-primary-600" />
+      <i class="pi pi-check-circle mt-0.5 text-lg text-primary" />
       <div class="flex-1">
-        <p class="text-sm font-semibold text-primary-800">
+        <p class="text-sm font-semibold text-ink">
           {{ t("start_deutsch.schreiben.complete_title") }}
         </p>
-        <p class="mt-0.5 text-sm text-primary-700">
+        <p class="mt-0.5 text-sm text-muted">
           {{ t("start_deutsch.schreiben.complete_description") }}
         </p>
       </div>
@@ -39,14 +42,17 @@
     />
   </div>
 
-  <div v-else-if="timeExpired" class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+  <div
+    v-else-if="timeExpired"
+    class="rounded-card border border-amber-500/30 bg-amber-500/10 p-4"
+  >
     <div class="flex items-start gap-3">
       <i class="pi pi-clock mt-0.5 text-lg text-amber-600" />
       <div class="flex-1">
-        <p class="text-sm font-semibold text-amber-800">
+        <p class="text-sm font-semibold text-ink">
           {{ t("start_deutsch.schreiben.time_up_title") }}
         </p>
-        <p class="mt-0.5 text-sm text-amber-700">
+        <p class="mt-0.5 text-sm text-muted">
           {{ t("start_deutsch.schreiben.time_up_description") }}
         </p>
       </div>
@@ -108,12 +114,16 @@ function isTeilAnswered(teil: SchreibenTeil): boolean {
   if (teil.format_type === "form_fill") {
     const fields = question.content.fields ?? [];
     if (!fields.length) return false;
-    return fields.every((f) => !!userAnswer?.[String(f.number)]?.toString().trim());
+    return fields.every(
+      (f) => !!userAnswer?.[String(f.number)]?.toString().trim(),
+    );
   }
   return false;
 }
 
-const isComplete = computed(() => props.teile.length > 0 && props.teile.every(isTeilAnswered));
+const isComplete = computed(
+  () => props.teile.length > 0 && props.teile.every(isTeilAnswered),
+);
 
 function handleDownload() {
   download({

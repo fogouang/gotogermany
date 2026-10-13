@@ -113,9 +113,14 @@
     :question="question"
   />
 
-  <div v-else class="question-container flex items-center gap-2 text-sm text-ink-secondary">
+  <div
+    v-else
+    class="flex items-center gap-2 rounded-card border border-line bg-card p-4 text-sm text-muted shadow-soft"
+  >
     <i class="pi pi-hourglass" />
-    Ce type de question ({{ formatType }}) arrive dans une prochaine mise à jour.
+    {{
+      t("start_deutsch.question_ui.unsupported_format", { format: formatType })
+    }}
   </div>
 </template>
 
@@ -163,7 +168,11 @@ const props = withDefaults(defineProps<Props>(), {
   subjectNumber: 0,
   usedLabels: () => [],
 });
-const emit = defineEmits<{ "update:modelValue": [value: Record<string, any>] }>();
+const emit = defineEmits<{
+  "update:modelValue": [value: Record<string, any>];
+}>();
+
+const { t } = useI18n();
 
 const formatType = computed(() => props.teil.format_type);
 

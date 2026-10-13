@@ -1,153 +1,161 @@
 <!-- pages/dashboard/start-deutsch/[subjectId]/result.vue -->
 <template>
   <div class="space-y-6 pb-10">
-    <!-- Loading -->
-    <div v-if="store.loading" class="flex justify-center py-16">
-      <ProgressSpinner style="width: 50px; height: 50px" />
+    <!-- ── Chargement ── -->
+    <div v-if="store.loading" class="space-y-4">
+      <div class="h-48 animate-pulse rounded-card bg-card-2" />
+      <div class="h-64 animate-pulse rounded-card bg-card-2" />
     </div>
 
-    <!-- Not found -->
+    <!-- ── Introuvable ── -->
     <div
       v-else-if="!result"
-      class="flex flex-col items-center justify-center py-16 bg-card rounded-2xl border border-line"
+      class="flex flex-col items-center justify-center rounded-card border border-line bg-card py-16 shadow-soft"
     >
-      <div class="w-14 h-14 rounded-2xl bg-danger-50 flex items-center justify-center mb-4">
-        <i class="pi pi-exclamation-triangle text-2xl text-danger-500"></i>
+      <div class="mb-4 flex size-14 items-center justify-center rounded-card bg-red-500/10">
+        <i class="pi pi-exclamation-triangle text-2xl text-red-600" />
       </div>
-      <p class="font-semibold text-ink mb-4">{{ t("start_deutsch.result.not_found") }}</p>
+      <p class="mb-4 font-semibold text-ink">{{ t("start_deutsch.result.not_found") }}</p>
       <Button :label="t('start_deutsch.result.back')" outlined size="small" @click="goToCatalogue" />
     </div>
 
     <template v-else>
-      <!-- ── Hero score ── -->
-      <div class="score-display relative overflow-hidden">
-        <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10 bg-white"></div>
-        <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10 bg-white"></div>
-
-        <p class="relative text-xs font-bold uppercase tracking-widest opacity-80">
+      <!-- ══ Score ══ -->
+      <section class="rounded-card border border-line bg-card p-6 text-center shadow-soft sm:p-8">
+        <p class="text-xs font-bold uppercase tracking-widest text-faint">
           {{ result.subject_title }} · {{ result.level }}
         </p>
-        <p class="score-percentage relative mt-2">{{ scorePercent }}%</p>
-        <p class="relative mt-1 text-sm opacity-90">
+        <p class="mt-2 text-5xl font-bold text-primary">{{ scorePercent }}%</p>
+        <p class="mt-1 text-sm text-muted">
           {{ t("start_deutsch.result.score_of", { score: result.score?.toFixed(0) ?? "0" }) }}
         </p>
 
-        <div class="relative mx-auto mt-5 h-2.5 w-full max-w-sm overflow-hidden rounded-full bg-white/25">
-          <div class="h-full rounded-full bg-white" :style="{ width: `${scorePercent}%` }" />
+        <div class="mx-auto mt-5 h-2.5 w-full max-w-sm overflow-hidden rounded-full bg-card-2">
+          <div class="h-full rounded-full bg-primary transition-all duration-500" :style="{ width: `${scorePercent}%` }" />
         </div>
 
-        <p class="relative mt-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold">
+        <p
+          class="mt-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+          :class="statusClass"
+        >
           <i :class="['pi', statusIcon]" />
           {{ statusLabel }}
         </p>
-      </div>
+      </section>
 
-      <!-- ── Résultat par module ── -->
-      <div class="bg-card border border-line rounded-2xl overflow-hidden">
-        <div class="px-6 py-4 border-b border-line">
-          <h2 class="font-bold text-ink">{{ t("start_deutsch.result.by_module") }}</h2>
-        </div>
+      <!-- ══ Résultat par module ══ -->
+      <section class="overflow-hidden rounded-card border border-line bg-card shadow-soft">
+        <header class="border-b border-line px-5 py-4 sm:px-6">
+          <h2 class="font-semibold text-ink">{{ t("start_deutsch.result.by_module") }}</h2>
+        </header>
 
-        <button
-          v-for="mod in result.modules ?? []"
-          :key="mod.module_id"
-          class="w-full px-6 py-4 flex items-center gap-4 hover:bg-hover transition-colors text-left"
-          @click="toggleModule(mod.module_id)"
-        >
-          <div class="w-11 h-11 rounded-xl bg-primary-50 flex items-center justify-center shrink-0">
-            <i :class="['pi', moduleIcon(mod.slug), 'text-primary-600']" />
-          </div>
-
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1.5">
-              <p class="font-semibold text-ink text-sm">{{ moduleLabel(mod.slug) }}</p>
-              <span
-                v-if="mod.is_corrected"
-                :class="[
-                  'inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full',
-                  modulePct(mod) >= 60 ? 'bg-success-100 text-success-700' : 'bg-danger-100 text-danger-600',
-                ]"
-              >
-                <i :class="['pi text-xs', modulePct(mod) >= 60 ? 'pi-check' : 'pi-times']" />
-                {{ modulePct(mod) }}%
-              </span>
-              <span v-else class="inline-flex items-center gap-1.5 text-amber-600 text-xs">
-                <i class="pi pi-clock text-xs" />
-                {{ t("start_deutsch.result.pending") }}
-              </span>
+        <div class="divide-y divide-line">
+          <button
+            v-for="mod in result.modules ?? []"
+            :key="mod.module_id"
+            type="button"
+            class="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-card-2 sm:px-6"
+            @click="toggleModule(mod.module_id)"
+          >
+            <div class="flex size-11 shrink-0 items-center justify-center rounded-leaf bg-primary/10">
+              <i :class="['pi', moduleIcon(mod.slug), 'text-primary']" />
             </div>
-            <div v-if="mod.is_corrected" class="flex items-center gap-2">
-              <div class="flex-1 bg-hover rounded-full h-2 overflow-hidden">
-                <div
-                  class="h-2 rounded-full transition-all duration-500"
-                  :class="modulePct(mod) >= 60 ? 'bg-success-500' : 'bg-danger-400'"
-                  :style="{ width: `${modulePct(mod)}%` }"
-                />
+
+            <div class="min-w-0 flex-1">
+              <div class="mb-1.5 flex items-center gap-2">
+                <p class="text-sm font-semibold text-ink">{{ moduleLabel(mod.slug) }}</p>
+                <span
+                  v-if="mod.is_corrected"
+                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold"
+                  :class="
+                    modulePct(mod) >= 60
+                      ? 'bg-emerald-500/10 text-emerald-600'
+                      : 'bg-red-500/10 text-red-600'
+                  "
+                >
+                  <i :class="['pi text-xs', modulePct(mod) >= 60 ? 'pi-check' : 'pi-times']" />
+                  {{ modulePct(mod) }}%
+                </span>
+                <span v-else class="inline-flex items-center gap-1.5 text-xs text-amber-600">
+                  <i class="pi pi-clock text-xs" />
+                  {{ t("start_deutsch.result.pending") }}
+                </span>
               </div>
-              <span class="text-xs font-bold text-ink-secondary shrink-0">
-                {{ mod.score_obtained }}/{{ mod.max_score }}
-              </span>
+              <div v-if="mod.is_corrected" class="flex items-center gap-2">
+                <div class="h-2 flex-1 overflow-hidden rounded-full bg-card-2">
+                  <div
+                    class="h-2 rounded-full transition-all duration-500"
+                    :class="modulePct(mod) >= 60 ? 'bg-emerald-500' : 'bg-red-500'"
+                    :style="{ width: `${modulePct(mod)}%` }"
+                  />
+                </div>
+                <span class="shrink-0 text-xs font-bold text-muted">
+                  {{ mod.score_obtained }}/{{ mod.max_score }}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <i
-            :class="[
-              'pi text-ink-tertiary text-sm',
-              expandedModules.has(mod.module_id) ? 'pi-chevron-up' : 'pi-chevron-down',
-            ]"
-          />
-        </button>
-      </div>
-
-      <!-- ── Détail réponses par module (accordéon) ── -->
-      <div
-        v-for="mod in (result.modules ?? []).filter((m) => expandedModules.has(m.module_id))"
-        :key="`detail-${mod.module_id}`"
-        class="bg-card border border-line rounded-2xl overflow-hidden"
-      >
-        <div class="px-6 py-3 border-b border-line">
-          <p class="text-xs font-bold text-ink-tertiary uppercase tracking-wide">
-            {{ t("start_deutsch.result.detail") }} - {{ moduleLabel(mod.slug) }}
-          </p>
+            <i
+              :class="[
+                'pi text-sm text-faint',
+                expandedModules.has(mod.module_id) ? 'pi-chevron-up' : 'pi-chevron-down',
+              ]"
+            />
+          </button>
         </div>
+      </section>
+
+      <!-- ══ Détail des réponses (accordéon) ══ -->
+      <section
+        v-for="mod in expandedList"
+        :key="`detail-${mod.module_id}`"
+        class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+      >
+        <header class="border-b border-line px-5 py-3 sm:px-6">
+          <p class="text-xs font-bold uppercase tracking-wide text-faint">
+            {{ t("start_deutsch.result.detail") }} · {{ moduleLabel(mod.slug) }}
+          </p>
+        </header>
 
         <div v-for="teil in mod.teile ?? []" :key="teil.teil_id" class="border-b border-line last:border-0">
-          <div class="px-6 py-3 bg-hover/50 flex items-center justify-between">
-            <p class="text-xs font-bold text-ink-secondary uppercase tracking-wide">
-              Teil {{ teil.teil_number }}
-            </p>
-            <span class="text-xs font-bold text-ink-secondary">
+          <div class="flex items-center justify-between bg-card-2 px-5 py-3 sm:px-6">
+            <p class="text-xs font-bold uppercase tracking-wide text-muted">Teil {{ teil.teil_number }}</p>
+            <span class="text-xs font-bold text-muted">
               {{ teil.score_obtained.toFixed(1) }} / {{ teil.max_score }} pts
             </span>
           </div>
 
           <div class="divide-y divide-line">
-            <div v-for="answer in teil.answers ?? []" :key="answer.question_id" class="px-6 py-3 flex items-start gap-3">
-              <div class="shrink-0 mt-0.5">
+            <div
+              v-for="answer in teil.answers ?? []"
+              :key="answer.question_id"
+              class="flex items-start gap-3 px-5 py-3 sm:px-6"
+            >
+              <div class="mt-0.5 shrink-0">
                 <div
                   v-if="answer.is_correct === true"
-                  class="w-5 h-5 rounded-full bg-success-100 flex items-center justify-center"
+                  class="flex size-5 items-center justify-center rounded-full bg-emerald-500/10"
                 >
-                  <i class="pi pi-check text-success-600 text-xs" />
+                  <i class="pi pi-check text-xs text-emerald-600" />
                 </div>
                 <div
                   v-else-if="answer.is_correct === false"
-                  class="w-5 h-5 rounded-full bg-danger-100 flex items-center justify-center"
+                  class="flex size-5 items-center justify-center rounded-full bg-red-500/10"
                 >
-                  <i class="pi pi-times text-danger-500 text-xs" />
+                  <i class="pi pi-times text-xs text-red-600" />
                 </div>
-                <div v-else class="w-5 h-5 rounded-full bg-hover flex items-center justify-center">
-                  <i class="pi pi-minus text-ink-tertiary text-xs" />
+                <div v-else class="flex size-5 items-center justify-center rounded-full bg-card-2">
+                  <i class="pi pi-minus text-xs text-faint" />
                 </div>
               </div>
-              <div class="flex-1 min-w-0 text-sm">
-                <span class="text-ink-secondary">
-                  Q{{ answer.question_number }} - {{ t("start_deutsch.result.your_answer") }} :
+              <div class="min-w-0 flex-1 text-sm">
+                <span class="text-muted">
+                  Q{{ answer.question_number }} · {{ t("start_deutsch.result.your_answer") }} :
                   <strong class="text-ink">{{ formatAnswer(answer.user_answer) }}</strong>
                 </span>
                 <span
                   v-if="answer.correct_answer && answer.is_correct === false"
-                  class="ml-3 text-success-700"
+                  class="ml-3 text-emerald-600"
                 >
                   {{ t("start_deutsch.result.correct_answer") }} :
                   <strong>{{ formatAnswer(answer.correct_answer) }}</strong>
@@ -156,10 +164,10 @@
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- ── Actions ── -->
-      <div class="flex flex-col sm:flex-row gap-3">
+      <!-- ══ Actions ══ -->
+      <div class="flex flex-col gap-3 sm:flex-row">
         <Button
           :label="t('start_deutsch.result.back')"
           icon="pi pi-arrow-left"
@@ -182,12 +190,17 @@
 definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 const route = useRoute();
 const store = useStartDeutschSessionStore();
 
 const expandedModules = ref<Set<string>>(new Set());
 
 const result = computed(() => store.result);
+
+const expandedList = computed(() =>
+  (result.value?.modules ?? []).filter((m) => expandedModules.value.has(m.module_id)),
+);
 
 const scorePercent = computed(() => {
   if (!result.value?.score || !result.value?.modules?.length) return 0;
@@ -196,18 +209,24 @@ const scorePercent = computed(() => {
   return Math.round((result.value.score / totalMax) * 100);
 });
 
-// Wording volontairement neutre (pas "échec") — Start Deutsch est un
-// entraînement de familiarisation, pas un vrai examen à enjeu
+// Formulation neutre : Start Deutsch est un entraînement, pas un examen à enjeu
+const isPending = computed(() => result.value?.status === "PENDING_REVIEW");
+
 const statusIcon = computed(() => {
-  if (result.value?.status === "PENDING_REVIEW") return "pi-clock";
+  if (isPending.value) return "pi-clock";
   return scorePercent.value >= 60 ? "pi-check-circle" : "pi-arrow-up-right";
 });
 
 const statusLabel = computed(() => {
-  if (result.value?.status === "PENDING_REVIEW") return t("start_deutsch.result.pending_review");
+  if (isPending.value) return t("start_deutsch.result.pending_review");
   return scorePercent.value >= 60
     ? t("start_deutsch.result.good_score")
     : t("start_deutsch.result.keep_practicing");
+});
+
+const statusClass = computed(() => {
+  if (isPending.value) return "bg-amber-500/15 text-amber-600";
+  return scorePercent.value >= 60 ? "bg-emerald-500/10 text-emerald-600" : "bg-primary/10 text-primary";
 });
 
 const moduleLabels: Record<string, string> = {
@@ -234,8 +253,11 @@ function modulePct(mod: { score_obtained: number; max_score: number }) {
 }
 
 function toggleModule(moduleId: string) {
-  if (expandedModules.value.has(moduleId)) expandedModules.value.delete(moduleId);
-  else expandedModules.value.add(moduleId);
+  // Nouveau Set pour que Vue détecte le changement
+  const next = new Set(expandedModules.value);
+  if (next.has(moduleId)) next.delete(moduleId);
+  else next.add(moduleId);
+  expandedModules.value = next;
 }
 
 function formatAnswer(answer: Record<string, any> | null): string {
@@ -244,11 +266,11 @@ function formatAnswer(answer: Record<string, any> | null): string {
 }
 
 function goToCatalogue() {
-  navigateTo("/dashboard/start-deutsch");
+  navigateTo(localePath("/dashboard/start-deutsch"));
 }
 
 function retrySubject() {
-  navigateTo(`/dashboard/start-deutsch/${route.params.subjectId}/session`);
+  navigateTo(localePath(`/dashboard/start-deutsch/${route.params.subjectId}/session`));
 }
 
 onMounted(async () => {

@@ -1,11 +1,10 @@
 <!-- components/start-deutsch/MatchingWithDistractorQuestion.vue -->
 <!--
-  Nécessite teil.shared_content.ads = [{label, url, text}, ...] — le pool
-  d'annonces est commun à toutes les questions du Teil, pas répété par
-  question. Voir le patch de modèle (StartDeutschTeil.shared_content).
+  Nécessite teil.shared_content.ads = [{label, url, text}, ...] : le pool
+  d'annonces est commun à toutes les questions du Teil.
 -->
 <template>
-  <div class="question-container">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
     <p class="text-base font-semibold text-ink">{{ question.content.profile }}</p>
 
     <div class="mt-4 grid gap-2 sm:grid-cols-2">
@@ -13,30 +12,30 @@
         v-for="ad in sharedAds"
         :key="ad.label"
         type="button"
-        class="rounded-lg border p-3 text-left text-sm transition-colors"
+        class="min-w-0 rounded-leaf border p-3 text-left text-sm transition-colors"
         :class="
           modelValue === ad.label
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-line bg-card hover:bg-hover'
+            ? 'border-primary bg-primary/10'
+            : 'border-line bg-card hover:border-primary/30'
         "
         @click="$emit('update:modelValue', ad.label)"
       >
-        <span class="mr-1.5 font-semibold uppercase text-ink-tertiary">{{ ad.label }})</span>
-        <span class="font-mono text-xs text-ink-tertiary">{{ ad.url }}</span>
+        <span class="mr-1.5 font-semibold uppercase text-faint">{{ ad.label }})</span>
+        <span class="break-all font-mono text-xs text-faint">{{ ad.url }}</span>
         <p class="mt-1 text-ink">{{ ad.text }}</p>
       </button>
 
       <button
         type="button"
-        class="flex items-center justify-center gap-2 rounded-lg border border-dashed p-3 text-sm font-semibold transition-colors"
+        class="flex items-center justify-center gap-2 rounded-leaf border border-dashed p-3 text-sm font-semibold transition-colors"
         :class="
           modelValue === 'X'
-            ? 'border-primary-500 bg-primary-50 text-primary-700'
-            : 'border-line text-ink-secondary hover:bg-hover'
+            ? 'border-primary bg-primary/10 text-primary'
+            : 'border-line text-muted hover:border-primary/30'
         "
         @click="$emit('update:modelValue', 'X')"
       >
-        <i class="pi pi-ban" /> Aucune solution
+        <i class="pi pi-ban" /> {{ t("start_deutsch.question_ui.none_solution") }}
       </button>
     </div>
   </div>
@@ -65,6 +64,8 @@ interface Props {
 
 const props = defineProps<Props>();
 defineEmits<{ "update:modelValue": [value: string] }>();
+
+const { t } = useI18n();
 
 const sharedAds = computed(() => props.teil.shared_content?.ads ?? []);
 </script>

@@ -7,7 +7,7 @@
   parent (qui itère les questions du Teil) la fournit.
 -->
 <template>
-  <div class="question-container">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
     <p class="text-base font-semibold text-ink">{{ question.content.day }}</p>
 
     <div class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -16,8 +16,12 @@
         :key="img.label"
         type="button"
         :disabled="isTakenByOther(img.label)"
-        class="group relative overflow-hidden rounded-lg border-2 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-        :class="modelValue === img.label ? 'border-primary-500' : 'border-line hover:border-primary-300'"
+        class="group relative overflow-hidden rounded-leaf border-2 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+        :class="
+          modelValue === img.label
+            ? 'border-primary'
+            : 'border-line hover:border-primary/40'
+        "
         @click="$emit('update:modelValue', img.label)"
       >
         <img
@@ -26,11 +30,11 @@
           class="aspect-square w-full object-cover"
         />
         <span
-          class="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold uppercase"
+          class="absolute left-1 top-1 flex size-5 items-center justify-center rounded-full text-[10px] font-bold uppercase"
           :class="
             modelValue === img.label
-              ? 'bg-primary-500 text-white'
-              : 'bg-white/90 text-ink-secondary'
+              ? 'bg-primary text-white'
+              : 'bg-card/90 text-muted'
           "
         >
           {{ img.label }}

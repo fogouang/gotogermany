@@ -8,12 +8,12 @@
   content = { cards: [{ image_file: string }] }
 -->
 <template>
-  <div class="question-container">
+ <div class="rounded-card border border-line bg-card p-4 shadow-soft">
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <div
         v-for="(card, i) in question.content.cards"
         :key="i"
-        class="overflow-hidden rounded-lg border border-line bg-card"
+        class="overflow-hidden rounded-leaf border border-line bg-card-2"
       >
         <img
           :src="resolveImageUrl(card.image_file)"

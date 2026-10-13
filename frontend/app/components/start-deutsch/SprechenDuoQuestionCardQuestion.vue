@@ -7,14 +7,14 @@
   content = { cards: string[] }
 -->
 <template>
-  <div class="question-container">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
     <div class="grid grid-cols-2 gap-3">
       <div
         v-for="(card, i) in question.content.cards"
         :key="i"
-        class="flex aspect-4/3 flex-col items-center justify-center gap-1.5 rounded-lg border border-line bg-card p-3 text-center"
+        class="flex aspect-4/3 flex-col items-center justify-center gap-1.5 rounded-leaf border border-line bg-card-2 p-3 text-center"
       >
-        <span class="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
+        <span class="text-xs font-semibold uppercase tracking-wide text-faint">
           {{ t("start_deutsch.sprechen.person_questions_label") }}
         </span>
         <span class="text-xl font-bold text-ink">{{ card }}</span>

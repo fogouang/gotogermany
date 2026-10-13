@@ -1,6 +1,6 @@
 <!-- components/start-deutsch/McImageQuestion.vue -->
 <template>
-  <div class="question-container">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
     <p class="text-base font-semibold text-ink">{{ question.content.question }}</p>
 
     <div class="mt-4 grid grid-cols-3 gap-3">
@@ -8,8 +8,8 @@
         v-for="opt in question.content.options"
         :key="opt.label"
         type="button"
-        class="group relative overflow-hidden rounded-lg border-2 transition-colors"
-        :class="modelValue === opt.label ? 'border-primary-500' : 'border-line hover:border-primary-300'"
+        class="group relative overflow-hidden rounded-leaf border-2 transition-colors"
+        :class="modelValue === opt.label ? 'border-primary' : 'border-line hover:border-primary/40'"
         @click="$emit('update:modelValue', opt.label)"
       >
         <img
@@ -18,18 +18,14 @@
           class="aspect-square w-full object-cover"
         />
         <span
-          class="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold uppercase"
-          :class="
-            modelValue === opt.label
-              ? 'bg-primary-500 text-white'
-              : 'bg-white/90 text-ink-secondary'
-          "
+          class="absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-full text-xs font-bold uppercase"
+          :class="modelValue === opt.label ? 'bg-primary text-white' : 'bg-card/90 text-muted'"
         >
           {{ opt.label }}
         </span>
         <i
           v-if="modelValue === opt.label"
-          class="pi pi-check-circle absolute bottom-1.5 right-1.5 text-lg text-primary-500"
+          class="pi pi-check-circle absolute bottom-1.5 right-1.5 text-lg text-primary"
         />
       </button>
     </div>
@@ -49,15 +45,13 @@ interface Props {
     content: { question: string; options: McImageOption[] };
   };
   modelValue: string | null;
-  /** Base URL vers le dossier des assets Start Deutsch (audio/images) */
+  /** Base URL du dossier des assets Start Deutsch (audio/images) */
   assetsBaseUrl?: string;
-  /** Niveau (A1/A2) — nécessaire pour reconstruire le chemin exact, puisque
-   * image_file ne contient que le nom de fichier nu (ex. "hoeren_teil1_q1_a.png"),
-   * alors que le stockage réel est <STORAGE_ROOT>/<level>/images/<filename>
-   * (cf. import_service.py::import_images). Contrairement à audio_file, qui
-   * lui contient déjà le chemin relatif complet. */
+  /** Niveau (A1/A2) : image_file ne contient que le nom de fichier, le stockage
+   * réel est <STORAGE_ROOT>/<level>/subject<n>/images/<filename>
+   * (cf. import_service.py::import_images). audio_file contient déjà le chemin complet. */
   level?: string;
-  /** Numéro du sujet — évite les collisions de noms de fichiers entre sujets du même niveau */
+  /** Numéro du sujet : évite les collisions de noms entre sujets du même niveau */
   subjectNumber?: number;
 }
 

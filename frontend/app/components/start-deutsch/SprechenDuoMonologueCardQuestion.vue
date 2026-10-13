@@ -14,18 +14,22 @@
   content = { central_question: string, sub_prompts: string[] }
 -->
 <template>
-  <div class="question-container">
-    <div class="mx-auto max-w-md rounded-xl border-2 border-primary-500 bg-primary-50 p-4 text-center">
-      <p class="text-lg font-bold text-ink">{{ question.content.central_question }}</p>
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
+    <div
+      class="mx-auto max-w-md rounded-leaf border-2 border-primary bg-primary/10 p-4 text-center"
+    >
+      <p class="text-lg font-bold text-ink">
+        {{ question.content.central_question }}
+      </p>
     </div>
 
     <div class="mt-3 grid grid-cols-2 gap-3">
       <div
         v-for="(prompt, i) in question.content.sub_prompts"
         :key="i"
-        class="flex flex-col items-center gap-1 rounded-lg border border-line bg-card p-3 text-center"
+        class="flex flex-col items-center gap-1 rounded-leaf border border-line bg-card-2 p-3 text-center"
       >
-        <i class="pi pi-arrow-up text-xs text-ink-tertiary" />
+        <i class="pi pi-arrow-up text-xs text-faint" />
         <span class="font-semibold text-ink">{{ prompt }}</span>
       </div>
     </div>

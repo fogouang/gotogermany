@@ -1,36 +1,29 @@
 <!-- pages/dashboard/start-deutsch/index.vue -->
 <template>
-  <div class="space-y-8">
-    <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">
-        {{ t("start_deutsch.title") }}
-      </h1>
-      <p class="text-gray-500 mt-1 text-sm">
-        {{ t("start_deutsch.subtitle") }}
-      </p>
+  <div class="space-y-6">
+    <!-- ── En-tête ── -->
+    <header>
+      <h1 class="text-2xl font-bold text-ink">{{ t("start_deutsch.title") }}</h1>
+      <p class="mt-1 text-sm text-muted">{{ t("start_deutsch.subtitle") }}</p>
+    </header>
+
+    <!-- ── Bandeau : entraînement inclus, pas un vrai examen ── -->
+    <div class="flex items-start gap-3 rounded-card border border-primary/30 bg-primary/10 px-5 py-4">
+      <i class="pi pi-info-circle mt-0.5 shrink-0 text-primary" />
+      <p class="text-sm text-ink">{{ t("start_deutsch.info_banner") }}</p>
     </div>
 
-    <!-- Bandeau explicatif : entraînement inclus, pas un vrai examen -->
-    <div
-      class="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-5 py-4"
-    >
-      <i class="pi pi-info-circle text-emerald-500 mt-0.5 shrink-0"></i>
-      <p class="text-sm text-emerald-800">
-        {{ t("start_deutsch.info_banner") }}
-      </p>
-    </div>
-
-    <!-- Filtre niveau -->
-    <div class="flex gap-2">
+    <!-- ── Filtre niveau ── -->
+    <div class="flex flex-wrap gap-2">
       <button
         v-for="opt in levelOptions"
         :key="opt.value"
+        type="button"
         class="rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors"
         :class="
           filterLevel === opt.value
-            ? 'border-emerald-500 bg-emerald-500 text-white'
-            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+            ? 'border-primary bg-primary/10 text-primary'
+            : 'border-line bg-card text-muted hover:border-primary/30 hover:text-ink'
         "
         @click="setLevelFilter(opt.value)"
       >
@@ -38,49 +31,45 @@
       </button>
     </div>
 
-    <!-- Loading -->
-    <div v-if="store.subjectsLoading" class="flex justify-center py-16">
-      <ProgressSpinner style="width: 48px; height: 48px" />
+    <!-- ── Chargement ── -->
+    <div v-if="store.subjectsLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div v-for="i in 6" :key="i" class="h-32 animate-pulse rounded-card bg-card-2" />
     </div>
 
-    <!-- Empty -->
+    <!-- ── Vide ── -->
     <div
       v-else-if="filteredSubjects.length === 0"
-      class="text-center py-16 bg-white rounded-xl border border-gray-100"
+      class="rounded-card border border-line bg-card py-16 text-center shadow-soft"
     >
-      <i class="pi pi-inbox text-4xl text-gray-200 mb-3 block"></i>
-      <p class="text-sm text-gray-500">{{ t("start_deutsch.empty") }}</p>
+      <i class="pi pi-inbox mb-3 block text-4xl text-faint" />
+      <p class="text-sm text-muted">{{ t("start_deutsch.empty") }}</p>
     </div>
 
-    <!-- Cartes sujets -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- ── Cartes sujets ── -->
+    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <button
         v-for="subject in filteredSubjects"
         :key="subject.id"
-        class="group flex flex-col items-start gap-3 bg-white border border-gray-100 rounded-xl p-5 text-left hover:border-emerald-400 hover:shadow-md transition-all"
+        type="button"
+        class="group flex flex-col items-start gap-3 rounded-card border border-line bg-card p-5 text-left shadow-soft transition-all hover:border-primary/40"
         @click="startSubject(subject.id)"
       >
         <div class="flex w-full items-center justify-between">
           <span
-            class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-sm group-hover:bg-emerald-100 transition-colors"
+            class="inline-flex size-10 items-center justify-center rounded-leaf bg-primary/10 text-sm font-bold text-primary"
           >
             {{ subject.level }}
           </span>
           <i
-            class="pi pi-arrow-right text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all"
-          ></i>
+            class="pi pi-arrow-right text-faint transition-all group-hover:translate-x-1 group-hover:text-primary"
+          />
         </div>
 
-        <div>
-          <p
-            class="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors"
-          >
+        <div class="min-w-0">
+          <p class="font-semibold text-ink transition-colors group-hover:text-primary">
             {{ subject.title }}
           </p>
-          <p
-            v-if="subject.description"
-            class="text-xs text-gray-400 mt-1 line-clamp-2"
-          >
+          <p v-if="subject.description" class="mt-1 line-clamp-2 text-xs text-muted">
             {{ subject.description }}
           </p>
         </div>
@@ -93,6 +82,7 @@
 definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 const store = useStartDeutschSessionStore();
 
 const filterLevel = ref<"A1" | "A2" | "">("");
@@ -114,7 +104,7 @@ function setLevelFilter(value: "A1" | "A2" | "") {
 }
 
 function startSubject(subjectId: string) {
-  navigateTo(`/dashboard/start-deutsch/${subjectId}/session`);
+  navigateTo(localePath(`/dashboard/start-deutsch/${subjectId}/session`));
 }
 
 onMounted(async () => {

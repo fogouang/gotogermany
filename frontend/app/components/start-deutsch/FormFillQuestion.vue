@@ -4,12 +4,12 @@
   user_answer = { "1": "...", "2": "...", ... } — clé = field.number en string
 -->
 <template>
-  <div class="question-container">
-    <p class="whitespace-pre-line text-sm leading-relaxed text-ink-secondary">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
+    <p class="whitespace-pre-line text-sm leading-relaxed text-muted">
       {{ question.content.prompt_text }}
     </p>
 
-    <div class="mt-5 space-y-3 rounded-lg border border-line bg-hover/40 p-4">
+    <div class="mt-5 space-y-3 rounded-leaf border border-line bg-card-2 p-4">
       <div
         v-for="field in question.content.fields"
         :key="field.number"

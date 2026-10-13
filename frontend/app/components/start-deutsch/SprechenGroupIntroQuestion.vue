@@ -7,7 +7,7 @@
   content = { prompts: string[] }
 -->
 <template>
-  <div class="question-container">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
     <ul class="divide-y divide-line">
       <li
         v-for="(prompt, i) in question.content.prompts"

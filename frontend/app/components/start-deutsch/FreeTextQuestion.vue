@@ -6,8 +6,10 @@
   se déclenche séparément après le submit de la session (cf. session.vue).
 -->
 <template>
-  <div class="question-container">
-    <p class="text-sm text-ink-secondary whitespace-pre-line">{{ question.content.prompt }}</p>
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
+    <p class="whitespace-pre-line text-sm text-muted">
+      {{ question.content.prompt }}
+    </p>
 
     <ul v-if="question.content.content_points?.length" class="mt-3 space-y-1.5">
       <li
@@ -15,7 +17,7 @@
         :key="i"
         class="flex items-start gap-2 text-sm text-ink"
       >
-        <i class="pi pi-circle-fill text-primary-500 text-[6px] mt-2 shrink-0" />
+        <i class="pi pi-circle-fill mt-2 shrink-0 text-[6px] text-primary" />
         {{ point }}
       </li>
     </ul>
@@ -67,16 +69,19 @@ const wordCount = computed(() => {
 
 const wordRangeLabel = computed(() => {
   const { min_words, max_words } = props.question.content;
-  if (min_words && max_words) return `${min_words}-${max_words} ${t("start_deutsch.free_text.words")}`;
+  if (min_words && max_words)
+    return `${min_words}-${max_words} ${t("start_deutsch.free_text.words")}`;
   if (min_words) return `≥ ${min_words} ${t("start_deutsch.free_text.words")}`;
   return "";
 });
 
 const wordCountColor = computed(() => {
   const { min_words, max_words } = props.question.content;
-  if (min_words && wordCount.value < min_words) return "text-danger-500 font-semibold";
-  if (max_words && wordCount.value > max_words) return "text-amber-600 font-semibold";
-  return "text-ink-tertiary";
+  if (min_words && wordCount.value < min_words)
+    return "font-semibold text-red-600";
+  if (max_words && wordCount.value > max_words)
+    return "font-semibold text-amber-600";
+  return "text-faint";
 });
 
 function onTextChange(value: string | undefined) {

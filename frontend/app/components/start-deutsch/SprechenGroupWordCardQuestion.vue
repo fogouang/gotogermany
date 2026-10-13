@@ -7,8 +7,8 @@
   content = { theme: string, cards: string[] }
 -->
 <template>
-  <div class="question-container">
-    <p v-if="question.content.theme" class="mb-4 text-sm font-semibold uppercase tracking-wide text-ink-secondary">
+ <div class="rounded-card border border-line bg-card p-4 shadow-soft"> 
+      <p v-if="question.content.theme" class="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
       {{ t("start_deutsch.sprechen.theme_label") }} {{ question.content.theme }}
     </p>
 
@@ -16,7 +16,7 @@
       <div
         v-for="(card, i) in question.content.cards"
         :key="i"
-        class="flex aspect-4/3 items-center justify-center rounded-lg border border-line bg-card p-3 text-center"
+        class="flex aspect-4/3 items-center justify-center rounded-leaf border border-line bg-card-2 p-3 text-center"
       >
         <span class="text-lg font-bold text-ink">{{ card }}</span>
       </div>
