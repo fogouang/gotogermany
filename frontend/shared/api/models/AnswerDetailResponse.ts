@@ -13,5 +13,7 @@ export type AnswerDetailResponse = {
     points_possible: number;
     feedback: (Record<string, any> | null);
     corrected_at: (string | null);
+    instruction?: (string | null);
+    prompts?: Array<string>;
 };
 
