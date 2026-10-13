@@ -46,6 +46,8 @@ class AuthService:
             hashed_password=hash_password(data.password),
             full_name=data.full_name.strip(),
             phone=data.phone,
+            whatsapp_opt_in=data.whatsapp_opt_in,
+            whatsapp_opt_in_at=datetime.now(timezone.utc) if data.whatsapp_opt_in else None,
             is_active=True,
             is_admin=False,
             is_verified=False,

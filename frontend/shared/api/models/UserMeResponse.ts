@@ -17,6 +17,7 @@ export type UserMeResponse = {
     ai_credits?: number;
     is_ambassador: boolean;
     role: UserRole;
+    whatsapp_opt_in?: boolean;
     is_admin: boolean;
     center_id: (string | null);
     branch_id: (string | null);

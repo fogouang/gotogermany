@@ -49,7 +49,46 @@ class UserService:
         update_data = data.model_dump(exclude_unset=True, exclude_none=True)
         if not update_data:
             return current_user
+
+        if "target_level_id" in update_data:
+            await self._check_target_level(current_user, update_data["target_level_id"])
+
+        if "whatsapp_opt_in" in update_data:
+            if update_data["whatsapp_opt_in"]:
+                phone = update_data.get("phone") or current_user.phone
+                if not phone:
+                    raise BadRequestException(
+                        detail="Ajoutez d'abord votre numéro WhatsApp à votre profil."
+                    )
+                # On garde la date du premier accord s'il était déjà donné
+                if not current_user.whatsapp_opt_in:
+                    update_data["whatsapp_opt_in_at"] = datetime.now(timezone.utc)
+            else:
+                update_data["whatsapp_opt_in_at"] = None
+
         return await self.repo.update(current_user.id, **update_data)
+
+    async def _check_target_level(self, user: User, level_id: UUID) -> None:
+        """Niveau actif choisi par l'étudiant lui-même (préférence d'affichage)."""
+        from sqlalchemy import func, select
+
+        from app.modules.exams.models import Level, Subject
+
+        if user.role != UserRole.student:
+            raise ForbiddenException(detail="Seuls les étudiants choisissent un niveau.")
+        if user.branch_id:
+            # Élève de centre : niveau fixé par le centre, verrouillé côté front
+            raise ForbiddenException(detail="Votre niveau est défini par votre centre.")
+
+        level = await self.db.get(Level, level_id)
+        if not level:
+            raise BadRequestException(detail="Niveau introuvable.")
+
+        subject_count = await self.db.scalar(
+            select(func.count(Subject.id)).where(Subject.level_id == level_id)
+        )
+        if not subject_count:
+            raise BadRequestException(detail="Ce niveau n'a pas encore de sujets.")
 
     async def change_password(
         self, current_user: User, data: UserChangePasswordRequest

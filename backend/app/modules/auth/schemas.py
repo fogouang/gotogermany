@@ -1,8 +1,9 @@
 """
 app/modules/auth/schemas.py
 """
+from app.shared.utils.phone import normalize_phone
 from uuid import UUID
-from pydantic import EmailStr, Field
+from pydantic import EmailStr, Field, ValidationInfo, field_validator
 from app.shared.schemas.base import BaseSchema
 from app.modules.users.models import UserRole
 
@@ -13,6 +14,19 @@ class RegisterRequest(BaseSchema):
     full_name: str = Field(min_length=2, max_length=150)
     phone: str | None = Field(default=None, max_length=20)
     referral_code: str | None = None
+    whatsapp_opt_in: bool = False
+
+    @field_validator("phone")
+    @classmethod
+    def phone_format(cls, v: str | None) -> str | None:
+        return normalize_phone(v)
+
+    @field_validator("whatsapp_opt_in")
+    @classmethod
+    def opt_in_needs_phone(cls, v: bool, info: ValidationInfo) -> bool:
+        if v and not info.data.get("phone"):
+            raise ValueError("Indiquez votre numéro WhatsApp pour rejoindre la communauté.")
+        return v
 
 
 class LoginRequest(BaseSchema):

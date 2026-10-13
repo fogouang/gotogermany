@@ -17,9 +17,11 @@ export type UserAdminResponse = {
     ai_credits?: number;
     is_ambassador: boolean;
     role: UserRole;
+    whatsapp_opt_in?: boolean;
     is_admin: boolean;
     updated_at: string;
     center_id: (string | null);
     branch_id: (string | null);
+    whatsapp_opt_in_at?: (string | null);
 };
 

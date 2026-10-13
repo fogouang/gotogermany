@@ -5,5 +5,7 @@
 export type UserUpdateRequest = {
     full_name?: (string | null);
     phone?: (string | null);
+    target_level_id?: (string | null);
+    whatsapp_opt_in?: (boolean | null);
 };
 

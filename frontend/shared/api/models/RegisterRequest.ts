@@ -8,5 +8,6 @@ export type RegisterRequest = {
     full_name: string;
     phone?: (string | null);
     referral_code?: (string | null);
+    whatsapp_opt_in?: boolean;
 };
 

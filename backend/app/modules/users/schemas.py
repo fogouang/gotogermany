@@ -1,6 +1,7 @@
 """
 app/modules/users/schemas.py
 """
+from app.shared.utils.phone import normalize_phone
 import uuid
 from datetime import datetime
 from pydantic import EmailStr, Field, field_validator
@@ -35,13 +36,22 @@ class UserRegisterRequest(BaseSchema):
 class UserUpdateRequest(BaseSchema):
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
     phone: str | None = Field(default=None, max_length=20)
-
+    
+    # Niveau actif de l'étudiant individuel (préférence d'affichage).
+    # Ignoré/refusé pour un élève de centre : c'est le centre qui fixe son niveau.
+    target_level_id: uuid.UUID | None = None
+    whatsapp_opt_in: bool | None = None
+        
     @field_validator("full_name")
     @classmethod
     def full_name_strip(cls, v: str | None) -> str | None:
         return v.strip() if v else None
 
-
+    @field_validator("phone")
+    @classmethod
+    def phone_format(cls, v: str | None) -> str | None:
+        return normalize_phone(v)
+    
 class UserChangePasswordRequest(BaseSchema):
     current_password: str
     new_password: str = Field(min_length=8, max_length=100)
@@ -129,6 +139,7 @@ class UserResponse(BaseSchema):
     ai_credits: int = 0
     is_ambassador: bool
     role: UserRole
+    whatsapp_opt_in: bool = False
 
 
 class UserAdminResponse(UserResponse):
@@ -138,7 +149,7 @@ class UserAdminResponse(UserResponse):
     updated_at: datetime
     center_id: uuid.UUID | None
     branch_id: uuid.UUID | None
-
+    whatsapp_opt_in_at: datetime | None = None
 
 class UserMeResponse(UserResponse):
     """Réponse pour /users/me — inclut le contexte centre/branch si applicable."""

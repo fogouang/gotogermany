@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime, timezone
 import enum
-from sqlalchemy import Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, UniqueConstraint, true
+from sqlalchemy import Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, UniqueConstraint, true, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.shared.database.base import Base, UUIDMixin, TimestampMixin
@@ -32,6 +32,14 @@ class User(Base, UUIDMixin, TimestampMixin):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Accord pour rejoindre la communauté WhatsApp (case non cochée par défaut).
+    # La date sert de preuve du consentement ; remise à null en cas de retrait.
+    whatsapp_opt_in: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default=false()
+    )
+    whatsapp_opt_in_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
