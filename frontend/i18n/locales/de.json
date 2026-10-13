@@ -881,7 +881,9 @@
     "tips": "Tipps",
     "close": "Schließen",
     "redo": "Dieses Thema wiederholen",
-    "page_title": "Schreiben-Simulator - DeutschTest"
+    "page_title": "Schreiben-Simulator - DeutschTest",
+    "passed": "Prüfung bestanden",
+    "not_passed": "Nicht bestanden"
   },
   "simulator_result": {
     "no_correction": "Keine Korrektur verfügbar.",
@@ -898,9 +900,12 @@
     "tips": "Verbesserungstipps",
     "redo": "Dieses Thema wiederholen",
     "choose_another": "Anderes Thema wählen",
-    "page_title": "Ergebnisse - DeutschTest"
+    "page_title": "Ergebnisse - DeutschTest",
+    "your_text": "Ihr Text",
+    "original_unavailable": "Originaltext nicht verfügbar."
   },
   "simulator_subject": {
+    "points_label": "Punkte",
     "words_written": "geschriebene(s) Wort(e)",
     "ad_context": "Anzeige / Kontext",
     "task_label": "Aufgabe",
@@ -1163,7 +1168,51 @@
     "status_ended": "Beendet",
     "status_cancelled": "Abgesagt",
     "see_notes": "Notizen ansehen",
-    "join": "Beitreten"
+    "join": "Beitreten",
+    "room": {
+      "loading": "Sitzung wird geladen…",
+      "title": "Live-Sitzung Sprechen",
+      "subtitle": "Mit einer Prüferin oder einem Prüfer Ihres Zentrums.",
+      "connecting_title": "Verbindung zur Prüfungsperson…",
+      "connecting_hint": "Bitte warten Sie, das dauert nur wenige Sekunden.",
+      "prep_text": "Sie haben {duration} Zeit, das Thema vorzubereiten. Machen Sie Notizen auf Papier, wie in der echten Prüfung.",
+      "prep_minutes": "{n} Minuten",
+      "ready": "Ich bin bereit",
+      "live_badge": "Live",
+      "examiner": "Prüfer/in",
+      "you": "Sie",
+      "candidate": "Teilnehmer/in",
+      "hand_raised": "Hand gehoben",
+      "mic_on": "Mikrofon einschalten",
+      "mic_off": "Mikrofon stummschalten",
+      "cam_on": "Kamera einschalten",
+      "cam_off": "Kamera ausschalten",
+      "raise_hand": "Hand heben",
+      "leave": "Verlassen",
+      "leave_aria": "Prüfung verlassen",
+      "stay_visible": "Bleiben Sie während der gesamten mündlichen Prüfung im Bild.",
+      "tab_chat": "Chat",
+      "tab_people": "Teilnehmende",
+      "tab_status": "Status",
+      "chat_empty": "Noch keine Nachrichten.",
+      "chat_placeholder": "Nachricht schreiben…",
+      "chat_label": "Nachricht",
+      "send": "Senden",
+      "mic": "Mikrofon",
+      "camera": "Kamera",
+      "mic_state_on": "An",
+      "mic_state_off": "Stumm",
+      "cam_state_on": "An",
+      "cam_state_off": "Aus",
+      "status_note": "Identitäts- und Sitzungskontrollen sind noch nicht automatisiert: Die Prüfungsperson überwacht das Gespräch direkt.",
+      "ended_title": "Sitzung beendet",
+      "ended_text": "Ihre mündliche Prüfung ist beendet.",
+      "feedback_title": "Rückmeldung der Prüfungsperson",
+      "no_notes": "Die Prüfungsperson hat noch keine Notizen veröffentlicht.",
+      "back": "Zurück zu meinen Sitzungen",
+      "subject_to_prepare": "Vorzubereitendes Thema",
+      "not_found": "Sitzung nicht gefunden."
+    }
   },
   "start_deutsch": {
     "title": "Start Deutsch — A1 & A2",
@@ -1208,6 +1257,10 @@
       "download_button": "Meine Antworten herunterladen (PDF)",
       "time_up_title": "Zeit abgelaufen",
       "time_up_description": "Ihre Antworten wurden automatisch als PDF heruntergeladen."
+    },
+    "question_ui": {
+      "none_solution": "Keine Anzeige passt",
+      "unsupported_format": "Dieser Fragetyp ({format}) kommt in einem späteren Update."
     }
   },
   "modules_section": {

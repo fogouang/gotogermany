@@ -872,7 +872,9 @@
     "tips": "Conseils",
     "close": "Fermer",
     "redo": "Refaire ce sujet",
-    "page_title": "Simulateur Schreiben  DeutschTest"
+    "page_title": "Simulateur Schreiben  DeutschTest",
+    "passed": "Prüfung bestanden",
+    "not_passed": "Nicht bestanden"
   },
   "simulator_result": {
     "no_correction": "Aucune correction disponible.",
@@ -889,9 +891,12 @@
     "tips": "Conseils pour progresser",
     "redo": "Refaire ce sujet",
     "choose_another": "Choisir un autre sujet",
-    "page_title": "Résultats - DeutschTest"
+    "page_title": "Résultats - DeutschTest",
+    "your_text": "Votre texte",
+    "original_unavailable": "Texte original non disponible."
   },
   "simulator_subject": {
+    "points_label": "points",
     "words_written": "mot(s) rédigé(s)",
     "ad_context": "Annonce / Context",
     "task_label": "Aufgabe",
@@ -1155,7 +1160,51 @@
     "status_ended": "Terminée",
     "status_cancelled": "Annulée",
     "see_notes": "Voir les notes",
-    "join": "Rejoindre"
+    "join": "Rejoindre",
+    "room": {
+      "loading": "Chargement de la session…",
+      "title": "Session Sprechen en direct",
+      "subtitle": "Avec un examinateur de votre centre.",
+      "connecting_title": "Connexion à l'examinateur…",
+      "connecting_hint": "Merci de patienter, ça ne prend que quelques secondes.",
+      "prep_text": "Vous avez {duration} pour préparer le sujet. Prenez vos notes sur papier, comme à l'examen réel.",
+      "prep_minutes": "{n} minutes",
+      "ready": "Je suis prêt(e)",
+      "live_badge": "En direct",
+      "examiner": "Examinateur",
+      "you": "Vous",
+      "candidate": "Candidat",
+      "hand_raised": "Main levée",
+      "mic_on": "Activer le micro",
+      "mic_off": "Couper le micro",
+      "cam_on": "Activer la caméra",
+      "cam_off": "Couper la caméra",
+      "raise_hand": "Lever la main",
+      "leave": "Quitter",
+      "leave_aria": "Quitter l'examen",
+      "stay_visible": "Restez visible à l'écran pendant toute l'épreuve orale.",
+      "tab_chat": "Chat",
+      "tab_people": "Participants",
+      "tab_status": "Statut",
+      "chat_empty": "Aucun message pour l'instant.",
+      "chat_placeholder": "Écrire un message…",
+      "chat_label": "Message",
+      "send": "Envoyer",
+      "mic": "Micro",
+      "camera": "Caméra",
+      "mic_state_on": "Actif",
+      "mic_state_off": "Coupé",
+      "cam_state_on": "Active",
+      "cam_state_off": "Coupée",
+      "status_note": "Le contrôle d'identité et de session n'est pas encore automatisé : l'examinateur supervise directement l'appel.",
+      "ended_title": "Session terminée",
+      "ended_text": "Votre examen oral avec l'examinateur est terminé.",
+      "feedback_title": "Retour de l'examinateur",
+      "no_notes": "L'examinateur n'a pas encore publié de notes.",
+      "back": "Retour à mes sessions",
+      "subject_to_prepare": "Sujet à préparer",
+      "not_found": "Session introuvable."
+    }
   },
   "start_deutsch": {
     "title": "Start Deutsch — A1 & A2",
@@ -1200,6 +1249,10 @@
       "download_button": "Meine Antworten herunterladen (PDF)",
       "time_up_title": "Temps écoulé",
       "time_up_description": "Votre devoir a été téléchargé automatiquement avec vos réponses en l'état."
+    },
+    "question_ui": {
+      "none_solution": "Aucune annonce ne convient",
+      "unsupported_format": "Ce type de question ({format}) arrive dans une prochaine mise à jour."
     }
   },
   "admin": {

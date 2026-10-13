@@ -1,163 +1,148 @@
+<!-- pages/dashboard/simulateur/[subjectId]/index.vue -->
 <template>
-  <div class="h-screen flex flex-col bg-gray-50 overflow-hidden">
-
-    <!-- Loading -->
-    <div v-if="store.loading" class="flex-1 flex items-center justify-center">
+  <div class="flex h-screen flex-col overflow-hidden bg-canvas">
+    <!-- ── Chargement ── -->
+    <div v-if="store.loading" class="flex flex-1 items-center justify-center">
       <ProgressSpinner style="width: 50px; height: 50px" />
     </div>
 
-    <!-- Erreur -->
-    <div v-else-if="store.error" class="flex-1 flex items-center justify-center">
-      <div class="max-w-lg px-6 text-center space-y-4">
-        <i class="pi pi-exclamation-circle text-red-400 text-4xl"></i>
-        <p class="text-red-600 font-medium">{{ store.error }}</p>
+    <!-- ── Erreur ── -->
+    <div v-else-if="store.error" class="flex flex-1 items-center justify-center">
+      <div class="max-w-lg space-y-4 px-6 text-center">
+        <i class="pi pi-exclamation-circle text-4xl text-red-500" />
+        <p class="font-medium text-red-600">{{ store.error }}</p>
         <Button :label="t('simulator_subject.back')" outlined @click="router.back()" />
       </div>
     </div>
 
-    <!-- Contenu -->
     <template v-else-if="subject">
-
-      <!-- Barre de navigation sticky -->
-      <div class="shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-        <Button icon="pi pi-arrow-left" text rounded @click="router.back()" />
+      <!-- ══ Barre du haut ══ -->
+      <div class="flex shrink-0 items-center gap-3 border-b border-line bg-card px-4 py-3">
+        <Button icon="pi pi-arrow-left" text rounded :aria-label="t('simulator_subject.back')" @click="router.back()" />
         <div class="flex items-center gap-2">
-          <span :class="['text-xs font-bold px-2 py-0.5 rounded-full uppercase', providerColor(subject.provider)]">
+          <span class="rounded-full px-2 py-0.5 text-xs font-bold uppercase" :class="providerColor(subject.provider)">
             {{ subject.provider }}
           </span>
-          <span class="text-xs font-bold px-2 py-0.5 rounded-full uppercase bg-indigo-100 text-indigo-700">
+          <span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold uppercase text-primary">
             {{ subject.level }}
           </span>
         </div>
-        <h1 class="text-sm font-semibold text-gray-800 truncate flex-1">{{ subject.title }}</h1>
-        <span class="ml-auto text-xs text-gray-400 shrink-0">
+        <h1 class="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{{ subject.title }}</h1>
+        <span class="ml-auto shrink-0 text-xs text-faint">
           {{ totalWords }} {{ t("simulator_subject.words_written") }}
         </span>
       </div>
 
-      <!-- Tabs -->
-      <div class="shrink-0 bg-white border-b border-gray-100 px-4">
-        <div class="flex gap-0 overflow-x-auto">
+      <!-- ══ Onglets des Teile ══ -->
+      <div class="shrink-0 border-b border-line bg-card px-4">
+        <div class="flex overflow-x-auto">
           <button
             v-for="(task, i) in subject.tasks"
             :key="i"
-            :class="[
-              'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0',
-              activeTab === i
-                ? 'border-teal-600 text-teal-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700',
-            ]"
+            type="button"
+            class="flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors"
+            :class="activeTab === i ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'"
             @click="activeTab = i"
           >
             <span
-              :class="[
-                'w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shrink-0 transition-colors',
-                wordCount(i) >= (task.word_count_min ?? 0)
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-200 text-gray-500',
-              ]"
+              class="flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors"
+              :class="wordCount(i) >= (task.word_count_min ?? 0) ? 'bg-primary text-white' : 'bg-card-2 text-muted'"
             >
-              {{ wordCount(i) >= (task.word_count_min ?? 0) ? "✓" : i + 1 }}
+              <i v-if="wordCount(i) >= (task.word_count_min ?? 0)" class="pi pi-check text-[10px]" />
+              <template v-else>{{ i + 1 }}</template>
             </span>
-            <span class="font-medium">Teil {{ task.teil }}</span>
-            <span class="text-xs text-gray-400 hidden sm:inline">({{ wordCount(i) }}/{{ task.word_count_max }})</span>
+            <span>Teil {{ task.teil }}</span>
+            <span class="hidden text-xs text-faint sm:inline">({{ wordCount(i) }}/{{ task.word_count_max }})</span>
           </button>
         </div>
       </div>
 
-      <!-- Layout trois colonnes : consignes | rédaction+correction | caractères spéciaux -->
-      <div class="flex-1 overflow-hidden min-h-0 flex">
-        <div class="flex-1 overflow-hidden min-h-0">
+      <!-- ══ Consignes | rédaction et correction | caractères spéciaux ══ -->
+      <div class="flex min-h-0 flex-1 overflow-hidden">
+        <div class="min-h-0 flex-1 overflow-hidden">
           <template v-for="(task, i) in subject.tasks" :key="i">
-            <div v-show="activeTab === i" class="h-full flex flex-col lg:flex-row">
-
-              <!-- ── Colonne gauche : consignes ───────────────── -->
-              <div class="lg:w-[45%] bg-white border-r border-gray-100 overflow-y-auto">
-                <div class="p-6 space-y-4 max-w-xl mx-auto lg:mx-0">
-
-                  <!-- Sprachliche Mittel -->
+            <div v-show="activeTab === i" class="flex h-full flex-col lg:flex-row">
+              <!-- ── Consignes ── -->
+              <div class="overflow-y-auto border-r border-line bg-card lg:w-[45%]">
+                <div class="mx-auto max-w-xl space-y-4 p-6 lg:mx-0">
                   <SprachlicheMittelPanel :mittel-key="mittelKey(task)" />
 
-                  <!-- ══ CAS 1 : choix entre thèmes (Telc/ÖSD B2) ══ -->
+                  <!-- Cas 1 : choix entre thèmes (telc / ÖSD B2) -->
                   <template v-if="task.themes">
                     <div v-if="!selectedThemes[i]" class="space-y-3">
-                      <p class="text-sm font-semibold text-gray-700">
-                        {{ t("simulator_subject.choose_theme") }}
-                      </p>
+                      <p class="text-sm font-semibold text-ink">{{ t("simulator_subject.choose_theme") }}</p>
                       <div class="grid grid-cols-1 gap-3">
                         <button
                           v-for="(theme, key) in task.themes"
                           :key="key"
-                          class="p-4 bg-white border-2 border-gray-200 rounded-xl text-left hover:border-teal-400 transition-colors"
+                          type="button"
+                          class="rounded-card border-2 border-line bg-card p-4 text-left transition-colors hover:border-primary/40"
                           @click="selectedThemes[i] = String(key)"
                         >
-                          <p class="font-semibold text-gray-900 mb-1">
-                            Thema {{ key }} : {{ theme.titel }}
-                          </p>
-                          <p class="text-xs text-gray-500 line-clamp-2">{{ theme.stimulus }}</p>
+                          <p class="mb-1 font-semibold text-ink">Thema {{ key }} : {{ theme.titel }}</p>
+                          <p class="line-clamp-2 text-xs text-muted">{{ theme.stimulus }}</p>
                         </button>
                       </div>
                     </div>
 
                     <template v-else>
-                      <div class="flex items-center justify-between mb-2">
-                        <p class="text-sm font-semibold text-gray-700">
+                      <div class="mb-2 flex items-center justify-between gap-2">
+                        <p class="text-sm font-semibold text-ink">
                           Thema {{ selectedThemes[i] }} : {{ task.themes[selectedThemes[i]!]?.titel }}
                         </p>
-                        <button class="text-xs text-gray-400 hover:text-gray-600" @click="selectedThemes[i] = null">
+                        <button type="button" class="text-xs text-muted hover:text-ink" @click="selectedThemes[i] = null">
                           {{ t("simulator_subject.change_theme") }}
                         </button>
                       </div>
 
-                      <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
-                        <p class="text-sm text-gray-800 italic">{{ task.themes[selectedThemes[i]!]?.stimulus }}</p>
+                      <div class="rounded-card border border-line bg-card-2 p-5">
+                        <p class="text-sm italic text-ink">{{ task.themes[selectedThemes[i]!]?.stimulus }}</p>
                       </div>
 
-                      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">
+                      <div class="rounded-card border border-amber-500/30 bg-amber-500/10 p-5">
+                        <p class="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">
                           {{ t("simulator_subject.task_label") }}
                         </p>
                         <ul class="space-y-1">
                           <li
                             v-for="(prompt, pi) in task.themes[selectedThemes[i]!]?.prompts"
                             :key="pi"
-                            class="flex gap-2 text-sm text-amber-800"
+                            class="flex gap-2 text-sm text-ink"
                           >
-                            <span class="font-bold shrink-0">–</span>
+                            <span class="shrink-0 font-bold text-amber-600">•</span>
                             <span>{{ prompt }}</span>
                           </li>
                         </ul>
-                        <p v-if="task.word_count_target" class="mt-3 text-xs text-amber-600 font-medium">
+                        <p v-if="task.word_count_target" class="mt-3 text-xs font-medium text-amber-600">
                           {{ t("simulator_subject.approx") }} {{ task.word_count_target }} {{ t("simulator_subject.words") }}
                         </p>
                       </div>
                     </template>
                   </template>
 
-                  <!-- ══ CAS 2 : choix entre variantes d'opinion (ÖSD) ══ -->
+                  <!-- Cas 2 : choix entre variantes d'opinion (ÖSD) -->
                   <template v-else-if="task.opinion_variants">
                     <div v-if="!selectedVariants[i]" class="space-y-3">
-                      <p class="text-sm font-semibold text-gray-700">
-                        {{ t("simulator_subject.choose_theme") }}
-                      </p>
+                      <p class="text-sm font-semibold text-ink">{{ t("simulator_subject.choose_theme") }}</p>
                       <div class="grid grid-cols-1 gap-3">
                         <button
                           v-for="(variant, key) in task.opinion_variants"
                           :key="key"
-                          class="p-4 bg-white border-2 border-gray-200 rounded-xl text-left hover:border-teal-400 transition-colors"
+                          type="button"
+                          class="rounded-card border-2 border-line bg-card p-4 text-left transition-colors hover:border-primary/40"
                           @click="selectedVariants[i] = String(key)"
                         >
-                          <p class="font-semibold text-gray-900">{{ variant.thema }}</p>
+                          <p class="font-semibold text-ink">{{ variant.thema }}</p>
                         </button>
                       </div>
                     </div>
 
                     <template v-else>
-                      <div class="flex items-center justify-between mb-2">
-                        <p class="text-sm font-semibold text-gray-700">
+                      <div class="mb-2 flex items-center justify-between gap-2">
+                        <p class="text-sm font-semibold text-ink">
                           {{ task.opinion_variants[selectedVariants[i]!]?.thema }}
                         </p>
-                        <button class="text-xs text-gray-400 hover:text-gray-600" @click="selectedVariants[i] = null">
+                        <button type="button" class="text-xs text-muted hover:text-ink" @click="selectedVariants[i] = null">
                           {{ t("simulator_subject.change_theme") }}
                         </button>
                       </div>
@@ -166,150 +151,146 @@
                         <div
                           v-for="(aussage, ai) in task.opinion_variants[selectedVariants[i]!].aussagen"
                           :key="ai"
-                          class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-800 italic"
+                          class="rounded-leaf border border-line bg-card-2 p-3 text-sm italic text-ink"
                         >
                           « {{ aussage }} »
                         </div>
                       </div>
 
-                      <div v-if="task.leitpunkte?.length" class="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">
+                      <div v-if="task.leitpunkte?.length" class="rounded-card border border-amber-500/30 bg-amber-500/10 p-5">
+                        <p class="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">
                           {{ t("simulator_subject.task_label") }}
                         </p>
                         <ul class="space-y-1">
-                          <li v-for="(punkt, pi) in task.leitpunkte" :key="pi" class="flex gap-2 text-sm text-amber-800">
-                            <span class="font-bold shrink-0">–</span>
+                          <li v-for="(punkt, pi) in task.leitpunkte" :key="pi" class="flex gap-2 text-sm text-ink">
+                            <span class="shrink-0 font-bold text-amber-600">•</span>
                             <span>{{ punkt }}</span>
                           </li>
                         </ul>
-                        <p v-if="task.word_count_target" class="mt-3 text-xs text-amber-600 font-medium">
+                        <p v-if="task.word_count_target" class="mt-3 text-xs font-medium text-amber-600">
                           {{ t("simulator_subject.approx") }} {{ task.word_count_target }} {{ t("simulator_subject.words") }}
                         </p>
                       </div>
                     </template>
                   </template>
 
-                  <!-- ══ CAS 3 : formats simples ══ -->
+                  <!-- Cas 3 : formats simples -->
                   <template v-else>
-                    <!-- Stimulus e-mail (Telc) -->
+                    <!-- E-mail stimulus (telc) -->
                     <div
                       v-if="task.stimulus_email?.sender || task.stimulus_email?.subject || task.stimulus_email?.body"
-                      class="bg-white border border-gray-200 rounded-xl overflow-hidden"
+                      class="overflow-hidden rounded-card border border-line bg-card"
                     >
-                      <div class="bg-gray-50 border-b border-gray-200 px-5 py-3 space-y-1">
+                      <div class="space-y-1 border-b border-line bg-card-2 px-5 py-3">
                         <div class="flex items-center gap-2 text-sm">
-                          <span class="font-semibold text-gray-500 w-16">Von:</span>
-                          <span class="text-gray-900 font-medium">{{ task.stimulus_email.sender }}</span>
+                          <span class="w-16 font-semibold text-muted">Von:</span>
+                          <span class="font-medium text-ink">{{ task.stimulus_email.sender }}</span>
                         </div>
                         <div class="flex items-center gap-2 text-sm">
-                          <span class="font-semibold text-gray-500 w-16">Betreff:</span>
-                          <span class="text-gray-900">{{ task.stimulus_email.subject }}</span>
+                          <span class="w-16 font-semibold text-muted">Betreff:</span>
+                          <span class="text-ink">{{ task.stimulus_email.subject }}</span>
                         </div>
                       </div>
-                      <div class="px-5 py-4">
-                        <p class="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{{ task.stimulus_email.body }}</p>
-                      </div>
+                      <p class="whitespace-pre-line px-5 py-4 text-sm leading-relaxed text-ink">
+                        {{ task.stimulus_email.body }}
+                      </p>
                     </div>
 
-                    <!-- Stimulus forum (Goethe) -->
-                    <div v-else-if="task.stimulus" class="bg-gray-50 border border-gray-200 rounded-xl p-5">
-                      <div class="flex items-center gap-2 mb-2">
-                        <i class="pi pi-comment text-gray-500"></i>
-                        <span class="text-sm font-semibold text-gray-700">
+                    <!-- Forum (Goethe) -->
+                    <div v-else-if="task.stimulus" class="rounded-card border border-line bg-card-2 p-5">
+                      <div class="mb-2 flex items-center gap-2">
+                        <i class="pi pi-comment text-muted" />
+                        <span class="text-sm font-semibold text-ink">
                           {{ getStimulusAuthor(task) || t("simulator_subject.comment") }}
                         </span>
                       </div>
-                      <p v-if="getStimulusTitle(task)" class="text-xs font-semibold text-gray-500 mb-2">
+                      <p v-if="getStimulusTitle(task)" class="mb-2 text-xs font-semibold text-muted">
                         {{ getStimulusTitle(task) }}
                       </p>
-                      <p class="text-sm text-gray-800 italic">{{ getStimulusText(task) }}</p>
+                      <p class="text-sm italic text-ink">{{ getStimulusText(task) }}</p>
                     </div>
 
-                    <!-- Context ad (Telc/ÖSD annonce) -->
-                    <div v-if="task.context_ad" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                      <div class="bg-gray-50 border-b border-gray-200 px-5 py-3">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                          {{ t("simulator_subject.ad_context") }}
-                        </p>
-                      </div>
-                      <div class="px-5 py-4">
-                        <p class="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{{ task.context_ad }}</p>
-                      </div>
+                    <!-- Annonce (telc / ÖSD) -->
+                    <div v-if="task.context_ad" class="overflow-hidden rounded-card border border-line bg-card">
+                      <p class="border-b border-line bg-card-2 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted">
+                        {{ t("simulator_subject.ad_context") }}
+                      </p>
+                      <p class="whitespace-pre-line px-5 py-4 text-sm leading-relaxed text-ink">{{ task.context_ad }}</p>
                     </div>
 
                     <!-- Destinataire -->
-                    <div v-if="task.recipient" class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm">
-                      <span class="font-semibold text-gray-500">An:</span>
-                      <span class="text-gray-900 ml-2">{{ task.recipient }}</span>
+                    <div v-if="task.recipient" class="rounded-leaf border border-line bg-card-2 px-4 py-2 text-sm">
+                      <span class="font-semibold text-muted">An:</span>
+                      <span class="ml-2 text-ink">{{ task.recipient }}</span>
                     </div>
 
-                    <!-- Info comparaison (ÖSD promesses vs réalité) -->
-                    <div v-if="task.info_comparison" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                      <div class="bg-gray-50 border-b border-gray-200 px-5 py-3">
-                        <p class="text-sm font-semibold text-gray-800">{{ task.info_comparison.anbieter }}</p>
-                        <p class="text-xs text-gray-500 mt-1">{{ task.info_comparison.situation }}</p>
+                    <!-- Promesses et réalité (ÖSD) -->
+                    <div v-if="task.info_comparison" class="overflow-hidden rounded-card border border-line bg-card">
+                      <div class="border-b border-line bg-card-2 px-5 py-3">
+                        <p class="text-sm font-semibold text-ink">{{ task.info_comparison.anbieter }}</p>
+                        <p class="mt-1 text-xs text-muted">{{ task.info_comparison.situation }}</p>
                       </div>
-                      <div class="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
                         <div>
-                          <p class="text-xs font-bold text-green-700 uppercase mb-2">Versprochen</p>
+                          <p class="mb-2 text-xs font-bold uppercase text-emerald-600">Versprochen</p>
                           <ul class="space-y-1">
-                            <li v-for="(v, vi) in task.info_comparison.versprechen" :key="vi" class="text-xs text-gray-700 flex gap-1.5">
-                              <span class="text-green-600">✓</span>{{ v }}
+                            <li v-for="(v, vi) in task.info_comparison.versprechen" :key="vi" class="flex gap-1.5 text-xs text-ink">
+                              <i class="pi pi-check mt-0.5 text-[10px] text-emerald-600" />{{ v }}
                             </li>
                           </ul>
                         </div>
                         <div>
-                          <p class="text-xs font-bold text-red-700 uppercase mb-2">Problème</p>
+                          <p class="mb-2 text-xs font-bold uppercase text-red-600">Probleme</p>
                           <ul class="space-y-1">
-                            <li v-for="(p, pi) in task.info_comparison.probleme" :key="pi" class="text-xs text-gray-700 flex gap-1.5">
-                              <span class="text-red-600">✗</span>{{ p }}
+                            <li v-for="(p, pi) in task.info_comparison.probleme" :key="pi" class="flex gap-1.5 text-xs text-ink">
+                              <i class="pi pi-times mt-0.5 text-[10px] text-red-600" />{{ p }}
                             </li>
                           </ul>
                         </div>
                       </div>
-                      <div v-if="task.info_comparison.kontakt" class="px-5 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+                      <div v-if="task.info_comparison.kontakt" class="border-t border-line bg-card-2 px-5 py-3 text-xs text-muted">
                         Kontakt: {{ task.info_comparison.kontakt }}
                       </div>
                     </div>
 
-                    <!-- Sujet simple (topic) -->
-                    <div v-if="task.topic" class="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                      <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Thema :</p>
-                      <p class="text-base font-bold text-amber-900">{{ task.topic }}</p>
+                    <!-- Thème simple -->
+                    <div v-if="task.topic" class="rounded-card border border-amber-500/30 bg-amber-500/10 p-5">
+                      <p class="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">Thema</p>
+                      <p class="text-base font-bold text-ink">{{ task.topic }}</p>
                     </div>
 
                     <!-- Scénario -->
-                    <div v-if="task.scenario" class="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                      <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">
+                    <div v-if="task.scenario" class="rounded-card border border-amber-500/30 bg-amber-500/10 p-5">
+                      <p class="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">
                         {{ t("simulator_subject.task_label") }}
                       </p>
-                      <p class="text-sm text-amber-900 leading-relaxed">{{ task.scenario }}</p>
+                      <p class="text-sm leading-relaxed text-ink">{{ task.scenario }}</p>
                     </div>
 
-                    <!-- Prompts (communs à topic/scenario) -->
-                    <div v-if="task.prompts?.length" class="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                      <p v-if="!task.scenario" class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">
+                    <!-- Points à traiter -->
+                    <div v-if="task.prompts?.length" class="rounded-card border border-amber-500/30 bg-amber-500/10 p-5">
+                      <p v-if="!task.scenario" class="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">
                         {{ t("simulator_subject.task_label") }}
                       </p>
                       <ul class="space-y-1">
-                        <li v-for="(prompt, pi) in task.prompts" :key="pi" class="flex gap-2 text-sm text-amber-800">
-                          <span class="font-bold shrink-0">–</span>
+                        <li v-for="(prompt, pi) in task.prompts" :key="pi" class="flex gap-2 text-sm text-ink">
+                          <span class="shrink-0 font-bold text-amber-600">•</span>
                           <span>{{ prompt }}</span>
                         </li>
                       </ul>
-                      <p class="mt-3 text-xs text-amber-600 font-medium">
-                        {{ task.word_count_min }}–{{ task.word_count_max }} {{ t("simulator_subject.word_range") }}
-                        <span v-if="task.register === 'formell'"> • {{ t("simulator_subject.formal_required") }}</span>
+                      <p class="mt-3 text-xs font-medium text-amber-600">
+                        {{ task.word_count_min }}-{{ task.word_count_max }} {{ t("simulator_subject.word_range") }}
+                        <span v-if="task.register === 'formell'"> · {{ t("simulator_subject.formal_required") }}</span>
                       </p>
                     </div>
-                    <div v-else class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                      <p class="text-xs text-amber-600 font-medium">
-                        {{ task.word_count_min }}–{{ task.word_count_max }} {{ t("simulator_subject.word_range") }}
+                    <div v-else class="rounded-card border border-amber-500/30 bg-amber-500/10 p-4">
+                      <p class="text-xs font-medium text-amber-600">
+                        {{ task.word_count_min }}-{{ task.word_count_max }} {{ t("simulator_subject.word_range") }}
                       </p>
                     </div>
                   </template>
 
-                  <!-- Navigation teile -->
+                  <!-- Navigation entre Teile -->
                   <div class="flex justify-between pt-2">
                     <Button
                       v-if="i > 0"
@@ -324,7 +305,7 @@
                       v-if="i < subject.tasks.length - 1"
                       :label="t('simulator_subject.next_teil')"
                       icon="pi pi-arrow-right"
-                      iconPos="right"
+                      icon-pos="right"
                       size="small"
                       severity="secondary"
                       @click="activeTab = i + 1"
@@ -333,69 +314,73 @@
                 </div>
               </div>
 
-              <!-- ── Colonne milieu : rédaction + correction ─── -->
-              <div class="lg:w-[55%] overflow-y-auto bg-gray-50">
-                <div class="p-6 space-y-4 max-w-2xl mx-auto">
-
-                  <!-- Zone rédaction — verrouillée tant qu'un thème/variante n'est pas choisi -->
-                  <div class="bg-white border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-teal-400 transition-colors">
+              <!-- ── Rédaction et correction ── -->
+              <div class="overflow-y-auto bg-canvas lg:w-[55%]">
+                <div class="mx-auto max-w-2xl space-y-4 p-6">
+                  <!-- Zone de rédaction : verrouillée tant qu'un thème ou une variante n'est pas choisi -->
+                  <div
+                    class="overflow-hidden rounded-card border-2 border-line bg-card transition-colors focus-within:border-primary/60"
+                  >
                     <textarea
                       v-if="isWritingUnlocked(i, task)"
+                      :id="`simulator-answer-${i}`"
                       :ref="(el) => setTextareaRef(el, i)"
                       v-model="answers[i]"
                       :placeholder="t('simulator_subject.write_placeholder')"
-                      class="w-full border-0 resize-none p-5 text-sm focus:ring-0 focus:outline-none bg-transparent"
+                      class="w-full resize-none border-0 bg-transparent p-5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-0"
                       rows="12"
                       @focus="activeTextareaIndex = i"
                     />
-                    <div v-else class="p-5 text-sm text-gray-400 italic">
+                    <div v-else class="p-5 text-sm italic text-faint">
                       {{ t("simulator_subject.choose_theme_first") }}
                     </div>
-                    <div class="border-t border-gray-100 px-5 py-2 flex items-center justify-between bg-gray-50">
-                      <span class="text-xs text-gray-400">{{ wordCount(i) }} {{ t("simulator_subject.words_count") }}</span>
+                    <div class="flex items-center justify-between border-t border-line bg-card-2 px-5 py-2">
+                      <span class="text-xs text-muted">{{ wordCount(i) }} {{ t("simulator_subject.words_count") }}</span>
                       <div class="flex items-center gap-2">
-                        <div class="w-24 bg-gray-200 rounded-full h-1">
+                        <div class="h-1 w-24 rounded-full bg-line">
                           <div
-                            :class="['h-1 rounded-full transition-all', wordCount(i) >= task.word_count_max ? 'bg-green-500' : 'bg-teal-400']"
+                            class="h-1 rounded-full transition-all"
+                            :class="wordCount(i) >= task.word_count_max ? 'bg-emerald-500' : 'bg-primary'"
                             :style="{ width: `${Math.min((wordCount(i) / task.word_count_max) * 100, 100)}%` }"
                           />
                         </div>
-                        <span :class="['text-xs font-medium', wordCount(i) >= task.word_count_min ? 'text-green-600' : 'text-gray-400']">
+                        <span
+                          class="text-xs font-medium"
+                          :class="wordCount(i) >= task.word_count_min ? 'text-emerald-600' : 'text-faint'"
+                        >
                           / {{ task.word_count_max }}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Récap complétion -->
-                  <div class="flex items-center gap-2 flex-wrap">
+                  <!-- Avancement par Teil -->
+                  <div class="flex flex-wrap items-center gap-2">
                     <span
                       v-for="(task2, ti) in subject.tasks"
                       :key="ti"
-                      :class="[
-                        'text-xs px-2 py-1 rounded-full font-medium',
-                        wordCount(ti) >= (task2.word_count_min ?? 0) ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-400',
-                      ]"
+                      class="rounded-full px-2 py-1 text-xs font-medium"
+                      :class="wordCount(ti) >= (task2.word_count_min ?? 0) ? 'bg-primary/10 text-primary' : 'bg-card-2 text-faint'"
                     >
-                      Teil {{ task2.teil }}: {{ wordCount(ti) }}/{{ task2.word_count_max }}
+                      Teil {{ task2.teil }} : {{ wordCount(ti) }}/{{ task2.word_count_max }}
                     </span>
                   </div>
 
-                  <!-- Solde crédits -->
-                  <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <!-- Crédits IA -->
+                  <div class="flex items-center justify-between rounded-card border border-amber-500/30 bg-amber-500/10 px-4 py-3">
                     <div class="flex items-center gap-2">
-                      <i class="pi pi-sparkles text-amber-500"></i>
-                      <span class="text-sm font-medium text-amber-800">
+                      <i class="pi pi-sparkles text-amber-600" />
+                      <span class="text-sm font-medium text-ink">
                         {{ authStore.aiCredits }}
-                        {{ authStore.aiCredits <= 1 ? t('simulator_subject.credit') : t('simulator_subject.credits') }}
+                        {{ authStore.aiCredits <= 1 ? t("simulator_subject.credit") : t("simulator_subject.credits") }}
                       </span>
                     </div>
                     <NuxtLink
                       v-if="authStore.aiCredits === 0"
-                      to="/dashboard/credits"
-                      class="text-xs font-semibold text-white bg-amber-500 px-3 py-1.5 rounded-lg hover:bg-amber-600 transition-colors"
+                      :to="localePath('/dashboard/credits')"
+                      class="rounded-leaf bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600"
                     >
-                      {{ t('simulator_subject.buy_credits') }}
+                      {{ t("simulator_subject.buy_credits") }}
                     </NuxtLink>
                   </div>
 
@@ -409,27 +394,33 @@
                       size="large"
                       @click="launchCorrection"
                     />
-                    <p v-if="!canCorrect && authStore.aiCredits > 0" class="text-center text-xs text-gray-400 mt-2">
+                    <p v-if="!canCorrect && authStore.aiCredits > 0" class="mt-2 text-center text-xs text-faint">
                       {{ t("simulator_subject.correct_hint") }}
                     </p>
-                    <p v-if="authStore.aiCredits === 0" class="text-center text-xs text-red-400 mt-2">
-                      {{ t('simulator_subject.no_credits_hint') }}
+                    <p v-if="authStore.aiCredits === 0" class="mt-2 text-center text-xs text-red-600">
+                      {{ t("simulator_subject.no_credits_hint") }}
                     </p>
                   </div>
 
-                  <!-- Chargement IA -->
-                  <div v-else-if="store.correcting" class="flex flex-col items-center gap-3 py-8 bg-teal-50 border border-teal-200 rounded-2xl">
-                    <i class="pi pi-spin pi-spinner text-teal-600 text-2xl"></i>
-                    <p class="text-sm font-medium text-teal-700">{{ t("simulator_subject.correcting") }}</p>
-                    <p class="text-xs text-teal-500">{{ t("simulator_subject.correcting_sub") }}</p>
+                  <!-- Correction en cours -->
+                  <div
+                    v-else-if="store.correcting"
+                    class="flex flex-col items-center gap-3 rounded-card border border-primary/30 bg-primary/10 py-8"
+                  >
+                    <i class="pi pi-spin pi-spinner text-2xl text-primary" />
+                    <p class="text-sm font-medium text-ink">{{ t("simulator_subject.correcting") }}</p>
+                    <p class="text-xs text-muted">{{ t("simulator_subject.correcting_sub") }}</p>
                   </div>
 
-                  <!-- Erreur correction -->
-                  <div v-else-if="store.correctionError" class="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                    <i class="pi pi-exclamation-circle text-red-500 mt-0.5 shrink-0"></i>
-                    <div class="flex-1">
-                      <p class="text-sm font-medium text-red-700">{{ t("simulator_subject.error_title") }}</p>
-                      <p class="text-xs text-red-500 mt-1">{{ store.correctionError }}</p>
+                  <!-- Erreur de correction -->
+                  <div
+                    v-else-if="store.correctionError"
+                    class="flex items-start gap-3 rounded-card border border-red-500/30 bg-red-500/5 p-4"
+                  >
+                    <i class="pi pi-exclamation-circle mt-0.5 shrink-0 text-red-600" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm font-medium text-red-600">{{ t("simulator_subject.error_title") }}</p>
+                      <p class="mt-1 text-xs text-muted">{{ store.correctionError }}</p>
                     </div>
                     <Button :label="t('simulator_subject.retry')" size="small" outlined severity="danger" @click="launchCorrection" />
                   </div>
@@ -437,50 +428,49 @@
                   <!-- Résultat disponible -->
                   <div
                     v-else-if="store.correction"
-                    class="p-5 bg-white border-2 rounded-2xl"
-                    :class="store.correction.passed ? 'border-green-400' : 'border-orange-400'"
+                    class="rounded-card border-2 bg-card p-5"
+                    :class="store.correction.passed ? 'border-emerald-500' : 'border-orange-500'"
                   >
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
                       <div class="flex items-center gap-3">
                         <div
-                          class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                          :class="store.correction.passed ? 'bg-green-500' : 'bg-orange-500'"
+                          class="flex size-12 items-center justify-center rounded-full text-sm font-bold text-white"
+                          :class="store.correction.passed ? 'bg-emerald-500' : 'bg-orange-500'"
                         >
                           {{ store.scorePercentage }}%
                         </div>
                         <div>
-                          <p class="text-sm font-semibold text-gray-800">
-                            {{ store.correction.passed ? "Prüfung bestanden ✓" : "Nicht bestanden" }}
+                          <p class="text-sm font-semibold text-ink">
+                            {{ store.correction.passed ? t("simulator.passed") : t("simulator.not_passed") }}
                           </p>
-                          <p class="text-xs text-gray-500">
-                            {{ store.correction.overall_score }} / {{ store.correction.max_score }} points
+                          <p class="text-xs text-muted">
+                            {{ store.correction.overall_score }} / {{ store.correction.max_score }}
+                            {{ t("simulator_subject.points_label") }}
                           </p>
                         </div>
                       </div>
                       <Button
                         :label="t('simulator_subject.see_results')"
                         icon="pi pi-arrow-right"
-                        iconPos="right"
+                        icon-pos="right"
                         size="small"
                         @click="goToResults"
                       />
                     </div>
                   </div>
-
                 </div>
               </div>
-
             </div>
           </template>
         </div>
 
-        <!-- ── Colonne extrême droite : caractères spéciaux allemands ── -->
-        <div class="w-14 shrink-0 bg-white border-l border-gray-200 flex flex-col items-center py-4 gap-1.5 overflow-y-auto">
+        <!-- ── Caractères spéciaux allemands ── -->
+        <div class="flex w-14 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-l border-line bg-card py-4">
           <button
             v-for="char in specialChars"
             :key="char"
             type="button"
-            class="w-9 h-9 rounded-lg text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-teal-100 hover:text-teal-700 transition-colors border border-gray-200"
+            class="size-9 rounded-leaf border border-line bg-card-2 text-sm font-semibold text-ink transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
             :title="t('simulator_subject.insert_char', { char })"
             @click="insertChar(char)"
           >
@@ -488,7 +478,6 @@
           </button>
         </div>
       </div>
-
     </template>
   </div>
 </template>
@@ -502,6 +491,7 @@ import { resolveMittelKey } from "#shared/sprachlicheMittel";
 definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 const route = useRoute();
 const router = useRouter();
 const store = useSimulatorStore();
@@ -525,12 +515,8 @@ const wordCount = (i: number): number => {
   return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
 };
 
-const totalWords = computed(() =>
-  answers.value.reduce((sum, _, i) => sum + wordCount(i), 0),
-);
-const canCorrect = computed(() =>
-  answers.value.some((_, i) => wordCount(i) > 0),
-);
+const totalWords = computed(() => answers.value.reduce((sum, _, i) => sum + wordCount(i), 0));
+const canCorrect = computed(() => answers.value.some((_, i) => wordCount(i) > 0));
 
 const launchCorrection = async () => {
   store.clearCorrection();
@@ -538,28 +524,27 @@ const launchCorrection = async () => {
   await authStore.fetchUser();
 };
 
-const goToResults = () =>
-  router.push(`/dashboard/simulateur/${subjectId}/resultats`);
+const goToResults = () => router.push(localePath(`/dashboard/simulateur/${subjectId}/resultats`));
 
+// Couleur d'identité par fournisseur, en transparence pour rester lisible en sombre
 const providerColor = (p: string) =>
   ({
-    goethe: "bg-blue-100 text-blue-700",
-    telc: "bg-purple-100 text-purple-700",
-    osd: "bg-orange-100 text-orange-700",
-  })[p] ?? "bg-gray-100 text-gray-600";
+    goethe: "bg-blue-500/10 text-blue-600",
+    telc: "bg-purple-500/10 text-purple-600",
+    osd: "bg-orange-500/10 text-orange-600",
+  })[p.toLowerCase()] ?? "bg-card-2 text-muted";
 
-// ── Sprachliche Mittel — dérivé directement des champs typés du sujet,
-// pas d'un nom d'examen à parser (contrairement à la session réelle).
+// ── Sprachliche Mittel : dérivé des champs typés du sujet ──
 const mittelKey = (task: any) =>
   resolveMittelKey({
     provider: subject.value?.provider?.toUpperCase() ?? "",
     cefrCode: subject.value?.level?.toUpperCase() ?? "",
     moduleSlug: "schreiben",
-    formatType: task.themes ? "oral_monologue" : undefined, // ADJUST: pas de format_type réel disponible ici, à vérifier contre resolveMittelKey
+    formatType: task.themes ? "oral_monologue" : undefined, // ADJUST: pas de format_type réel ici, à vérifier contre resolveMittelKey
     teilNumber: task.teil,
   });
 
-// ── Choix de thème / variante d'opinion — un état par index de tâche ──
+// ── Choix de thème / variante d'opinion : un état par tâche ──
 const selectedThemes = ref<Record<number, string | null>>({});
 const selectedVariants = ref<Record<number, string | null>>({});
 
@@ -569,8 +554,7 @@ const isWritingUnlocked = (i: number, task: any): boolean => {
   return true;
 };
 
-// ── Stimulus — gère le cas où le générateur a produit un objet
-// {text, title, author} au lieu d'une simple string.
+// ── Stimulus : string simple, objet {text, title, author} ou JSON en string ──
 const parseStimulus = (raw: any): { text: string; title?: string; author?: string } => {
   if (!raw) return { text: "" };
   if (typeof raw === "object") return { text: raw.text || "", title: raw.title, author: raw.author };
@@ -590,12 +574,10 @@ const parseStimulus = (raw: any): { text: string; title?: string; author?: strin
 };
 
 const getStimulusText = (task: any): string => parseStimulus(task.stimulus).text;
-const getStimulusAuthor = (task: any): string =>
-  parseStimulus(task.stimulus).author || task.stimulus_author || "";
+const getStimulusAuthor = (task: any): string => parseStimulus(task.stimulus).author || task.stimulus_author || "";
 const getStimulusTitle = (task: any): string => parseStimulus(task.stimulus).title || "";
 
-// ── Caractères spéciaux allemands ─────────────────────────────────
-
+// ── Caractères spéciaux allemands ──
 const specialChars = ["ä", "ö", "ü", "Ä", "Ö", "Ü", "ß"];
 
 const textareaRefs = ref<Record<number, HTMLTextAreaElement | null>>({});

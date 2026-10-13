@@ -881,7 +881,9 @@
     "tips": "Tips",
     "close": "Close",
     "redo": "Redo this subject",
-    "page_title": "Schreiben Simulator DeutschTest"
+    "page_title": "Schreiben Simulator DeutschTest",
+    "passed": "Prüfung bestanden",
+    "not_passed": "Nicht bestanden"
   },
   "simulator_result": {
     "no_correction": "No correction available.",
@@ -898,9 +900,12 @@
     "tips": "Tips for improvement",
     "redo": "Redo this subject",
     "choose_another": "Choose another subject",
-    "page_title": "Results  DeutschTest"
+    "page_title": "Results  DeutschTest",
+    "your_text": "Your text",
+    "original_unavailable": "Original text not available."
   },
   "simulator_subject": {
+    "points_label": "points",
     "words_written": "word(s) written",
     "ad_context": "Ad / Context",
     "task_label": "Task",
@@ -1164,7 +1169,51 @@
     "status_ended": "Ended",
     "status_cancelled": "Cancelled",
     "see_notes": "See notes",
-    "join": "Join"
+    "join": "Join",
+    "room": {
+      "loading": "Loading session…",
+      "title": "Live Sprechen session",
+      "subtitle": "With an examiner from your centre.",
+      "connecting_title": "Connecting to the examiner…",
+      "connecting_hint": "Please wait, this only takes a few seconds.",
+      "prep_text": "You have {duration} to prepare the topic. Take notes on paper, as in the real exam.",
+      "prep_minutes": "{n} minutes",
+      "ready": "I'm ready",
+      "live_badge": "Live",
+      "examiner": "Examiner",
+      "you": "You",
+      "candidate": "Candidate",
+      "hand_raised": "Hand raised",
+      "mic_on": "Turn on microphone",
+      "mic_off": "Mute microphone",
+      "cam_on": "Turn on camera",
+      "cam_off": "Turn off camera",
+      "raise_hand": "Raise hand",
+      "leave": "Leave",
+      "leave_aria": "Leave the exam",
+      "stay_visible": "Stay visible on screen for the whole oral exam.",
+      "tab_chat": "Chat",
+      "tab_people": "Participants",
+      "tab_status": "Status",
+      "chat_empty": "No messages yet.",
+      "chat_placeholder": "Write a message…",
+      "chat_label": "Message",
+      "send": "Send",
+      "mic": "Microphone",
+      "camera": "Camera",
+      "mic_state_on": "On",
+      "mic_state_off": "Muted",
+      "cam_state_on": "On",
+      "cam_state_off": "Off",
+      "status_note": "Identity and session checks are not automated yet: the examiner supervises the call directly.",
+      "ended_title": "Session ended",
+      "ended_text": "Your oral exam with the examiner is over.",
+      "feedback_title": "Examiner's feedback",
+      "no_notes": "The examiner has not published any notes yet.",
+      "back": "Back to my sessions",
+      "subject_to_prepare": "Topic to prepare",
+      "not_found": "Session not found."
+    }
   },
   "start_deutsch": {
     "title": "Start Deutsch — A1 & A2",
@@ -1209,6 +1258,10 @@
       "download_button": "Download my assignment (PDF)",
       "time_up_title": "Time's up",
       "time_up_description": "Your assignment was automatically downloaded with your answers as they stand."
+    },
+    "question_ui": {
+      "none_solution": "No ad fits",
+      "unsupported_format": "This question type ({format}) is coming in a future update."
     }
   },
   "modules_section": {
