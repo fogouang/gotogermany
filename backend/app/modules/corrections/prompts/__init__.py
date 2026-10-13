@@ -37,8 +37,7 @@ class TaskData:
     bullet_points: list[str] = field(default_factory=list)   # Points à traiter
     opinion_quote: str = ""             # Goethe B1 Teil 2 : citation du forum
     topic: str = ""                     # Goethe/ÖSD B2 Teil 1 : thème
-    context_ad: str = ""                # Telc B2 / ÖSD B2 : annonce ; TestDaF A2 : texte source + graphique
-
+    context_ad: str = ""                # Telc B2 : annonce ; ÖSD B2 Teil 1 : Informationsblatt ; TestDaF A2 : texte source + graphique
 
 # ─────────────────────────────────────────────────────────
 # Constantes : providers et niveaux supportés
@@ -74,6 +73,13 @@ MAX_SCORES = {
     ("testdaf", "b2"): 20,
     ("testdaf", "c1"): 20,
 }
+
+def _with_points(instruction: str, points: list[str], label: str = "Leitpunkte") -> str:
+    """Ajoute les points à traiter à la consigne, pour les prompts sans paramètre dédié."""
+    if not points:
+        return instruction
+    lines = "\n".join(f"- {p}" for p in points)
+    return f"{instruction}\n\n{label}:\n{lines}".strip()
 
 
 def _normalize_provider(provider: str) -> str:
@@ -141,23 +147,26 @@ def build_correction_prompt(
         t1, t2 = tasks[0], tasks[1]
         return get_goethe_b2_prompt(
             task1_text=t1.text,
-            task1_instruction=t1.instruction,
+            task1_instruction=_with_points(t1.instruction, t1.bullet_points),
             task1_topic=t1.topic,
             task2_text=t2.text,
-            task2_instruction=t2.instruction,
+            task2_instruction=_with_points(t2.instruction, t2.bullet_points),
         )
 
     # ── ÖSD B2 ──────────────────────────────────────────
     if key == ("osd", "b2"):
         t1, t2 = tasks[0], tasks[1]
+        # Teil 1 = Beschwerde-Mail, Teil 2 = Meinungsäußerung (ordre des sujets ÖSD B2)
         return get_osd_b2_prompt(
             task1_text=t1.text,
             task1_instruction=t1.instruction,
-            task1_topic=t1.topic,
+            task1_context=t1.context_ad,
+            task1_bullet_points=t1.bullet_points,
             task2_text=t2.text,
             task2_instruction=t2.instruction,
+            task2_topic=t2.topic,
+            task2_statements=t2.opinion_quote,
             task2_bullet_points=t2.bullet_points,
-            context_ad=t2.context_ad,
         )
 
     # ── ECL B1 / B2 (esquisse) ──────────────────────────

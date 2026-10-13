@@ -52,7 +52,93 @@ _REQUIRED_FIELDS_BY_SHAPE = {
     "testdaf": {"global_assessment", "task1", "task2"},
 }
 
+def _stimulus_text(raw) -> str:
+    """Message de forum / annonce : str ou {title, text, author}."""
+    if not raw:
+        return ""
+    if isinstance(raw, dict):
+        body = "\n".join(p for p in (raw.get("title", ""), raw.get("text", "")) if p)
+        author = raw.get("author")
+        return f"{author}: {body}" if author else body
+    return str(raw)
 
+
+def _build_task_fields(content: dict, user_answer: dict, teil) -> dict:
+    """Contexte complet d'une tâche Schreiben, quel que soit le format du sujet.
+
+    - TELC/ÖSD B2 « themen » : on prend le sujet choisi (user_answer.theme) ;
+      sinon (anciennes réponses) on donne les deux et l'IA identifie celui traité.
+    - ÖSD variantes d'opinion : variante choisie (user_answer.variant).
+    - Goethe forum : le message à commenter (stimulus) -> opinion_quote.
+    - TELC e-mail reçu (stimulus_email) : ajouté à la consigne.
+    - ÖSD réclamation (info_comparison) : promesses / problèmes -> context_ad.
+    """
+    instruction = content.get("scenario") or content.get("instruction") or teil.instructions or ""
+    bullet_points = list(content.get("prompts") or [])
+    topic = content.get("topic", "") or ""
+    opinion_quote = content.get("opinion_quote", "") or _stimulus_text(content.get("stimulus"))
+    context_parts = [
+        content.get("context_ad", ""),
+        content.get("source_text", ""),
+        content.get("graph_description", ""),
+    ]
+
+    # E-mail reçu (TELC)
+    email = content.get("stimulus_email") or {}
+    if email.get("body"):
+        header = f"E-Mail von {email.get('sender', '')}".strip()
+        if email.get("subject"):
+            header += f" (Betreff: {email['subject']})"
+        instruction = f"{instruction}\n\n{header}:\n{email['body']}".strip()
+
+    # Réclamation (ÖSD)
+    info = content.get("info_comparison")
+    if info:
+        lines = [f"Anbieter: {info.get('anbieter', '')}", f"Situation: {info.get('situation', '')}"]
+        if info.get("versprechen"):
+            lines.append("Versprochen: " + "; ".join(info["versprechen"]))
+        if info.get("probleme"):
+            lines.append("Probleme: " + "; ".join(info["probleme"]))
+        if info.get("kontakt"):
+            lines.append(f"Kontakt: {info['kontakt']}")
+        context_parts.append("\n".join(lines))
+
+    # Choix entre deux sujets (TELC / ÖSD B2 : themen)
+    themes = content.get("themes") or {}
+    if themes:
+        chosen = themes.get(str(user_answer.get("theme") or ""))
+        if chosen:
+            topic = chosen.get("titel", "") or topic
+            bullet_points = list(chosen.get("prompts") or [])
+            context_parts.append(_stimulus_text(chosen.get("stimulus")))
+        else:
+            blocks = [
+                f"Thema {key}: {th.get('titel', '')}\n{_stimulus_text(th.get('stimulus'))}\n"
+                f"Leitpunkte: {'; '.join(th.get('prompts') or [])}"
+                for key, th in themes.items()
+            ]
+            context_parts.append(
+                "Der Kandidat hat eines der folgenden Themen gewählt. "
+                "Erkenne am Text, welches, und bewerte nur danach:\n\n" + "\n\n".join(blocks)
+            )
+
+    # Choix entre deux variantes d'opinion (ÖSD)
+    variants = content.get("opinion_variants") or {}
+    if variants:
+        chosen = variants.get(str(user_answer.get("variant") or ""))
+        selected = [chosen] if chosen else list(variants.values())
+        topic = " / ".join(v.get("thema", "") for v in selected if v.get("thema")) or topic
+        opinion_quote = "\n".join(f"- {a}" for v in selected for a in (v.get("aussagen") or []))
+        bullet_points = list(content.get("leitpunkte") or bullet_points)
+
+    return {
+        "instruction": instruction,
+        "bullet_points": bullet_points,
+        "topic": topic,
+        "opinion_quote": opinion_quote,
+        "context_ad": "\n\n".join(p for p in context_parts if p),
+    }
+    
 class CorrectionService:
 
     def __init__(self, db: AsyncSession):
@@ -246,32 +332,15 @@ class CorrectionService:
         tasks = []
         for answer in free_text_answers:
             question = answer.question
-            teil = question.teil
-            content = question.content
-
-            # ✅ La consigne peut venir de plusieurs endroits selon le format :
-            # - scenario / instruction : cas général (Goethe, TELC message unique)
-            # - teil.instructions : cas "réponse à un e-mail reçu" (stimulus_email),
-            #   où la vraie consigne est au niveau du Teil, pas de la question
-            instruction = (
-                content.get("scenario")
-                or content.get("instruction")
-                or teil.instructions
-                or ""
+            user_answer = answer.user_answer or {}
+            fields = _build_task_fields(question.content or {}, user_answer, question.teil)
+            tasks.append(
+                TaskPayload(
+                    teil_number=question.teil.teil_number,
+                    text=user_answer.get("text", ""),
+                    **fields,
+                )
             )
-
-            task = TaskPayload(
-                teil_number=teil.teil_number,
-                text=answer.user_answer.get("text", ""),
-                instruction=instruction,
-                bullet_points=content.get("prompts", []),
-                opinion_quote=content.get("opinion_quote", ""),
-                topic=content.get("topic", ""),
-                context_ad=content.get("context_ad", "") or "\n\n".join(
-                    filter(None, [content.get("source_text", ""), content.get("graph_description", "")])
-                ),
-            )
-            tasks.append(task)
 
         return tasks
 
@@ -280,15 +349,28 @@ class CorrectionService:
         session: ExamSession,
         correction: Correction,
     ) -> None:
-        """
-        Mettre à jour le score_breakdown de la session avec le score Schreiben.
-        Ne touche pas aux autres modules (Lesen, Hören...).
-        """
-        breakdown = session.score_breakdown or {}
-        breakdown["schreiben"] = correction.overall_score
+        """Reporte la note IA sur les réponses free_text puis recalcule la session.
 
-        session.score_breakdown = breakdown
-        await self.db.commit()
+        Chaque réponse reçoit (note / max) x ses points : la notation par Teil
+        de ExamSessionService la ramène ensuite au barème officiel du module.
+        La session sort ainsi de PENDING_REVIEW et son score global compte le Schreiben.
+        """
+        ratio = (correction.overall_score / correction.max_score) if correction.max_score else 0.0
+
+        result = await self.db.execute(
+            select(ExamSessionAnswer)
+            .where(ExamSessionAnswer.session_id == session.id)
+            .options(selectinload(ExamSessionAnswer.question))
+        )
+        for answer in result.scalars().all():
+            if answer.question.question_type == "free_text":
+                answer.score_obtained = round(ratio * float(answer.question.points or 0), 2)
+        await self.db.flush()
+
+        # Import local : évite un import circulaire entre corrections et exam_sessions
+        from app.modules.exam_sessions.service import ExamSessionService
+
+        await ExamSessionService(self.db).rescore_session(session.id)
 
     def _validate_ai_result(
         self,
