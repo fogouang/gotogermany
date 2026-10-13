@@ -14,5 +14,6 @@ export type ModuleResultResponse = {
     questions_total: number;
     teile?: Array<TeilResultResponse>;
     tdn_level?: (string | null);
+    points_obtained?: (number | null);
 };
 

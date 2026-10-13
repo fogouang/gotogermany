@@ -89,6 +89,7 @@ class ModuleResultResponse(BaseSchema):
     questions_total: int
     teile: list[TeilResultResponse] = []
     tdn_level: str | None = None   # TestDaF uniquement : "TDN 5" ... "unter TDN 3"
+    points_obtained: float | None = None
 
 
 class SessionResultResponse(BaseSchema):
