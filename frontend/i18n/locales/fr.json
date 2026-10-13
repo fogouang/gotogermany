@@ -1949,5 +1949,14 @@
     "offline_detail": "Vos réponses restent sur cet appareil en attendant le retour de la connexion.",
     "online": "Connexion rétablie",
     "level_changed": "Niveau actif : {level}"
+  },
+  "methodology": {
+    "eyebrow": "Guide de rédaction",
+    "title": "Méthodologie Schreiben",
+    "subtitle": "Structures attendues, formules clés et conseils par examen et par niveau.",
+    "notice_title": "Guide en cours de mise à jour",
+    "notice_text": "Nous révisons ce guide à partir des documents officiels de telc, du Goethe-Institut et de l'ÖSD, pour que chaque structure et chaque barème corresponde exactement à l'examen. En attendant, entraînez-vous avec le simulateur : la correction IA vous indique ce qui est attendu pour chaque tâche.",
+    "cta_simulator": "S'entraîner au Schreiben",
+    "cta_exams": "Voir les examens"
   }
 }

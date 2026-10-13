@@ -1954,5 +1954,14 @@
     "offline_detail": "Ihre Antworten bleiben auf diesem Gerät, bis die Verbindung zurück ist.",
     "online": "Verbindung wiederhergestellt",
     "level_changed": "Aktives Niveau: {level}"
+  },
+  "methodology": {
+    "eyebrow": "Schreibleitfaden",
+    "title": "Methodik Schreiben",
+    "subtitle": "Erwartete Strukturen, wichtige Redemittel und Tipps nach Prüfung und Niveau.",
+    "notice_title": "Leitfaden wird aktualisiert",
+    "notice_text": "Wir überarbeiten diesen Leitfaden anhand der offiziellen Unterlagen von telc, dem Goethe-Institut und dem ÖSD, damit jede Struktur und jede Bewertung genau der Prüfung entspricht. Üben Sie in der Zwischenzeit mit dem Simulator: Die KI-Korrektur zeigt Ihnen, was in jeder Aufgabe erwartet wird.",
+    "cta_simulator": "Schreiben üben",
+    "cta_exams": "Prüfungen ansehen"
   }
 }

@@ -1948,5 +1948,13 @@
     "offline_detail": "Your answers stay on this device until the connection comes back.",
     "online": "Back online",
     "level_changed": "Active level: {level}"
-  }
+  },"methodology": {
+  "eyebrow": "Writing guide",
+  "title": "Schreiben methodology",
+  "subtitle": "Expected structures, key phrases and tips by exam and level.",
+  "notice_title": "Guide being updated",
+  "notice_text": "We are revising this guide using the official documents from telc, the Goethe-Institut and ÖSD, so that every structure and score matches the exam exactly. In the meantime, practise with the simulator: the AI marking shows you what is expected for each task.",
+  "cta_simulator": "Practise Schreiben",
+  "cta_exams": "See the exams"
+}
 }
