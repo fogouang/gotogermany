@@ -81,10 +81,6 @@ function detectCountry(): string {
 const countryIso = ref(DEFAULT_PHONE_COUNTRY);
 const localNumber = ref("");
 
-onMounted(() => {
-  if (!props.modelValue) countryIso.value = detectCountry();
-});
-
 /** Numéro national saisi -> format international */
 function toInternational(): string {
   const country = countryByIso(countryIso.value);
@@ -94,15 +90,40 @@ function toInternational(): string {
   return `+${country.dial}${digits}`;
 }
 
+/** "+237690000000" -> pays CM + "690000000" (indicatif le plus long qui correspond) */
+function fromInternational(value: string) {
+  const digits = value.replace(/\D/g, "");
+  const match = [...PHONE_COUNTRIES]
+    .sort((a, b) => b.dial.length - a.dial.length)
+    .find((c) => digits.startsWith(c.dial));
+  if (match && value.trim().startsWith("+")) {
+    countryIso.value = match.iso;
+    localNumber.value = digits.slice(match.dial.length);
+  } else {
+    // Ancien numéro enregistré sans indicatif : on le garde tel quel
+    localNumber.value = digits;
+  }
+}
+
 function emitValue() {
   emit("update:modelValue", toInternational());
 }
 
-// Remise à zéro par le parent (ex. après une inscription réussie)
+// Valeur fournie par le parent : numéro existant (profil), remise à zéro (après inscription)...
 watch(
   () => props.modelValue,
   (value) => {
-    if (!value) localNumber.value = "";
+    if (!value) {
+      localNumber.value = "";
+      return;
+    }
+    // On ne relit que si la valeur ne vient pas de notre propre saisie
+    if (value !== toInternational()) fromInternational(value);
   },
+  { immediate: true },
 );
+
+onMounted(() => {
+  if (!props.modelValue) countryIso.value = detectCountry();
+});
 </script>

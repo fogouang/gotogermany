@@ -84,7 +84,7 @@
               {{ t("dashboard.my_levels") }}
             </h2>
             <NuxtLink
-              :to="localePath('/dashboard/examens')"
+              :to="localePath('/dashboard/examens/catalogue')"
               class="text-sm font-medium text-primary hover:underline"
             >
               {{ t("dashboard.see_all") }}
@@ -123,7 +123,7 @@
               >
                 <span
                   class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-xs font-bold"
-                  :class="providerStyle(row.exam.provider)"
+                  :class="info(row.exam.provider).badge"
                 >
                   {{ row.level.cefr_code }}
                 </span>
@@ -137,7 +137,20 @@
                 </span>
 
                 <span
-                  v-if="row.level.has_access || row.level.is_free"
+                  v-if="row.level.id === activeLevelId"
+                  class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                >
+                  <i class="pi pi-bookmark-fill text-[9px]" />
+                  {{ t("exam_detail.active_level") }}
+                </span>
+                <span
+                  v-if="!row.level.subject_count"
+                  class="shrink-0 rounded-full bg-card-2 px-2 py-0.5 text-[11px] font-semibold text-muted"
+                >
+                  {{ t("dashboard_exams.coming_soon") }}
+                </span>
+                <span
+                  v-else-if="row.level.has_access || row.level.is_free"
                   class="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600"
                 >
                   {{
@@ -146,23 +159,19 @@
                       : t("dashboard.level_active")
                   }}
                 </span>
-                <span
-                  v-else
-                  class="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
-                >
-                  {{ t("dashboard.level_preview") }}
-                </span>
-
-                <span
-                  v-if="
-                    !row.level.has_access &&
-                    !row.level.is_free &&
-                    !isCenterStudent
-                  "
-                  class="hidden shrink-0 text-xs font-semibold text-primary sm:inline"
-                >
-                  {{ t("dashboard.unlock") }}
-                </span>
+                <template v-else>
+                  <span
+                    class="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
+                  >
+                    {{ t("dashboard.level_preview") }}
+                  </span>
+                  <span
+                    v-if="!isCenterStudent"
+                    class="hidden shrink-0 text-xs font-semibold text-primary sm:inline"
+                  >
+                    {{ t("dashboard.unlock") }}
+                  </span>
+                </template>
                 <i
                   class="pi pi-chevron-right shrink-0 text-xs text-faint transition-transform group-hover:translate-x-0.5"
                 />
@@ -286,6 +295,42 @@
           </div>
         </section>
 
+        <!-- Communauté WhatsApp -->
+        <section
+          v-if="showCommunity"
+          class="relative overflow-hidden rounded-card border border-emerald-500/30 bg-emerald-500/10 p-5"
+        >
+          <button
+            type="button"
+            class="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full text-muted hover:bg-card hover:text-ink"
+            :aria-label="t('toast.close')"
+            @click="hideCommunity"
+          >
+            <i class="pi pi-times text-xs" />
+          </button>
+          <span
+            class="mb-3 flex size-10 items-center justify-center rounded-full bg-emerald-600 text-white"
+          >
+            <i class="pi pi-whatsapp" />
+          </span>
+          <h2 class="font-semibold text-ink">
+            {{ t("dashboard.community_title") }}
+          </h2>
+          <p class="mt-1 text-sm text-muted">
+            {{ t("dashboard.community_text") }}
+          </p>
+          <a
+            :href="SITE.whatsappCommunity"
+            target="_blank"
+            rel="noopener"
+            class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-leaf bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+            @click="hideCommunity"
+          >
+            <i class="pi pi-whatsapp" />
+            {{ t("dashboard.community_btn") }}
+          </a>
+        </section>
+
         <!-- Devoirs (élève de centre) -->
         <section
           v-if="isCenterStudent"
@@ -368,6 +413,7 @@
 
 <script setup lang="ts">
 import { AssignmentsService } from "#shared/api";
+import { SITE } from "~/config/site";
 import type {
   LevelAccessResponse,
   SessionListResponse,
@@ -383,7 +429,9 @@ const authStore = useAuthStore();
 const examsStore = useExamsStore();
 const sessionStore = useSessionStore();
 const { visibleCatalog, isCenterStudent } = useVisibleCatalog();
-const { needsOnboarding } = useActiveLevel();
+const { needsOnboarding, activeOption } = useActiveLevel();
+const { info } = useProviders();
+const activeLevelId = computed(() => activeOption.value?.level.id ?? null);
 
 const me = computed(() => authStore.user as UserMeResponse | null);
 const firstName = computed(() => (authStore.userName || "").split(" ")[0]);
@@ -408,13 +456,6 @@ const formatDateTime = (d: string) =>
     minute: "2-digit",
   });
 
-const providerStyle = (p: string) =>
-  ({
-    goethe: "bg-sky-500/10 text-sky-600",
-    telc: "bg-violet-500/10 text-violet-600",
-    osd: "bg-orange-500/10 text-orange-600",
-  })[p?.toLowerCase()] ?? "bg-primary/10 text-primary";
-
 // ── Niveaux ──
 type LevelRow = {
   exam: { name: string; slug: string; provider: string };
@@ -425,15 +466,21 @@ const levelRows = computed<LevelRow[]>(() => {
   const rows = visibleCatalog.value.flatMap((exam) =>
     (exam.levels ?? []).map((level) => ({ exam, level })),
   );
-  // Accès actifs d'abord, puis ordre d'affichage
+  // Niveau actif d'abord, puis niveaux avec sujets, puis accès ouverts
   return rows.sort(
     (a, b) =>
+      Number(b.level.id === activeLevelId.value) -
+        Number(a.level.id === activeLevelId.value) ||
+      Number((b.level.subject_count ?? 0) > 0) -
+        Number((a.level.subject_count ?? 0) > 0) ||
       Number(b.level.has_access) - Number(a.level.has_access) ||
       a.level.display_order - b.level.display_order,
   );
 });
 
 const openLevel = (row: LevelRow) => {
+  if (!row.level.subject_count) return;
+
   if (row.level.has_access || row.level.is_free || isCenterStudent.value) {
     navigateTo(localePath(`/dashboard/examens/${row.exam.slug}`));
   } else {
@@ -619,16 +666,33 @@ const shortcuts = computed(() => {
     {
       to: "/dashboard/credits",
       label: t("dashboard.pages.credits"),
-      sub: t(
-        "ai_credits.available",
-        { n: authStore.aiCredits },
-        authStore.aiCredits,
-      ),
+      sub: `${authStore.aiCredits} ${t("ai_credits.available", { n: authStore.aiCredits }, authStore.aiCredits)}`,
       icon: "pi pi-sparkles",
       iconClass: "bg-amber-500/15 text-amber-600",
     },
   ];
   return list.filter((a) => !(a.hideForCenter && isCenterStudent.value));
+});
+
+// ── Communauté WhatsApp : carte masquée après "Rejoindre" ou la croix (préférence locale) ──
+const COMMUNITY_KEY = "gtg_community_hidden";
+const showCommunity = ref(false);
+
+function hideCommunity() {
+  showCommunity.value = false;
+  try {
+    localStorage.setItem(COMMUNITY_KEY, "1");
+  } catch {
+    /* stockage indisponible : la carte réapparaîtra simplement */
+  }
+}
+
+onMounted(() => {
+  try {
+    showCommunity.value = localStorage.getItem(COMMUNITY_KEY) !== "1";
+  } catch {
+    showCommunity.value = true;
+  }
 });
 
 // ── Chargement ──

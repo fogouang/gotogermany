@@ -13,7 +13,7 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css", "primeicons/primeicons.css"],
 
-  components: [{ path: "~/components/ui", pathPrefix: false }, "~/components"],
+  components: [{ path: "~/components", pathPrefix: false }],
   // ── SEO global ──────────────────────────────────────────
   app: {
     head: {

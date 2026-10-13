@@ -30,8 +30,8 @@
     "country": "Country",
     "phone_placeholder": "Your number",
     "whatsapp_opt_in": "Join the GoToGermany community on WhatsApp",
-"whatsapp_opt_in_hint": "Tips, new subjects and support between candidates. You can leave at any time.",
-"whatsapp_needs_phone": "Enter your WhatsApp number to join the community."
+    "whatsapp_opt_in_hint": "Tips, new subjects and support between candidates. You can leave at any time.",
+    "whatsapp_needs_phone": "Enter your WhatsApp number to join the community."
   },
   "exam": {
     "start": "Start",
@@ -424,6 +424,9 @@
       "expiring_text": "It ends on {date}.",
       "renew": "Renew"
     },
+    "community_title": "Join the community",
+    "community_text": "Tips, new subjects and support between candidates, on WhatsApp.",
+    "community_btn": "Join on WhatsApp",
     "space": "Student area",
     "role": "Student"
   },
@@ -850,7 +853,9 @@
     "delete_type": "Type \"DELETE\" to confirm",
     "delete_placeholder": "DELETE",
     "delete_confirm_btn": "Permanently delete",
-    "delete_confirm_word": "DELETE"
+    "delete_confirm_word": "DELETE",
+    "whatsapp_on": "You're part of the WhatsApp community.",
+    "whatsapp_off": "Your WhatsApp consent has been withdrawn."
   },
   "faq": {
     "badge": "Help center",
@@ -1678,7 +1683,10 @@
     "skip": "Skip",
     "continue": "Continue",
     "empty": "No exams are available yet.",
-    "error": "We couldn't save your choice. Please try again."
+    "error": "We couldn't save your choice. Please try again.",
+    "community_title": "All set!",
+    "community_text": "Your space is ready for {level}.",
+    "go_dashboard": "Go to my space"
   },
   "level_switch": {
     "title": "Switch level",

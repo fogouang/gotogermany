@@ -424,6 +424,9 @@
       "expiring_text": "Er endet am {date}.",
       "renew": "Verlängern"
     },
+    "community_title": "Treten Sie der Community bei",
+    "community_text": "Tipps, neue Themen und gegenseitige Hilfe unter Prüflingen, auf WhatsApp.",
+    "community_btn": "Auf WhatsApp beitreten",
     "space": "Lernbereich",
     "role": "Lernende(r)"
   },
@@ -850,7 +853,9 @@
     "delete_type": "Gib \"LÖSCHEN\" ein, um zu bestätigen",
     "delete_placeholder": "LÖSCHEN",
     "delete_confirm_btn": "Dauerhaft löschen",
-    "delete_confirm_word": "LÖSCHEN"
+    "delete_confirm_word": "LÖSCHEN",
+    "whatsapp_on": "Sie sind Teil der WhatsApp-Community.",
+    "whatsapp_off": "Ihre WhatsApp-Zustimmung wurde widerrufen."
   },
   "faq": {
     "badge": "Hilfezentrum",
@@ -1685,7 +1690,10 @@
     "skip": "Überspringen",
     "continue": "Weiter",
     "empty": "Derzeit sind keine Prüfungen verfügbar.",
-    "error": "Ihre Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen."
+    "error": "Ihre Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "community_title": "Alles klar!",
+    "community_text": "Ihr Bereich ist bereit für {level}.",
+    "go_dashboard": "Zu meinem Bereich"
   },
   "level_switch": {
     "title": "Niveau wechseln",

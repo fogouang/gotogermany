@@ -8,6 +8,7 @@
           GoToGermany
         </span>
         <button
+          v-if="step === 'level'"
           type="button"
           class="text-sm font-medium text-muted hover:text-ink disabled:opacity-50"
           :disabled="saving"
@@ -18,7 +19,44 @@
       </div>
     </header>
 
-    <main class="mx-auto max-w-3xl px-4 py-10">
+    <!-- ══════════ Étape 2 : communauté (après le choix du niveau) ══════════ -->
+    <main v-if="step === 'community'" class="mx-auto flex max-w-lg flex-col items-center px-4 py-16 text-center">
+      <span class="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+        <i class="pi pi-check-circle text-3xl" />
+      </span>
+      <h1 class="mt-5 text-2xl font-bold text-ink">{{ t("onboarding.community_title") }}</h1>
+      <p class="mt-2 text-sm text-muted">{{ t("onboarding.community_text", { level: chosenLabel }) }}</p>
+
+      <div class="mt-8 w-full rounded-card border border-emerald-500/30 bg-emerald-500/10 p-5 text-left">
+        <p class="flex items-center gap-2 font-semibold text-ink">
+          <i class="pi pi-whatsapp text-emerald-600" />
+          {{ t("dashboard.community_title") }}
+        </p>
+        <p class="mt-1 text-sm text-muted">{{ t("dashboard.community_text") }}</p>
+        <a
+          :href="SITE.whatsappCommunity"
+          target="_blank"
+          rel="noopener"
+          class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-leaf bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+          @click="joinCommunity"
+        >
+          <i class="pi pi-whatsapp" />
+          {{ t("dashboard.community_btn") }}
+        </a>
+      </div>
+
+      <Button
+        :label="t('onboarding.go_dashboard')"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        text
+        class="mt-4"
+        @click="goDashboard"
+      />
+    </main>
+
+    <!-- ══════════ Étape 1 : choix du niveau ══════════ -->
+    <main v-else class="mx-auto max-w-3xl px-4 py-10">
       <h1 class="text-2xl font-bold text-ink sm:text-3xl">{{ t("onboarding.title") }}</h1>
       <p class="mt-1 text-sm text-muted">{{ t("onboarding.subtitle") }}</p>
 
@@ -27,7 +65,10 @@
         <div v-for="n in 6" :key="n" class="h-20 animate-pulse rounded-card bg-card-2" />
       </div>
 
-      <p v-else-if="options.length === 0" class="mt-8 rounded-card border border-dashed border-line bg-card px-6 py-10 text-center text-sm text-muted">
+      <p
+        v-else-if="options.length === 0"
+        class="mt-8 rounded-card border border-dashed border-line bg-card px-6 py-10 text-center text-sm text-muted"
+      >
         {{ t("onboarding.empty") }}
       </p>
 
@@ -47,7 +88,10 @@
               :class="selectedId === o.level.id ? 'border-primary bg-primary/10' : 'border-line hover:border-primary/40'"
               @click="selectedId = o.level.id"
             >
-              <span class="flex size-12 shrink-0 items-center justify-center rounded-leaf text-base font-extrabold" :class="info(o.exam.provider).badge">
+              <span
+                class="flex size-12 shrink-0 items-center justify-center rounded-leaf text-base font-extrabold"
+                :class="info(o.exam.provider).badge"
+              >
                 {{ o.level.cefr_code }}
               </span>
               <span class="min-w-0 flex-1">
@@ -79,6 +123,8 @@
 </template>
 
 <script setup lang="ts">
+import { SITE } from "~/config/site";
+
 definePageMeta({ layout: false });
 
 const { t, te } = useI18n();
@@ -91,6 +137,7 @@ const loading = ref(true);
 const saving = ref(false);
 const error = ref("");
 const selectedId = ref<string | null>(null);
+const step = ref<"level" | "community">("level");
 
 const levelName = (code: string) => (te(`exam_detail.level_names.${code}`) ? t(`exam_detail.level_names.${code}`) : "");
 
@@ -109,9 +156,19 @@ const groups = computed(() => {
     .sort((a, b) => orderOf(a.key) - orderOf(b.key));
 });
 
+/** Libellé du niveau choisi, ex. "Goethe B2" */
+const chosenLabel = computed(() => {
+  const o = options.value.find((x) => x.level.id === selectedId.value);
+  return o ? `${info(o.exam.provider).brand} ${o.level.cefr_code}` : "";
+});
+
 const goDashboard = () => navigateTo(localePath("/dashboard"), { replace: true });
 
-async function confirm(levelId: string) {
+/**
+ * Enregistre le niveau actif.
+ * withCommunity : après "Continuer", on propose la communauté ; après "Passer", on va droit au tableau de bord.
+ */
+async function confirm(levelId: string, withCommunity = true) {
   saving.value = true;
   error.value = "";
   const result = await setActiveLevel(levelId);
@@ -120,12 +177,26 @@ async function confirm(levelId: string) {
     error.value = result.error || t("onboarding.error");
     return;
   }
-  goDashboard();
+  if (withCommunity) step.value = "community";
+  else goDashboard();
 }
 
 /** "Passer" : on applique le niveau par défaut pour ne plus reposer la question */
 async function skip() {
-  if (defaultOption.value) return confirm(defaultOption.value.level.id);
+  if (defaultOption.value) {
+    selectedId.value = defaultOption.value.level.id;
+    return confirm(defaultOption.value.level.id, false);
+  }
+  goDashboard();
+}
+
+/** Même clé que la carte du tableau de bord : elle ne réapparaîtra pas */
+function joinCommunity() {
+  try {
+    localStorage.setItem("gtg_community_hidden", "1");
+  } catch {
+    /* stockage indisponible : sans conséquence */
+  }
   goDashboard();
 }
 

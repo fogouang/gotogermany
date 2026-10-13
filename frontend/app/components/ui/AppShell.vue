@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SITE } from "~/config/site";
 import type { NavRole } from "~/types/navigation";
+import LevelSwitcher from "~/components/dashboard/LevelSwitcher.vue";
 
 const props = defineProps<{
   /** Rôle imposé par le layout ; absent = déduit du store (espace Centre) */
@@ -11,8 +12,15 @@ const { t } = useI18n();
 const route = useRoute();
 const authStore = useAuthStore();
 const { openMobile } = useSidebar();
-const { role, espace, sections, pageMeta, initiale, seDeconnecter } =
-  useNavigation(props.role);
+// "navRole" et non "role" : la prop du même nom masquerait la valeur dans le template
+const {
+  role: navRole,
+  espace,
+  sections,
+  pageMeta,
+  initiale,
+  seDeconnecter,
+} = useNavigation(props.role);
 
 // Seule la zone de contenu défile : on la remet en haut à chaque changement de page
 const zoneContenu = ref<HTMLElement | null>(null);
@@ -110,7 +118,7 @@ async function deconnecter() {
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
-          <LevelSwitcher v-if="role === 'etudiant'" />
+          <LevelSwitcher v-if="navRole === 'etudiant'" />
           <slot name="header-actions" />
           <AppLangSwitcher />
           <ThemeToggle />

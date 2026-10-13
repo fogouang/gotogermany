@@ -414,6 +414,9 @@
       "expiring_text": "Il prend fin le {date}.",
       "renew": "Renouveler"
     },
+    "community_title": "Rejoignez la communauté",
+    "community_text": "Conseils, nouveaux sujets et entraide entre candidats, sur WhatsApp.",
+    "community_btn": "Rejoindre sur WhatsApp",
     "space": "Espace Étudiant",
     "role": "Étudiant"
   },
@@ -841,7 +844,9 @@
     "delete_type": "Tapez \"SUPPRIMER\" pour confirmer",
     "delete_placeholder": "SUPPRIMER",
     "delete_confirm_btn": "Supprimer définitivement",
-    "delete_confirm_word": "SUPPRIMER"
+    "delete_confirm_word": "SUPPRIMER",
+    "whatsapp_on": "Vous faites partie de la communauté WhatsApp.",
+    "whatsapp_off": "Votre accord WhatsApp a été retiré."
   },
   "faq": {
     "badge": "Centre d'aide",
@@ -1679,7 +1684,10 @@
     "skip": "Passer",
     "continue": "Continuer",
     "empty": "Aucun examen n'est disponible pour le moment.",
-    "error": "Impossible d'enregistrer votre choix. Réessayez."
+    "error": "Impossible d'enregistrer votre choix. Réessayez.",
+    "community_title": "C'est noté !",
+    "community_text": "Votre espace est prêt pour {level}.",
+    "go_dashboard": "Accéder à mon espace"
   },
   "level_switch": {
     "title": "Changer de niveau",

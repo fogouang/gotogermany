@@ -1,11 +1,11 @@
 <template>
   <div>
-    <LandingHero />
-    <LandingLevelsSection />
-    <LandingModulesSection />
-    <LandingHowIsWork />
-    <LandingTemoignages />
-    <LandingCta />
+    <Hero />
+    <LevelsSection />
+    <ModulesSection />
+    <HowIsWork />
+    <Temoignages />
+    <Cta />
   </div>
 </template>
 

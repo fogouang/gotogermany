@@ -12,6 +12,9 @@ export const SITE = {
   phoneLabel: "+237 691 85 09 13",
   email: "lfogouang39@gmail.com",
   phone2Label: "+237 670 88 62 88",
+  // Communauté WhatsApp : rejointe librement via le lien d'invitation
+  whatsappCommunity: "https://chat.whatsapp.com/CxUdtE70ckv66iQjikHqBF",
+
   // Réseaux sociaux : laisser vide tant que la page n'existe pas (masqué)
   social: {
     facebook: "",

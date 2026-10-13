@@ -222,6 +222,25 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
+    async setWhatsappOptIn(optIn: boolean) {
+      this._ensureApiConfig();
+      try {
+        const response = await UsersService.updateMeApiV1UsersMePatch({
+          whatsapp_opt_in: optIn,
+        });
+        this.user = response;
+        return { success: true };
+      } catch (error: any) {
+        return {
+          success: false,
+          error:
+            typeof error.body?.detail === "string"
+              ? error.body.detail
+              : "Erreur lors de la mise à jour",
+        };
+      }
+    },
+
     async changePassword(currentPassword: string, newPassword: string) {
       this._ensureApiConfig();
       this.loading = true;

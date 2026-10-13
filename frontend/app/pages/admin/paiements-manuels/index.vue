@@ -270,21 +270,49 @@
         </div>
         <div>
           <label class="mb-1.5 block text-xs font-medium text-muted"
-            >Examen</label
+            >Niveau</label
           >
           <Select
-            v-model="accessForm.exam_id"
-            :options="examOptions"
+            v-model="accessForm.level_id"
+            :options="levelOptions"
             optionLabel="label"
             optionValue="value"
             filter
-            placeholder="Choisir un examen"
+            placeholder="Choisir un niveau"
             class="w-full"
           />
         </div>
+
+        <!-- Formule ou pass journalier -->
         <div>
           <label class="mb-1.5 block text-xs font-medium text-muted"
-            >Plan</label
+            >Type d'accès</label
+          >
+          <div
+            class="grid grid-cols-2 gap-1 rounded-leaf border border-line bg-card-2 p-1"
+          >
+            <button
+              v-for="m in accessModes"
+              :key="m.value"
+              type="button"
+              class="flex items-center justify-center gap-2 rounded-leaf px-3 py-2 text-sm font-medium transition-colors"
+              :class="
+                accessForm.mode === m.value
+                  ? 'bg-card text-primary shadow-soft'
+                  : 'text-muted hover:text-ink'
+              "
+              @click="accessForm.mode = m.value"
+            >
+              <i :class="m.icon" class="text-xs" />
+              {{ m.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Formule -->
+        <div v-if="accessForm.mode === 'plan'">
+          <label class="mb-1.5 block text-xs font-medium text-muted"
+            >Formule</label
           >
           <div
             v-if="activePlans.length === 0"
@@ -310,6 +338,54 @@
               }}</span>
             </button>
           </div>
+        </div>
+
+        <!-- Pass journalier -->
+        <div v-else>
+          <label class="mb-1.5 block text-xs font-medium text-muted"
+            >Nombre de jours</label
+          >
+          <InputNumber
+            v-model="accessForm.days"
+            :min="1"
+            :max="30"
+            showButtons
+            class="w-full"
+            inputClass="w-full"
+          />
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button
+              v-for="n in [1, 2, 3, 7]"
+              :key="n"
+              type="button"
+              class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+              :class="
+                accessForm.days === n
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-line bg-card text-muted hover:border-primary/30'
+              "
+              @click="accessForm.days = n"
+            >
+              {{ n }} jour{{ n > 1 ? "s" : "" }}
+            </button>
+          </div>
+          <p class="mt-2 text-xs text-muted">
+            Montant calculé au tarif du pass journalier. Aucune commission
+            partenaire.
+          </p>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-muted"
+            >Note (optionnelle)</label
+          >
+          <Textarea
+            v-model="accessForm.note"
+            rows="2"
+            autoResize
+            class="w-full"
+            placeholder="Ex. Virement Orange Money reçu le 13/10/2026"
+          />
         </div>
         <Message v-if="dialogError" severity="error" :closable="false">{{
           dialogError
@@ -593,29 +669,52 @@ const userOptions = computed(() =>
     label: u.full_name ? `${u.full_name} · ${u.email}` : u.email,
   })),
 );
-const examOptions = computed(() =>
-  (catalog.value ?? []).map((e: any) => ({ value: e.id, label: e.name })),
-);
 
+// Un accès se donne par niveau : une option par niveau de chaque examen
+const levelOptions = computed(() =>
+  (catalog.value ?? []).flatMap((e: any) =>
+    (e.levels ?? []).map((l: any) => ({
+      value: l.id,
+      label: `${e.name} · ${l.cefr_code}`,
+    })),
+  ),
+);
 // ── Dialogues ──
 const showAccessDialog = ref(false);
 const showCreditsDialog = ref(false);
 const saving = ref(false);
 const dialogError = ref("");
 
-const accessForm = ref({ user_id: "", exam_id: "", plan_id: "" });
+type AccessMode = "plan" | "pass";
+
+const accessModes: { value: AccessMode; label: string; icon: string }[] = [
+  { value: "plan", label: "Formule", icon: "pi pi-tag" },
+  { value: "pass", label: "Pass journalier", icon: "pi pi-sun" },
+];
+
+const accessForm = ref({
+  user_id: "",
+  level_id: "",
+  mode: "plan" as AccessMode,
+  plan_id: "",
+  days: 1 as number | null,
+  note: "",
+});
+
 const creditsForm = ref<{ user_id: string; credits: number | null }>({
   user_id: "",
   credits: 10,
 });
 const creditPresets = [5, 10, 20, 50];
 
-const accessValid = computed(
-  () =>
-    !!accessForm.value.user_id &&
-    !!accessForm.value.exam_id &&
-    !!accessForm.value.plan_id,
-);
+const accessValid = computed(() => {
+  const f = accessForm.value;
+  if (!f.user_id || !f.level_id) return false;
+  if (f.mode === "plan") return !!f.plan_id;
+  // Pass : le backend ignore le plan mais le schéma l'exige, il faut au moins un plan actif
+  return (f.days ?? 0) >= 1 && activePlans.value.length > 0;
+});
+
 const creditsValid = computed(
   () => !!creditsForm.value.user_id && (creditsForm.value.credits ?? 0) > 0,
 );
@@ -624,8 +723,11 @@ function openAccessDialog() {
   dialogError.value = "";
   accessForm.value = {
     user_id: "",
-    exam_id: "",
+    level_id: "",
+    mode: "plan",
     plan_id: activePlans.value.length === 1 ? activePlans.value[0]!.id : "",
+    days: 1,
+    note: "",
   };
   showAccessDialog.value = true;
 }
@@ -640,14 +742,29 @@ async function submitAccess() {
   if (!accessValid.value) return;
   saving.value = true;
   dialogError.value = "";
-  const result = await adminGrantExamAccess({ ...accessForm.value });
+
+  const f = accessForm.value;
+  const isPass = f.mode === "pass";
+  const result = await adminGrantExamAccess({
+    user_id: f.user_id,
+    level_id: f.level_id,
+    // Pass journalier : plan exigé par le schéma mais ignoré par le backend (prix et durée viennent de "days")
+    plan_id: isPass ? activePlans.value[0]!.id : f.plan_id,
+    days: isPass ? f.days : null,
+    note: f.note.trim() || null,
+  });
+
   saving.value = false;
   if (!result?.success) {
     dialogError.value = result?.message || "L'accès n'a pas pu être accordé.";
     return;
   }
   showAccessDialog.value = false;
-  toast.add({ severity: "success", summary: "Accès accordé", life: 3000 });
+  toast.add({
+    severity: "success",
+    summary: isPass ? `Pass de ${f.days} jour(s) accordé` : "Accès accordé",
+    life: 3000,
+  });
   activeTab.value = "access";
   loadHistory();
 }

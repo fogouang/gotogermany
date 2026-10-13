@@ -2,34 +2,64 @@
 <template>
   <div class="space-y-5">
     <!-- ── Tuiles (servent aussi de filtre) ── -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       <button
         v-for="tile in tiles"
         :key="tile.key"
         type="button"
         class="flex items-center gap-3 rounded-card border bg-card p-4 text-left shadow-soft transition-colors"
-        :class="filterStatus === tile.key ? 'border-primary ring-1 ring-primary/30' : 'border-line hover:border-primary/30'"
+        :class="
+          filterStatus === tile.key
+            ? 'border-primary ring-1 ring-primary/30'
+            : 'border-line hover:border-primary/30'
+        "
         @click="filterStatus = tile.key"
       >
-        <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf" :class="tile.iconClass">
+        <span
+          class="flex size-10 shrink-0 items-center justify-center rounded-leaf"
+          :class="tile.iconClass"
+        >
           <i :class="tile.icon" />
         </span>
         <div class="min-w-0">
-          <p class="text-2xl font-bold leading-none text-ink">{{ tile.count }}</p>
+          <p class="text-2xl font-bold leading-none text-ink">
+            {{ tile.count }}
+          </p>
           <p class="mt-1 truncate text-xs text-muted">{{ tile.label }}</p>
         </div>
       </button>
     </div>
 
-    <!-- ── Recherche ── -->
-    <IconField class="w-full sm:max-w-sm">
-      <InputIcon class="pi pi-search" />
-      <InputText v-model="search" placeholder="Rechercher un utilisateur (nom, email)" class="w-full" />
-    </IconField>
+    <!-- ── Recherche + export ── -->
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <IconField class="w-full sm:max-w-sm">
+        <InputIcon class="pi pi-search" />
+        <InputText
+          v-model="search"
+          placeholder="Rechercher (nom, email, téléphone)"
+          class="w-full"
+        />
+      </IconField>
+      <Button
+        :label="`Exporter les numéros WhatsApp (${whatsappUsers.length})`"
+        icon="pi pi-download"
+        severity="success"
+        outlined
+        class="w-full sm:w-auto"
+        :disabled="whatsappUsers.length === 0"
+        @click="exportWhatsapp"
+      />
+    </div>
 
     <!-- ── Chargement ── -->
     <div v-if="store.loading" class="space-y-3">
-      <div v-for="n in 5" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
+      <div
+        v-for="n in 5"
+        :key="n"
+        class="h-16 animate-pulse rounded-card bg-card-2"
+      />
     </div>
 
     <!-- ── Vide ── -->
@@ -37,7 +67,9 @@
       v-else-if="filteredUsers.length === 0"
       class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <span
+        class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+      >
         <i class="pi pi-users" />
       </span>
       <p class="text-sm font-medium text-ink">Aucun utilisateur trouvé</p>
@@ -45,41 +77,65 @@
 
     <!-- ── Liste ── -->
     <template v-else>
-      <ul class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft">
+      <ul
+        class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft"
+      >
         <li
           v-for="user in paginatedUsers"
           :key="user.id"
           class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3.5 sm:px-5"
         >
           <!-- Identité -->
-          <div class="flex min-w-56 flex-1 items-center gap-3" :class="{ 'opacity-60': !user.is_active }">
+          <div
+            class="flex min-w-56 flex-1 items-center gap-3"
+            :class="{ 'opacity-60': !user.is_active }"
+          >
             <span
               class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-sm font-bold"
-              :class="user.is_admin ? 'bg-red-500/10 text-red-600' : 'bg-primary/10 text-primary'"
+              :class="
+                user.is_admin
+                  ? 'bg-red-500/10 text-red-600'
+                  : 'bg-primary/10 text-primary'
+              "
             >
               {{ initials(user.full_name) }}
             </span>
             <div class="min-w-0">
               <p class="truncate font-medium text-ink">{{ user.full_name }}</p>
               <p class="truncate text-xs text-muted">{{ user.email }}</p>
+              <p v-if="user.phone" class="truncate text-xs text-faint">
+                {{ user.phone }}
+              </p>
             </div>
           </div>
 
           <!-- Inscription -->
-          <span class="hidden w-28 text-xs text-muted md:block">{{ formatDate(user.created_at) }}</span>
+          <span class="hidden w-28 text-xs text-muted md:block">{{
+            formatDate(user.created_at)
+          }}</span>
 
           <!-- Badges -->
           <div class="flex flex-wrap items-center gap-1.5">
-            <span v-if="user.is_admin" class="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+            <span
+              v-if="user.is_admin"
+              class="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-600"
+            >
               Admin
             </span>
             <span
               class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-              :class="user.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'"
+              :class="
+                user.is_active
+                  ? 'bg-emerald-500/10 text-emerald-600'
+                  : 'bg-red-500/10 text-red-600'
+              "
             >
               {{ user.is_active ? "Actif" : "Désactivé" }}
             </span>
-            <span v-if="user.is_verified" class="rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
+            <span
+              v-if="user.is_verified"
+              class="rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold text-sky-600"
+            >
               Vérifié
             </span>
             <span
@@ -87,6 +143,17 @@
               class="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
             >
               <i class="pi pi-star-fill text-[9px]" /> Ambassadeur
+            </span>
+            <span
+              v-if="user.whatsapp_opt_in"
+              v-tooltip.top="
+                user.whatsapp_opt_in_at
+                  ? `Accord donné le ${formatDate(user.whatsapp_opt_in_at)}`
+                  : 'Accord WhatsApp'
+              "
+              class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600"
+            >
+              <i class="pi pi-whatsapp text-[9px]" /> WhatsApp
             </span>
           </div>
 
@@ -108,8 +175,16 @@
               rounded
               size="small"
               :severity="user.is_ambassador ? 'warn' : 'secondary'"
-              v-tooltip.top="user.is_ambassador ? 'Retirer le statut ambassadeur' : 'Rendre ambassadeur'"
-              :aria-label="user.is_ambassador ? 'Retirer le statut ambassadeur' : 'Rendre ambassadeur'"
+              v-tooltip.top="
+                user.is_ambassador
+                  ? 'Retirer le statut ambassadeur'
+                  : 'Rendre ambassadeur'
+              "
+              :aria-label="
+                user.is_ambassador
+                  ? 'Retirer le statut ambassadeur'
+                  : 'Rendre ambassadeur'
+              "
               :loading="togglingAmbassadorId === user.id"
               @click="handleToggleAmbassador(user)"
             />
@@ -159,22 +234,36 @@
     >
       <div v-if="selectedUser" class="space-y-5">
         <div class="flex items-center gap-3 rounded-leaf bg-card-2 p-4">
-          <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-primary/10 font-bold text-primary">
+          <span
+            class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-primary/10 font-bold text-primary"
+          >
             {{ initials(selectedUser.full_name) }}
           </span>
           <div class="min-w-0">
-            <p class="truncate font-semibold text-ink">{{ selectedUser.full_name }}</p>
+            <p class="truncate font-semibold text-ink">
+              {{ selectedUser.full_name }}
+            </p>
             <p class="truncate text-xs text-muted">{{ selectedUser.email }}</p>
           </div>
         </div>
 
         <!-- Accès complet -->
-        <div class="flex items-center justify-between gap-4 rounded-leaf border border-primary/30 bg-primary/5 p-4">
+        <div
+          class="flex items-center justify-between gap-4 rounded-leaf border border-primary/30 bg-primary/5 p-4"
+        >
           <div>
             <p class="text-sm font-semibold text-ink">Accès complet</p>
-            <p class="mt-0.5 text-xs text-muted">Donner accès à tous les niveaux disponibles</p>
+            <p class="mt-0.5 text-xs text-muted">
+              Donner accès à tous les niveaux disponibles
+            </p>
           </div>
-          <Button label="Tout accorder" icon="pi pi-star" size="small" :loading="grantingAll" @click="handleGrantAll" />
+          <Button
+            label="Tout accorder"
+            icon="pi pi-star"
+            size="small"
+            :loading="grantingAll"
+            @click="handleGrantAll"
+          />
         </div>
 
         <div class="flex items-center gap-3">
@@ -184,7 +273,9 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-ink">Niveau spécifique</label>
+          <label class="mb-1.5 block text-sm font-medium text-ink"
+            >Niveau spécifique</label
+          >
           <Select
             v-model="selectedLevelId"
             :options="allLevels"
@@ -196,7 +287,9 @@
           />
         </div>
 
-        <Message v-if="grantError" severity="error" :closable="false">{{ grantError }}</Message>
+        <Message v-if="grantError" severity="error" :closable="false">{{
+          grantError
+        }}</Message>
       </div>
 
       <template #footer>
@@ -219,19 +312,28 @@
       :style="{ width: '95vw', maxWidth: '26rem' }"
     >
       <div v-if="selectedUser" class="flex items-start gap-3">
-        <span class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-red-500/10">
+        <span
+          class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-red-500/10"
+        >
           <i class="pi pi-exclamation-triangle text-red-600" />
         </span>
         <div>
           <p class="font-semibold text-ink">{{ selectedUser.full_name }}</p>
           <p class="mt-1 text-sm text-muted">
-            Cette action est irréversible. Toutes les données de cet utilisateur seront supprimées.
+            Cette action est irréversible. Toutes les données de cet utilisateur
+            seront supprimées.
           </p>
         </div>
       </div>
       <template #footer>
         <Button label="Annuler" text @click="deleteDialog = false" />
-        <Button label="Supprimer" icon="pi pi-trash" severity="danger" :loading="deleting" @click="handleDelete" />
+        <Button
+          label="Supprimer"
+          icon="pi pi-trash"
+          severity="danger"
+          :loading="deleting"
+          @click="handleDelete"
+        />
       </template>
     </Dialog>
   </div>
@@ -247,7 +349,13 @@ const examsStore = useExamsStore();
 const toast = useToast();
 
 // ── Filtres ──
-type FilterKey = "all" | "active" | "inactive" | "admin" | "ambassador";
+type FilterKey =
+  | "all"
+  | "active"
+  | "inactive"
+  | "admin"
+  | "ambassador"
+  | "whatsapp";
 const search = ref("");
 const filterStatus = ref<FilterKey>("all");
 
@@ -256,17 +364,49 @@ function matches(u: UserAdminResponse, key: FilterKey) {
   if (key === "inactive") return !u.is_active;
   if (key === "admin") return u.is_admin;
   if (key === "ambassador") return u.is_ambassador;
+  if (key === "whatsapp") return !!u.whatsapp_opt_in;
   return true;
 }
 
 const tiles = computed(() => {
-  const count = (k: FilterKey) => store.users.filter((u) => matches(u, k)).length;
+  const count = (k: FilterKey) =>
+    store.users.filter((u) => matches(u, k)).length;
   return [
-    { key: "all" as const, label: "Utilisateurs", count: count("all"), icon: "pi pi-users", iconClass: "bg-primary/10 text-primary" },
-    { key: "active" as const, label: "Actifs", count: count("active"), icon: "pi pi-check-circle", iconClass: "bg-emerald-500/10 text-emerald-600" },
-    { key: "inactive" as const, label: "Désactivés", count: count("inactive"), icon: "pi pi-ban", iconClass: "bg-red-500/10 text-red-600" },
-    { key: "admin" as const, label: "Admins", count: count("admin"), icon: "pi pi-shield", iconClass: "bg-red-500/10 text-red-600" },
-    { key: "ambassador" as const, label: "Ambassadeurs", count: count("ambassador"), icon: "pi pi-star", iconClass: "bg-amber-500/15 text-amber-600" },
+    {
+      key: "all" as const,
+      label: "Utilisateurs",
+      count: count("all"),
+      icon: "pi pi-users",
+      iconClass: "bg-primary/10 text-primary",
+    },
+    {
+      key: "active" as const,
+      label: "Actifs",
+      count: count("active"),
+      icon: "pi pi-check-circle",
+      iconClass: "bg-emerald-500/10 text-emerald-600",
+    },
+    {
+      key: "inactive" as const,
+      label: "Désactivés",
+      count: count("inactive"),
+      icon: "pi pi-ban",
+      iconClass: "bg-red-500/10 text-red-600",
+    },
+    {
+      key: "admin" as const,
+      label: "Admins",
+      count: count("admin"),
+      icon: "pi pi-shield",
+      iconClass: "bg-red-500/10 text-red-600",
+    },
+    {
+      key: "ambassador" as const,
+      label: "Ambassadeurs",
+      count: count("ambassador"),
+      icon: "pi pi-star",
+      iconClass: "bg-amber-500/15 text-amber-600",
+    },
   ];
 });
 
@@ -274,13 +414,21 @@ const filteredUsers = computed(() => {
   const q = search.value.trim().toLowerCase();
   return store.users
     .filter((u) => matches(u, filterStatus.value))
-    .filter((u) => !q || u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    .filter(
+      (u) =>
+        !q ||
+        u.full_name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        (u.phone ?? "").replace(/\s/g, "").includes(q.replace(/\s/g, "")),
+    );
 });
 
 // ── Pagination ──
 const first = ref(0);
 const rows = ref(15);
-const paginatedUsers = computed(() => filteredUsers.value.slice(first.value, first.value + rows.value));
+const paginatedUsers = computed(() =>
+  filteredUsers.value.slice(first.value, first.value + rows.value),
+);
 
 watch([search, filterStatus], () => {
   first.value = 0;
@@ -320,14 +468,24 @@ function initials(name: string) {
 }
 
 const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+  new Date(d).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
 // ── Actions ──
 async function handleToggle(user: UserAdminResponse) {
   togglingId.value = user.id;
   const res = await store.toggleActive(user.id);
   togglingId.value = null;
-  if (!res.success) toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
+  if (!res.success)
+    toast.add({
+      severity: "error",
+      summary: "Erreur",
+      detail: res.error,
+      life: 3000,
+    });
 }
 
 async function handleToggleAmbassador(user: UserAdminResponse) {
@@ -338,12 +496,19 @@ async function handleToggleAmbassador(user: UserAdminResponse) {
   if (res.success) {
     toast.add({
       severity: "success",
-      summary: wasAmbassador ? "Statut ambassadeur retiré" : "Statut ambassadeur accordé",
+      summary: wasAmbassador
+        ? "Statut ambassadeur retiré"
+        : "Statut ambassadeur accordé",
       detail: `${user.full_name} ${wasAmbassador ? "n'est plus" : "est maintenant"} ambassadeur.`,
       life: 3000,
     });
   } else {
-    toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
+    toast.add({
+      severity: "error",
+      summary: "Erreur",
+      detail: res.error,
+      life: 3000,
+    });
   }
 }
 
@@ -358,7 +523,13 @@ async function handleDelete() {
   const res = await store.deleteUser(selectedUser.value.id);
   deleting.value = false;
   deleteDialog.value = false;
-  if (!res.success) toast.add({ severity: "error", summary: "Erreur", detail: res.error, life: 3000 });
+  if (!res.success)
+    toast.add({
+      severity: "error",
+      summary: "Erreur",
+      detail: res.error,
+      life: 3000,
+    });
 }
 
 function openGrantAccess(user: UserAdminResponse) {
@@ -372,7 +543,10 @@ async function handleGrantAccess() {
   if (!selectedUser.value || !selectedLevelId.value) return;
   granting.value = true;
   grantError.value = "";
-  const res = await store.grantAccess(selectedUser.value.id, selectedLevelId.value);
+  const res = await store.grantAccess(
+    selectedUser.value.id,
+    selectedLevelId.value,
+  );
   granting.value = false;
   if (res.success) {
     grantDialog.value = false;
@@ -404,6 +578,64 @@ async function handleGrantAll() {
   } else {
     grantError.value = res.error || "Erreur lors de l'attribution globale";
   }
+}
+
+// ══════════ Export WhatsApp ══════════
+const whatsappUsers = computed(() =>
+  store.users.filter((u) => u.whatsapp_opt_in && u.phone),
+);
+
+/** Même règle que le backend (normalize_phone) : anciens numéros locaux camerounais -> +237... */
+function toE164(raw: string): string {
+  const value = raw.trim();
+  let digits = value.replace(/\D/g, "");
+  if (value.startsWith("+")) return `+${digits}`;
+  if (digits.startsWith("00")) return `+${digits.slice(2)}`;
+  if (digits.length === 9 && /^[62]/.test(digits)) digits = `237${digits}`;
+  return `+${digits}`;
+}
+
+function exportWhatsapp() {
+  const csvCell = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const header = [
+    "Nom",
+    "Email",
+    "Téléphone",
+    "Lien WhatsApp",
+    "Accord donné le",
+    "Inscrit le",
+  ];
+  const lines = whatsappUsers.value.map((u) => {
+    const phone = toE164(u.phone!);
+    return [
+      u.full_name,
+      u.email,
+      phone,
+      `https://wa.me/${phone.slice(1)}`,
+      u.whatsapp_opt_in_at ? formatDate(u.whatsapp_opt_in_at) : "",
+      formatDate(u.created_at),
+    ]
+      .map(csvCell)
+      .join(";");
+  });
+
+  // ";" + BOM UTF-8 : s'ouvre correctement dans Excel en français, accents compris
+  const csv = "\uFEFF" + [header.map(csvCell).join(";"), ...lines].join("\r\n");
+  const url = URL.createObjectURL(
+    new Blob([csv], { type: "text/csv;charset=utf-8" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `gotogermany-whatsapp-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  toast.add({
+    severity: "success",
+    summary: "Export prêt",
+    detail: `${whatsappUsers.value.length} numéro(s) exporté(s).`,
+    life: 3000,
+  });
 }
 
 onMounted(async () => {

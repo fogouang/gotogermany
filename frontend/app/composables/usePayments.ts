@@ -40,23 +40,26 @@ export const usePayments = () => {
   // ── Admin : accorder un accès exam manuellement ─────────────
   const adminGrantExamAccess = async (data: {
     user_id: string;
-    exam_id: string;
+    level_id: string;
     plan_id: string;
+    days?: number | null;
     note?: string | null;
   }) => {
     try {
       const res =
         await PaymentsService.createManualPaymentApiV1PaymentsAdminManualPost({
           user_id: data.user_id,
-          level_id: data.exam_id,
+          level_id: data.level_id,
           plan_id: data.plan_id,
+          days: data.days ?? null,
           note: data.note ?? null,
         });
       return { success: true, data: res };
     } catch (err: any) {
       return {
         success: false,
-        message: err?.body?.message ?? "Erreur lors de l'activation manuelle",
+        message:
+          err?.body?.detail ?? err?.body?.message ?? "Erreur lors de l'activation manuelle",
       };
     }
   };
