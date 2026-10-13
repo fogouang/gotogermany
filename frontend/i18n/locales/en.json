@@ -855,7 +855,7 @@
       "completed": "Completed"
     },
     "load_more": "Load more",
-        "view_detail": "View details",
+    "view_detail": "View details",
     "subject_n": "Topic {n}"
   },
   "simulator": {
@@ -1109,7 +1109,7 @@
     "stimulus_people_label": "Given opinions",
     "reading_text_label": "Reading text",
     "prep_suggested_time_left": "Suggested time left: {time}",
-        "examiner": "Examiner",
+    "examiner": "Examiner",
     "you": "You",
     "official_prep_left": "Official time: {time} left",
     "official_prep_over": "Official time is up, you can start"
@@ -1710,6 +1710,34 @@
       "camera_on": "On",
       "camera_off": "Off",
       "not_found": "Session not found."
+    },
+    "grading": {
+      "back": "Back to assignment",
+      "final_score": "Final score",
+      "not_submitted": "This copy has not been submitted yet.",
+      "download_pdf": "Schreiben copy (PDF)",
+      "upload_annotated": "Upload annotated copy",
+      "download_annotated": "Annotated copy",
+      "upload_done": "Annotated copy saved",
+      "upload_error": "The file could not be uploaded.",
+      "auto_title": "Automatic marking",
+      "auto_correct": "{correct}/{total} correct answers",
+      "manual_title": "To mark",
+      "no_manual": "This assignment has no Schreiben: the score is calculated automatically.",
+      "words": "{n} words",
+      "empty_answer": "No answer",
+      "task": "Task",
+      "student_text": "Student's text",
+      "score": "Score",
+      "comment": "Comment",
+      "comment_placeholder": "Notes on this task",
+      "general_comment": "Overall comment",
+      "general_placeholder": "Overall feedback on the assignment",
+      "remaining": "All tasks are scored | 1 task without a score | {n} tasks without a score",
+      "save": "Save marking",
+      "saved_final": "Marking saved, final score calculated",
+      "saved_partial": "Partial marking saved",
+      "save_error": "The marking could not be saved."
     },
     "launch": {
       "intro": "Pick the student, then the Sprechen topic to run with them.",

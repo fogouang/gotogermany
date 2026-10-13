@@ -41,6 +41,9 @@ class AnswerDetailResponse(BaseSchema):
     points_possible: float
     feedback: dict[str, Any] | None
     corrected_at: datetime | None
+    # Production écrite uniquement : consigne et points à traiter, comme dans le PDF Schreiben
+    instruction: str | None = None
+    prompts: list[str] = []
 
 
 class SessionStartResponse(BaseSchema):

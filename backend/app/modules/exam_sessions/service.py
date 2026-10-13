@@ -59,7 +59,7 @@ class ExamSessionService:
     async def start_session(
         self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None, module_slugs: list[str] | None = None,
     ) -> SessionStartResponse:
-        
+
         requested_slugs = self._normalize_slugs(module_slugs)
 
         # 1. Déterminer le subject cible (explicite ou auto-pick)
@@ -387,7 +387,8 @@ class ExamSessionService:
         total_pass_score = level.total_pass_score if level else None
 
         return await self._build_result_response(
-            session, exam, subject, answers, total_pass_score
+            session, exam, subject, answers, total_pass_score,
+            include_empty_free_text=True,
         )
 
     async def get_my_sessions(
@@ -668,6 +669,27 @@ class ExamSessionService:
 
     # ── Construction du résultat ─────────────────────────
 
+    @staticmethod
+    def _free_text_instruction(question, teil) -> tuple[str | None, list[str]]:
+        """Même logique que AssignmentService._schreiben_parts : consigne et Leitpunkte."""
+        if question.question_type != "free_text":
+            return None, []
+        content = question.content or {}
+        instruction = (
+            content.get("scenario")
+            or content.get("instruction")
+            or content.get("topic")
+            or teil.instructions
+            or ""
+        )
+        prompts = content.get("prompts") or content.get("leitpunkte") or []
+        if not isinstance(prompts, list):
+            prompts = []
+        return (
+            instruction if isinstance(instruction, str) and instruction else None,
+            [p for p in prompts if isinstance(p, str)],
+        )
+
     async def _build_result_response(
         self,
         session: ExamSession,
@@ -675,7 +697,10 @@ class ExamSessionService:
         subject: Subject,
         answers: list[ExamSessionAnswer],
         total_pass_score: int | None,
+        include_empty_free_text: bool = False,
     ) -> SessionResultResponse:
+        """include_empty_free_text : vue staff, une production écrite laissée vide
+        est renvoyée avec une réponse vide pour que l'enseignant puisse la noter."""
         answer_map = {a.question_id: a for a in answers}
         modules_result = []
         provider = exam.provider if exam else "TELC"
@@ -707,7 +732,10 @@ class ExamSessionService:
                         elif answer.is_correct is False:
                             questions_incorrect += 1
 
+                        instruction, prompts = self._free_text_instruction(question, teil)
                         answer_details.append(AnswerDetailResponse(
+                            instruction=instruction,
+                            prompts=prompts,
                             question_id=question.id,
                             question_number=question.question_number,
                             question_type=question.question_type,
@@ -718,6 +746,22 @@ class ExamSessionService:
                             points_possible=question.points,
                             feedback=answer.feedback,
                             corrected_at=answer.corrected_at,
+                        ))
+                    elif include_empty_free_text and question.question_type == "free_text":
+                        instruction, prompts = self._free_text_instruction(question, teil)
+                        answer_details.append(AnswerDetailResponse(
+                            instruction=instruction,
+                            prompts=prompts,
+                            question_id=question.id,
+                            question_number=question.question_number,
+                            question_type=question.question_type,
+                            user_answer={},
+                            correct_answer=question.correct_answer,
+                            is_correct=None,
+                            score_obtained=None,
+                            points_possible=question.points,
+                            feedback=None,
+                            corrected_at=None,
                         ))
 
                 t_points, t_total, t_pending = self._teil_points(teil, answer_map)
