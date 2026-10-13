@@ -20,5 +20,6 @@ export type SessionResultResponse = {
     modules?: Array<ModuleResultResponse>;
     result_message: (string | null);
     module_passed?: (boolean | null);
+    module_slugs?: (Array<string> | null);
 };
 

@@ -854,7 +854,9 @@
       "failed": "Failed",
       "completed": "Completed"
     },
-    "load_more": "Load more"
+    "load_more": "Load more",
+        "view_detail": "View details",
+    "subject_n": "Topic {n}"
   },
   "simulator": {
     "title": "Schreiben Simulator",
@@ -1106,7 +1108,11 @@
     "scenario_label": "Topic",
     "stimulus_people_label": "Given opinions",
     "reading_text_label": "Reading text",
-    "prep_suggested_time_left": "Suggested time left: {time}"
+    "prep_suggested_time_left": "Suggested time left: {time}",
+        "examiner": "Examiner",
+    "you": "You",
+    "official_prep_left": "Official time: {time} left",
+    "official_prep_over": "Official time is up, you can start"
   },
   "referrals": {
     "page_title": "Referrals",

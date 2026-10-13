@@ -153,11 +153,16 @@ export const useSessionStore = defineStore("session", {
       OpenAPI.TOKEN = tokenCookie.value ?? undefined;
     },
 
-    async startSession(examId: string, subjectId?: string) {
+    async startSession(
+      examId: string,
+      subjectId?: string,
+      moduleSlugs?: string[],
+    ) {
       return this._start(() =>
         SessionsService.startSessionApiV1SessionsPost({
           exam_id: examId,
           subject_id: subjectId ?? null,
+          module_slugs: moduleSlugs?.length ? moduleSlugs : null,
         }),
       );
     },

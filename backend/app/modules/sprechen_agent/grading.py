@@ -73,6 +73,23 @@ def _extract_criterion_max(value: Any, scoring_system: ScoringSystem) -> float:
     return float(sum(numeric_leaves))
 
 
+
+def _norm_criterion(name: str) -> str:
+    """'I_Ausdrücksfähigkeit' / 'I Ausdruecksfaehigkeit' -> 'iausdruecksfaehigkeit'."""
+    s = (name or "").lower()
+    for src, dst in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        s = s.replace(src, dst)
+    return "".join(ch for ch in s if ch.isalnum())
+
+
+def _criterion_max_map(teil: TeilConfig) -> dict[str, float]:
+    """Max officiel de chaque critère, tel qu'importé du JSON du sujet."""
+    return {
+        _norm_criterion(name): _extract_criterion_max(value, teil.scoring_system)
+        for name, value in teil.scoring_criteria_raw.items()
+    }
+    
+    
 def compute_teil_max_score(teil: TeilConfig) -> float:
     return sum(
         _extract_criterion_max(v, teil.scoring_system)
@@ -177,6 +194,9 @@ exactly this shape:
 }}
 
 For each criterion:
+- "criterion_name": copy the criterion key EXACTLY as written in the raw \
+  criteria (e.g. "I_Ausdruecksfaehigkeit"), and "max_score": the maximum \
+  attainable for that criterion as defined above.
 - "issue": one short sentence naming the concrete gap you observed, grounded \
   in what the candidate actually said (or didn't say). Use null only if the \
   score is at or near max and there is genuinely nothing to flag.
@@ -218,35 +238,48 @@ def _testdaf_level(percent: float) -> str:
     return "unter TDN 3"
 
 def parse_grading_response(raw_text: str, session: SessionState) -> GradingResult:
-    """Turns Claude's raw JSON text into a validated GradingResult,
-    filling in max_score totals and the pass/fail decision. Separated
-    from call_claude_grading() so it can be unit-tested against a
-    synthetic response without a real API call."""
+    """Turns Claude's raw JSON text into a validated GradingResult.
+
+    Le maximum officiel vient TOUJOURS des critères importés
+    (scoring_criteria_raw), jamais du max_score renvoyé par Claude :
+      - chaque critère reconnu prend son max officiel, score plafonné ;
+      - le max d'un Teil = compute_teil_max_score(teil) ;
+      - un Teil noté oublié par Claude compte 0 sur son max.
+    """
     data = json.loads(_strip_code_fences(raw_text))
 
     teile_by_number = {t.teil_number: t for t in session.teile}
     teil_gradings: list[TeilGrading] = []
+    graded_numbers: set[int] = set()
     total_score = 0.0
     total_max_score = 0.0
 
-    for teil_data in data["teile"]:
+    for teil_data in data.get("teile", []):
         teil_number = teil_data["teil_number"]
         teil = teile_by_number.get(teil_number)
-        teil_name = teil.name if teil else f"Teil {teil_number}"
+        max_map = _criterion_max_map(teil) if teil else {}
 
-        criteria = [
-            CriterionScore(
-                criterion_name=c["criterion_name"],
-                score=float(c["score"]),
-                max_score=float(c["max_score"]),
-                issue=c.get("issue"),
-                model_phrase=c.get("model_phrase"),
-                tip=c.get("tip"),
+        criteria: list[CriterionScore] = []
+        for c in teil_data.get("criteria", []):
+            official_max = max_map.get(_norm_criterion(c["criterion_name"]))
+            max_score = official_max if official_max is not None else float(c["max_score"])
+            score = max(0.0, min(float(c["score"]), max_score))
+            criteria.append(
+                CriterionScore(
+                    criterion_name=c["criterion_name"],
+                    score=score,
+                    max_score=max_score,
+                    issue=c.get("issue"),
+                    model_phrase=c.get("model_phrase"),
+                    tip=c.get("tip"),
+                )
             )
-            for c in teil_data["criteria"]
-        ]
-        teil_score = sum(c.score for c in criteria)
-        teil_max = sum(c.max_score for c in criteria)
+
+        if teil and teil.scoring_criteria_raw:
+            teil_max = compute_teil_max_score(teil)
+        else:
+            teil_max = sum(c.max_score for c in criteria)
+        teil_score = min(sum(c.score for c in criteria), teil_max)
 
         teil_gradings.append(
             TeilGrading(
@@ -256,9 +289,26 @@ def parse_grading_response(raw_text: str, session: SessionState) -> GradingResul
                 teil_max_score=teil_max,
             )
         )
+        graded_numbers.add(teil_number)
         total_score += teil_score
         total_max_score += teil_max
 
+    # Teil noté (critères présents) que Claude a oublié : 0 sur son max officiel
+    for teil in session.teile:
+        if teil.teil_number in graded_numbers or not teil.scoring_criteria_raw:
+            continue
+        teil_max = compute_teil_max_score(teil)
+        teil_gradings.append(
+            TeilGrading(
+                teil_number=teil.teil_number,
+                criteria=[],
+                teil_score=0.0,
+                teil_max_score=teil_max,
+            )
+        )
+        total_max_score += teil_max
+
+    teil_gradings.sort(key=lambda tg: tg.teil_number)
     percent = (total_score / total_max_score * 100) if total_max_score else 0.0
 
     return GradingResult(
@@ -274,8 +324,8 @@ def parse_grading_response(raw_text: str, session: SessionState) -> GradingResul
         strengths=data.get("strengths", []),
         improvement_areas=data.get("improvement_areas", []),
     )
-
-
+    
+    
 async def call_claude_grading(session: SessionState, *, anthropic_api_key: str) -> GradingResult:
     """The actual network call. Thin on purpose — build_grading_prompt()
     and parse_grading_response() hold all the logic worth testing without

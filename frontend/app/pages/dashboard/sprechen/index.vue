@@ -1,152 +1,112 @@
 <!--sprechen/index.vue-->
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
+  <div class="space-y-6 pb-10">
+    <!-- En-tête -->
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">
-        {{ t("sprechen.title") }}
-      </h1>
-      <p class="text-sm text-gray-500">{{ t("sprechen.subtitle") }}</p>
+      <h1 class="text-2xl font-bold text-ink">{{ t("sprechen.title") }}</h1>
+      <p class="text-sm text-muted">{{ t("sprechen.subtitle") }}</p>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex border-b border-gray-200">
+    <!-- Onglets -->
+    <div class="flex border-b border-line">
       <button
-        :class="[
-          'px-5 py-3 text-sm font-semibold border-b-2 transition-colors',
-          activeTab === 'sujets'
-            ? 'border-teal-600 text-teal-700'
-            : 'border-transparent text-gray-500 hover:text-gray-700',
-        ]"
+        type="button"
+        :class="tabClass('sujets')"
         @click="activeTab = 'sujets'"
       >
         <i class="pi pi-list-check mr-2" />{{ t("sprechen.tab_subjects") }}
       </button>
       <button
-        :class="[
-          'px-5 py-3 text-sm font-semibold border-b-2 transition-colors',
-          activeTab === 'resultats'
-            ? 'border-teal-600 text-teal-700'
-            : 'border-transparent text-gray-500 hover:text-gray-700',
-        ]"
+        type="button"
+        :class="tabClass('resultats')"
         @click="switchToResults"
       >
         <i class="pi pi-history mr-2" />{{ t("sprechen.tab_results") }}
         <span
           v-if="results.length"
-          class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-teal-100 text-teal-700 font-bold"
+          class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-primary/10 text-primary font-bold"
         >
           {{ results.length }}
         </span>
       </button>
     </div>
 
-    <!-- TAB : Sujets -->
+    <!-- ── Sujets ── -->
     <template v-if="activeTab === 'sujets'">
-      <!-- Filtres provider (dérivés du vrai catalogue, pas de liste en dur) -->
-      <div class="flex flex-wrap gap-2">
+      <!-- Filtres (dérivés du catalogue) -->
+      <div class="flex flex-wrap items-center gap-2">
         <button
           v-for="p in availableProviders"
           :key="p"
-          :class="[
-            'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
-            selectedProvider === p
-              ? 'bg-teal-600 text-white border-teal-600'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-teal-300',
-          ]"
+          type="button"
+          :class="chipClass(selectedProvider === p)"
           @click="selectedProvider = selectedProvider === p ? '' : p"
         >
-          {{ p.toUpperCase() }}
+          {{ info(p).name }}
         </button>
-        <div class="w-px bg-gray-200 mx-1" />
+        <span class="w-px h-6 bg-line mx-1" />
         <button
           v-for="l in availableLevels"
           :key="l"
-          :class="[
-            'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
-            selectedLevel === l
-              ? 'bg-indigo-600 text-white border-indigo-600'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300',
-          ]"
+          type="button"
+          :class="chipClass(selectedLevel === l)"
           @click="selectedLevel = selectedLevel === l ? '' : l"
         >
           {{ l }}
         </button>
       </div>
 
-      <!-- Loading -->
       <div v-if="examsStore.loading" class="flex justify-center py-12">
-        <ProgressSpinner style="width: 50px; height: 50px" />
+        <ProgressSpinner style="width: 48px; height: 48px" strokeWidth="3" />
       </div>
 
-      <!-- Vide -->
       <div
         v-else-if="!sprechenSubjects.length"
-        class="text-center py-16 bg-white rounded-xl border border-gray-100"
+        class="text-center py-16 bg-card border border-line rounded-card"
       >
-        <i class="pi pi-inbox text-4xl text-gray-300 mb-3 block" />
-        <p class="font-medium text-gray-600">
-          {{ t("sprechen.no_subjects_title") }}
-        </p>
-        <p class="text-sm text-gray-400 mb-4">
-          {{ t("sprechen.no_subjects_subtitle") }}
-        </p>
-        <Button
-          :label="t('sprechen.show_all')"
-          icon="pi pi-refresh"
-          @click="resetFilters"
-        />
+        <i class="pi pi-inbox text-4xl text-faint mb-3 block" />
+        <p class="font-medium text-ink">{{ t("sprechen.no_subjects_title") }}</p>
+        <p class="text-sm text-muted mb-4">{{ t("sprechen.no_subjects_subtitle") }}</p>
+        <Button :label="t('sprechen.show_all')" icon="pi pi-refresh" @click="resetFilters" />
       </div>
 
-      <!-- Grille sujets -->
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <NuxtLink
           v-for="subject in sprechenSubjects"
           :key="subject.id"
-          :to="`/dashboard/sprechen/${subject.id}`"
-          class="group bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-teal-200 transition-all flex flex-col gap-3"
+          :to="localePath(`/dashboard/sprechen/${subject.id}`)"
+          class="group bg-card border border-line rounded-card p-5 hover:border-primary/40 hover:shadow-soft transition-all flex flex-col gap-3"
         >
           <div class="flex items-start gap-3">
-            <div
-              class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white text-xs font-bold bg-orange-500"
-            >
+            <span class="w-10 h-10 rounded-leaf flex items-center justify-center shrink-0 bg-primary/10 text-primary">
               <i class="pi pi-microphone" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p
-                class="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors text-sm leading-snug"
-              >
-                {{ subject.title }}
-              </p>
-            </div>
+            </span>
+            <p class="flex-1 min-w-0 font-semibold text-ink group-hover:text-primary transition-colors text-sm leading-snug">
+              {{ subject.title }}
+            </p>
           </div>
 
           <p
             v-if="subject.preview"
-            class="text-xs text-gray-500 line-clamp-2 leading-relaxed bg-gray-50 rounded-lg px-3 py-2"
+            class="text-xs text-muted line-clamp-2 leading-relaxed bg-card-2 rounded-leaf px-3 py-2"
           >
             {{ subject.preview }}
           </p>
 
           <div class="flex items-center justify-between pt-1">
             <div class="flex items-center gap-2">
-              <Tag
-                :value="subject.provider.toUpperCase()"
-                :class="providerTagClass(subject.provider)"
-              />
-              <Tag :value="subject.level" severity="info" />
-              <span class="text-xs text-gray-400">
+              <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', info(subject.provider).badge]">
+                {{ info(subject.provider).name }}
+              </span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-card-2 border border-line text-ink">
+                {{ subject.level }}
+              </span>
+              <span class="text-xs text-muted">
                 {{ subject.teilCount }}
-                {{
-                  subject.teilCount > 1
-                    ? t("sprechen.teile_plural")
-                    : t("sprechen.teil")
-                }}
+                {{ subject.teilCount > 1 ? t("sprechen.teile_plural") : t("sprechen.teil") }}
               </span>
             </div>
-            <span
-              class="text-xs text-teal-600 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all"
-            >
+            <span class="text-xs text-primary font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
               {{ t("sprechen.start") }}
               <i class="pi pi-arrow-right text-xs" />
             </span>
@@ -155,95 +115,69 @@
       </div>
     </template>
 
-    <!-- TAB : Historique -->
+    <!-- ── Historique ── -->
     <template v-else>
       <div v-if="loadingResults" class="flex justify-center py-12">
-        <ProgressSpinner style="width: 50px; height: 50px" />
+        <ProgressSpinner style="width: 48px; height: 48px" strokeWidth="3" />
       </div>
 
       <div
         v-else-if="!results.length"
-        class="text-center py-16 bg-white rounded-xl border border-gray-100"
+        class="text-center py-16 bg-card border border-line rounded-card"
       >
-        <i class="pi pi-history text-4xl text-gray-300 mb-3 block" />
-        <p class="font-medium text-gray-600">
-          {{ t("sprechen.no_results_title") }}
-        </p>
-        <p class="text-sm text-gray-400 mb-4">
-          {{ t("sprechen.no_results_subtitle") }}
-        </p>
-        <Button
-          :label="t('sprechen.see_subjects')"
-          icon="pi pi-list-check"
-          @click="activeTab = 'sujets'"
-        />
+        <i class="pi pi-history text-4xl text-faint mb-3 block" />
+        <p class="font-medium text-ink">{{ t("sprechen.no_results_title") }}</p>
+        <p class="text-sm text-muted mb-4">{{ t("sprechen.no_results_subtitle") }}</p>
+        <Button :label="t('sprechen.see_subjects')" icon="pi pi-list-check" @click="activeTab = 'sujets'" />
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div
           v-for="result in results"
           :key="result.session_id"
-          class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3"
+          class="bg-card border border-line rounded-card p-5 flex flex-col gap-3"
         >
           <div class="flex items-start gap-3">
             <div class="shrink-0 relative w-14 h-14">
               <svg class="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+                <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" stroke-width="6" class="text-line" />
                 <circle
                   cx="28"
                   cy="28"
                   r="22"
                   fill="none"
-                  stroke="#f3f4f6"
-                  stroke-width="6"
-                />
-                <circle
-                  cx="28"
-                  cy="28"
-                  r="22"
-                  fill="none"
-                  :stroke="result.passed ? '#22c55e' : '#f97316'"
+                  stroke="currentColor"
                   stroke-width="6"
                   stroke-linecap="round"
-                  :stroke-dasharray="`${(result.total_score / result.total_max_score) * 138} 138`"
+                  :class="result.passed ? 'text-emerald-500' : 'text-amber-500'"
+                  :stroke-dasharray="`${(percentOf(result) / 100) * 138} 138`"
                 />
               </svg>
-              <div
-                class="absolute inset-0 flex flex-col items-center justify-center"
-              >
-                <span class="text-xs font-extrabold text-gray-800 leading-none">
-                  {{
-                    Math.round(
-                      (result.total_score / result.total_max_score) * 100,
-                    )
-                  }}%
-                </span>
-              </div>
+              <span class="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-ink tabular-nums">
+                {{ percentOf(result) }}%
+              </span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-semibold text-gray-900 text-sm leading-snug">
-                {{ result.subject_name }}
-              </p>
-              <p class="text-xs text-gray-400 mt-0.5">
-                {{ formatDate(result.completed_at) }}
-              </p>
+              <p class="font-semibold text-ink text-sm leading-snug">{{ result.subject_name }}</p>
+              <p class="text-xs text-muted mt-0.5">{{ formatDate(result.completed_at) }}</p>
               <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', info(result.provider).badge]">
+                  {{ info(result.provider).name }}
+                </span>
+                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-card-2 border border-line text-ink">
+                  {{ result.level.toUpperCase() }}
+                </span>
                 <Tag
-                  :value="result.provider.toUpperCase()"
-                  :class="providerTagClass(result.provider)"
-                />
-                <Tag :value="result.level.toUpperCase()" severity="info" />
-                <Tag
-                  :value="result.passed ? 'Bestanden ✓' : 'Nicht bestanden'"
+                  :value="result.passed ? t('sprechen_subject.passed') : t('sprechen_subject.not_passed')"
                   :severity="result.passed ? 'success' : 'danger'"
                 />
               </div>
             </div>
           </div>
           <span
-            class="text-xs font-bold"
-            :class="result.passed ? 'text-green-600' : 'text-orange-500'"
+            :class="['text-xs font-bold tabular-nums', result.passed ? 'text-emerald-600' : 'text-amber-600']"
           >
-            {{ result.total_score }} / {{ result.total_max_score }} pts
+            {{ result.total_score }} / {{ result.total_max_score }} {{ t("sprechen_subject.points") }}
           </span>
         </div>
       </div>
@@ -257,7 +191,9 @@ import type { SessionHistoryItem } from "#shared/api";
 
 definePageMeta({ layout: "dashboard" });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const localePath = useLocalePath();
+const { info } = useProviders();
 useHead({ title: t("sprechen.page_title") });
 
 const examsStore = useExamsStore();
@@ -266,23 +202,29 @@ const activeTab = ref<"sujets" | "resultats">("sujets");
 const selectedProvider = ref("");
 const selectedLevel = ref("");
 
-// ---------------------------------------------------------------------
-// Sujets — dérivés de useExamsStore, même pattern que
-// examens/[slug].vue : fetchExamBySlug() charge l'arbre complet, on
-// filtre ensuite côté client pour ne garder que les sujets qui ont un
-// module "sprechen".
-// ---------------------------------------------------------------------
+const ORAL_SLUGS = ["sprechen", "muendlicher_ausdruck", "mündlicher_ausdruck"];
 
-const availableProviders = computed(() => {
-  const set = new Set(examsStore.catalog.map((e) => e.provider));
-  return [...set];
-});
+const tabClass = (tab: "sujets" | "resultats") => [
+  "px-5 py-3 text-sm font-semibold border-b-2 transition-colors",
+  activeTab.value === tab
+    ? "border-primary text-primary"
+    : "border-transparent text-muted hover:text-ink",
+];
+
+const chipClass = (active: boolean) => [
+  "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors",
+  active
+    ? "bg-primary text-white border-primary"
+    : "bg-card text-ink border-line hover:border-primary/40",
+];
+
+// ── Sujets : arbre de l'examen filtré sur les sujets ayant un module oral ──
+
+const availableProviders = computed(() => [...new Set(examsStore.catalog.map((e) => e.provider))]);
 
 const availableLevels = computed(() => {
   const set = new Set<string>();
-  examsStore.catalog.forEach((e) =>
-    e.levels?.forEach((l) => set.add(l.cefr_code)),
-  );
+  examsStore.catalog.forEach((e) => e.levels?.forEach((l) => set.add(l.cefr_code)));
   return [...set];
 });
 
@@ -301,26 +243,20 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
 
   const cards: SprechenSubjectCard[] = [];
   for (const level of exam.levels ?? []) {
-    if (selectedLevel.value && level.cefr_code !== selectedLevel.value)
-      continue;
+    if (selectedLevel.value && level.cefr_code !== selectedLevel.value) continue;
 
     for (const subject of level.subjects ?? []) {
       const sprechenModule = (subject.modules ?? []).find((m) =>
-        ["sprechen", "muendlicher_ausdruck"].includes(
-          m.slug?.trim().toLowerCase(),
-        ),
+        ORAL_SLUGS.includes(m.slug?.trim().toLowerCase()),
       );
       if (!sprechenModule) continue;
 
-      const firstTeil = sprechenModule.teile?.[0];
       cards.push({
         id: subject.id,
         provider: exam.provider,
         level: level.cefr_code,
-        title:
-          subject.name ||
-          `${t("sprechen.subject_default")} ${subject.subject_number}`,
-        preview: firstTeil?.instructions ?? undefined,
+        title: subject.name || `${t("sprechen.subject_default")} ${subject.subject_number}`,
+        preview: sprechenModule.teile?.[0]?.instructions ?? undefined,
         teilCount: sprechenModule.teile?.length ?? 0,
       });
     }
@@ -328,31 +264,20 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
   return cards;
 });
 
-// Résout le bon Exam (slug) à charger selon provider ET niveau —
-// nécessaire car un provider peut correspondre à plusieurs Exam
-// distincts en base (un par niveau, selon le slug utilisé à l'import),
-// pas un seul Exam avec plusieurs Level comme on le supposait.
+// Un fournisseur peut avoir plusieurs Exam (un par niveau) : on choisit le bon slug
 const targetExamSlug = computed(() => {
   if (!selectedProvider.value) return null;
-
-  const candidates = examsStore.catalog.filter(
-    (e) => e.provider === selectedProvider.value,
-  );
+  const candidates = examsStore.catalog.filter((e) => e.provider === selectedProvider.value);
   if (!candidates.length) return null;
-
   if (!selectedLevel.value) return candidates[0]!.slug;
-
-  const match = candidates.find((e) =>
-    e.levels?.some((l) => l.cefr_code === selectedLevel.value),
-  );
+  const match = candidates.find((e) => e.levels?.some((l) => l.cefr_code === selectedLevel.value));
   return (match ?? candidates[0]!).slug;
 });
 
 watch(
   targetExamSlug,
   async (slug) => {
-    if (!slug) return;
-    await examsStore.fetchExamBySlug(slug);
+    if (slug) await examsStore.fetchExamBySlug(slug);
   },
   { immediate: true },
 );
@@ -363,12 +288,13 @@ const resetFilters = () => {
   examsStore.clearCurrentExam();
 };
 
-// ---------------------------------------------------------------------
-// Historique — le seul appel vraiment spécifique à Sprechen
-// ---------------------------------------------------------------------
+// ── Historique du simulateur ──────────────────────────
 
 const results = ref<SessionHistoryItem[]>([]);
 const loadingResults = ref(false);
+
+const percentOf = (r: SessionHistoryItem) =>
+  r.total_max_score ? Math.round((r.total_score / r.total_max_score) * 100) : 0;
 
 async function fetchMyResults() {
   const config = useRuntimeConfig();
@@ -399,10 +325,8 @@ const switchToResults = () => {
   if (!results.value.length) fetchMyResults();
 };
 
-// ---------------------------------------------------------------------
-
 const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString("fr-FR", {
+  new Date(d).toLocaleDateString(locale.value, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -410,24 +334,12 @@ const formatDate = (d: string) =>
     minute: "2-digit",
   });
 
-const providerTagClass = (p: string) =>
-  ({
-    goethe: "bg-blue-100 text-blue-700",
-    telc: "bg-purple-100 text-purple-700",
-    osd: "bg-orange-100 text-orange-700",
-  })[p] ?? "bg-gray-100 text-gray-600";
-
 onMounted(async () => {
   if (!examsStore.catalog.length) await examsStore.fetchCatalog();
 
-  // Filtre par défaut sur TELC au montage — sans ça la liste de sujets
-  // reste vide tant que l'utilisateur n'a pas cliqué manuellement sur un
-  // badge provider (targetExamSlug ne se calcule qu'une fois
-  // selectedProvider renseigné).
+  // TELC par défaut, sinon la liste reste vide tant qu'aucun filtre n'est choisi
   if (!selectedProvider.value) {
-    const telc = availableProviders.value.find(
-      (p) => p.toLowerCase() === "telc",
-    );
+    const telc = availableProviders.value.find((p) => p.toLowerCase() === "telc");
     selectedProvider.value = telc ?? availableProviders.value[0] ?? "";
   }
 });

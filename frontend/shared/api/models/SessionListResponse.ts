@@ -15,5 +15,6 @@ export type SessionListResponse = {
     started_at: string;
     submitted_at: (string | null);
     duration_seconds: (number | null);
+    module_slugs?: (Array<string> | null);
 };
 

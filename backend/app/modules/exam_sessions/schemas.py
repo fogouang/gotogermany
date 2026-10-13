@@ -10,6 +10,7 @@ from app.shared.schemas.base import BaseSchema
 class SessionStartRequest(BaseSchema):
     exam_id: uuid.UUID
     subject_id: uuid.UUID | None = None
+    module_slugs: list[str] | None = None   # mode "module seul" ; None = examen complet
 
 
 class AnswerSubmitRequest(BaseSchema):
@@ -68,6 +69,7 @@ class SessionListResponse(BaseSchema):
     started_at: datetime
     submitted_at: datetime | None
     duration_seconds: int | None
+    module_slugs: list[str] | None = None
 
 
 class TeilResultResponse(BaseSchema):
@@ -108,7 +110,8 @@ class SessionResultResponse(BaseSchema):
     duration_seconds: int | None
     modules: list[ModuleResultResponse] = []
     result_message: str | None
-    module_passed: bool | None = None 
+    module_passed: bool | None = None
+    module_slugs: list[str] | None = None
 
 
 class ActiveSessionResponse(BaseSchema):

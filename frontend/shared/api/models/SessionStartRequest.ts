@@ -5,5 +5,6 @@
 export type SessionStartRequest = {
     exam_id: string;
     subject_id?: (string | null);
+    module_slugs?: (Array<string> | null);
 };
 

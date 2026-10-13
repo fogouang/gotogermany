@@ -844,7 +844,9 @@
       "failed": "Échoué",
       "completed": "Terminé"
     },
-    "load_more": "Charger plus"
+    "load_more": "Charger plus",
+    "view_detail": "Voir le détail",
+    "subject_n": "Sujet {n}"
   },
 
   "simulator": {
@@ -1097,7 +1099,11 @@
     "scenario_label": "Sujet",
     "stimulus_people_label": "Avis donnés",
     "reading_text_label": "Texte à lire",
-    "prep_suggested_time_left": "Temps suggéré restant : {time}"
+    "prep_suggested_time_left": "Temps suggéré restant : {time}",
+    "examiner": "Examinateur",
+    "you": "Vous",
+    "official_prep_left": "Temps officiel : {time} restantes",
+    "official_prep_over": "Temps officiel écoulé, vous pouvez commencer"
   },
   "referrals": {
     "page_title": "Parrainage",

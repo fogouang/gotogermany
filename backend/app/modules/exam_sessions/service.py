@@ -57,8 +57,10 @@ class ExamSessionService:
     # ── Démarrage ────────────────────────────────────────
 
     async def start_session(
-        self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None
+        self, user_id: UUID, exam_id: UUID, subject_id: UUID | None = None, module_slugs: list[str] | None = None,
     ) -> SessionStartResponse:
+        
+        requested_slugs = self._normalize_slugs(module_slugs)
 
         # 1. Déterminer le subject cible (explicite ou auto-pick)
         if subject_id:
@@ -72,6 +74,10 @@ class ExamSessionService:
 
         # 2. Réutiliser la session active SEULEMENT si elle porte sur ce subject précis
         active = await self.repo.get_active_session(user_id, exam_id, subject_obj.id)
+        # Une session en cours sur une autre sélection de modules n'est pas reprise
+        if active and self._normalize_slugs(active.module_slugs) != requested_slugs:
+            await self.repo.update(active.id, status="ABANDONED")
+            active = None
         if active:
             subject = await self._load_subject_full(active.subject_id)
             exam = await self._load_exam_by_subject(active.subject_id)
@@ -107,6 +113,7 @@ class ExamSessionService:
             subject_id=subject.id,
             status="IN_PROGRESS",
             started_at=datetime.now(timezone.utc),
+            module_slugs=requested_slugs,
         )
         modules_data = self._build_modules_content(subject)
 
@@ -208,15 +215,22 @@ class ExamSessionService:
     # ── Soumission finale ────────────────────────────────
 
     async def _evaluate(
-        self, subject: Subject, exam: Exam | None, answers: list[ExamSessionAnswer]
+        self,
+        subject: Subject,
+        exam: Exam | None,
+        answers: list[ExamSessionAnswer],
+        module_slugs: list[str] | None = None,
     ) -> dict:
         """Score par module, score global, statut et réussite (logique commune
         à la soumission et à la correction par l'enseignant)."""
         provider = exam.provider if exam else "TELC"
-        score_breakdown, has_pending = self._compute_scores(subject, answers, provider=provider)
+        modules = self._scoped_modules(subject, module_slugs)
+        score_breakdown, has_pending = self._compute_scores(
+            subject, answers, provider=provider, modules=modules
+        )
 
         # Total des points de l'écrit / total possible (TELC B2 : x / 225, ÖSD B2 : x / 70)
-        global_score = self._weighted_global(subject, answers)
+        global_score = self._weighted_global(subject, answers, modules=modules)
 
         level = await self._get_level(subject.level_id)
         total_pass_score = level.total_pass_score if level else None
@@ -255,7 +269,7 @@ class ExamSessionService:
         answers = await self.answer_repo.get_by_session(session_id)
         subject = await self._load_subject_full(session.subject_id)
         exam = await self.exam_repo.get_by_id(session.exam_id)
-        ev = await self._evaluate(subject, exam, answers)
+        ev = await self._evaluate(subject, exam, answers, session.module_slugs)
         return await self.repo.update(
             session_id,
             status=ev["status"],
@@ -303,7 +317,7 @@ class ExamSessionService:
         subject = await self._load_subject_full(session.subject_id)
         exam = await self.exam_repo.get_by_id(session.exam_id)
 
-        ev = await self._evaluate(subject, exam, answers)
+        ev = await self._evaluate(subject, exam, answers, session.module_slugs)
 
         now = datetime.now(timezone.utc)
         session = await self.repo.update(
@@ -400,6 +414,7 @@ class ExamSessionService:
                 started_at=s.started_at,
                 submitted_at=s.submitted_at,
                 duration_seconds=s.duration_seconds,
+                module_slugs=s.module_slugs,
             ))
         return result
 
@@ -533,6 +548,23 @@ class ExamSessionService:
         except Exception:
             return False
 
+    # ── Helpers privés : sélection de modules ────────────
+
+    @staticmethod
+    def _normalize_slugs(slugs: list[str] | None) -> list[str] | None:
+        cleaned = sorted({s.strip().lower() for s in (slugs or []) if s and s.strip()})
+        return cleaned or None
+
+    @staticmethod
+    def _scoped_modules(subject: Subject, module_slugs: list[str] | None) -> list[Module]:
+        """Modules réellement passés : tous (examen complet) ou la sélection
+        (module seul). Même règle que le front : le slug du module contient
+        le slug demandé."""
+        if not module_slugs:
+            return list(subject.modules)
+        targets = [s.lower() for s in module_slugs]
+        return [m for m in subject.modules if any(t in m.slug.lower() for t in targets)]
+
     # ── Helpers privés : notation ────────────────────────
 
     @staticmethod
@@ -586,12 +618,15 @@ class ExamSessionService:
         return not any(q.id in answer_map for t in module.teile for q in t.questions)
 
     def _weighted_global(
-        self, subject: Subject, answers: list[ExamSessionAnswer]
+        self,
+        subject: Subject,
+        answers: list[ExamSessionAnswer],
+        modules: list[Module] | None = None,
     ) -> float | None:
         """Somme des points de l'écrit / total possible, en %."""
         answer_map = {a.question_id: a for a in answers}
         got = total = 0.0
-        for module in subject.modules:
+        for module in (modules if modules is not None else subject.modules):
             if self._skip_module(module, answer_map):
                 continue
             g, t, pending = self._module_points(module, answer_map)
@@ -606,6 +641,7 @@ class ExamSessionService:
         subject: Subject,
         answers: list[ExamSessionAnswer],
         provider: str = "TELC",
+        modules: list[Module] | None = None,
     ) -> tuple[dict, bool]:
         """Score par module, en %, selon le barème officiel des Teile.
 
@@ -616,7 +652,7 @@ class ExamSessionService:
         score_breakdown: dict = {}
         has_pending = False
 
-        for module in subject.modules:
+        for module in (modules if modules is not None else subject.modules):
             if self._skip_module(module, answer_map):
                 continue
             got, total, pending = self._module_points(module, answer_map)
@@ -647,7 +683,7 @@ class ExamSessionService:
         rules = self._pass_rules(level, provider)
         is_tdn = rules["pass_rule"] == "tdn_levels"
 
-        for module in subject.modules:
+        for module in self._scoped_modules(subject, session.module_slugs):
             if self._skip_module(module, answer_map):
                 continue  # Sprechen : évalué en session orale
 
@@ -789,4 +825,5 @@ class ExamSessionService:
             duration_seconds=session.duration_seconds,
             modules=modules_result,
             result_message=result_message,
+            module_slugs=session.module_slugs,
         )

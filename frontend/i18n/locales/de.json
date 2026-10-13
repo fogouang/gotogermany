@@ -854,7 +854,9 @@
       "failed": "Nicht bestanden",
       "completed": "Abgeschlossen"
     },
-    "load_more": "Mehr laden"
+    "load_more": "Mehr laden",
+    "view_detail": "Details ansehen",
+    "subject_n": "Modellsatz {n}"
   },
   "simulator": {
     "title": "Schreiben-Simulator",
@@ -1106,7 +1108,10 @@
     "scenario_label": "Thema",
     "stimulus_people_label": "Gegebene Meinungen",
     "reading_text_label": "Lesetext",
-    "prep_suggested_time_left": "Empfohlene Restzeit: {time}"
+        "examiner": "Prüfer/in",
+    "you": "Sie",
+    "official_prep_left": "Offizielle Zeit: noch {time}",
+    "official_prep_over": "Offizielle Vorbereitungszeit vorbei, Sie können beginnen"
   },
   "referrals": {
     "page_title": "Empfehlungen",

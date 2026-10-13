@@ -76,6 +76,10 @@ class ExamSession(Base, UUIDMixin, TimestampMixin):
 
     # True=réussi, False=échoué, None=pas encore déterminé
     passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    
+    
+    # Modules choisis en mode "module seul" (ex. ["lesen"]) ; None = examen complet
+    module_slugs: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False

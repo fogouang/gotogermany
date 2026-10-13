@@ -536,8 +536,9 @@ const moduleSlug = computed(() => route.query.moduleSlug as string | undefined);
 const moduleSlugs = computed(
   () => route.query.moduleSlugs as string | undefined,
 );
+
 const isSingleModule = computed(
-  () => !!moduleSlug.value || !!moduleSlugs.value,
+  () => !!moduleSlug.value || !!moduleSlugs.value || !!result.value?.module_slugs?.length,
 );
 
 const displayedModules = computed<ModuleResultResponse[]>(() => {

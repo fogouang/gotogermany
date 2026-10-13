@@ -4,7 +4,7 @@
     :class="
       isCallTheme
         ? 'bg-[radial-gradient(ellipse_at_50%_-10%,#10534a_0%,#0b2b26_50%,#061412_100%)] text-white'
-        : 'bg-slate-50 text-gray-900'
+        : 'bg-canvas text-ink'
     "
   >
     <!-- Connexion -->
@@ -53,20 +53,18 @@
           :label="t('sprechen_subject.back')"
           outlined
           class="border-white/25! text-white!"
-          @click="router.back()"
+          @click="goToList"
         />
       </div>
     </div>
 
     <!-- Session active / préparation / terminée -->
     <template v-else>
-      <!-- Barre d'appel sticky -->
+      <!-- Barre d'appel -->
       <div
         class="shrink-0 backdrop-blur border-b px-4 py-3 flex items-center gap-3"
         :class="
-          isCallTheme
-            ? 'bg-white/5 border-white/10'
-            : 'bg-white/95 border-gray-200'
+          isCallTheme ? 'bg-white/5 border-white/10' : 'bg-card border-line'
         "
       >
         <Button
@@ -74,18 +72,19 @@
           text
           rounded
           :class="isCallTheme ? 'text-white!' : ''"
+          :aria-label="t('sprechen_subject.back')"
           @click="confirmLeave"
         />
         <div class="flex items-center gap-2.5 min-w-0 flex-1">
           <span
             class="w-2 h-2 rounded-full shrink-0"
             :class="
-              status === 'active' ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
+              status === 'active' ? 'bg-red-500 animate-pulse' : 'bg-faint'
             "
           />
           <h1
             class="text-sm font-semibold truncate"
-            :class="isCallTheme ? 'text-white/90' : 'text-gray-800'"
+            :class="isCallTheme ? 'text-white/90' : 'text-ink'"
           >
             {{ headerTeilName }}
           </h1>
@@ -94,21 +93,19 @@
           v-if="headerTeilNumber"
           class="ml-auto text-xs font-medium shrink-0 rounded-full px-2.5 py-1"
           :class="
-            isCallTheme
-              ? 'bg-white/10 text-white/70'
-              : 'bg-gray-100 text-gray-400'
+            isCallTheme ? 'bg-white/10 text-white/70' : 'bg-card-2 text-muted'
           "
         >
           Teil {{ headerTeilNumber }} / {{ totalTeile }}
         </span>
       </div>
 
-      <!-- ═══════════════ TAB : préparation ═══════════════ -->
+      <!-- ═══════════════ Préparation ═══════════════ -->
       <div
         v-if="status === 'preparing' && preparationInfo"
-        class="flex-1 grid grid-cols-1 md:grid-cols-[300px_1fr] overflow-hidden"
+        class="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden"
       >
-        <!-- Panneau gauche : consignes -->
+        <!-- Consignes -->
         <div
           class="bg-white/5 border-r border-white/10 p-6 flex flex-col gap-5 overflow-y-auto"
         >
@@ -127,9 +124,6 @@
             {{ preparationInfo.instructions }}
           </p>
 
-          <!-- Sujet / scénario donné (telc oral_thema, Diskussion, etc.) —
-               anciennement calculé côté backend mais jamais montré à
-               l'étudiant pendant la préparation. -->
           <div
             v-if="preparationInfo.scenario"
             class="bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-3"
@@ -144,10 +138,6 @@
             </p>
           </div>
 
-          <!-- Les deux avis donnés (person_a/person_b, person1/person2) —
-               l'examen réel remet cette carte à l'étudiant pendant la
-               Vorbereitungszeit ; jusqu'ici elle n'atteignait que le
-               prompt de l'agent, jamais l'écran de préparation. -->
           <div
             v-if="preparationInfo.stimulus_people?.length"
             class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
@@ -169,13 +159,12 @@
                   {{ person.name }}
                 </p>
                 <p class="text-xs text-white/60 italic mt-0.5">
-                  "{{ person.opinion }}"
+                  „{{ person.opinion }}“
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Texte de lecture donné (telc B2 "Diskussion") -->
           <div
             v-if="preparationInfo.stimulus_text"
             class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
@@ -188,7 +177,7 @@
               </p>
             </div>
             <p
-              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-64 overflow-y-auto"
+              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-80 overflow-y-auto"
             >
               {{ preparationInfo.stimulus_text }}
             </p>
@@ -215,24 +204,49 @@
                 :key="point"
                 class="flex gap-2 text-sm text-white/80"
               >
-                <span class="font-bold text-teal-300/80 shrink-0">–</span>
+                <i
+                  class="pi pi-circle-fill text-[5px] text-teal-300/80 mt-2 shrink-0"
+                ></i>
                 <span>{{ point }}</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <!-- Panneau droit : compteur montant + démarrage, sans limite -->
+        <!-- Chrono de préparation + démarrage -->
         <div class="flex-1 flex items-center justify-center p-8">
           <div class="flex flex-col items-center gap-6 max-w-sm w-full">
             <div class="flex flex-col items-center gap-1.5">
-              <span class="text-2xl font-medium text-white/90 tabular-nums">{{
+              <span class="text-3xl font-medium text-white/90 tabular-nums">{{
                 prepElapsedLabel
               }}</span>
               <span class="text-xs text-white/40 uppercase tracking-wide">{{
                 t("sprechen_subject.preparing")
               }}</span>
             </div>
+
+            <!-- Repère : temps officiel de préparation (jamais imposé) -->
+            <span
+              v-if="officialPrepSeconds > 0"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-colors"
+              :class="
+                prepSecondsLeft === 0
+                  ? 'bg-white/10 text-white/70 border-white/15'
+                  : prepTimerIsAlert
+                    ? 'bg-red-500/15 text-red-200 border-red-400/30 animate-pulse'
+                    : 'bg-amber-400/10 text-amber-200 border-amber-300/20'
+              "
+            >
+              <i class="pi pi-clock text-[11px]"></i>
+              {{
+                prepSecondsLeft > 0
+                  ? t("sprechen_subject.official_prep_left", {
+                      time: prepCountdownLabel,
+                    })
+                  : t("sprechen_subject.official_prep_over")
+              }}
+            </span>
+
             <p class="text-sm text-white/60 text-center leading-relaxed">
               {{ t("sprechen_subject.preparation_no_limit") }}
             </p>
@@ -245,12 +259,12 @@
         </div>
       </div>
 
-      <!-- ═══════════════ TAB : session en cours (interface d'appel) ═══════════════ -->
+      <!-- ═══════════════ Session en cours (interface d'appel) ═══════════════ -->
       <div
         v-else-if="status === 'active' && currentTeil"
-        class="flex-1 grid grid-cols-1 md:grid-cols-[300px_1fr] overflow-hidden"
+        class="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden"
       >
-        <!-- Panneau gauche : consignes fixes -->
+        <!-- Consignes -->
         <div
           class="bg-white/5 border-r border-white/10 p-6 flex flex-col gap-5 overflow-y-auto"
         >
@@ -281,8 +295,6 @@
             {{ teilCountdownLabel }}
           </span>
 
-          <!-- Sujet / scénario donné — reste visible pendant toute la
-               session active, pas seulement pendant la préparation. -->
           <div
             v-if="currentTeil.scenario"
             class="bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-3"
@@ -318,7 +330,7 @@
                   {{ person.name }}
                 </p>
                 <p class="text-xs text-white/60 italic mt-0.5">
-                  "{{ person.opinion }}"
+                  „{{ person.opinion }}“
                 </p>
               </div>
             </div>
@@ -336,7 +348,7 @@
               </p>
             </div>
             <p
-              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-64 overflow-y-auto"
+              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-80 overflow-y-auto"
             >
               {{ currentTeil.stimulus_text }}
             </p>
@@ -363,16 +375,17 @@
                 :key="point"
                 class="flex gap-2 text-sm text-white/80"
               >
-                <span class="font-bold text-teal-300/80 shrink-0">–</span>
+                <i
+                  class="pi pi-circle-fill text-[5px] text-teal-300/80 mt-2 shrink-0"
+                ></i>
                 <span>{{ point }}</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <!-- Panneau droit : conversation -->
+        <!-- Conversation -->
         <div class="flex-1 flex flex-col overflow-hidden">
-          <!-- Indicateur de tour de parole + avatars -->
           <div
             class="flex items-center justify-center gap-10 pt-6 pb-2 shrink-0"
           >
@@ -405,7 +418,7 @@
                 />
               </div>
               <p class="text-xs font-medium text-white/60 tracking-wide">
-                Examinateur
+                {{ t("sprechen_subject.examiner") }}
               </p>
             </div>
 
@@ -438,7 +451,7 @@
                 />
               </div>
               <p class="text-xs font-medium text-white/60 tracking-wide">
-                Vous
+                {{ t("sprechen_subject.you") }}
               </p>
             </div>
           </div>
@@ -459,8 +472,6 @@
                   line.speaker === 'student' ? 'flex-row-reverse' : 'flex-row'
                 "
               >
-                <!-- Avatar toujours accolé à la bulle, jamais uniquement dans l'en-tête,
-                     pour qu'on sache sans ambiguïté qui vient de parler -->
                 <div
                   class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden border"
                   :class="
@@ -491,21 +502,23 @@
         </div>
       </div>
 
-      <!-- ═══════════════ TAB : correction en cours (modal vivant) ═══════════════ -->
+      <!-- ═══════════════ Notation en cours ═══════════════ -->
       <div
         v-else-if="status === 'ended' && !gradingResult"
         class="flex-1 flex items-center justify-center p-6"
       >
-        <div class="bg-white rounded-2xl p-7 max-w-sm w-full text-center">
+        <div
+          class="bg-card text-ink rounded-card p-7 max-w-sm w-full text-center shadow-soft"
+        >
           <div
-            class="w-14 h-14 rounded-full bg-teal-50 flex items-center justify-center mx-auto mb-4"
+            class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4"
           >
-            <i class="pi pi-comments text-teal-600 text-2xl"></i>
+            <i class="pi pi-comments text-primary text-2xl"></i>
           </div>
-          <h3 class="text-base font-medium text-gray-900 mb-1">
+          <h3 class="text-base font-semibold text-ink mb-1">
             {{ t("sprechen_subject.grading_modal_title") }}
           </h3>
-          <p class="text-sm text-gray-500 mb-5">
+          <p class="text-sm text-muted mb-5">
             {{ t("sprechen_subject.grading_modal_subtitle") }}
           </p>
 
@@ -513,27 +526,25 @@
             <div
               v-for="(step, i) in gradingSteps"
               :key="step.key"
-              class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors"
+              class="flex items-center gap-2.5 rounded-leaf px-3 py-2.5 transition-colors"
               :class="gradingStepStateClass(i)"
             >
               <i
                 :class="[
                   'text-lg shrink-0',
                   i < gradingStepIndex
-                    ? 'pi pi-check-circle text-teal-600'
+                    ? 'pi pi-check-circle text-emerald-600'
                     : '',
                   i === gradingStepIndex
-                    ? 'pi pi-spin pi-spinner text-indigo-600'
+                    ? 'pi pi-spin pi-spinner text-primary'
                     : '',
-                  i > gradingStepIndex ? 'pi pi-circle text-gray-300' : '',
+                  i > gradingStepIndex ? 'pi pi-circle text-faint' : '',
                 ]"
               ></i>
               <span
                 class="text-sm"
                 :class="
-                  i <= gradingStepIndex
-                    ? 'font-medium text-gray-800'
-                    : 'text-gray-400'
+                  i <= gradingStepIndex ? 'font-medium text-ink' : 'text-faint'
                 "
               >
                 {{ t(step.labelKey) }}
@@ -543,67 +554,73 @@
         </div>
       </div>
 
-      <!-- ═══════════════ TAB : résultat ═══════════════ -->
+      <!-- ═══════════════ Résultat ═══════════════ -->
       <div
         v-else-if="status === 'ended' && gradingResult"
         class="flex-1 overflow-y-auto"
       >
         <div class="max-w-2xl mx-auto px-4 py-8 space-y-5">
-          <!-- Hero score -->
+          <!-- En-tête -->
           <div
-            class="rounded-2xl overflow-hidden shadow-sm"
-            :class="gradingResult.passed ? 'bg-green-600' : 'bg-orange-500'"
+            class="bg-card border border-line rounded-card shadow-soft overflow-hidden"
           >
-            <div class="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
+            <div
+              :class="[
+                'h-1.5',
+                gradingResult.passed ? 'bg-emerald-500' : 'bg-amber-500',
+              ]"
+            ></div>
+            <div class="px-6 py-5 flex items-center justify-between gap-4">
               <div>
                 <p
-                  class="text-xs text-white/70 font-semibold uppercase tracking-widest mb-1"
+                  class="text-xs font-semibold uppercase tracking-wider text-muted mb-1"
                 >
                   {{ gradingResult.provider.toUpperCase() }} ·
-                  {{ gradingResult.level.toUpperCase() }}
+                  {{ gradingResult.level.toUpperCase() }} · Sprechen
                 </p>
-                <h1 class="text-2xl font-bold text-white">
+                <h1 class="text-2xl font-bold text-ink">
                   {{
                     gradingResult.passed
                       ? t("sprechen_subject.passed")
                       : t("sprechen_subject.not_passed")
                   }}
                 </h1>
-              </div>
-              <div class="text-white text-right shrink-0">
-                <p class="text-2xl font-bold leading-none">
-                  {{ scorePercent }}%
+                <p class="text-sm text-muted mt-1 tabular-nums">
+                  {{ gradingResult.total_score }} /
+                  {{ gradingResult.total_max_score }}
+                  {{ t("sprechen_subject.points") }}
                 </p>
               </div>
-            </div>
-            <div class="px-6 py-4 bg-black/10 border-t border-white/10">
-              <p class="text-sm text-white/90">
-                {{ gradingResult.total_score }} /
-                {{ gradingResult.total_max_score }}
-                {{ t("sprechen_subject.points") }}
+              <p
+                :class="[
+                  'text-3xl font-extrabold tabular-nums shrink-0',
+                  gradingResult.passed ? 'text-emerald-600' : 'text-amber-600',
+                ]"
+              >
+                {{ scorePercent }}%
               </p>
             </div>
           </div>
 
-          <!-- Delta avant/après -->
+          <!-- Évolution -->
           <div
             v-if="gradingResult.score_delta_percent !== null"
-            class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex items-center justify-between"
+            class="bg-card border border-line rounded-card px-5 py-4 flex items-center justify-between"
           >
             <div>
-              <p class="text-xs text-gray-500 mb-0.5">
+              <p class="text-xs text-muted mb-0.5">
                 {{ t("sprechen_subject.score_delta_since_last") }}
               </p>
-              <p class="text-lg font-medium text-gray-900">
+              <p class="text-lg font-semibold text-ink tabular-nums">
                 {{ Math.round(gradingResult.previous_score_percent!) }}%
               </p>
             </div>
-            <div
-              class="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
+            <span
+              class="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold tabular-nums"
               :class="
                 gradingResult.score_delta_percent >= 0
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-orange-50 text-orange-700'
+                  ? 'bg-emerald-500/10 text-emerald-700'
+                  : 'bg-amber-500/10 text-amber-700'
               "
             >
               <i
@@ -615,66 +632,67 @@
               ></i>
               {{ gradingResult.score_delta_percent >= 0 ? "+" : ""
               }}{{ Math.round(gradingResult.score_delta_percent) }}%
-            </div>
+            </span>
           </div>
 
-          <!-- Détail par Teil, feedback structuré -->
-          <div
-            class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm"
-          >
-            <div class="px-5 py-4 border-b border-gray-100">
-              <h2 class="font-semibold text-gray-800 text-sm">
+          <!-- Détail par Teil -->
+          <div class="bg-card border border-line rounded-card overflow-hidden">
+            <div class="px-5 py-4 border-b border-line">
+              <h2 class="font-semibold text-ink text-sm">
                 {{ t("sprechen_subject.detail_by_teil") }}
               </h2>
             </div>
-            <div class="divide-y divide-gray-100">
+            <div class="divide-y divide-line">
               <div
                 v-for="teil in gradingResult.teile"
                 :key="teil.teil_number"
-                class="px-5 py-4 space-y-4"
+                class="px-5 py-4 space-y-3"
               >
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">
-                    Teil {{ teil.teil_number }} — {{ teil.teil_name }}
-                  </span>
-                  <span class="text-xs text-gray-400"
-                    >{{ teil.teil_score }}/{{ teil.teil_max_score }}</span
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-sm font-semibold text-ink"
+                    >Teil {{ teil.teil_number }} · {{ teil.teil_name }}</span
                   >
+                  <span
+                    class="text-xs font-semibold text-muted tabular-nums shrink-0"
+                  >
+                    {{ teil.teil_score }} / {{ teil.teil_max_score }}
+                  </span>
                 </div>
 
                 <div
                   v-for="c in teil.criteria"
                   :key="c.criterion_name"
-                  class="rounded-xl bg-gray-50 border border-gray-100 p-3.5"
+                  class="rounded-leaf bg-card-2 border border-line p-3.5"
                 >
                   <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-800">{{
+                    <span class="text-sm font-medium text-ink">{{
                       c.criterion_name
                     }}</span>
                     <span
-                      class="text-xs font-semibold"
+                      class="text-xs font-semibold tabular-nums"
                       :class="
-                        c.score / c.max_score >= 0.75
-                          ? 'text-green-600'
-                          : 'text-orange-600'
+                        c.max_score && c.score / c.max_score >= 0.75
+                          ? 'text-emerald-600'
+                          : 'text-amber-600'
                       "
                     >
-                      {{ c.score }}/{{ c.max_score }}
+                      {{ c.score }} / {{ c.max_score }}
                     </span>
                   </div>
 
                   <div
                     v-if="c.issue"
-                    class="flex gap-2 bg-orange-50 rounded-lg px-3 py-2 mb-2"
+                    class="flex gap-2 rounded-leaf bg-amber-500/10 px-3 py-2 mb-2"
                   >
                     <i
-                      class="pi pi-exclamation-circle text-orange-500 text-xs mt-0.5 shrink-0"
+                      class="pi pi-exclamation-circle text-amber-600 text-xs mt-0.5 shrink-0"
                     ></i>
-                    <p class="text-xs text-orange-900 leading-relaxed">
-                      <span class="font-medium"
+                    <p class="text-xs text-ink leading-relaxed">
+                      <span class="font-semibold"
                         >{{
                           t("sprechen_subject.criterion_issue_label")
-                        }}:</span
+                        }}
+                        :</span
                       >
                       {{ c.issue }}
                     </p>
@@ -682,28 +700,29 @@
 
                   <div
                     v-if="c.model_phrase"
-                    class="flex gap-2 bg-teal-50 rounded-lg px-3 py-2 mb-2"
+                    class="flex gap-2 rounded-leaf bg-primary/10 px-3 py-2 mb-2"
                   >
                     <i
-                      class="pi pi-comment text-teal-600 text-xs mt-0.5 shrink-0"
+                      class="pi pi-comment text-primary text-xs mt-0.5 shrink-0"
                     ></i>
-                    <p class="text-xs text-teal-900 leading-relaxed italic">
-                      <span class="font-medium not-italic"
+                    <p class="text-xs text-ink leading-relaxed italic">
+                      <span class="font-semibold not-italic"
                         >{{
                           t("sprechen_subject.criterion_model_phrase_label")
-                        }}:</span
+                        }}
+                        :</span
                       >
-                      "{{ c.model_phrase }}"
+                      „{{ c.model_phrase }}“
                     </p>
                   </div>
 
                   <div v-if="c.tip" class="flex gap-2 px-1">
                     <i
-                      class="pi pi-lightbulb text-gray-400 text-xs mt-0.5 shrink-0"
+                      class="pi pi-lightbulb text-faint text-xs mt-0.5 shrink-0"
                     ></i>
-                    <p class="text-xs text-gray-500 leading-relaxed">
-                      <span class="font-medium"
-                        >{{ t("sprechen_subject.criterion_tip_label") }}:</span
+                    <p class="text-xs text-muted leading-relaxed">
+                      <span class="font-semibold"
+                        >{{ t("sprechen_subject.criterion_tip_label") }} :</span
                       >
                       {{ c.tip }}
                     </p>
@@ -717,7 +736,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div v-if="gradingResult.strengths.length">
               <p
-                class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1"
+                class="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-2 flex items-center gap-1.5"
               >
                 <i class="pi pi-check-circle" />{{
                   t("sprechen_subject.strengths")
@@ -727,17 +746,17 @@
                 <li
                   v-for="(s, i) in gradingResult.strengths"
                   :key="i"
-                  class="flex items-start gap-2 text-sm text-gray-700 bg-green-50 rounded-lg px-3 py-2"
+                  class="flex items-start gap-2 text-sm text-ink bg-emerald-500/10 rounded-leaf px-3 py-2"
                 >
                   <i
-                    class="pi pi-check text-green-500 mt-0.5 shrink-0 text-xs"
+                    class="pi pi-check text-emerald-600 mt-0.5 shrink-0 text-xs"
                   /><span>{{ s }}</span>
                 </li>
               </ul>
             </div>
             <div v-if="gradingResult.improvement_areas.length">
               <p
-                class="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2 flex items-center gap-1"
+                class="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-2 flex items-center gap-1.5"
               >
                 <i class="pi pi-exclamation-circle" />{{
                   t("sprechen_subject.to_improve")
@@ -747,10 +766,10 @@
                 <li
                   v-for="(a, i) in gradingResult.improvement_areas"
                   :key="i"
-                  class="flex items-start gap-2 text-sm text-gray-700 bg-orange-50 rounded-lg px-3 py-2"
+                  class="flex items-start gap-2 text-sm text-ink bg-amber-500/10 rounded-leaf px-3 py-2"
                 >
                   <i
-                    class="pi pi-times text-orange-400 mt-0.5 shrink-0 text-xs"
+                    class="pi pi-arrow-right text-amber-600 mt-0.5 shrink-0 text-xs"
                   /><span>{{ a }}</span>
                 </li>
               </ul>
@@ -758,11 +777,12 @@
           </div>
 
           <!-- Actions -->
-          <div class="flex gap-3 pb-8">
+          <div class="flex flex-col sm:flex-row gap-3 pb-8">
             <Button
               :label="t('sprechen_subject.redo')"
               icon="pi pi-refresh"
               outlined
+              severity="secondary"
               class="flex-1"
               @click="redo"
             />
@@ -791,7 +811,7 @@ definePageMeta({ layout: "dashboard" });
 
 const { t } = useI18n();
 const route = useRoute();
-const router = useRouter();
+const localePath = useLocalePath();
 const runtimeConfig = useRuntimeConfig();
 
 const subjectId = route.params.subjectId as string;
@@ -851,69 +871,53 @@ const groupedTranscript = computed(() => {
   return groups;
 });
 
-// Seuil sous lequel un timer passe en état d'alerte (rouge, pulsant) —
-// pas pour couper quoi que ce soit côté backend (rien n'est imposé),
-// juste pour signaler visuellement au candidat qu'il doit conclure.
+// Seuil d'alerte visuelle (rien n'est coupé côté backend)
 const TIMER_ALERT_THRESHOLD_SECONDS = 30;
 
-// ── Décompte de préparation, purement côté client (le backend ne
-// pousse pas de tick — juste la durée totale une fois via
-// PreparationStartedEvent, avec un fallback à DEFAULT_PREPARATION_MINUTES
-// côté service.py si la donnée n'est pas renseignée). Redémarre à
-// chaque nouvelle préparation. prepSecondsElapsed reste l'affichage
-// principal ("sans limite" — la préparation n'est jamais coupée de
-// force) ; prepSecondsLeft/prepCountdownLabel alimentent un repère
-// secondaire discret, avec le même effet d'alerte que le timer du
-// Teil actif.
-const prepSecondsLeft = ref(0);
+const formatClock = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
+// ── Préparation : temps écoulé (affichage principal, sans limite)
+// + repère du temps officiel (preparation_minutes), jamais imposé ──
 const prepSecondsElapsed = ref(0);
+const prepSecondsLeft = ref(0);
 let prepIntervalId: ReturnType<typeof setInterval> | null = null;
+
+const officialPrepSeconds = computed(
+  () => (preparationInfo.value?.preparation_minutes ?? 0) * 60,
+);
 
 watch(preparationInfo, (info) => {
   if (prepIntervalId) clearInterval(prepIntervalId);
+  prepIntervalId = null;
   if (!info) return;
   prepSecondsElapsed.value = 0;
+  prepSecondsLeft.value = (info.preparation_minutes ?? 0) * 60;
   prepIntervalId = setInterval(() => {
     prepSecondsElapsed.value += 1;
+    if (prepSecondsLeft.value > 0) prepSecondsLeft.value -= 1;
   }, 1000);
 });
 
-
-const prepElapsedLabel = computed(() => {
-  const m = Math.floor(prepSecondsElapsed.value / 60);
-  const s = prepSecondsElapsed.value % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-});
-
-const prepCountdownLabel = computed(() => {
-  const m = Math.floor(prepSecondsLeft.value / 60);
-  const s = prepSecondsLeft.value % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-});
-const prepProgressDashArray = computed(() => {
-  const total = (preparationInfo.value?.preparation_minutes ?? 1) * 60;
-  const fraction = total > 0 ? prepSecondsLeft.value / total : 0;
-  return Math.round(fraction * 314);
-});
+const prepElapsedLabel = computed(() => formatClock(prepSecondsElapsed.value));
+const prepCountdownLabel = computed(() => formatClock(prepSecondsLeft.value));
 const prepTimerIsAlert = computed(
   () =>
     prepSecondsLeft.value > 0 &&
     prepSecondsLeft.value <= TIMER_ALERT_THRESHOLD_SECONDS,
 );
 
-// ── Compte à rebours du Teil actif — calé sur currentTeil.duration_minutes,
-// redémarre à chaque nouveau Teil (currentTeil est un shallowRef :
-// watch() se déclenche bien à chaque réaffectation de .value, même si
-// le contenu interne n'est pas rendu profondément réactif). Un Teil
-// enchaîne automatiquement sur le suivant côté backend (advance()
-// dans orchestrator.py) — ce timer n'a donc aucun pouvoir de blocage,
-// il sert uniquement à alerter le candidat qu'il doit conclure avant
-// la bascule automatique.
+// ── Compte à rebours du Teil actif (alerte seulement : le backend
+// enchaîne lui-même sur le Teil suivant) ──
 const teilSecondsLeft = ref(0);
 let teilIntervalId: ReturnType<typeof setInterval> | null = null;
 
 watch(currentTeil, (teil) => {
   if (teilIntervalId) clearInterval(teilIntervalId);
+  teilIntervalId = null;
   if (!teil) return;
   teilSecondsLeft.value = (teil.duration_minutes || 0) * 60;
   teilIntervalId = setInterval(() => {
@@ -921,20 +925,14 @@ watch(currentTeil, (teil) => {
   }, 1000);
 });
 
-const teilCountdownLabel = computed(() => {
-  const m = Math.floor(teilSecondsLeft.value / 60);
-  const s = teilSecondsLeft.value % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-});
+const teilCountdownLabel = computed(() => formatClock(teilSecondsLeft.value));
 const teilTimerIsAlert = computed(
   () =>
     teilSecondsLeft.value > 0 &&
     teilSecondsLeft.value <= TIMER_ALERT_THRESHOLD_SECONDS,
 );
 
-// ── Étapes du modal de correction — purement décoratif/séquencé côté
-// client pendant l'attente du vrai appel de notation ; ne reflète pas
-// un vrai statut serveur étape par étape.
+// ── Étapes décoratives pendant la notation ──
 const gradingSteps = [
   { key: "listening", labelKey: "sprechen_subject.grading_step_listening" },
   { key: "vocab", labelKey: "sprechen_subject.grading_step_vocab" },
@@ -959,19 +957,20 @@ watch(status, (value) => {
     gradingIntervalId = null;
   }
 
-  // Le Teil actif ne quitte jamais "active" par une remise à null de
-  // currentTeil (voir useSprechenSession — session_ended ne le vide
-  // pas), donc watch(currentTeil, ...) seul ne suffit pas à arrêter le
-  // décompte une fois la session terminée/abandonnée.
+  // currentTeil n'est pas remis à null en fin de session : on arrête ici
   if (value !== "active" && teilIntervalId) {
     clearInterval(teilIntervalId);
     teilIntervalId = null;
   }
+  if (value !== "preparing" && prepIntervalId) {
+    clearInterval(prepIntervalId);
+    prepIntervalId = null;
+  }
 });
 
 function gradingStepStateClass(i: number) {
-  if (i < gradingStepIndex.value) return "bg-teal-50";
-  if (i === gradingStepIndex.value) return "bg-indigo-50";
+  if (i < gradingStepIndex.value) return "bg-emerald-500/10";
+  if (i === gradingStepIndex.value) return "bg-primary/10";
   return "";
 }
 
@@ -983,6 +982,9 @@ const scorePercent = computed(() => {
   );
 });
 
+// ── Navigation ──
+const goToList = () => navigateTo(localePath("/dashboard/sprechen"));
+
 function confirmLeave() {
   if (
     status.value === "active" &&
@@ -990,10 +992,9 @@ function confirmLeave() {
   )
     return;
   abandonSession();
-  router.back();
+  goToList();
 }
 
-const goToList = () => router.push("/dashboard/sprechen");
 const redo = () => {
   disconnect();
   connect();

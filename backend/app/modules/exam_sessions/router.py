@@ -40,6 +40,7 @@ async def start_session(
         user_id=current_user.id,
         exam_id=data.exam_id,
         subject_id=data.subject_id,
+        module_slugs=data.module_slugs,
     )
 
 

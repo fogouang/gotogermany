@@ -719,8 +719,23 @@ async function loadSession() {
     return;
   }
 
+  // Modules choisis (mode module seul / combinés), envoyés au back pour la notation
+  const targetSlugs = moduleSlugs
+    ? moduleSlugs
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+    : moduleSlug
+      ? [moduleSlug.toLowerCase()]
+      : [];
+
   // Appel direct au store : un seul chrono, celui de cette page
-  const result = await sessionStore.startSession(examId, subjectId);
+  const result = await sessionStore.startSession(
+    examId,
+    subjectId,
+    targetSlugs,
+  );
+
   if (!result.success) {
     loadError.value = sessionStore.error || t("api_errors.generic");
     notify.error(t("toast.error_title"), loadError.value);
@@ -729,11 +744,8 @@ async function loadSession() {
   }
 
   // 1. Mode module seul / modules combinés
-  moduleMode.value = !!(moduleSlug || moduleSlugs);
+  moduleMode.value = targetSlugs.length > 0;
   if (moduleMode.value) {
-    const targetSlugs = moduleSlugs
-      ? moduleSlugs.split(",").map((s) => s.trim().toLowerCase())
-      : [moduleSlug!.toLowerCase()];
     sessionStore.modules = sessionStore.modules.filter((m: any) =>
       targetSlugs.some((slug) => slugOf(m.slug).includes(slug)),
     );
