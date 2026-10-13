@@ -1,31 +1,35 @@
 <template>
   <div>
-    <!-- Numéro + points -->
-    <div class="flex items-center justify-between mb-3">
-      <span class="text-xs font-semibold text-gray-900 uppercase tracking-wide">
-        Question {{ question.question_number }}
+    <!-- Numéro -->
+    <div class="flex items-center gap-2 mb-3">
+      <span
+        class="inline-flex items-center h-7 min-w-7 px-2.5 justify-center rounded-full bg-card-2 border border-line text-xs font-bold text-ink tabular-nums"
+      >
+        {{ badge }}
       </span>
-      <span class="text-xs text-gray-900">{{ question.points }} pt(s)</span>
+      <span
+        v-if="c.abschnitt"
+        class="text-[11px] font-medium text-muted bg-card-2 border border-line rounded-full px-2 py-0.5"
+      >
+        {{ t("session.q.abschnitt", { n: c.abschnitt }) }}
+      </span>
     </div>
 
     <!-- richtig_falsch / ja_nein -->
-    <div v-if="['richtig_falsch', 'ja_nein'].includes(question.question_type)">
-      <p class="text-base text-gray-900 mb-4">
-        {{ question.content.statement || question.content.text }}
-      </p>
-      <div class="flex gap-3">
+    <div v-if="type === 'richtig_falsch' || type === 'ja_nein'">
+      <div v-if="type === 'ja_nein' && c.text" class="mb-4">
+        <p v-if="c.author" class="text-sm font-semibold text-ink mb-1">{{ c.author }}</p>
+        <p class="text-[15px] text-ink leading-relaxed">{{ c.text }}</p>
+      </div>
+      <p v-else class="text-[15px] text-ink leading-relaxed mb-4">{{ c.statement || c.text }}</p>
+
+      <div class="grid grid-cols-2 gap-3">
         <button
-          v-for="opt in rfOptions"
+          v-for="opt in binaryOptions"
           :key="opt.value"
-          :class="[
-            'flex-1 py-3 px-4 rounded-lg border-2 font-medium text-sm transition-all',
-            answer?.answer === opt.value
-              ? opt.value === 'richtig' || opt.value === 'ja'
-                ? 'border-green-500 bg-green-50 text-green-800'
-                : 'border-green-500 bg-green-50 text-green-800'
-              : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: opt.value })"
+          type="button"
+          :class="['py-3 px-4 rounded-leaf border-2 text-sm font-semibold transition-colors', optionClass(isSel(opt.value))]"
+          @click="choose(opt.value)"
         >
           {{ opt.label }}
         </button>
@@ -33,446 +37,263 @@
     </div>
 
     <!-- qcm_abc -->
-    <div v-else-if="question.question_type === 'qcm_abc'">
-      <p class="text-base text-gray-900 mb-4">
-        {{ question.content.stem || question.content.question }}
-      </p>
+    <div v-else-if="type === 'qcm_abc'">
+      <p class="text-[15px] text-ink leading-relaxed mb-4">{{ c.stem || c.question }}</p>
       <div class="space-y-2">
         <button
-          v-for="(text, key) in question.content.options"
+          v-for="(text, key) in c.options"
           :key="key"
-          :class="[
-            'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-start gap-3',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
+          type="button"
+          :class="['w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3', optionClass(isSel(key))]"
+          @click="choose(key)"
         >
-          <span
-            :class="[
-              'shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-              answer?.answer === String(key)
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-600',
-            ]"
-          >
-            {{ String(key).toUpperCase() }}
-          </span>
-          <span>{{ text }}</span>
+          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          <span class="pt-0.5">{{ text }}</span>
         </button>
       </div>
     </div>
 
-    <!-- matching (Goethe) -->
-    <div v-else-if="question.question_type === 'matching'">
-      <p class="text-base text-gray-900 mb-4">
-        {{ question.content.situation }}
-      </p>
+    <!-- matching (Goethe) / selektives_matching (TELC) -->
+    <div v-else-if="type === 'matching' || type === 'selektives_matching'">
+      <p class="text-[15px] text-ink leading-relaxed mb-4">{{ c.situation }}</p>
       <div class="flex flex-wrap gap-2">
         <button
-          v-for="key in matchingKeys"
+          v-for="key in adKeys"
           :key="key"
+          type="button"
           :class="[
-            'w-10 h-10 rounded-lg border-2 font-bold text-sm transition-all',
-            answer?.answer === key
-              ? 'border-primary-600 bg-primary-600 text-white'
-              : 'border-gray-300 text-gray-700 hover:border-primary-400',
+            'w-10 h-10 rounded-leaf border-2 font-bold text-sm transition-colors',
+            isSel(key)
+              ? 'border-primary bg-primary text-white'
+              : key === noMatchKey
+                ? 'border-dashed border-line text-muted hover:border-primary/40'
+                : 'border-line bg-card text-ink hover:border-primary/40',
           ]"
-          @click="$emit('answer', { answer: key })"
+          @click="choose(key)"
         >
-          {{ key === "0" ? "0" : key.toUpperCase() }}
+          {{ key === noMatchKey ? key : key.toUpperCase() }}
         </button>
       </div>
+      <p class="text-xs text-muted mt-2">
+        {{ noMatchKey === "x" ? t("session.q.no_match_x") : t("session.q.no_match_0") }}
+      </p>
     </div>
 
     <!-- zuordnung_speaker -->
-    <div v-else-if="question.question_type === 'zuordnung_speaker'">
-      <p class="text-base text-gray-900 mb-4">
-        {{ question.content.statement }}
-      </p>
-      <div class="flex gap-3">
+    <div v-else-if="type === 'zuordnung_speaker'">
+      <p class="text-[15px] text-ink leading-relaxed mb-4">{{ c.statement }}</p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <button
-          v-for="(name, key) in question.content.speakers"
+          v-for="(name, key) in c.speakers"
           :key="key"
-          :class="[
-            'flex-1 py-3 px-2 rounded-lg border-2 text-center transition-all',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
+          type="button"
+          :class="['py-3 px-2 rounded-leaf border-2 text-center transition-colors', optionClass(isSel(key))]"
+          @click="choose(key)"
         >
-          <div class="font-bold text-lg text-gray-900">
-            {{ String(key).toUpperCase() }}
-          </div>
-          <div class="text-xs text-gray-500 mt-1 leading-tight">{{ name }}</div>
+          <span class="block font-bold text-base">{{ String(key).toUpperCase() }}</span>
+          <span class="block text-xs text-muted mt-0.5 leading-tight">{{ speakerName(name) }}</span>
         </button>
       </div>
     </div>
 
     <!-- zuordnung_titre -->
-    <div v-else-if="question.question_type === 'zuordnung_titre'">
+    <div v-else-if="type === 'zuordnung_titre'">
       <div
-        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
+        v-if="!stimulusInSide"
+        class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-[15px] text-ink leading-relaxed"
       >
-        {{ question.content.stimulus_text }}
+        {{ c.stimulus_text }}
       </div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Choisissez le titre correspondant :
-      </p>
-      <div class="grid grid-cols-1 gap-2">
-        <button
-          v-for="(titre, key) in question.content.titres"
-          :key="key"
-          :class="[
-            'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
-        >
-          <span
-            :class="[
-              'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
-              answer?.answer === String(key)
-                ? 'bg-primary-600 text-white'
-                : 'bg-white border-2 border-gray-300 text-gray-500',
-            ]"
-            >{{ String(key).toUpperCase() }}</span
-          >
-          <span
-            :class="
-              answer?.answer === String(key)
-                ? 'font-medium text-primary-900'
-                : 'text-gray-700'
-            "
-          >
-            {{ titre }}
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- selektives_matching -->
-    <div v-else-if="question.question_type === 'selektives_matching'">
-      <p class="text-base text-gray-900 mb-4">
-        {{ question.content.situation }}
-      </p>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Quelle annonce correspond ?
-      </p>
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="key in selektivesKeys"
-          :key="key"
-          :class="[
-            'w-10 h-10 rounded-lg border-2 font-bold text-sm transition-all uppercase',
-            answer?.answer === key
-              ? 'border-primary-600 bg-primary-600 text-white'
-              : key === 'x'
-                ? 'border-gray-400 text-gray-500 hover:border-gray-500'
-                : 'border-gray-300 text-gray-700 hover:border-primary-400',
-          ]"
-          @click="$emit('answer', { answer: key })"
-        >
-          {{ key }}
-        </button>
-      </div>
+      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+        {{ t("session.q.choose_title") }}
+      </label>
+      <select :value="selected" :class="selectClass" @change="onSelect">
+        <option value="" disabled>{{ t("session.q.select_placeholder") }}</option>
+        <option v-for="(titre, key) in c.titres" :key="key" :value="String(key)">
+          {{ key }}) {{ titre }}
+        </option>
+      </select>
     </div>
 
     <!-- qcm_gap_fill -->
-    <div v-else-if="question.question_type === 'qcm_gap_fill'">
+    <div v-else-if="type === 'qcm_gap_fill'">
       <div
-        class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
-      >
-        <span
-          v-html="
-            highlightGap(
-              question.content.text_with_gaps,
-              question.content.gap_number,
-            )
-          "
-        ></span>
-      </div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Lacune {{ question.content.gap_number }} - Choisissez la bonne réponse :
-      </p>
-      <div class="flex gap-3">
+        v-if="!stimulusInSide"
+        class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-sm text-ink leading-loose"
+        v-html="highlightGap(c.text_with_gaps, c.gap_number)"
+      />
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button
-          v-for="(text, key) in question.content.options"
+          v-for="(text, key) in c.options"
           :key="key"
-          :class="[
-            'flex-1 py-3 px-3 rounded-lg border-2 text-sm font-medium transition-all text-center',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50 text-primary-800'
-              : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
+          type="button"
+          :class="['px-3 py-2.5 rounded-leaf border-2 text-sm font-medium transition-colors flex items-center gap-2', optionClass(isSel(key))]"
+          @click="choose(key)"
         >
-          <span class="font-bold">{{ String(key).toUpperCase() }}</span>
-          <span class="ml-2">{{ text }}</span>
+          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          {{ text }}
         </button>
       </div>
     </div>
 
     <!-- word_bank_gap_fill -->
-    <div v-else-if="question.question_type === 'word_bank_gap_fill'">
+    <div v-else-if="type === 'word_bank_gap_fill'">
       <div
-        class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
-      >
-        <span
-          v-html="
-            highlightGap(
-              question.content.text_with_gaps,
-              question.content.gap_number,
-            )
-          "
-        ></span>
-      </div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Lacune {{ question.content.gap_number }} - Choisissez le mot :
-      </p>
-      <div class="flex flex-wrap gap-2">
+        v-if="!stimulusInSide"
+        class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-sm text-ink leading-loose"
+        v-html="highlightGap(c.text_with_gaps, c.gap_number)"
+      />
+      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+        {{ t("session.q.choose_word") }}
+      </label>
+      <select :value="selected" :class="selectClass" @change="onSelect">
+        <option value="" disabled>{{ t("session.q.select_placeholder") }}</option>
+        <option v-for="(word, key) in wordBank" :key="key" :value="String(key)">
+          {{ String(key).toUpperCase() }}) {{ word }}
+        </option>
+      </select>
+    </div>
+
+    <!-- zuordnung_personen (Goethe B2 Lesen T1) -->
+    <div v-else-if="type === 'zuordnung_personen'">
+      <p class="text-[15px] text-ink leading-relaxed mb-4">{{ c.statement }}</p>
+      <div class="grid grid-cols-2 gap-2">
         <button
-          v-for="(word, key) in question.content.word_bank"
+          v-for="(person, key) in c.persons"
           :key="key"
-          :class="[
-            'px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50 text-primary-800'
-              : 'border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
+          type="button"
+          :class="['p-3 rounded-leaf border-2 text-left transition-colors', optionClass(isSel(key))]"
+          @click="choose(key)"
         >
-          <span class="text-xs text-gray-400 mr-1">{{
-            String(key).toUpperCase()
-          }}</span>
-          {{ word }}
+          <span class="font-semibold">{{ String(key).toUpperCase() }} · {{ person.name }}</span>
+          <span v-if="!stimulusInSide" class="block text-xs text-muted mt-1 line-clamp-2">{{ person.text }}</span>
         </button>
       </div>
     </div>
 
-    <!-- zuordnung_personen — Goethe B2 Lesen Teil 1 -->
-    <div v-else-if="question.question_type === 'zuordnung_personen'">
-      <p class="text-base text-gray-900 mb-4">
-        {{ question.content.statement }}
-      </p>
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          v-for="(person, key) in question.content.persons"
-          :key="key"
-          :class="[
-            'p-3 rounded-lg border-2 text-left transition-all',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
-        >
-          <div class="font-bold text-primary-700 mb-1">
-            {{ String(key).toUpperCase() }} - {{ person.name }}
-          </div>
-          <p class="text-xs text-gray-600 line-clamp-2">{{ person.text }}</p>
-        </button>
-      </div>
-    </div>
-
-    <!-- lueckentext_saetze — Goethe B2 Lesen Teil 2 -->
-    <div v-else-if="question.question_type === 'lueckentext_saetze'">
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Lacune [{{ question.content.gap_number }}] - Choisissez la phrase :
+    <!-- lueckentext_saetze (Goethe B2 Lesen T2) -->
+    <div v-else-if="type === 'lueckentext_saetze'">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
+        {{ t("session.q.choose_sentence") }}
       </p>
       <div class="space-y-2">
         <button
-          v-for="(text, key) in question.content.candidates"
+          v-for="(text, key) in c.candidates"
           :key="key"
-          :class="[
-            'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-start gap-3',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
+          type="button"
+          :class="['w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3', optionClass(isSel(key))]"
+          @click="choose(key)"
         >
-          <span
-            :class="[
-              'shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-              answer?.answer === String(key)
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-600',
-            ]"
-            >{{ String(key).toUpperCase() }}</span
-          >
-          <span>{{ text }}</span>
+          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          <span class="pt-0.5">{{ text }}</span>
         </button>
       </div>
     </div>
 
-    <!-- zuordnung_meinungen — Goethe B2 Lesen Teil 4 -->
-    <div v-else-if="question.question_type === 'zuordnung_meinungen'">
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">
-          Titre à associer :
+    <!-- zuordnung_meinungen (Goethe B2 Lesen T4) -->
+    <div v-else-if="type === 'zuordnung_meinungen'">
+      <div class="rounded-leaf border border-line bg-card-2 px-4 py-3 mb-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-1">
+          {{ t("session.q.title_to_match") }}
         </p>
-        <p class="text-base font-semibold text-gray-900">
-          {{ question.content.title }}
-        </p>
+        <p class="text-[15px] font-semibold text-ink">{{ c.title }}</p>
       </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          v-for="(opinion, key) in c.opinions"
+          :key="key"
+          type="button"
+          :class="['px-3 py-2.5 rounded-leaf border-2 text-left text-sm transition-colors', optionClass(isSel(key))]"
+          @click="choose(key)"
+        >
+          <span class="font-semibold">{{ String(key).toUpperCase() }} · {{ opinion.author }}</span>
+          <span v-if="!stimulusInSide" class="block text-xs text-muted mt-1 line-clamp-2">{{ opinion.text }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- zuordnung_paragraphen (Goethe Lesen T5) -->
+    <div v-else-if="type === 'zuordnung_paragraphen'">
+      <div
+        v-if="!stimulusInSide"
+        class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-[15px] text-ink leading-relaxed"
+      >
+        {{ c.paragraph_text }}
+      </div>
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
+        {{ t("session.q.choose_heading") }}
+      </p>
       <div class="space-y-2">
         <button
-          v-for="(opinion, key) in question.content.opinions"
+          v-for="(heading, key) in c.headings"
           :key="key"
-          :class="[
-            'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
+          type="button"
+          :class="['w-full text-left px-4 py-2.5 rounded-leaf border-2 text-sm transition-colors flex items-center gap-3', optionClass(isSel(key))]"
+          @click="choose(key)"
         >
-          <div class="flex items-center gap-2 mb-1">
-            <span
-              :class="[
-                'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                answer?.answer === String(key)
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-200 text-gray-600',
-              ]"
-              >{{ String(key).toUpperCase() }}</span
-            >
-            <span class="font-semibold text-gray-700">{{
-              opinion.author
-            }}</span>
-          </div>
-          <p class="text-xs text-gray-500 line-clamp-2 ml-8">
-            {{ opinion.text }}
-          </p>
-        </button>
-      </div>
-    </div>
-
-    <!-- zuordnung_paragraphen — Goethe B2 Lesen Teil 5 -->
-    <div v-else-if="question.question_type === 'zuordnung_paragraphen'">
-      <div
-        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
-      >
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-2">
-          {{ question.content.paragraph_title }}
-        </p>
-        <p>{{ question.content.paragraph_text }}</p>
-      </div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-        Choisissez le titre correspondant :
-      </p>
-      <div class="grid grid-cols-1 gap-2">
-        <button
-          v-for="(heading, key) in question.content.headings"
-          :key="key"
-          :class="[
-            'w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
-            answer?.answer === String(key)
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
-          ]"
-          @click="$emit('answer', { answer: String(key) })"
-        >
-          <span
-            :class="[
-              'shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-              answer?.answer === String(key)
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-600',
-            ]"
-            >{{ String(key).toUpperCase() }}</span
-          >
+          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
           <span>{{ heading }}</span>
         </button>
       </div>
     </div>
 
-    <!-- gap_fill_letters — ÖSD Lesen Teil 3 : compléter avec quelques lettres -->
-    <div v-else-if="question.question_type === 'gap_fill_letters'">
-      <div
-        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
-      >
-        {{ question.content.visible_text }}
-        <span
-          class="inline-block bg-primary-100 border-b-2 border-primary-400 px-2 py-0.5 rounded mx-1 font-bold text-primary-700"
-        >
-          {{ answer?.answer || "___" }}
+    <!-- gap_fill_letters (ÖSD Lesen T3) -->
+    <div v-else-if="type === 'gap_fill_letters'">
+      <div class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-[15px] text-ink leading-relaxed">
+        {{ c.visible_text }}
+        <span class="inline-block min-w-10 border-b-2 border-primary px-1.5 mx-1 font-bold text-primary">
+          {{ textDraft || "___" }}
         </span>
       </div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-2">
-        Complétez (max. 3 lettres) :
-      </p>
+      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+        {{ t("session.q.letters_hint") }}
+      </label>
       <input
         type="text"
-        maxlength="3"
-        :value="answer?.answer || ''"
-        class="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none uppercase"
-        @input="
-          $emit('answer', {
-            answer: ($event.target as HTMLInputElement).value.toLowerCase(),
-          })
-        "
+        maxlength="6"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        :value="textDraft"
+        :class="[inputClass, 'w-32']"
+        @input="onTextInput(($event.target as HTMLInputElement).value.toLowerCase())"
       />
     </div>
 
-    <!-- gap_fill_words — ÖSD Lesen Teil 4 : compléter avec un mot -->
-    <div v-else-if="question.question_type === 'gap_fill_words'">
+    <!-- gap_fill_words (ÖSD Lesen T4) -->
+    <div v-else-if="type === 'gap_fill_words'">
       <div
-        class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-800 leading-relaxed"
-        v-html="
-          highlightGap(
-            question.content.text_with_gaps,
-            question.content.gap_number,
-          )
-        "
-      ></div>
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-2">
-        Lacune {{ question.content.gap_number }} - Complétez avec un mot :
-      </p>
+        v-if="!stimulusInSide"
+        class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-sm text-ink leading-loose"
+        v-html="highlightGap(c.text_with_gaps, c.gap_number)"
+      />
+      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+        {{ t("session.q.word_hint") }}
+      </label>
       <input
         type="text"
-        :value="answer?.answer || ''"
-        placeholder="Votre réponse..."
-        class="w-full max-w-xs px-3 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium focus:border-primary-500 focus:outline-none"
-        @input="
-          $emit('answer', {
-            answer: ($event.target as HTMLInputElement).value,
-          })
-        "
+        autocomplete="off"
+        spellcheck="false"
+        :value="textDraft"
+        :placeholder="t('session.q.your_answer')"
+        :class="[inputClass, 'w-full max-w-xs']"
+        @input="onTextInput(($event.target as HTMLInputElement).value)"
       />
     </div>
 
-    <!-- tableau_mixed — ÖSD Hören Teil 2 : tableau comparatif (checkbox ou texte par ligne) -->
-    <div v-else-if="question.question_type === 'tableau_mixed'">
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">
-          {{ question.content.zeile_name }}
-        </p>
-      </div>
+    <!-- tableau_mixed (ÖSD Hören T2) -->
+    <div v-else-if="type === 'tableau_mixed'">
+      <p class="text-sm font-semibold text-ink mb-3">{{ c.zeile_name }}</p>
 
-      <!-- Type checkbox : sélection multiple d'options -->
-      <div v-if="question.content.type === 'checkbox'" class="space-y-4">
-        <div
-          v-for="col in question.content.spalten"
-          :key="col"
-          class="border border-gray-100 rounded-lg p-3"
-        >
-          <p class="text-xs font-bold text-gray-600 mb-2">{{ col }}</p>
+      <div v-if="c.type === 'checkbox'" class="space-y-3">
+        <div v-for="col in c.spalten" :key="col" class="rounded-leaf border border-line p-3">
+          <p class="text-xs font-semibold text-muted mb-2">{{ col }}</p>
           <div class="flex flex-wrap gap-2">
             <button
-              v-for="opt in question.content.options"
+              v-for="opt in c.options"
               :key="opt"
-              :class="[
-                'px-3 py-1.5 rounded-lg border-2 text-xs font-medium transition-all',
-                (answer?.answers?.[col] || []).includes(opt)
-                  ? 'border-primary-500 bg-primary-50 text-primary-800'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300',
-              ]"
+              type="button"
+              :class="['px-3 py-1.5 rounded-leaf border-2 text-xs font-medium transition-colors', optionClass(tableauHas(col, opt))]"
               @click="toggleTableauOption(col, opt)"
             >
               {{ opt }}
@@ -481,86 +302,186 @@
         </div>
       </div>
 
-      <!-- Type texte : réponse libre par colonne -->
       <div v-else class="space-y-3">
-        <div v-for="col in question.content.spalten" :key="col">
-          <p class="text-xs font-bold text-gray-600 mb-1">{{ col }}</p>
+        <div v-for="col in c.spalten" :key="col">
+          <p class="text-xs font-semibold text-muted mb-1">{{ col }}</p>
           <input
             type="text"
-            :value="answer?.answers?.[col] || ''"
-            placeholder="Votre réponse..."
-            class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-primary-500 focus:outline-none"
-            @input="
-              setTableauText(col, ($event.target as HTMLInputElement).value)
-            "
+            autocomplete="off"
+            spellcheck="false"
+            :value="tableauDraft[col] ?? ''"
+            :placeholder="t('session.q.your_answer')"
+            :class="[inputClass, 'w-full']"
+            @input="setTableauText(col, ($event.target as HTMLInputElement).value)"
           />
         </div>
       </div>
     </div>
 
-    <!-- Fallback -->
-    <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-      <p class="text-yellow-700 text-sm">
-        Type non supporté : <code>{{ question.question_type }}</code>
-      </p>
+    <!-- Format inconnu -->
+    <div v-else class="rounded-leaf border border-amber-500/30 bg-amber-500/10 p-4">
+      <p class="text-sm text-amber-700">{{ t("session.q.unsupported", { type }) }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  question: any;
-  answer: any;
-  teilAnzeigen?: Record<string, string>;
-}>();
+const props = withDefaults(
+  defineProps<{
+    question: any;
+    answer: any;
+    teilAnzeigen?: Record<string, any>;
+    teilWordBank?: Record<string, string>;
+    stimulusInSide?: boolean; // le support est déjà affiché dans la colonne de gauche
+  }>(),
+  { stimulusInSide: false },
+);
 
-// defineEmits<{ answer: [value: any] }>();
 const emit = defineEmits<{ answer: [value: any] }>();
 
-const rfOptions = computed(() => {
-  const isJaNein = props.question.question_type === "ja_nein";
-  return isJaNein
-    ? [
-        { value: "ja", label: "Ja ✓" },
-        { value: "nein", label: "Nein ✗" },
-      ]
-    : [
-        { value: "richtig", label: "Richtig ✓" },
-        { value: "falsch", label: "Falsch ✗" },
-      ];
+const { t } = useI18n();
+
+const type = computed(() => String(props.question.question_type || ""));
+const c = computed<Record<string, any>>(() => props.question.content || {});
+
+// ── Sélection ─────────────────────────────────────────
+
+const selected = computed(() =>
+  props.answer?.answer != null ? String(props.answer.answer) : "",
+);
+
+// Comparaison insensible à la casse (ÖSD : réponses "C" pour la clé "c")
+const isSel = (key: string | number) =>
+  selected.value !== "" && selected.value.toLowerCase() === String(key).toLowerCase();
+
+const choose = (key: string | number) => emit("answer", { answer: String(key) });
+
+const onSelect = (e: Event) => choose((e.target as HTMLSelectElement).value);
+
+// ── Styles communs ────────────────────────────────────
+
+const optionClass = (sel: boolean) =>
+  sel
+    ? "border-primary bg-primary/10 text-ink"
+    : "border-line bg-card text-ink hover:border-primary/40 hover:bg-card-2";
+
+const keyClass = (sel: boolean) => [
+  "shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+  sel ? "bg-primary text-white" : "bg-card-2 text-muted border border-line",
+];
+
+const selectClass =
+  "w-full rounded-leaf border-2 border-line bg-card px-3 py-2.5 text-sm text-ink outline-none focus:border-primary transition-colors";
+
+const inputClass =
+  "px-3 py-2 rounded-leaf border-2 border-line bg-card text-sm font-medium text-ink outline-none focus:border-primary transition-colors";
+
+// ── Libellés ──────────────────────────────────────────
+
+const badge = computed(() => {
+  const n = props.question.question_number;
+  switch (type.value) {
+    case "qcm_gap_fill":
+    case "word_bank_gap_fill":
+    case "gap_fill_words":
+    case "lueckentext_saetze":
+      return t("session.q.gap", { n: c.value.gap_number ?? n });
+    case "zuordnung_titre":
+      return t("session.q.text_n", { n });
+    case "zuordnung_paragraphen":
+      return t("session.q.paragraph", { n: c.value.paragraph_number ?? n });
+    default:
+      return String(n);
+  }
 });
 
-const matchingKeys = computed(() => {
-  const anzeigen = props.question.content.anzeigen || {};
-  return [...Object.keys(anzeigen), "0"];
+// Vocabulaire de la copie d'examen : reste en allemand
+const binaryOptions = computed(() =>
+  type.value === "ja_nein"
+    ? [{ value: "ja", label: "Ja" }, { value: "nein", label: "Nein" }]
+    : [{ value: "richtig", label: "Richtig" }, { value: "falsch", label: "Falsch" }],
+);
+
+const noMatchKey = computed(() => (type.value === "matching" ? "0" : "x"));
+
+const adKeys = computed(() => {
+  const anzeigen = props.teilAnzeigen || c.value.anzeigen || {};
+  return [...Object.keys(anzeigen), noMatchKey.value];
 });
 
-const selektivesKeys = computed(() => {
-  const anzeigen = props.teilAnzeigen || props.question.content.anzeigen || {};
-  return [...Object.keys(anzeigen), "x"];
-});
+const wordBank = computed(() => props.teilWordBank || c.value.word_bank || {});
+
+const speakerName = (speaker: any) =>
+  typeof speaker === "object" ? (speaker?.name ?? "") : String(speaker);
+
+// ── Texte à trous (échappé avant v-html) ──────────────
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const highlightGap = (text: string, gapNumber: number): string => {
   if (!text) return "";
-  const marker = `_${gapNumber}_`;
-  return text.replace(
-    marker,
-    `<span class="inline-block bg-primary-200 text-primary-900 font-bold px-2 py-0.5 rounded mx-1">[${gapNumber}]</span>`,
-  );
+  return escapeHtml(text)
+    .replace(/\n/g, "<br>")
+    .replace(/\((\d+)\)|_(\d+)_/g, (_m, a, b) => {
+      const n = a ?? b;
+      return String(n) === String(gapNumber)
+        ? `<span class="inline-flex items-center justify-center min-w-6 h-6 px-1.5 mx-0.5 rounded-full bg-primary text-white text-xs font-bold align-middle">${n}</span>`
+        : `<span class="text-faint text-xs font-semibold">(${n})</span>`;
+    });
 };
 
-const toggleTableauOption = (col: string, opt: string) => {
-  const current = { ...(props.answer?.answers || {}) };
-  const colValues: string[] = current[col] || [];
-  current[col] = colValues.includes(opt)
-    ? colValues.filter((v) => v !== opt)
-    : [...colValues, opt];
-  emit("answer", { answers: current });
-};
+// ── Réponses tapées : envoi après une pause de frappe ─
 
-const setTableauText = (col: string, value: string) => {
-  const current = { ...(props.answer?.answers || {}) };
-  current[col] = value;
-  emit("answer", { answers: current });
-};
+const SAVE_DELAY = 500;
+const textDraft = ref<string>(props.answer?.answer ?? "");
+let textTimer: ReturnType<typeof setTimeout> | null = null;
+
+function onTextInput(value: string) {
+  textDraft.value = value;
+  if (textTimer) clearTimeout(textTimer);
+  textTimer = setTimeout(flushText, SAVE_DELAY);
+}
+
+function flushText() {
+  if (textTimer) {
+    clearTimeout(textTimer);
+    textTimer = null;
+  }
+  emit("answer", { answer: textDraft.value.trim() });
+}
+
+// ── tableau_mixed ─────────────────────────────────────
+
+const tableauDraft = reactive<Record<string, any>>({ ...(props.answer?.answers || {}) });
+let tableauTimer: ReturnType<typeof setTimeout> | null = null;
+
+const tableauHas = (col: string, opt: string) =>
+  ((tableauDraft[col] as string[]) || []).includes(opt);
+
+function toggleTableauOption(col: string, opt: string) {
+  const values: string[] = tableauDraft[col] || [];
+  tableauDraft[col] = values.includes(opt) ? values.filter((v) => v !== opt) : [...values, opt];
+  emit("answer", { answers: { ...tableauDraft } });
+}
+
+function setTableauText(col: string, value: string) {
+  tableauDraft[col] = value;
+  if (tableauTimer) clearTimeout(tableauTimer);
+  tableauTimer = setTimeout(flushTableau, SAVE_DELAY);
+}
+
+function flushTableau() {
+  if (tableauTimer) {
+    clearTimeout(tableauTimer);
+    tableauTimer = null;
+  }
+  emit("answer", { answers: { ...tableauDraft } });
+}
+
+// Rien ne se perd si l'apprenant change de Teil pendant la frappe
+onBeforeUnmount(() => {
+  if (textTimer) flushText();
+  if (tableauTimer) flushTableau();
+});
 </script>

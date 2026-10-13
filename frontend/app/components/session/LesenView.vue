@@ -1,554 +1,352 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-0 lg:h-[calc(100vh-7rem)]">
-    <!-- Colonne gauche : texte stimulus -->
+  <div class="lg:h-full flex flex-col">
+    <!-- Onglets mobile -->
     <div
       v-if="hasStimulus"
-      class="lg:w-1/2 bg-white shadow-sm border-r border-gray-200 overflow-y-auto lg:min-h-0"
+      class="lg:hidden sticky top-0 z-10 bg-canvas border-b border-line px-4 py-2"
     >
-      <div class="p-6 mx-auto">
-        <!-- Instructions -->
-        <div class="mb-4 p-3 bg-green-50 border border-blue-200 rounded-lg">
-          <p class="text-sm text-green-600 font-medium">
-            {{ teil.instructions }}
+      <div class="grid grid-cols-2 gap-1 p-1 rounded-leaf bg-card-2">
+        <button
+          type="button"
+          :class="tabClass('text')"
+          @click="mobileTab = 'text'"
+        >
+          {{ t("session.q.tab_text") }}
+        </button>
+        <button
+          type="button"
+          :class="tabClass('tasks')"
+          @click="mobileTab = 'tasks'"
+        >
+          {{ t("session.q.tab_tasks", { answered: answeredCount, total: questions.length }) }}
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 min-h-0 flex flex-col lg:flex-row">
+      <!-- ── Colonne gauche : textes ── -->
+      <section
+        v-if="hasStimulus"
+        :class="[
+          'bg-card lg:w-1/2 lg:border-r border-line lg:overflow-y-auto lg:min-h-0',
+          mobileTab === 'text' ? 'block' : 'hidden lg:block',
+        ]"
+      >
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="rounded-leaf border border-primary/20 bg-primary/5 px-4 py-3">
+            <p class="text-sm font-medium text-ink whitespace-pre-line">{{ teil.instructions }}</p>
+          </div>
+
+          <p v-if="contextLine || docLabel" class="text-xs text-muted">
+            <span v-if="docLabel" class="font-semibold text-ink">{{ docLabel }}</span>
+            <span v-if="docLabel && contextLine"> · </span>
+            <span v-if="contextLine">{{ contextLine }}</span>
           </p>
-        </div>
 
-        <!-- Stimulus image générique (qcm_abc, richtig_falsch...) -->
-        <div v-if="teil.config?.stimulus_image" class="mb-4">
           <img
-            :src="`${apiBase}/images/${teil.config.stimulus_image}`"
-            alt="Stimulus"
-            class="w-full rounded-lg border border-gray-200 object-contain"
+            v-if="cfg.stimulus_image || cfg.image"
+            :src="`${apiBase}/images/${cfg.stimulus_image || cfg.image}`"
+            alt=""
+            class="w-full rounded-leaf border border-line object-contain"
           />
-        </div>
-        <!-- Image générique (fichiers uploadés sans suffixe key, ex: lesen_teil2.png) -->
-        <div v-else-if="teil.config?.image" class="mb-4">
-          <img
-            :src="`${apiBase}/images/${teil.config.image}`"
-            alt="Illustration"
-            class="w-full rounded-lg border border-gray-200 object-contain"
-          />
-        </div>
-        <!-- Titre article si présent (qcm_abc) -->
-        <h3
-          v-if="
-            teil.config?.article_title &&
-            teil.format_type !== 'lueckentext_saetze'
-          "
-          class="font-bold text-gray-900 text-base mb-3"
-        >
-          {{ teil.config.article_title }}
-        </h3>
-        <!-- Stimulus text simple (teil.config) -->
-        <div
-          v-if="stimulusText"
-          class="prose prose-sm text-gray-800 leading-relaxed"
-          v-html="formatText(stimulusText)"
-        />
 
-        <!-- ✅ NOUVEAU : zuordnung_titre — texte stimulus par question -->
-        <div
-          v-if="teil.format_type === 'zuordnung_titre'"
-          class="space-y-5 mt-2"
-        >
-          <div
-            v-for="q in questions"
-            :key="`stimulus-${q.id}`"
-            class="bg-white border border-gray-200 rounded-lg p-4"
+          <h3
+            v-if="cfg.article_title && fmt !== 'lueckentext_saetze'"
+            class="font-bold text-ink text-base"
           >
-            <p
-              class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2"
-            >
-              Text {{ q.question_number }}
-            </p>
-            <div
-              class="prose prose-sm text-gray-800 leading-relaxed"
-              v-html="formatText(q.content?.stimulus_text || '')"
-            />
-          </div>
-        </div>
-
-        <!-- Article (lueckentext_saetze) -->
-        <div v-if="teil.format_type === 'lueckentext_saetze'" class="space-y-2">
-          <div v-if="teil.config?.article_image" class="mb-4">
-            <img
-              :src="`${apiBase}/images/${teil.config.article_image}`"
-              alt="Article"
-              class="w-full rounded-lg border border-gray-200 object-contain"
-            />
-          </div>
-          <h3 class="font-bold text-gray-900 mb-3">
-            {{ teil.config?.article_title }}
+            {{ cfg.article_title }}
           </h3>
-          <div
-            class="prose prose-sm text-gray-800 leading-relaxed"
-            v-html="formatText(teil.config?.article_text || '')"
-          />
-        </div>
 
-        <!-- Personnes (zuordnung_personen) -->
-        <div
-          v-else-if="teil.format_type === 'zuordnung_personen'"
-          class="space-y-4 mt-2"
-        >
           <div
-            v-for="(person, key) in teil.config?.persons"
-            :key="key"
-            class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4"
-          >
-            <div class="flex gap-3 sm:gap-4 items-start">
+            v-if="cfg.stimulus_text"
+            class="text-[15px] text-ink leading-relaxed"
+            v-html="formatText(cfg.stimulus_text)"
+          />
+
+          <!-- zuordnung_titre : titres puis textes -->
+          <template v-if="fmt === 'zuordnung_titre'">
+            <div class="rounded-card border border-line bg-card-2 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+                {{ t("session.q.headings") }}
+              </p>
+              <ul class="space-y-1.5">
+                <li v-for="(titre, key) in titres" :key="key" class="flex gap-2 text-sm text-ink">
+                  <span class="font-bold text-primary w-5 shrink-0">{{ String(key) }}</span>
+                  <span>{{ titre }}</span>
+                </li>
+              </ul>
+            </div>
+            <div
+              v-for="q in questions"
+              :key="`stim-${q.id}`"
+              class="rounded-card border border-line p-4"
+            >
+              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+                {{ t("session.q.text_n", { n: q.question_number }) }}
+              </p>
+              <div
+                class="text-[15px] text-ink leading-relaxed"
+                v-html="formatText(q.content?.stimulus_text || '')"
+              />
+            </div>
+          </template>
+
+          <!-- lueckentext_saetze : article à trous -->
+          <template v-else-if="fmt === 'lueckentext_saetze'">
+            <img
+              v-if="cfg.article_image"
+              :src="`${apiBase}/images/${cfg.article_image}`"
+              alt=""
+              class="w-full rounded-leaf border border-line object-contain"
+            />
+            <h3 class="font-bold text-ink">{{ cfg.article_title }}</h3>
+            <div
+              class="text-[15px] text-ink leading-relaxed"
+              v-html="formatGapText(cfg.article_text || '')"
+            />
+          </template>
+
+          <!-- zuordnung_personen -->
+          <template v-else-if="fmt === 'zuordnung_personen'">
+            <div
+              v-for="(person, key) in cfg.persons"
+              :key="key"
+              class="rounded-card border border-line p-4 flex gap-3 sm:gap-4 items-start"
+            >
               <img
                 v-if="person?.image"
                 :src="`${apiBase}/images/${person.image}`"
                 :alt="person.name"
-                class="w-16 h-20 sm:w-28 sm:h-32 object-cover rounded-lg border border-gray-200 shrink-0"
+                class="w-16 h-20 sm:w-24 sm:h-28 object-cover rounded-leaf border border-line shrink-0"
               />
               <div
                 v-else
-                class="w-16 h-20 sm:w-28 sm:h-32 rounded-lg bg-primary-50 border border-gray-200 flex items-center justify-center shrink-0"
+                class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0"
               >
-                <span class="font-bold text-primary-400 text-lg sm:text-xl">
+                <span class="font-bold text-primary">{{ String(key).toUpperCase() }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-ink mb-1">{{ String(key).toLowerCase() }}) {{ person.name }}</p>
+                <p class="text-[15px] text-ink leading-relaxed">{{ person.text }}</p>
+              </div>
+            </div>
+          </template>
+
+          <!-- zuordnung_meinungen -->
+          <template v-else-if="fmt === 'zuordnung_meinungen'">
+            <div
+              v-for="(opinion, key) in cfg.opinions"
+              :key="key"
+              class="rounded-card border border-line p-4"
+            >
+              <div class="flex items-center gap-3 mb-2">
+                <img
+                  v-if="opinion?.image"
+                  :src="`${apiBase}/images/${opinion.image}`"
+                  :alt="opinion.author"
+                  class="w-10 h-10 rounded-full object-cover border border-line shrink-0"
+                />
+                <span
+                  v-else
+                  class="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center shrink-0"
+                >
                   {{ String(key).toUpperCase() }}
                 </span>
+                <p class="font-semibold text-ink">{{ String(key).toUpperCase() }} · {{ opinion.author }}</p>
               </div>
-
-              <div class="flex-1 min-w-0">
-                <p class="font-bold text-gray-900 mb-1 text-sm sm:text-base">
-                  {{ String(key).toLowerCase() }}) {{ person.name }}
-                </p>
-                <p
-                  class="text-sm sm:text-base text-gray-700 leading-relaxed text-justify"
-                >
-                  {{ person.text }}
-                </p>
-              </div>
+              <p class="text-[15px] text-ink leading-relaxed">{{ opinion.text }}</p>
             </div>
-          </div>
-        </div>
+          </template>
 
-        <!-- Opinions (zuordnung_meinungen) -->
-        <div
-          v-else-if="teil.format_type === 'zuordnung_meinungen'"
-          class="space-y-4 mt-2"
-        >
-          <div
-            v-for="(opinion, key) in teil.config?.opinions"
-            :key="key"
-            class="p-4 bg-white border border-gray-200 rounded-lg"
-          >
-            <div class="flex items-center gap-3 mb-2">
+          <!-- zuordnung_paragraphen -->
+          <template v-else-if="fmt === 'zuordnung_paragraphen'">
+            <div
+              v-for="(para, key) in cfg.paragraphs"
+              :key="key"
+              class="rounded-card border border-line p-4"
+            >
               <img
-                v-if="opinion?.image"
-                :src="`${apiBase}/images/${opinion.image}`"
-                :alt="opinion.author"
-                class="w-12 h-12 rounded-full object-cover border border-gray-200 shrink-0"
+                v-if="para?.image"
+                :src="`${apiBase}/images/${para.image}`"
+                alt=""
+                class="w-full h-32 object-cover rounded-leaf border border-line mb-2"
               />
-              <div
-                v-else
-                class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center shrink-0"
-              >
-                <span class="font-bold text-primary-700 text-sm">{{
-                  String(key).toUpperCase()
-                }}</span>
+              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-1">
+                {{ t("session.q.paragraph", { n: String(key).replace(/^p/i, "") }) }}
+                <span v-if="para.title"> · {{ para.title }}</span>
+              </p>
+              <p class="text-[15px] text-ink leading-relaxed">{{ para.text }}</p>
+            </div>
+          </template>
+
+          <!-- Annonces (matching / selektives_matching) -->
+          <template v-else-if="fmt === 'matching' || fmt === 'selektives_matching'">
+            <p class="text-xs font-semibold uppercase tracking-wide text-faint">
+              {{ t("session.q.ads") }}
+            </p>
+            <div
+              v-for="(anzeige, key) in cfg.anzeigen"
+              :key="key"
+              class="rounded-card border border-line p-4 flex items-start gap-3"
+            >
+              <span class="font-bold text-primary w-5 shrink-0">{{ String(key).toUpperCase() }}</span>
+              <div class="flex-1 min-w-0">
+                <p v-if="anzeigeField(anzeige, 'title')" class="font-semibold text-ink text-sm mb-0.5">
+                  {{ anzeigeField(anzeige, "title") }}
+                </p>
+                <p class="text-sm text-ink leading-relaxed">{{ anzeigeText(anzeige) }}</p>
+                <p v-if="anzeigeField(anzeige, 'contact')" class="text-xs text-muted italic mt-1">
+                  {{ anzeigeField(anzeige, "contact") }}
+                </p>
               </div>
-              <div class="font-bold text-primary-700">
-                {{ String(key).toUpperCase() }}-{{ opinion.author }}
+              <img
+                v-if="anzeigeField(anzeige, 'image')"
+                :src="`${apiBase}/images/${anzeigeField(anzeige, 'image')}`"
+                alt=""
+                class="w-16 h-16 object-cover rounded-leaf border border-line shrink-0"
+              />
+            </div>
+          </template>
+
+          <!-- Sprachbausteine : texte à trous -->
+          <template v-else-if="fmt === 'qcm_gap_fill' || fmt === 'word_bank_gap_fill'">
+            <p v-if="cfg.situation" class="text-xs text-muted italic">{{ cfg.situation }}</p>
+            <div
+              v-if="cfg.stimulus_anzeige"
+              class="rounded-leaf border border-line bg-card-2 p-3 text-sm text-ink"
+            >
+              {{ cfg.stimulus_anzeige }}
+            </div>
+            <div
+              class="text-[15px] text-ink leading-loose"
+              v-html="formatGapText(cfg.text_with_gaps || '')"
+            />
+            <div v-if="fmt === 'word_bank_gap_fill' && cfg.word_bank">
+              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+                {{ t("session.q.word_bank") }}
+              </p>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div
+                  v-for="(word, key) in cfg.word_bank"
+                  :key="key"
+                  class="text-xs rounded-leaf border border-line bg-card-2 px-3 py-2 flex gap-2 items-center"
+                >
+                  <span class="font-bold text-primary shrink-0">{{ String(key).toUpperCase() }}</span>
+                  <span class="text-ink">{{ word }}</span>
+                </div>
               </div>
             </div>
-            <p class="text-sm text-gray-700 leading-relaxed">
-              {{ opinion.text }}
+          </template>
+        </div>
+      </section>
+
+      <!-- ── Colonne droite : questions ── -->
+      <section
+        :class="[
+          'lg:overflow-y-auto lg:min-h-0',
+          hasStimulus ? 'lg:w-1/2' : 'w-full',
+          hasStimulus && mobileTab === 'text' ? 'hidden lg:block' : 'block',
+        ]"
+      >
+        <div class="p-5 sm:p-6 max-w-2xl mx-auto space-y-4">
+          <div
+            v-if="!hasStimulus"
+            class="rounded-leaf border border-primary/20 bg-primary/5 px-4 py-3"
+          >
+            <p class="text-sm font-medium text-ink whitespace-pre-line">{{ teil.instructions }}</p>
+            <p v-if="contextLine || docLabel" class="text-xs text-muted mt-1">
+              {{ [docLabel, contextLine].filter(Boolean).join(" · ") }}
             </p>
           </div>
-        </div>
 
-        <!-- Paragraphes (zuordnung_paragraphen) -->
-        <div
-          v-else-if="teil.format_type === 'zuordnung_paragraphen'"
-          class="space-y-4 mt-2"
-        >
+          <!-- Question commune (Goethe B1 Lesen T4) -->
           <div
-            v-for="(para, key) in teil.config?.paragraphs"
-            :key="key"
-            class="p-4 bg-white border border-gray-200 rounded-lg"
+            v-if="cfg.fragestellung"
+            class="rounded-leaf border border-line bg-card-2 px-4 py-3 text-sm font-semibold text-ink"
           >
-            <img
-              v-if="para?.image"
-              :src="`${apiBase}/images/${para.image}`"
-              :alt="para.title"
-              class="w-full h-32 object-cover rounded-lg border border-gray-200 mb-2"
-            />
-            <div class="font-bold text-gray-700 mb-1">{{ para.title }}</div>
-            <p class="text-sm text-gray-700 leading-relaxed">{{ para.text }}</p>
+            {{ cfg.fragestellung }}
           </div>
-        </div>
 
-        <!-- Anzeigen (matching + selektives_matching) -->
-        <div
-          v-else-if="
-            teil.format_type === 'matching' ||
-            teil.format_type === 'selektives_matching'
-          "
-          class="space-y-3 mt-4"
-        >
+          <!-- Exemple 0 (ÖSD) -->
           <div
-            v-for="(anzeige, key) in teil.config?.anzeigen"
-            :key="key"
-            class="p-3 bg-white border border-gray-200 rounded-lg"
+            v-if="beispiel"
+            class="rounded-card border border-dashed border-line bg-card-2 p-4"
           >
-            <div class="flex items-start gap-2">
-              <span class="font-bold text-primary-700 shrink-0">{{
-                String(key).toUpperCase()
-              }}</span>
-              <div class="flex-1 min-w-0">
-                <p
-                  v-if="getAnzeigeTitle(anzeige)"
-                  class="font-semibold text-gray-900 text-sm mb-0.5"
-                >
-                  {{ getAnzeigeTitle(anzeige) }}
-                </p>
-                <p class="text-sm text-gray-700 leading-relaxed">
-                  {{ getAnzeigeText(anzeige) }}
-                </p>
-                <p
-                  v-if="getAnzeigeContact(anzeige)"
-                  class="text-xs text-gray-500 italic mt-1"
-                >
-                  {{ getAnzeigeContact(anzeige) }}
-                </p>
-              </div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+              {{ t("session.q.example") }} 0
+            </p>
+            <p v-if="beispiel.stem" class="text-sm text-ink mb-2">{{ beispiel.stem }}</p>
+            <p v-if="beispiel.context" class="text-sm text-ink mb-2">{{ beispiel.context }}</p>
+            <ul v-if="beispiel.options" class="space-y-1">
+              <li
+                v-for="(txt, key) in beispiel.options"
+                :key="key"
+                :class="[
+                  'text-sm',
+                  String(key).toLowerCase() === String(beispiel.answer).toLowerCase()
+                    ? 'font-semibold text-primary'
+                    : 'text-muted',
+                ]"
+              >
+                {{ key }}) {{ txt }}
+              </li>
+            </ul>
+            <p v-else-if="beispiel.answer" class="text-sm text-ink">
+              → <strong class="text-primary">{{ beispiel.answer }}</strong>
+            </p>
+          </div>
+
+          <!-- QCM avec plusieurs textes (Goethe B1 Lesen T2) -->
+          <template v-if="hasTexts">
+            <div v-for="(textBlock, ti) in cfg.texts" :key="ti" class="space-y-3">
               <img
-                v-if="getAnzeigeImage(anzeige)"
-                :src="`${apiBase}/images/${getAnzeigeImage(anzeige)}`"
-                :alt="`Annonce ${key}`"
-                class="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Sprachbausteine — texte avec lacunes numérotées
-             (qcm_gap_fill / word_bank_gap_fill) -->
-        <div
-          v-else-if="
-            teil.format_type === 'qcm_gap_fill' ||
-            teil.format_type === 'word_bank_gap_fill'
-          "
-          class="space-y-3"
-        >
-          <p
-            v-if="teil.config?.situation"
-            class="text-xs text-gray-500 italic mb-1"
-          >
-            {{ teil.config.situation }}
-          </p>
-          <div
-            v-if="teil.config?.stimulus_anzeige"
-            class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 mb-3"
-          >
-            {{ teil.config.stimulus_anzeige }}
-          </div>
-          <div
-            class="prose prose-sm text-gray-800 leading-relaxed"
-            v-html="formatGapText(teil.config?.text_with_gaps || '')"
-          />
-
-          <!-- Banque de mots partagée (Lexik / word_bank_gap_fill uniquement) -->
-          <div
-            v-if="
-              teil.format_type === 'word_bank_gap_fill' &&
-              teil.config?.word_bank
-            "
-            class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2"
-          >
-            <div
-              v-for="(word, key) in teil.config.word_bank"
-              :key="key"
-              class="text-xs bg-primary-50 border border-primary-100 rounded-lg px-3 py-2 flex gap-2 items-center"
-            >
-              <span class="font-bold text-primary-700 shrink-0">{{
-                String(key).toUpperCase()
-              }}</span>
-              <span class="text-gray-700">{{ word }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Colonne droite : questions -->
-    <div
-      :class="[
-        'overflow-y-auto lg:min-h-0',
-        hasStimulus ? 'lg:w-1/2' : 'w-full',
-      ]"
-    >
-      <div class="p-6 max-w-2xl mx-auto space-y-6">
-        <!-- Instructions si pas de stimulus -->
-        <div
-          v-if="!hasStimulus"
-          class="p-3 bg-blue-50 border border-blue-200 rounded-lg"
-        >
-          <p class="text-sm text-green-800 font-medium">
-            {{ teil.instructions }}
-          </p>
-        </div>
-
-        <!-- Questions groupées par texte (qcm_abc avec texts[]) -->
-        <template v-if="teil.format_type === 'qcm_abc' && hasTexts">
-          <div
-            v-for="(textBlock, ti) in teil.config?.texts || []"
-            :key="ti"
-            class="space-y-4"
-          >
-            <div v-if="textBlock?.image" class="mb-2">
-              <img
+                v-if="textBlock?.image"
                 :src="`${apiBase}/images/${textBlock.image}`"
-                alt="Stimulus"
-                class="w-full rounded-lg border border-gray-200 object-contain"
+                alt=""
+                class="w-full rounded-leaf border border-line object-contain"
               />
-            </div>
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div class="rounded-card border border-line bg-card p-4">
+                <p v-if="textBlock.source" class="text-xs text-faint mb-2">{{ textBlock.source }}</p>
+                <div
+                  class="text-[15px] text-ink leading-relaxed"
+                  v-html="formatText(textBlock.stimulus_text)"
+                />
+              </div>
               <div
-                class="prose prose-sm text-gray-800"
-                v-html="formatText(textBlock.stimulus_text)"
-              />
+                v-for="q in questionsForText(textBlock)"
+                :id="`question-${q.id}`"
+                :key="q.id"
+                :class="cardClass(q)"
+              >
+                <QuestionItem
+                  :question="q"
+                  :answer="answers[q.id]?.user_answer"
+                  @answer="(val: Record<string, any>) => emit('answer', q.id, val)"
+                />
+              </div>
             </div>
+          </template>
+
+          <!-- Tous les autres formats -->
+          <template v-else>
             <div
-              v-for="q in getQuestionsForText(textBlock)"
+              v-for="q in questions"
+              :id="`question-${q.id}`"
               :key="q.id"
-              class="bg-white shadow-md border border-gray-200 rounded-xl p-5"
+              :class="cardClass(q)"
             >
               <QuestionItem
                 :question="q"
                 :answer="answers[q.id]?.user_answer"
-                @answer="
-                  (val: Record<string, any>) => $emit('answer', q.id, val)
-                "
+                :stimulus-in-side="hasStimulus"
+                :teil-anzeigen="cfg.anzeigen"
+                :teil-word-bank="cfg.word_bank"
+                @answer="(val: Record<string, any>) => emit('answer', q.id, val)"
               />
             </div>
-          </div>
-        </template>
-
-        <!-- ✅ zuordnung_titre : on n'affiche QUE le choix de titre ici,
-             le stimulus_text est déjà dans la colonne gauche -->
-        <template v-else-if="teil.format_type === 'zuordnung_titre'">
-          <div
-            v-for="q in questions"
-            :key="q.id"
-            :class="[
-              'bg-white border rounded-xl p-5 transition-all scroll-mt-4',
-              answers[q.id] ? 'border-primary-300' : 'border-gray-200',
-            ]"
-            :id="`question-${q.id}`"
-          >
-            <div class="flex items-center justify-between mb-3">
-              <span
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wide"
-              >
-                Text {{ q.question_number }}
-              </span>
-              <span class="text-xs text-gray-400">{{ q.points }} pt(s)</span>
-            </div>
-            <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-              Choisissez le titre correspondant :
-            </p>
-            <div class="grid grid-cols-1 gap-2">
-              <button
-                v-for="(titre, key) in q.content?.titres"
-                :key="key"
-                :class="[
-                  'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
-                  answers[q.id]?.user_answer?.answer === String(key)
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
-                ]"
-                @click="$emit('answer', q.id, { answer: String(key) })"
-              >
-                <span
-                  :class="[
-                    'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
-                    answers[q.id]?.user_answer?.answer === String(key)
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white border-2 border-gray-300 text-gray-500',
-                  ]"
-                  >{{ String(key).toUpperCase() }}</span
-                >
-                <span
-                  :class="
-                    answers[q.id]?.user_answer?.answer === String(key)
-                      ? 'font-medium text-primary-900'
-                      : 'text-gray-700'
-                  "
-                >
-                  {{ titre }}
-                </span>
-              </button>
-            </div>
-          </div>
-        </template>
-
-        <!-- ✅ NOUVEAU : Sprachbausteine — une carte par lacune,
-             sans réafficher le texte (déjà à gauche) -->
-        <!-- Sprachbausteine : une carte par lacune, sans réafficher le texte -->
-        <template
-          v-else-if="
-            teil.format_type === 'qcm_gap_fill' ||
-            teil.format_type === 'word_bank_gap_fill'
-          "
-        >
-          <div
-            v-for="q in questions"
-            :key="q.id"
-            :class="[
-              'bg-white border rounded-xl p-5 transition-all scroll-mt-4',
-              answers[q.id] ? 'border-primary-300' : 'border-gray-200',
-            ]"
-            :id="`question-${q.id}`"
-          >
-            <div class="flex items-center justify-between mb-3">
-              <span
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wide"
-              >
-                Lücke {{ q.question_number }}
-              </span>
-              <span class="text-xs text-gray-400">{{ q.points }} pt(s)</span>
-            </div>
-            <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-              Choisissez la bonne réponse :
-            </p>
-
-            <!-- ✅ word_bank_gap_fill — menu déroulant compact, la banque de mots
-         est déjà affichée une seule fois à gauche, pas besoin de la
-         répéter en grille pour chaque lacune -->
-            <select
-              v-if="teil.format_type === 'word_bank_gap_fill'"
-              :value="answers[q.id]?.user_answer?.answer || ''"
-              class="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 focus:border-primary-400 outline-none transition-colors"
-              @change="
-                (e) =>
-                  $emit('answer', q.id, {
-                    answer: (e.target as HTMLSelectElement).value,
-                  })
-              "
-            >
-              <option value="" disabled>-- Wählen --</option>
-              <option
-                v-for="(label, key) in gapOptions(q)"
-                :key="key"
-                :value="key"
-              >
-                {{ String(key).toUpperCase() }}-{{ label }}
-              </option>
-            </select>
-
-            <!-- qcm_gap_fill — 3 options propres à chaque lacune, pas de répétition -->
-            <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                v-for="(label, key) in gapOptions(q)"
-                :key="key"
-                :class="[
-                  'px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2',
-                  answers[q.id]?.user_answer?.answer === String(key)
-                    ? 'border-primary-500 bg-primary-50 text-primary-900'
-                    : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50 text-gray-700',
-                ]"
-                @click="$emit('answer', q.id, { answer: String(key) })"
-              >
-                <span
-                  :class="[
-                    'shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-                    answers[q.id]?.user_answer?.answer === String(key)
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white border-2 border-gray-300 text-gray-500',
-                  ]"
-                  >{{ String(key).toUpperCase() }}</span
-                >
-                {{ label }}
-              </button>
-            </div>
-          </div>
-        </template>
-
-        <!-- zuordnung_paragraphen : une carte par paragraphe, choix du titre correspondant -->
-        <template v-else-if="teil.format_type === 'zuordnung_paragraphen'">
-          <div
-            v-for="q in questions"
-            :key="q.id"
-            :class="[
-              'bg-white border rounded-xl p-5 transition-all scroll-mt-4',
-              answers[q.id] ? 'border-primary-300' : 'border-gray-200',
-            ]"
-            :id="`question-${q.id}`"
-          >
-            <div class="flex items-center justify-between mb-3">
-              <span
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wide"
-              >
-                Paragraph {{ q.content?.paragraph_number }}
-              </span>
-              <span class="text-xs text-gray-400">{{ q.points }} pt(s)</span>
-            </div>
-            <p class="text-xs font-semibold text-gray-500 uppercase mb-3">
-              Choisissez le titre correspondant :
-            </p>
-            <div class="grid grid-cols-1 gap-2">
-              <button
-                v-for="(heading, key) in q.content?.headings"
-                :key="key"
-                :class="[
-                  'w-full text-left px-4 py-3 rounded-lg border-2 text-sm transition-all flex items-center gap-3',
-                  answers[q.id]?.user_answer?.answer === String(key)
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50',
-                ]"
-                @click="$emit('answer', q.id, { answer: String(key) })"
-              >
-                <span
-                  :class="[
-                    'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all',
-                    answers[q.id]?.user_answer?.answer === String(key)
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white border-2 border-gray-300 text-gray-500',
-                  ]"
-                  >{{ String(key).toUpperCase() }}</span
-                >
-                <span
-                  :class="
-                    answers[q.id]?.user_answer?.answer === String(key)
-                      ? 'font-medium text-primary-900'
-                      : 'text-gray-700'
-                  "
-                >
-                  {{ heading }}
-                </span>
-              </button>
-            </div>
-          </div>
-        </template>
-
-        <!-- Questions normales -->
-        <template v-else>
-          <div
-            v-for="q in questions"
-            :key="q.id"
-            :class="[
-              'bg-white border rounded-xl p-5 transition-all',
-              answers[q.id] ? 'border-primary-300' : 'border-gray-200',
-            ]"
-          >
-            <QuestionItem
-              :question="q"
-              :answer="answers[q.id]?.user_answer"
-              :teil-anzeigen="
-                teil.format_type === 'selektives_matching'
-                  ? teil.config?.anzeigen
-                  : undefined
-              "
-              @answer="(val: Record<string, any>) => $emit('answer', q.id, val)"
-            />
-          </div>
-        </template>
-      </div>
+          </template>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -562,78 +360,104 @@ const props = defineProps<{
   answers: Record<string, any>;
 }>();
 
-defineEmits<{ answer: [questionId: string, value: any] }>();
+const emit = defineEmits<{ answer: [questionId: string, value: any] }>();
 
+const { t } = useI18n();
 const config = useRuntimeConfig();
-const apiBase = config.public.apiBaseUrl || "http://localhost:8001";
+const apiBase = (config.public.apiBaseUrl as string) || "http://localhost:8001";
 
-const hasStimulus = computed(() => {
-  const t = props.teil;
-  return (
-    !!t.config?.stimulus_text ||
-    !!t.config?.stimulus_image ||
-    !!t.config?.article_text ||
-    !!t.config?.image || // ← ajouté
-    t.format_type === "matching" ||
-    t.format_type === "selektives_matching" ||
-    t.format_type === "zuordnung_personen" ||
-    t.format_type === "zuordnung_meinungen" ||
-    t.format_type === "zuordnung_paragraphen" ||
-    t.format_type === "zuordnung_titre" ||
-    t.format_type === "lueckentext_saetze" ||
-    t.format_type === "qcm_gap_fill" || // ✅ ajouté (Sprachbausteine Grammatik)
-    t.format_type === "word_bank_gap_fill" // ✅ ajouté (Sprachbausteine Lexik)
-  );
-});
+const mobileTab = ref<"text" | "tasks">("text");
 
-const hasTexts = computed(
+const cfg = computed<Record<string, any>>(() => props.teil.config || {});
+const fmt = computed(() => String(props.teil.format_type || ""));
+
+// Formats dont le support se lit dans la colonne de gauche
+const SIDE_FORMATS = new Set([
+  "matching",
+  "selektives_matching",
+  "zuordnung_personen",
+  "zuordnung_meinungen",
+  "zuordnung_paragraphen",
+  "zuordnung_titre",
+  "lueckentext_saetze",
+  "qcm_gap_fill",
+  "word_bank_gap_fill",
+]);
+
+const hasStimulus = computed(
   () =>
-    props.teil.format_type === "qcm_abc" &&
-    props.teil.config?.texts?.length > 0,
+    !!cfg.value.stimulus_text ||
+    !!cfg.value.stimulus_image ||
+    !!cfg.value.article_text ||
+    !!cfg.value.image ||
+    SIDE_FORMATS.has(fmt.value),
 );
 
-const stimulusText = computed(() => props.teil.config?.stimulus_text || "");
+const hasTexts = computed(
+  () => fmt.value === "qcm_abc" && Array.isArray(cfg.value.texts) && cfg.value.texts.length > 0,
+);
 
-const getQuestionsForText = (textBlock: any) => {
+const titres = computed(
+  () => cfg.value.titres || props.questions[0]?.content?.titres || {},
+);
+
+const contextLine = computed(
+  () => cfg.value.topic || cfg.value.thema || cfg.value.context || "",
+);
+
+const docLabel = computed(() =>
+  [cfg.value.document_type, cfg.value.institution].filter(Boolean).join(" · "),
+);
+
+const beispiel = computed(() => {
+  const b = cfg.value.beispiel;
+  return b && typeof b === "object" && (b.stem || b.context || b.answer) ? b : null;
+});
+
+const answeredCount = computed(
+  () => props.questions.filter((q) => props.answers[q.id]).length,
+);
+
+const questionsForText = (textBlock: any) => {
   const numbers = (textBlock.questions || []).map((q: any) => q.number);
   return props.questions.filter((q) => numbers.includes(q.question_number));
 };
 
+const cardClass = (q: any) => [
+  "border rounded-card p-4 sm:p-5 scroll-mt-4 transition-colors",
+  props.answers[q.id] ? "border-primary/30 bg-primary/5" : "border-line bg-card",
+];
+
+const tabClass = (tab: "text" | "tasks") => [
+  "py-2 rounded-lg text-sm font-medium transition-colors",
+  mobileTab.value === tab ? "bg-card text-ink shadow-soft" : "text-muted",
+];
+
+// ── Formatage (texte échappé avant v-html) ────────────
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 const formatText = (text: string) => {
   if (!text) return "";
-  return text
+  return escapeHtml(text)
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\n/g, "<br>");
 };
 
-// ✅ NOUVEAU : formate le texte à trous en mettant en évidence
-// les numéros de lacune (21), (22)... dans le texte source.
-const formatGapText = (text: string) => {
-  if (!text) return "";
-  return formatText(text).replace(
-    /\((\d+)\)/g,
-    '<span class="inline-flex items-center justify-center w-6 h-6 mx-0.5 rounded-full bg-primary-100 text-primary-700 text-xs font-bold align-middle">$1</span>',
+// Numéros de lacune (21) ou _21_ mis en évidence
+const formatGapText = (text: string) =>
+  formatText(text).replace(
+    /\((\d+)\)|_(\d+)_/g,
+    (_m, a, b) =>
+      `<span class="inline-flex items-center justify-center min-w-6 h-6 px-1 mx-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold align-middle">${a ?? b}</span>`,
   );
-};
 
-// ✅ NOUVEAU : options d'une lacune — propres à la question
-// (qcm_gap_fill) ou partagées au niveau du Teil (word_bank_gap_fill).
-const gapOptions = (q: any): Record<string, string> => {
-  if (props.teil.format_type === "word_bank_gap_fill") {
-    return props.teil.config?.word_bank || {};
-  }
-  return q.content?.options || {};
-};
+// ── Annonces (string ou {title, text, contact, image}) ──
 
-const getAnzeigeText = (anzeige: any): string =>
+const anzeigeText = (anzeige: any): string =>
   typeof anzeige === "object" ? (anzeige?.text ?? "") : String(anzeige);
 
-const getAnzeigeTitle = (anzeige: any): string =>
-  typeof anzeige === "object" ? (anzeige?.title ?? "") : "";
-
-const getAnzeigeContact = (anzeige: any): string =>
-  typeof anzeige === "object" ? (anzeige?.contact ?? "") : "";
-
-const getAnzeigeImage = (anzeige: any): string | null =>
-  typeof anzeige === "object" ? (anzeige?.image ?? null) : null;
+const anzeigeField = (anzeige: any, field: "title" | "contact" | "image"): string =>
+  typeof anzeige === "object" ? (anzeige?.[field] ?? "") : "";
 </script>
