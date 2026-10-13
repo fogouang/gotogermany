@@ -524,6 +524,28 @@
       "word_bank": "Banque de mots",
       "ads": "Annonces"
     },
+    "writing": {
+      "tab_task": "Sujet",
+      "tab_write": "Ma réponse",
+      "choose_theme": "Choisissez un sujet",
+      "aufgabe": "Sujet {n}",
+      "change_theme": "Changer de sujet",
+      "change_locked": "Effacez votre texte pour changer de sujet.",
+      "choose_first": "Choisissez d'abord un sujet pour commencer à écrire.",
+      "leitpunkte": "Points à traiter",
+      "telc_rule": "Traitez au moins 3 de ces points, ou 2 points et un aspect de votre choix.",
+      "letter_form": "N'oubliez pas : expéditeur, adresse, date, objet, formule d'appel et formule de politesse.",
+      "opinions": "Avis",
+      "headlines": "Titres de presse",
+      "promised": "Promis",
+      "reality": "En réalité",
+      "contact": "Contact",
+      "words": "{n} mot | {n} mots",
+      "target": "objectif : {n}",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré",
+      "no_spellcheck": "Correcteur orthographique désactivé, comme à l'examen."
+    },
     "horen": {
       "homeoffice_question": "Cette personne trouve-t-elle le Homeoffice positif ?",
       "plays_rule": "Vous entendez chaque texte une seule fois. | Vous entendez chaque texte {n} fois.",
@@ -594,7 +616,7 @@
     "not_found": "Résultat introuvable",
     "back_to_exams": "Retour aux examens",
     "subject": "Sujet",
-    "passed": "Réussi ✓",
+    "passed": "Réussi",
     "failed": "Non réussi",
     "pending": "En attente",
     "min_score": "min",
@@ -612,8 +634,21 @@
     "module_passed": "Réussi",
     "module_failed": "Échoué",
     "why_failed": "Pourquoi avez-vous échoué ?",
-    "global_score_insufficient": "Score global insuffisant : {score}/100 (seuil : {threshold})",
-    "module_score_insufficient": "{module} : {score}/100 (seuil module : 60)"
+    "global_score_insufficient": "Score de l'écrit : {score} %, le seuil est de {threshold} %.",
+    "module_score_insufficient": "{module} : {score}/100 (seuil module : 60)",
+    "official": {
+      "points": "{got} / {max} pts",
+      "threshold": "Seuil de réussite : {points} pts ({pct} %)",
+      "written_part": "Partie écrite",
+      "oral_title": "Épreuve orale",
+      "oral_text": "Évaluée séparément, en session avec un examinateur.",
+      "oral_link": "Voir le sujet oral",
+      "correction_pending": "Correction en cours",
+      "weak_modules": "À renforcer : {list}",
+      "block_detail": "Détail des réponses",
+      "teil": "Teil {n}",
+      "no_answer": "Aucune réponse donnée dans cette partie."
+    }
   },
   "exam_detail": {
     "not_found": "Examen introuvable",
@@ -686,7 +721,10 @@
     "tips": "Conseils pour progresser",
     "back_to_exam": "Retour à l'examen",
     "my_results": "Voir mes résultats",
-    "page_title": "Correction Schreiben - DeutschTest"
+    "page_title": "Correction Schreiben - DeutschTest",
+    "back_to_result": "Retour au résultat",
+    "teil": "Teil {n}",
+    "malus": "Malus : -{n}"
   },
   "invoices": {
     "title": "Mes paiements",

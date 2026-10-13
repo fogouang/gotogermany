@@ -495,7 +495,6 @@
       "word_bank": "Wortliste",
       "ads": "Anzeigen"
     },
-
     "player": {
       "intro_title": "Vor dem Start",
       "intro_modules": "Ablauf der Prüfung",
@@ -534,6 +533,28 @@
       "tab_left_title": "Sie haben die Prüfung verlassen",
       "tab_left_detail": "Verlassen Nr. {n}. In der echten Prüfung ist das Verlassen des Bildschirms nicht erlaubt.",
       "no_modules": "Dieses Thema enthält hier keinen Prüfungsteil."
+    },
+    "writing": {
+      "tab_task": "Aufgabe",
+      "tab_write": "Meine Antwort",
+      "choose_theme": "Wählen Sie eine Aufgabe",
+      "aufgabe": "Aufgabe {n}",
+      "change_theme": "Aufgabe wechseln",
+      "change_locked": "Löschen Sie Ihren Text, um die Aufgabe zu wechseln.",
+      "choose_first": "Wählen Sie zuerst eine Aufgabe, um zu schreiben.",
+      "leitpunkte": "Leitpunkte",
+      "telc_rule": "Behandeln Sie mindestens drei Punkte oder zwei Punkte und einen weiteren Aspekt Ihrer Wahl.",
+      "letter_form": "Vergessen Sie nicht Absender, Anschrift, Datum, Betreffzeile, Anrede und Schlussformel.",
+      "opinions": "Äußerungen",
+      "headlines": "Schlagzeilen",
+      "promised": "Versprochen",
+      "reality": "Tatsächlich",
+      "contact": "Kontakt",
+      "words": "{n} Wort | {n} Wörter",
+      "target": "Ziel: {n}",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert",
+      "no_spellcheck": "Die Rechtschreibprüfung ist deaktiviert, wie in der Prüfung."
     },
     "horen": {
       "homeoffice_question": "Findet diese Person Homeoffice positiv?",
@@ -604,27 +625,40 @@
   "result": {
     "not_found": "Ergebnis nicht gefunden",
     "back_to_exams": "Zurück zu den Prüfungen",
-    "subject": "Thema",
-    "passed": "Bestanden ✓",
+    "subject": "Modellsatz",
+    "passed": "Bestanden",
     "failed": "Nicht bestanden",
     "pending": "Ausstehend",
-    "min_score": "Min.",
-    "module_result": "Modulergebnis",
-    "modules_result": "Ergebnisse nach Modul",
-    "waiting_correction": "Wartet auf manuelle Korrektur",
+    "min_score": "min.",
+    "module_result": "Ergebnis des Moduls",
+    "modules_result": "Ergebnisse pro Modul",
+    "waiting_correction": "Manuelle Korrektur ausstehend",
     "see_correction": "Korrektur ansehen",
     "detail_title": "Korrektur ansehen",
-    "your_answer": "Deine Antwort",
+    "your_answer": "Ihre Antwort",
     "correct_answer": "Richtige Antwort",
-    "another_module": "Anderes Modul versuchen",
+    "another_module": "Anderes Modul machen",
     "my_results": "Meine Ergebnisse",
     "module": "Modul",
     "modules": "Module",
     "module_passed": "Bestanden",
     "module_failed": "Nicht bestanden",
-    "why_failed": "Warum haben Sie nicht bestanden?",
-    "global_score_insufficient": "Gesamtpunktzahl unzureichend: {score}/100 (Schwelle: {threshold})",
-    "module_score_insufficient": "{module}: {score}/100 (Modulschwelle: 60)"
+    "why_failed": "Warum hat es nicht gereicht?",
+    "global_score_insufficient": "Ergebnis schriftlich: {score} %, die Bestehensgrenze liegt bei {threshold} %.",
+    "module_score_insufficient": "{module}: {score}/100 (Grenze pro Modul: 60)",
+    "official": {
+      "points": "{got} / {max} Pkt.",
+      "threshold": "Bestehensgrenze: {points} Pkt. ({pct} %)",
+      "written_part": "Schriftliche Prüfung",
+      "oral_title": "Mündliche Prüfung",
+      "oral_text": "Wird separat mit einer Prüferin oder einem Prüfer bewertet.",
+      "oral_link": "Mündliche Aufgabe ansehen",
+      "correction_pending": "Wird korrigiert",
+      "weak_modules": "Zu verbessern: {list}",
+      "block_detail": "Antworten im Detail",
+      "teil": "Teil {n}",
+      "no_answer": "In diesem Teil wurde keine Antwort gegeben."
+    }
   },
   "exam_detail": {
     "not_found": "Prüfung nicht gefunden",
@@ -697,7 +731,10 @@
     "tips": "Verbesserungstipps",
     "back_to_exam": "Zurück zur Prüfung",
     "my_results": "Meine Ergebnisse ansehen",
-    "page_title": "Schreiben-Korrektur - DeutschTest"
+    "page_title": "Schreiben-Korrektur - DeutschTest",
+    "back_to_result": "Zurück zum Ergebnis",
+    "teil": "Teil {n}",
+    "malus": "Abzug: -{n}"
   },
   "invoices": {
     "title": "Meine Zahlungen",
