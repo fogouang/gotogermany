@@ -20,6 +20,12 @@ export interface NavItem {
   icon: string;
   /** Actif seulement si le chemin correspond exactement (ex. "/admin") */
   exact?: boolean;
+  /**
+   * Visibilité dans l'espace étudiant :
+   * "center" = élève de centre uniquement, "independent" = étudiant individuel uniquement.
+   * Absent = visible par tous.
+   */
+  audience?: "center" | "independent";
 }
 
 export interface NavSection {

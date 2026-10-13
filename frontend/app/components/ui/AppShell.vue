@@ -11,9 +11,8 @@ const { t } = useI18n();
 const route = useRoute();
 const authStore = useAuthStore();
 const { openMobile } = useSidebar();
-const { espace, sections, pageMeta, initiale, seDeconnecter } = useNavigation(
-  props.role,
-);
+const { role, espace, sections, pageMeta, initiale, seDeconnecter } =
+  useNavigation(props.role);
 
 // Seule la zone de contenu défile : on la remet en haut à chaque changement de page
 const zoneContenu = ref<HTMLElement | null>(null);
@@ -111,6 +110,7 @@ async function deconnecter() {
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
+          <LevelSwitcher v-if="role === 'etudiant'" />
           <slot name="header-actions" />
           <AppLangSwitcher />
           <ThemeToggle />

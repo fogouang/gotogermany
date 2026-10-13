@@ -5,11 +5,7 @@
 //   const nav = useNavigation();              // rôle déduit du store
 //   const nav = useNavigation("admin");       // rôle imposé par le layout
 //   const nav = useNavigation("ambassadeur"); // is_ambassador = drapeau, pas un rôle
-import {
-  ESPACES,
-  NAVIGATION,
-  getPageMeta,
-} from "~/config/navigation";
+import { ESPACES, NAVIGATION, getPageMeta } from "~/config/navigation";
 import type { NavItem, NavRole } from "~/types/navigation";
 
 export interface NavItemResolu {
@@ -60,17 +56,27 @@ export function useNavigation(roleImpose?: NavRole) {
   const libelle = (item: { label?: string; labelKey?: string }) =>
     item.labelKey ? t(item.labelKey) : (item.label ?? "");
 
+  // Élève de centre : même règle que useVisibleCatalog
+  const estEleveCentre = computed(() => !!authStore.branchId);
+
+  const visible = (item: NavItem) =>
+    !item.audience ||
+    item.audience === (estEleveCentre.value ? "center" : "independent");
+
   // Sections avec libellés traduits et liens localisés : le layout n'a plus qu'à afficher.
+  // Les entrées hors audience sont retirées, puis les sections vides.
   const sections = computed<NavSectionResolue[]>(() =>
-    NAVIGATION[role.value].map((section) => ({
-      title: section.titleKey ? t(section.titleKey) : section.title,
-      items: section.items.map((item: NavItem) => ({
-        label: libelle(item),
-        to: localePath(item.to),
-        icon: item.icon,
-        exact: !!item.exact,
-      })),
-    })),
+    NAVIGATION[role.value]
+      .map((section) => ({
+        title: section.titleKey ? t(section.titleKey) : section.title,
+        items: section.items.filter(visible).map((item: NavItem) => ({
+          label: libelle(item),
+          to: localePath(item.to),
+          icon: item.icon,
+          exact: !!item.exact,
+        })),
+      }))
+      .filter((section) => section.items.length > 0),
   );
 
   // Lien actif : les deux chemins sont localisés, la comparaison marche dans les 3 langues.
@@ -93,7 +99,9 @@ export function useNavigation(roleImpose?: NavRole) {
 
     const meta = getPageMeta(chemin, espace.value.label);
     return {
-      title: meta.titleKey ? t(meta.titleKey) : (meta.title ?? espace.value.label),
+      title: meta.titleKey
+        ? t(meta.titleKey)
+        : (meta.title ?? espace.value.label),
       subtitle: meta.subtitleKey ? t(meta.subtitleKey) : meta.subtitle,
     };
   });

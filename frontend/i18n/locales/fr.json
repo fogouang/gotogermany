@@ -23,7 +23,15 @@
     "have_account": "Déjà un compte ?",
     "login_link": "Se connecter",
     "login_error": "Erreur de connexion",
-    "signup_error": "Erreur lors de l'inscription"
+    "signup_error": "Erreur lors de l'inscription",
+    "phone_invalid": "Numéro incomplet : vérifiez-le ou laissez le champ vide.",
+    "password_digit": "Au moins un chiffre",
+    "password_upper": "Au moins une majuscule",
+    "country": "Pays",
+    "phone_placeholder": "Votre numéro",
+    "whatsapp_opt_in": "Rejoindre la communauté GoToGermany sur WhatsApp",
+    "whatsapp_opt_in_hint": "Conseils, nouveaux sujets et entraide entre candidats. Vous pouvez quitter à tout moment.",
+    "whatsapp_needs_phone": "Indiquez votre numéro WhatsApp pour rejoindre la communauté."
   },
   "seo": {
     "home": {
@@ -336,7 +344,10 @@
     "access_active": "Accès actif",
     "free": "Gratuit",
     "premium": "Premium",
-    "see_subjects": "Voir les sujets"
+    "see_subjects": "Voir les sujets",
+    "coming_soon": "Bientôt disponible",
+    "coming_soon_text": "Les sujets de cet examen arrivent bientôt.",
+    "unlock_price": "Débloquer · {price}"
   },
   "dashboard": {
     "greeting": "Bonjour",
@@ -349,7 +360,8 @@
       "results": "Mes résultats",
       "results_sub": "Suivi de progression",
       "start_deutsch": "Start Deutsch A1/A2",
-      "start_deutsch_sub": "Entraîne-toi en attendant ton vrai test"
+      "start_deutsch_sub": "Entraîne-toi en attendant ton vrai test",
+      "sprechen_sub": "Entraînement oral avec un examinateur IA"
     },
     "choose_exam": "Choisir un examen",
     "see_all": "Voir tout →",
@@ -370,7 +382,37 @@
       "factures": "Factures",
       "credits": "Crédits",
       "start_deutsch": "Start Deutsch A1/A2",
-      "sessions-live": "Session Sprechen en direct"
+      "sessions-live": "Session Sprechen en direct",
+      "devoirs": "Devoirs"
+    },
+    "resume_title": "Reprendre où vous en étiez",
+    "resume_btn": "Reprendre",
+    "my_levels": "Mes niveaux",
+    "level_active": "Accès actif",
+    "level_free": "Gratuit",
+    "level_preview": "Sujets d'essai",
+    "unlock": "Débloquer",
+    "in_progress": "En cours",
+    "passed": "Réussi",
+    "failed": "Échoué",
+    "progress_title": "Ma progression",
+    "no_progress": "Terminez un sujet pour voir votre progression ici.",
+    "sessions_done": "Sujets terminés",
+    "passed_count": "Réussis",
+    "avg_score": "Score moyen",
+    "assignments_title": "Devoirs",
+    "assignments_todo": "Aucun devoir à rendre | 1 devoir à rendre | {n} devoirs à rendre",
+    "assignments_late": "Aucun en retard | 1 devoir en retard | {n} devoirs en retard",
+    "next_due": "Prochaine échéance : {date}",
+    "see_assignments": "Voir mes devoirs",
+    "status": {
+      "no_level_title": "Votre centre n'a pas encore choisi votre examen",
+      "no_level_text": "Contactez votre centre pour qu'il vous attribue un niveau. Vos sujets apparaîtront ici ensuite.",
+      "not_activated_title": "Votre compte n'est pas encore activé",
+      "not_activated_text": "Vous pouvez essayer les sujets gratuits. Votre centre activera l'accès complet après votre inscription.",
+      "expiring_title": "Votre accès expire bientôt",
+      "expiring_text": "Il prend fin le {date}.",
+      "renew": "Renouveler"
     },
     "space": "Espace Étudiant",
     "role": "Étudiant"
@@ -379,7 +421,10 @@
     "main": "Principal",
     "account": "Compte",
     "logout": "Déconnexion",
-    "collapse": "Réduire"
+    "collapse": "Réduire",
+    "my_class": "Ma classe",
+    "practice": "S'entraîner",
+    "follow_up": "Mon suivi"
   },
   "session": {
     "loading": "Chargement de la session...",
@@ -502,6 +547,12 @@
     "subscribe": "Payer",
     "free_per_level": "Sujets gratuits",
     "modules": "modules",
+    "subject_meta": "{modules} modules · {minutes} min",
+    "more_subjects": "Aucun sujet supplémentaire | 1 sujet de plus avec l'accès complet | {n} sujets de plus avec l'accès complet",
+    "more_subjects_text": "Débloquez le niveau {level} pour accéder à tous les sujets.",
+    "done_count": "{done} / {total} sujets déjà passés",
+    "active_level": "Niveau actif",
+    "set_active": "Choisir comme niveau actif",
     "level_names": {
       "A1": "Débutant",
       "A2": "Élémentaire",
@@ -547,6 +598,8 @@
   },
   "invoices": {
     "title": "Mes paiements",
+    "all": "Tous",
+    "count": "Aucun paiement | {n} paiement | {n} paiements",
     "subtitle": "Historique de vos achats et factures",
     "empty_title": "Aucun paiement",
     "empty_subtitle": "Vous n'avez pas encore effectué d'achat",
@@ -1564,5 +1617,115 @@
       "correct_count": "{correct}/{total} correctes",
       "question": "Q{n}"
     }
+  },
+  "ai_credits": {
+    "subtitle": "Gérez vos crédits de correction IA.",
+    "available": "aucun crédit disponible | crédit disponible | crédits disponibles",
+    "total_purchased": "Crédits achetés",
+    "total_spent": "Total dépensé",
+    "buy_title": "Acheter des crédits",
+    "per_credit": "{price} par crédit. 1 crédit = 1 correction complète.",
+    "quantity": "Nombre de crédits",
+    "range": "Entre {min} et {max} crédits",
+    "preset": "{n} crédits",
+    "phone_invalid": "Numéro invalide : 9 chiffres commençant par 6 ou 9.",
+    "pay": "Payer {amount}",
+    "error": "Erreur lors de l'achat.",
+    "success_title": "Crédits ajoutés !",
+    "success_text": "Aucun crédit ajouté. | {n} crédit a été ajouté à votre compte. | {n} crédits ont été ajoutés à votre compte.",
+    "buy_more": "Acheter d'autres crédits",
+    "failed_title": "Paiement non abouti",
+    "failed_text": "Le paiement a été refusé ou annulé. Vous pouvez réessayer.",
+    "timeout_title": "Confirmation en attente",
+    "timeout_text": "Nous n'avons pas encore reçu la confirmation. Si vous avez validé sur votre téléphone, l'achat apparaîtra dans l'historique dans quelques minutes.",
+    "retry": "Réessayer",
+    "history_title": "Historique des achats",
+    "history_empty": "Aucun achat pour l'instant.",
+    "help_title": "Un problème avec le paiement Mobile Money ?",
+    "help_whatsapp": "Nous écrire sur WhatsApp",
+    "whatsapp_message": "Bonjour, je souhaite acheter des crédits IA sur GoToGermany."
+  },
+  "student_assignments": {
+    "subtitle": "Les devoirs donnés par vos enseignants.",
+    "tabs": { "todo": "À faire", "submitted": "Rendus", "graded": "Corrigés" },
+    "status": {
+      "pending": "À commencer",
+      "in_progress": "En cours",
+      "submitted": "En correction",
+      "graded": "Corrigé"
+    },
+    "by": "par {name}",
+    "due": "à rendre le {date}",
+    "no_due": "Sans échéance",
+    "late": "En retard",
+    "start": "Commencer",
+    "continue": "Continuer",
+    "waiting": "Votre enseignant corrige votre copie.",
+    "score": "Note",
+    "empty_todo": "Aucun devoir à faire pour le moment.",
+    "empty_submitted": "Aucun devoir en attente de correction.",
+    "empty_graded": "Aucun devoir corrigé pour l'instant.",
+    "error": "Impossible de charger vos devoirs.",
+    "retry": "Réessayer",
+    "exit_warning": "Vos réponses sont enregistrées. Vous pourrez reprendre ce devoir plus tard.",
+    "submitted_title": "Devoir rendu !",
+    "submitted_auto": "Il a été corrigé automatiquement. Votre note est visible dans vos devoirs.",
+    "submitted_teacher": "Votre enseignant va corriger votre copie. Votre note apparaîtra dans vos devoirs.",
+    "back": "Retour à mes devoirs"
+  },
+  "onboarding": {
+    "title": "Quel examen préparez-vous ?",
+    "subtitle": "Votre espace s'adapte à ce choix. Vous pourrez changer de niveau à tout moment.",
+    "skip": "Passer",
+    "continue": "Continuer",
+    "empty": "Aucun examen n'est disponible pour le moment.",
+    "error": "Impossible d'enregistrer votre choix. Réessayez."
+  },
+  "level_switch": {
+    "title": "Changer de niveau",
+    "note": "Votre progression est conservée séparément pour chaque niveau.",
+    "all_exams": "Voir tous les examens",
+    "locked": "Niveau défini par votre centre"
+  },
+  "api_errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "register": "L'inscription n'a pas pu aboutir. Vérifiez vos informations.",
+    "network": "Impossible de joindre le serveur. Vérifiez votre connexion internet.",
+    "server": "Le serveur rencontre un problème. Réessayez dans quelques instants.",
+    "fields": {
+      "password": "Le mot de passe",
+      "email": "L'adresse e-mail",
+      "full_name": "Le nom complet",
+      "phone": "Le numéro de téléphone"
+    },
+    "rules": {
+      "min_length": "{field} doit contenir au moins {n} caractères.",
+      "max_length": "{field} ne doit pas dépasser {n} caractères.",
+      "email": "Adresse e-mail invalide.",
+      "required": "{field} est obligatoire."
+    }
+  },
+  "toast": {
+    "close": "Fermer",
+    "error_title": "Oups, ça n'a pas marché",
+    "welcome": "Bienvenue, {name} !",
+    "welcome_detail": "Votre compte est créé. Choisissez votre examen pour commencer.",
+    "welcome_back": "Content de vous revoir, {name} !",
+    "session_started": "Sujet {n} commencé",
+    "session_started_detail": "Le chronomètre est lancé. Bonne chance !",
+    "session_resumed": "Reprise du sujet {n}",
+    "session_resumed_detail": "Aucune réponse restaurée. | 1 réponse restaurée. | {n} réponses restaurées.",
+    "time_left": "Plus que quelques secondes | Plus qu'une minute | Plus que {n} minutes",
+    "time_left_detail": "Pensez à vérifier vos réponses avant la fin du temps.",
+    "time_up": "Temps écoulé",
+    "time_up_detail": "Votre copie a été remise automatiquement.",
+    "submitted": "Sujet terminé !",
+    "submitted_detail": "Vos réponses sont enregistrées. Voici vos résultats.",
+    "save_failed": "Réponse non synchronisée",
+    "save_failed_detail": "Elle est gardée sur cet appareil et sera envoyée à la remise.",
+    "offline": "Vous êtes hors ligne",
+    "offline_detail": "Vos réponses restent sur cet appareil en attendant le retour de la connexion.",
+    "online": "Connexion rétablie",
+    "level_changed": "Niveau actif : {level}"
   }
 }

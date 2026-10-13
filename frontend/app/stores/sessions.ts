@@ -1,6 +1,10 @@
 import { defineStore } from "pinia";
-import { SessionsService, OpenAPI } from "#shared/api";
-import type { AnswerSubmitRequest, SessionResultResponse } from "#shared/api";
+import { SessionsService, AssignmentsService, OpenAPI } from "#shared/api";
+import type {
+  AnswerSubmitRequest,
+  SessionResultResponse,
+  SessionStartResponse,
+} from "#shared/api";
 
 interface Question {
   id: string;
@@ -150,18 +154,31 @@ export const useSessionStore = defineStore("session", {
     },
 
     async startSession(examId: string, subjectId?: string) {
+      return this._start(() =>
+        SessionsService.startSessionApiV1SessionsPost({
+          exam_id: examId,
+          subject_id: subjectId ?? null,
+        }),
+      );
+    },
+
+    // Devoir : même lecteur, la session est créée (ou reprise) par le module assignments
+    async startAssignment(assignmentId: string) {
+      return this._start(() =>
+        AssignmentsService.startAssignmentApiV1AssignmentsAssignmentIdStartPost(
+          assignmentId,
+        ),
+      );
+    },
+
+    async _start(request: () => Promise<SessionStartResponse>) {
       this._ensureApiConfig();
-      this.loading = true;
-      this.error = null;
       this.$reset();
       this.loading = true;
       this.error = null;
 
       try {
-        const response = await SessionsService.startSessionApiV1SessionsPost({
-          exam_id: examId,
-          subject_id: subjectId ?? null,
-        });
+        const response = await request();
 
         this.sessionId = response.session_id;
         this.examId = response.exam_id;
@@ -188,7 +205,7 @@ export const useSessionStore = defineStore("session", {
           : 30 * 60;
 
         this.deadline = Date.now() + this.timeRemaining * 1000;
-        
+
         // Recharger les réponses existantes si reprise
         if (response.existing_answers) {
           Object.entries(response.existing_answers).forEach(([qId, ans]) => {

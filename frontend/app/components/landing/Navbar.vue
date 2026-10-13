@@ -327,9 +327,7 @@ const { cheminApresConnexion } = useChoixExamen();
 
 const mobileMenuOpen = ref(false);
 const loginError = ref("");
-const signupError = ref("");
 const loginForm = ref({ email: "", password: "" });
-const signupForm = ref({ email: "", password: "", fullName: "", phone: "" });
 
 const mainItems = computed(() => [
   { key: "home", label: t("nav.home"), icon: "pi pi-home", to: "/" },
@@ -430,25 +428,6 @@ const handleLogin = async () => {
     }
   } else {
     loginError.value = result.error || t("auth.login_error");
-  }
-};
-
-const handleSignup = async () => {
-  signupError.value = "";
-  const savedLocale = locale.value; // ← sauvegarder avant navigation
-  const result = await authStore.register(
-    signupForm.value.email,
-    signupForm.value.password,
-    signupForm.value.fullName,
-    signupForm.value.phone,
-  );
-  if (result.success) {
-    signupVisible.value = false;
-    signupForm.value = { email: "", password: "", fullName: "", phone: "" };
-    await setLocale(savedLocale); // ← restaurer après signup
-    navigateTo("/dashboard");
-  } else {
-    signupError.value = result.error || t("auth.signup_error");
   }
 };
 

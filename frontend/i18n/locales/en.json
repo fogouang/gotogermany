@@ -23,7 +23,15 @@
     "have_account": "Already have an account?",
     "login_link": "Log in",
     "login_error": "Login error",
-    "signup_error": "Registration error"
+    "signup_error": "Registration error",
+    "phone_invalid": "Incomplete number: check it or leave the field empty.",
+    "password_digit": "At least one number",
+    "password_upper": "At least one uppercase letter",
+    "country": "Country",
+    "phone_placeholder": "Your number",
+    "whatsapp_opt_in": "Join the GoToGermany community on WhatsApp",
+"whatsapp_opt_in_hint": "Tips, new subjects and support between candidates. You can leave at any time.",
+"whatsapp_needs_phone": "Enter your WhatsApp number to join the community."
   },
   "exam": {
     "start": "Start",
@@ -346,7 +354,10 @@
     "access_active": "Active access",
     "free": "Free",
     "premium": "Premium",
-    "see_subjects": "See subjects"
+    "see_subjects": "See subjects",
+    "coming_soon": "Coming soon",
+    "coming_soon_text": "Subjects for this exam are on their way.",
+    "unlock_price": "Unlock · {price}"
   },
   "dashboard": {
     "greeting": "Hello",
@@ -359,7 +370,8 @@
       "results": "My results",
       "results_sub": "Progress tracking",
       "start_deutsch": "Start Deutsch A1/A2",
-      "start_deutsch_sub": "Practice while you wait for your real test"
+      "start_deutsch_sub": "Practice while you wait for your real test",
+      "sprechen_sub": "Speaking practice with an AI examiner"
     },
     "choose_exam": "Choose an exam",
     "see_all": "See all →",
@@ -380,7 +392,37 @@
       "factures": "Invoices",
       "credits": "Credits",
       "start_deutsch": "Start Deutsch A1/A2",
-      "sessions-live": "Live Sprechen session"
+      "sessions-live": "Live Sprechen session",
+      "devoirs": "Assignments"
+    },
+    "resume_title": "Pick up where you left off",
+    "resume_btn": "Resume",
+    "my_levels": "My levels",
+    "level_active": "Active access",
+    "level_free": "Free",
+    "level_preview": "Free trial subjects",
+    "unlock": "Unlock",
+    "in_progress": "In progress",
+    "passed": "Passed",
+    "failed": "Failed",
+    "progress_title": "My progress",
+    "no_progress": "Finish a subject to see your progress here.",
+    "sessions_done": "Subjects completed",
+    "passed_count": "Passed",
+    "avg_score": "Average score",
+    "assignments_title": "Assignments",
+    "assignments_todo": "No assignments due | 1 assignment due | {n} assignments due",
+    "assignments_late": "None overdue | 1 assignment overdue | {n} assignments overdue",
+    "next_due": "Next deadline: {date}",
+    "see_assignments": "See my assignments",
+    "status": {
+      "no_level_title": "Your centre hasn't chosen your exam yet",
+      "no_level_text": "Ask your centre to assign you a level. Your subjects will then appear here.",
+      "not_activated_title": "Your account isn't activated yet",
+      "not_activated_text": "You can try the free subjects. Your centre will unlock full access once you're enrolled.",
+      "expiring_title": "Your access expires soon",
+      "expiring_text": "It ends on {date}.",
+      "renew": "Renew"
     },
     "space": "Student area",
     "role": "Student"
@@ -389,7 +431,10 @@
     "main": "Main",
     "account": "Account",
     "logout": "Log out",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "my_class": "My class",
+    "practice": "Practice",
+    "follow_up": "My progress"
   },
   "session": {
     "loading": "Loading session...",
@@ -512,6 +557,12 @@
     "free_per_level": "Free subjects",
     "subject_default": "Subject",
     "modules": "modules",
+    "subject_meta": "{modules} modules · {minutes} min",
+    "more_subjects": "No extra subjects | 1 more subject with full access | {n} more subjects with full access",
+    "more_subjects_text": "Unlock level {level} to access every subject.",
+    "done_count": "{done} / {total} subjects completed",
+    "active_level": "Active level",
+    "set_active": "Set as active level",
     "level_names": {
       "A1": "Beginner",
       "A2": "Elementary",
@@ -558,6 +609,8 @@
   "invoices": {
     "title": "My payments",
     "subtitle": "History of your purchases and invoices",
+    "all": "All",
+    "count": "No payments | {n} payment | {n} payments",
     "empty_title": "No payments",
     "empty_subtitle": "You haven't made any purchases yet",
     "see_pricing": "View pricing",
@@ -1563,5 +1616,115 @@
       "correct_count": "{correct}/{total} correct",
       "question": "Q{n}"
     }
+  },
+  "ai_credits": {
+    "subtitle": "Manage your AI correction credits.",
+    "available": "no credits available | credit available | credits available",
+    "total_purchased": "Credits purchased",
+    "total_spent": "Total spent",
+    "buy_title": "Buy credits",
+    "per_credit": "{price} per credit. 1 credit = 1 full correction.",
+    "quantity": "Number of credits",
+    "range": "Between {min} and {max} credits",
+    "preset": "{n} credits",
+    "phone_invalid": "Invalid number: 9 digits starting with 6 or 9.",
+    "pay": "Pay {amount}",
+    "error": "Purchase failed.",
+    "success_title": "Credits added!",
+    "success_text": "No credits added. | {n} credit has been added to your account. | {n} credits have been added to your account.",
+    "buy_more": "Buy more credits",
+    "failed_title": "Payment not completed",
+    "failed_text": "The payment was declined or cancelled. You can try again.",
+    "timeout_title": "Awaiting confirmation",
+    "timeout_text": "We haven't received the confirmation yet. If you approved it on your phone, the purchase will appear in your history within a few minutes.",
+    "retry": "Try again",
+    "history_title": "Purchase history",
+    "history_empty": "No purchases yet.",
+    "help_title": "Having trouble with Mobile Money?",
+    "help_whatsapp": "Message us on WhatsApp",
+    "whatsapp_message": "Hello, I would like to buy AI credits on GoToGermany."
+  },
+  "student_assignments": {
+    "subtitle": "Assignments given by your teachers.",
+    "tabs": { "todo": "To do", "submitted": "Submitted", "graded": "Graded" },
+    "status": {
+      "pending": "Not started",
+      "in_progress": "In progress",
+      "submitted": "Being graded",
+      "graded": "Graded"
+    },
+    "by": "by {name}",
+    "due": "due {date}",
+    "no_due": "No deadline",
+    "late": "Overdue",
+    "start": "Start",
+    "continue": "Continue",
+    "waiting": "Your teacher is grading your work.",
+    "score": "Score",
+    "empty_todo": "No assignments to do right now.",
+    "empty_submitted": "No assignments waiting to be graded.",
+    "empty_graded": "No graded assignments yet.",
+    "error": "Couldn't load your assignments.",
+    "retry": "Try again",
+    "exit_warning": "Your answers are saved. You can resume this assignment later.",
+    "submitted_title": "Assignment submitted!",
+    "submitted_auto": "It was graded automatically. Your score is shown in your assignments.",
+    "submitted_teacher": "Your teacher will grade your work. Your score will appear in your assignments.",
+    "back": "Back to my assignments"
+  },
+  "onboarding": {
+    "title": "Which exam are you preparing for?",
+    "subtitle": "Your space adapts to this choice. You can switch levels at any time.",
+    "skip": "Skip",
+    "continue": "Continue",
+    "empty": "No exams are available yet.",
+    "error": "We couldn't save your choice. Please try again."
+  },
+  "level_switch": {
+    "title": "Switch level",
+    "note": "Your progress is saved separately for each level.",
+    "all_exams": "See all exams",
+    "locked": "Level set by your centre"
+  },
+  "api_errors": {
+    "generic": "Something went wrong. Please try again.",
+    "register": "Sign-up failed. Please check your details.",
+    "network": "Can't reach the server. Check your internet connection.",
+    "server": "The server is having trouble. Please try again shortly.",
+    "fields": {
+      "password": "Password",
+      "email": "Email address",
+      "full_name": "Full name",
+      "phone": "Phone number"
+    },
+    "rules": {
+      "min_length": "{field} must be at least {n} characters.",
+      "max_length": "{field} must be at most {n} characters.",
+      "email": "Invalid email address.",
+      "required": "{field} is required."
+    }
+  },
+  "toast": {
+    "close": "Close",
+    "error_title": "Oops, that didn't work",
+    "welcome": "Welcome, {name}!",
+    "welcome_detail": "Your account is ready. Pick your exam to get started.",
+    "welcome_back": "Good to see you again, {name}!",
+    "session_started": "Subject {n} started",
+    "session_started_detail": "The timer is running. Good luck!",
+    "session_resumed": "Resuming subject {n}",
+    "session_resumed_detail": "No answers restored. | 1 answer restored. | {n} answers restored.",
+    "time_left": "Only a few seconds left | Only one minute left | Only {n} minutes left",
+    "time_left_detail": "Remember to check your answers before time runs out.",
+    "time_up": "Time's up",
+    "time_up_detail": "Your paper was submitted automatically.",
+    "submitted": "Subject completed!",
+    "submitted_detail": "Your answers are saved. Here are your results.",
+    "save_failed": "Answer not synced",
+    "save_failed_detail": "It's kept on this device and will be sent when you submit.",
+    "offline": "You're offline",
+    "offline_detail": "Your answers stay on this device until the connection comes back.",
+    "online": "Back online",
+    "level_changed": "Active level: {level}"
   }
 }

@@ -1,190 +1,222 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">
-        {{ t("invoices.title") }}
-      </h1>
-      <p class="text-sm text-gray-500">{{ t("invoices.subtitle") }}</p>
-    </div>
+  <div class="space-y-5 pb-10">
+    <p class="text-sm text-muted">{{ t("invoices.subtitle") }}</p>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <ProgressSpinner style="width: 50px; height: 50px" />
-    </div>
-
-    <!-- Vide -->
-    <div
-      v-else-if="myPayments.length === 0"
-      class="text-center py-16 bg-white rounded-xl border border-gray-100"
-    >
-      <i class="pi pi-receipt text-4xl text-gray-300 mb-3 block"></i>
-      <p class="font-medium text-gray-600">{{ t("invoices.empty_title") }}</p>
-      <p class="text-sm text-gray-400 mb-4">
-        {{ t("invoices.empty_subtitle") }}
-      </p>
-      <Button
-        :label="t('invoices.see_pricing')"
-        icon="pi pi-tag"
-        @click="navigateTo('/tarifs')"
+    <!-- ── Chargement ── -->
+    <div v-if="loading" class="space-y-3">
+      <div class="h-24 animate-pulse rounded-card bg-card-2" />
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="h-20 animate-pulse rounded-card bg-card-2"
       />
     </div>
 
-    <!-- Liste paiements -->
-    <div v-else class="space-y-3">
-      <div
-        v-for="payment in myPayments"
-        :key="payment.id"
-        class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow"
+    <!-- ── Vide ── -->
+    <div
+      v-else-if="myPayments.length === 0"
+      class="flex flex-col items-center gap-3 rounded-card border border-dashed border-line bg-card px-6 py-14 text-center"
+    >
+      <span
+        class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex items-start gap-4">
-            <!-- Icône statut -->
-            <div
-              :class="[
-                'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
-                payment.payment_status === 'COMPLETED'
-                  ? 'bg-green-100'
-                  : payment.payment_status === 'FAILED'
-                    ? 'bg-red-100'
-                    : 'bg-amber-100',
-              ]"
-            >
-              <i
-                :class="[
-                  'pi text-sm',
-                  payment.payment_status === 'COMPLETED'
-                    ? 'pi-check text-green-600'
-                    : payment.payment_status === 'FAILED'
-                      ? 'pi-times text-red-600'
-                      : 'pi-clock text-amber-600',
-                ]"
-              ></i>
-            </div>
+        <i class="pi pi-receipt text-xl" />
+      </span>
+      <div>
+        <p class="font-medium text-ink">{{ t("invoices.empty_title") }}</p>
+        <p class="mt-1 text-sm text-muted">
+          {{ t("invoices.empty_subtitle") }}
+        </p>
+      </div>
+      <Button
+        :label="t('invoices.see_pricing')"
+        icon="pi pi-tag"
+        @click="navigateTo(localePath('/tarifs'))"
+      />
+    </div>
 
-            <div>
-              <p class="font-semibold text-gray-900">
-                {{ payment.amount_paid.toLocaleString("fr-FR") }} FCFA
+    <template v-else>
+      <!-- ── Résumé ── -->
+      <div
+        class="flex flex-wrap items-center justify-between gap-4 rounded-card border border-line bg-card p-5 shadow-soft"
+      >
+        <div class="flex items-center gap-4">
+          <span
+            class="flex size-12 shrink-0 items-center justify-center rounded-leaf bg-primary/10 text-primary"
+          >
+            <i class="pi pi-wallet" />
+          </span>
+          <div>
+            <p class="text-xs text-muted">{{ t("invoices.total") }}</p>
+            <p class="text-2xl font-bold leading-tight text-ink">
+              {{ fcfa(totalPaid) }}
+            </p>
+          </div>
+        </div>
+        <p class="text-sm text-muted">
+          {{ t("invoices.count", { n: myPayments.length }, myPayments.length) }}
+        </p>
+      </div>
+
+      <!-- ── Filtres ── -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="f in filters"
+          :key="f.key"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="
+            statusFilter === f.key
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-line bg-card text-muted hover:border-primary/30'
+          "
+          @click="statusFilter = f.key"
+        >
+          {{ f.label }} · {{ f.count }}
+        </button>
+      </div>
+
+      <!-- ── Liste ── -->
+      <ul
+        class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft"
+      >
+        <li
+          v-for="payment in pagedPayments"
+          :key="payment.id"
+          class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-5"
+        >
+          <span
+            class="flex size-10 shrink-0 items-center justify-center rounded-full"
+            :class="statusStyle(payment.payment_status).bubble"
+          >
+            <i
+              class="pi text-sm"
+              :class="statusStyle(payment.payment_status).icon"
+            />
+          </span>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="font-semibold text-ink">
+                {{ fcfa(payment.amount_paid) }}
               </p>
-              <p class="text-xs text-gray-400 mt-0.5">
-                {{ t("invoices.ref") }} {{ payment.transaction_reference }}
-              </p>
-              <p class="text-xs text-gray-400">
-                {{ formatDate(payment.created_at) }}
-              </p>
-              <div class="flex items-center gap-2 mt-2">
-                <Tag
-                  :value="formatStatus(payment.payment_status)"
-                  :severity="
-                    payment.payment_status === 'COMPLETED'
-                      ? 'success'
-                      : payment.payment_status === 'FAILED'
-                        ? 'danger'
-                        : 'warn'
-                  "
-                />
-                <span v-if="payment.operator" class="text-xs text-gray-400">{{
-                  payment.operator
-                }}</span>
-              </div>
+              <span
+                class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                :class="statusStyle(payment.payment_status).badge"
+              >
+                {{ formatStatus(payment.payment_status) }}
+              </span>
             </div>
+            <p class="mt-0.5 truncate text-xs text-muted">
+              {{ formatDate(payment.created_at) }}
+              <span v-if="payment.operator"> · {{ payment.operator }}</span>
+            </p>
+            <p class="truncate text-xs text-faint">
+              {{ t("invoices.ref") }} {{ payment.transaction_reference }}
+            </p>
           </div>
 
-          <!-- Actions -->
-          <div class="flex items-center gap-2 shrink-0">
+          <template v-if="payment.payment_status === 'COMPLETED'">
             <Button
-              v-if="payment.payment_status === 'COMPLETED'"
               icon="pi pi-file-pdf"
               :label="t('invoices.invoice_btn')"
               size="small"
               outlined
               severity="secondary"
+              class="hidden! sm:inline-flex!"
               :loading="loadingInvoice === payment.id"
               @click="openInvoice(payment.id)"
             />
-          </div>
-        </div>
-      </div>
-    </div>
+            <Button
+              icon="pi pi-file-pdf"
+              size="small"
+              text
+              rounded
+              severity="secondary"
+              class="sm:hidden!"
+              :aria-label="t('invoices.invoice_btn')"
+              :loading="loadingInvoice === payment.id"
+              @click="openInvoice(payment.id)"
+            />
+          </template>
+        </li>
+      </ul>
 
-    <!-- Dialog Facture -->
+      <Paginator
+        v-if="filteredPayments.length > rowsPerPage"
+        v-model:first="first"
+        :rows="rowsPerPage"
+        :totalRecords="filteredPayments.length"
+        class="rounded-card border border-line bg-card"
+      />
+    </template>
+
+    <!-- ══════════ Dialogue facture ══════════ -->
     <Dialog
       v-model:visible="invoiceDialog"
       :header="t('invoices.dialog_title')"
-      :modal="true"
-      :style="{ width: '90vw', maxWidth: '520px' }"
+      modal
+      :style="{ width: '32rem', maxWidth: '95vw' }"
     >
-      <div v-if="invoiceLoading" class="flex justify-center py-8">
-        <ProgressSpinner style="width: 40px; height: 40px" />
+      <div v-if="invoiceLoading" class="space-y-3">
+        <div class="h-24 animate-pulse rounded-leaf bg-card-2" />
+        <div class="h-40 animate-pulse rounded-leaf bg-card-2" />
       </div>
 
-      <div v-else-if="currentInvoice" class="space-y-4 mt-2">
-        <!-- Header facture -->
-        <div class="bg-gradient-primary text-white rounded-xl p-4 text-center">
-          <i class="pi pi-check-circle text-3xl mb-2 block"></i>
-          <p class="font-bold text-lg">{{ t("invoices.payment_confirmed") }}</p>
-          <p class="text-white/80 text-sm">
+      <div v-else-if="currentInvoice" class="space-y-4">
+        <div
+          class="flex flex-col items-center gap-1 rounded-leaf bg-primary/10 px-4 py-5 text-center"
+        >
+          <i class="pi pi-check-circle text-2xl text-primary" />
+          <p class="font-semibold text-ink">
+            {{ t("invoices.payment_confirmed") }}
+          </p>
+          <p class="break-all text-xs text-muted">
             {{ currentInvoice.transaction_reference }}
           </p>
         </div>
 
-        <!-- Détails -->
-        <div class="space-y-3 text-sm">
-          <div class="flex justify-between">
-            <span class="text-gray-500">{{ t("invoices.client") }}</span>
-            <span class="font-medium text-gray-900">{{
-              currentInvoice.customer_name
-            }}</span>
+        <dl class="space-y-2.5 text-sm">
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted">{{ t("invoices.client") }}</dt>
+            <dd class="text-right font-medium text-ink">
+              {{ currentInvoice.customer_name }}
+            </dd>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">{{ t("invoices.product") }}</span>
-            <span class="font-medium text-gray-900 text-right max-w-48">{{
-              currentInvoice.product_description
-            }}</span>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted">{{ t("invoices.product") }}</dt>
+            <dd class="max-w-56 text-right font-medium text-ink">
+              {{ currentInvoice.product_description }}
+            </dd>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">{{ t("invoices.date") }}</span>
-            <span class="font-medium text-gray-900">{{
-              formatDate(currentInvoice.payment_date)
-            }}</span>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted">{{ t("invoices.date") }}</dt>
+            <dd class="text-right font-medium text-ink">
+              {{ formatDate(currentInvoice.payment_date) }}
+            </dd>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">{{ t("invoices.operator") }}</span>
-            <span class="font-medium text-gray-900">{{
-              currentInvoice.operator || "—"
-            }}</span>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted">{{ t("invoices.operator") }}</dt>
+            <dd class="text-right font-medium text-ink">
+              {{ currentInvoice.operator || "-" }}
+            </dd>
           </div>
-          <Divider />
+        </dl>
+
+        <div class="space-y-2 border-t border-line pt-3 text-sm">
           <div
             v-if="currentInvoice.discount_amount > 0"
-            class="flex justify-between text-green-600"
+            class="flex justify-between text-emerald-600"
           >
             <span>{{ t("invoices.discount") }}</span>
-            <span
-              >-
-              {{
-                currentInvoice.discount_amount.toLocaleString("fr-FR")
-              }}
-              FCFA</span
-            >
+            <span>- {{ fcfa(currentInvoice.discount_amount) }}</span>
           </div>
-          <div class="flex justify-between font-bold text-base">
-            <span class="text-gray-900">{{ t("invoices.total") }}</span>
-            <span class="text-green-700"
-              >{{
-                currentInvoice.amount_paid.toLocaleString("fr-FR")
-              }}
-              FCFA</span
-            >
+          <div class="flex justify-between text-base font-bold">
+            <span class="text-ink">{{ t("invoices.total") }}</span>
+            <span class="text-primary">{{
+              fcfa(currentInvoice.amount_paid)
+            }}</span>
           </div>
-        </div>
-
-        <!-- Partenaire -->
-        <div
-          v-if="currentInvoice.partner_info"
-          class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800"
-        >
-          {{ currentInvoice.partner_info.partner_name }}
         </div>
       </div>
 
@@ -192,6 +224,7 @@
         <Button
           :label="t('invoices.close')"
           text
+          severity="secondary"
           @click="invoiceDialog = false"
         />
         <Button
@@ -219,9 +252,10 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: "dashboard" });
+definePageMeta({ layout: "dashboard", watermark: "Rechnungen" });
 
-const { t } = useI18n();
+const { t, te, locale } = useI18n();
+const localePath = useLocalePath();
 const { myPayments, loading, fetchMyPayments } = usePayments();
 const {
   currentInvoice,
@@ -235,9 +269,94 @@ const invoiceDialog = ref(false);
 const invoiceLoading = ref(false);
 const loadingInvoice = ref<string | null>(null);
 
-const formatStatus = (status: string) =>
-  t(`invoices.status.${status}`) || status;
+// ── Format ──
+const numberLocale = computed(
+  () =>
+    (({ fr: "fr-FR", de: "de-DE" }) as Record<string, string>)[locale.value] ??
+    "en-GB",
+);
+const fcfa = (n: number) =>
+  `${Math.round(n).toLocaleString(numberLocale.value)} FCFA`;
 
+const formatStatus = (status: string) =>
+  te(`invoices.status.${status}`) ? t(`invoices.status.${status}`) : status;
+
+const statusStyle = (status: string) =>
+  status === "COMPLETED"
+    ? {
+        bubble: "bg-emerald-500/10",
+        icon: "pi-check text-emerald-600",
+        badge: "bg-emerald-500/10 text-emerald-600",
+      }
+    : status === "FAILED"
+      ? {
+          bubble: "bg-red-500/10",
+          icon: "pi-times text-red-600",
+          badge: "bg-red-500/10 text-red-600",
+        }
+      : {
+          bubble: "bg-amber-500/15",
+          icon: "pi-clock text-amber-600",
+          badge: "bg-amber-500/15 text-amber-600",
+        };
+
+// ── Résumé ──
+const totalPaid = computed(() =>
+  myPayments.value
+    .filter((p) => p.payment_status === "COMPLETED")
+    .reduce((s, p) => s + (p.amount_paid ?? 0), 0),
+);
+
+// ── Filtres ──
+type StatusFilter = "all" | "COMPLETED" | "PENDING" | "FAILED";
+const statusFilter = ref<StatusFilter>("all");
+
+const countStatus = (s: string) =>
+  myPayments.value.filter((p) => p.payment_status === s).length;
+
+const filters = computed(() =>
+  [
+    {
+      key: "all" as const,
+      label: t("invoices.all"),
+      count: myPayments.value.length,
+    },
+    {
+      key: "COMPLETED" as const,
+      label: formatStatus("COMPLETED"),
+      count: countStatus("COMPLETED"),
+    },
+    {
+      key: "PENDING" as const,
+      label: formatStatus("PENDING"),
+      count: countStatus("PENDING"),
+    },
+    {
+      key: "FAILED" as const,
+      label: formatStatus("FAILED"),
+      count: countStatus("FAILED"),
+    },
+  ].filter((f) => f.key === "all" || f.count > 0),
+);
+
+const filteredPayments = computed(() =>
+  [...myPayments.value]
+    .filter(
+      (p) =>
+        statusFilter.value === "all" || p.payment_status === statusFilter.value,
+    )
+    .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+);
+
+// ── Pagination ──
+const first = ref(0);
+const rowsPerPage = 10;
+const pagedPayments = computed(() =>
+  filteredPayments.value.slice(first.value, first.value + rowsPerPage),
+);
+watch(statusFilter, () => (first.value = 0));
+
+// ── Facture ──
 const openInvoice = async (paymentId: string) => {
   loadingInvoice.value = paymentId;
   invoiceDialog.value = true;

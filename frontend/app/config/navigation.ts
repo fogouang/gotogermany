@@ -227,10 +227,11 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
     },
   ],
 
-  // Repris de DashboardSidebar.vue (clés i18n conservées)
+  // Étudiant : regroupé par intention.
+  // audience "center" = élève de centre uniquement, "independent" = étudiant individuel uniquement.
+  // Les sections vides après filtrage sont retirées par useNavigation.
   etudiant: [
     {
-      titleKey: "sidebar.main",
       items: [
         {
           labelKey: "dashboard.pages.dashboard",
@@ -238,15 +239,33 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           icon: "pi pi-th-large",
           exact: true,
         },
+      ],
+    },
+    {
+      // Ce que l'enseignant du centre donne à l'élève
+      titleKey: "sidebar.my_class",
+      items: [
+        {
+          labelKey: "dashboard.pages.devoirs",
+          to: "/dashboard/devoirs",
+          icon: "pi pi-file-edit",
+          audience: "center",
+        },
+        {
+          labelKey: "live_session.nav_label",
+          to: "/dashboard/sessions-live",
+          icon: "pi pi-video",
+          audience: "center",
+        },
+      ],
+    },
+    {
+      titleKey: "sidebar.practice",
+      items: [
         {
           labelKey: "dashboard.pages.examens",
           to: "/dashboard/examens",
           icon: "pi pi-book",
-        },
-        {
-          labelKey: "dashboard.pages.simulateur",
-          to: "/dashboard/simulateur",
-          icon: "pi pi-pen-to-square",
         },
         {
           labelKey: "dashboard.pages.sprechen",
@@ -254,24 +273,30 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           icon: "pi pi-microphone",
         },
         {
-          labelKey: "live_session.nav_label",
-          to: "/dashboard/sessions-live",
-          icon: "pi pi-video",
+          labelKey: "dashboard.pages.simulateur",
+          to: "/dashboard/simulateur",
+          icon: "pi pi-pen-to-square",
         },
         {
           labelKey: "dashboard.pages.start_deutsch",
           to: "/dashboard/start-deutsch",
           icon: "pi pi-graduation-cap",
+          audience: "independent",
+        },
+      ],
+    },
+    {
+      titleKey: "sidebar.follow_up",
+      items: [
+        {
+          labelKey: "dashboard.quick_actions.results",
+          to: "/dashboard/resultats",
+          icon: "pi pi-chart-line",
         },
         {
           labelKey: "dashboard.pages.methodologie",
           to: "/dashboard/methodologie",
           icon: "pi pi-compass",
-        },
-        {
-          labelKey: "dashboard.quick_actions.results",
-          to: "/dashboard/resultats",
-          icon: "pi pi-chart-line",
         },
       ],
     },
@@ -284,14 +309,14 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           icon: "pi pi-user",
         },
         {
+          labelKey: "dashboard.pages.credits",
+          to: "/dashboard/credits",
+          icon: "pi pi-sparkles",
+        },
+        {
           labelKey: "dashboard.pages.factures",
           to: "/dashboard/factures",
           icon: "pi pi-receipt",
-        },
-        {
-          labelKey: "dashboard.pages.credits",
-          to: "/dashboard/credits",
-          icon: "pi pi-credit-card",
         },
       ],
     },

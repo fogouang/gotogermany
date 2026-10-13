@@ -93,7 +93,11 @@ export const useAuthStore = defineStore("auth", {
       } catch (error: any) {
         return {
           success: false,
-          error: error.body?.detail || "Email ou mot de passe incorrect",
+          error:
+            typeof error.body?.detail === "string"
+              ? error.body.detail
+              : "Email ou mot de passe incorrect",
+          apiError: error,
         };
       } finally {
         this.loading = false;
@@ -106,6 +110,7 @@ export const useAuthStore = defineStore("auth", {
       fullName: string,
       phone?: string,
       referralCode?: string,
+      whatsappOptIn = false,
     ) {
       this._ensureApiConfig();
       this.loading = true;
@@ -117,6 +122,7 @@ export const useAuthStore = defineStore("auth", {
           full_name: fullName,
           phone: phone || null,
           referral_code: referralCode || null,
+          whatsapp_opt_in: whatsappOptIn,
         });
 
         const tokenCookie = useCookie("access_token", {
@@ -135,7 +141,11 @@ export const useAuthStore = defineStore("auth", {
       } catch (error: any) {
         return {
           success: false,
-          error: error.body?.detail || "Erreur lors de l'inscription",
+          error:
+            typeof error.body?.detail === "string"
+              ? error.body.detail
+              : "Erreur lors de l'inscription",
+          apiError: error,
         };
       } finally {
         this.loading = false;
@@ -193,6 +203,22 @@ export const useAuthStore = defineStore("auth", {
         };
       } finally {
         this.loading = false;
+      }
+    },
+
+    async setTargetLevel(levelId: string) {
+      this._ensureApiConfig();
+      try {
+        const response = await UsersService.updateMeApiV1UsersMePatch({
+          target_level_id: levelId,
+        });
+        this.user = response;
+        return { success: true };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.body?.detail || "Erreur lors du changement de niveau",
+        };
       }
     },
 

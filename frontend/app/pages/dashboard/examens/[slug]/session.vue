@@ -174,11 +174,16 @@ const route = useRoute();
 const session = useSession();
 const sessionStore = useSessionStore();
 const { t } = useI18n();
+const notify = useNotify();
 
 const currentModuleIndex = ref(0);
 const currentTeilIndex = ref(0);
 const exitDialogVisible = ref(false);
 const submitDialogVisible = ref(false);
+
+// Alertes de temps : 5 min puis 1 min, une seule fois par module
+const WARN_AT_SECONDS = [300, 60];
+const warned = new Set<string>();
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -238,6 +243,29 @@ const isSchreibenModule = computed(() => {
   return slug.includes("schreib") || slug.includes("schriftlich");
 });
 
+function warnIfLowTime() {
+  const remaining = sessionStore.timeRemaining;
+  if (remaining <= 0) return;
+  const moduleId = currentModule.value?.id ?? "";
+  for (const seuil of WARN_AT_SECONDS) {
+    const key = `${moduleId}-${seuil}`;
+    if (remaining <= seuil && !warned.has(key)) {
+      warned.add(key);
+      const n = Math.ceil(remaining / 60);
+      notify.warn(t("toast.time_left", { n }, n), t("toast.time_left_detail"));
+      break; // une seule alerte par seconde, même si deux seuils sont franchis
+    }
+  }
+}
+
+// Réponse non synchronisée : au plus une alerte toutes les 30 s
+let lastSaveWarning = 0;
+function warnSaveFailed() {
+  if (Date.now() - lastSaveWarning < 30_000) return;
+  lastSaveWarning = Date.now();
+  notify.warn(t("toast.save_failed"), t("toast.save_failed_detail"));
+}
+
 // ── Actions ───────────────────────────────────────────
 
 const getModuleIcon = (slug: string) => {
@@ -284,7 +312,8 @@ const prevTeil = () => {
 };
 
 const onAnswer = async (questionId: string, value: any) => {
-  await session.saveAnswer(questionId, value);
+  const res = await session.saveAnswer(questionId, value);
+  if (!res?.success) warnSaveFailed();
 };
 
 const exitSession = () => {
@@ -303,23 +332,25 @@ const hasSchreibenModule = computed(() =>
   ),
 );
 
-const handleSubmit = async () => {
+const handleSubmit = () => submit(false);
+
+const submit = async (auto: boolean) => {
   submitDialogVisible.value = false;
   stopTimer();
 
   const result = await sessionStore.submitSession();
-  if (!result.success) return;
+  if (!result.success) {
+    notify.error(
+      t("toast.error_title"),
+      result.error || t("api_errors.generic"),
+    );
+    return;
+  }
+
+  if (auto) notify.info(t("toast.time_up"), t("toast.time_up_detail"));
+  else notify.success(t("toast.submitted"), t("toast.submitted_detail"));
 
   const sessionId = sessionStore.sessionId;
-
-  console.log(
-    "DEBUG hasSchreibenModule:",
-    hasSchreibenModule.value,
-    "sessionId:",
-    sessionId,
-    "modules:",
-    sessionStore.modules,
-  );
 
   if (hasSchreibenModule.value && sessionId) {
     try {
@@ -327,7 +358,6 @@ const handleSubmit = async () => {
     } catch (err) {
       console.error("Erreur correction Schreiben:", err);
     }
-    console.log("DEBUG correctionStore.error:", correctionStore.error);
   }
 
   const slug = route.params.slug as string;
@@ -342,15 +372,17 @@ const handleSubmit = async () => {
     },
   });
 };
+
 // ── Timer ─────────────────────────────────────────────
 
 const startTimer = () => {
   stopTimer(); // sécurité anti-doublon, même si déjà appelé avant
   timerInterval = setInterval(() => {
-    sessionStore.tick(); // remplace decrementTimer
+    sessionStore.tick();
+    warnIfLowTime();
     if (sessionStore.timeRemaining <= 0) {
       stopTimer();
-      handleSubmit();
+      submit(true);
     }
   }, 1000);
 };
@@ -369,6 +401,8 @@ const initialized = ref(false);
 const loadSession = async () => {
   initialized.value = false;
   stopTimer();
+  warned.clear();
+
   sessionStore.resetSession(); // vide l'ancien état avant de recharger
 
   const examId = route.query.examId as string;
@@ -408,6 +442,26 @@ const loadSession = async () => {
   }
 
   currentModuleIndex.value = 0;
+  if (result.success) {
+    const restored = Object.keys(sessionStore.answers).length;
+    if (restored > 0) {
+      notify.info(
+        t("toast.session_resumed", { n: sessionStore.subjectNumber }),
+        t("toast.session_resumed_detail", { n: restored }, restored),
+      );
+    } else {
+      notify.success(
+        t("toast.session_started", { n: sessionStore.subjectNumber }),
+        t("toast.session_started_detail"),
+      );
+    }
+  } else {
+    notify.error(
+      t("toast.error_title"),
+      sessionStore.error || t("api_errors.generic"),
+    );
+  }
+  
   currentTeilIndex.value = 0;
   initialized.value = true;
   startTimer();

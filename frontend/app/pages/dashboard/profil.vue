@@ -1,274 +1,276 @@
 <template>
-  <div>
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('profile.title') }}</h1>
-      <p class="text-gray-600">{{ t('profile.subtitle') }}</p>
-    </div>
+  <div class="space-y-5 pb-10">
+    <p class="text-sm text-muted">{{ t("profile.subtitle") }}</p>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid items-start gap-5 lg:grid-cols-3">
+      <!-- ══════════ Carte identité ══════════ -->
+      <aside class="relative isolate overflow-hidden rounded-card border border-line bg-card p-6 text-center shadow-soft lg:sticky lg:top-0">
+        <span class="mx-auto mb-4 flex size-24 items-center justify-center rounded-full bg-primary/10 text-3xl font-bold text-primary">
+          {{ initials }}
+        </span>
+        <h2 class="truncate text-lg font-bold text-ink">{{ authStore.userName }}</h2>
+        <p class="truncate text-sm text-muted">{{ authStore.userEmail }}</p>
 
-      <!-- Profile Card -->
-      <Card class="lg:col-span-1">
-        <template #content>
-          <div class="text-center">
-            <Avatar
-              :label="authStore.userName[0]?.toUpperCase()"
-              shape="circle" size="xlarge"
-              class="bg-linear-to-br from-teal-600 to-blue-600 text-white mx-auto mb-4"
-              style="width: 120px; height: 120px; font-size: 48px;"
-            />
-            <h2 class="text-xl font-bold text-gray-900 mb-1">{{ authStore.userName }}</h2>
-            <p class="text-gray-600 mb-4">{{ authStore.userEmail }}</p>
-            <div class="flex items-center justify-center gap-2 mb-4">
-              <Tag v-if="authStore.isVerified"  :value="t('profile.email_verified')"     severity="success" icon="pi pi-check-circle" />
-              <Tag v-else                        :value="t('profile.email_not_verified')" severity="warning" icon="pi pi-exclamation-triangle" />
-            </div>
-            <Divider />
-            <div class="space-y-3 text-left">
-              <div class="flex items-center gap-3 text-sm">
-                <i class="pi pi-calendar text-gray-400"></i>
-                <div>
-                  <p class="text-gray-500">{{ t('profile.member_since') }}</p>
-                  <p class="font-semibold">{{ formatDate(userDetails?.full_name) }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 text-sm">
-                <i class="pi pi-shield text-gray-400"></i>
-                <div>
-                  <p class="text-gray-500">{{ t('profile.status') }}</p>
-                  <p class="font-semibold">{{ authStore.isAdmin ? t('profile.admin') : t('profile.user') }}</p>
-                </div>
-              </div>
+        <span
+          class="mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+          :class="authStore.isVerified ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/15 text-amber-600'"
+        >
+          <i class="pi text-[10px]" :class="authStore.isVerified ? 'pi-check-circle' : 'pi-exclamation-triangle'" />
+          {{ authStore.isVerified ? t("profile.email_verified") : t("profile.email_not_verified") }}
+        </span>
+
+        <dl class="mt-5 space-y-3 border-t border-line pt-5 text-left text-sm">
+          <div class="flex items-center gap-3">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-leaf bg-card-2 text-muted">
+              <i class="pi pi-calendar text-xs" />
+            </span>
+            <div>
+              <dt class="text-xs text-muted">{{ t("profile.member_since") }}</dt>
+              <dd class="font-medium text-ink">{{ formatDate(memberSince) }}</dd>
             </div>
           </div>
-        </template>
-      </Card>
+          <div class="flex items-center gap-3">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-leaf bg-card-2 text-muted">
+              <i class="pi pi-shield text-xs" />
+            </span>
+            <div>
+              <dt class="text-xs text-muted">{{ t("profile.status") }}</dt>
+              <dd class="font-medium text-ink">{{ authStore.isAdmin ? t("profile.admin") : t("profile.user") }}</dd>
+            </div>
+          </div>
+        </dl>
+      </aside>
 
-      <!-- Edit Profile Form -->
-      <Card class="lg:col-span-2">
-        <template #title>{{ t('profile.personal_info') }}</template>
-        <template #content>
-          <Message v-if="successMessage" severity="success" :closable="true" @close="successMessage = ''">{{ successMessage }}</Message>
-          <Message v-if="errorMessage"   severity="error"   :closable="true" @close="errorMessage = ''">{{ errorMessage }}</Message>
+      <!-- ══════════ Formulaires ══════════ -->
+      <div class="space-y-5 lg:col-span-2">
+        <!-- Infos personnelles -->
+        <section class="rounded-card border border-line bg-card p-5 shadow-soft sm:p-6">
+          <h2 class="mb-4 font-semibold text-ink">{{ t("profile.personal_info") }}</h2>
 
-          <form @submit.prevent="updateProfile" class="space-y-6 mt-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Message v-if="successMessage" severity="success" closable class="mb-4" @close="successMessage = ''">
+            {{ successMessage }}
+          </Message>
+          <Message v-if="errorMessage" severity="error" closable class="mb-4" @close="errorMessage = ''">
+            {{ errorMessage }}
+          </Message>
+
+          <form class="space-y-5" @submit.prevent="updateProfile">
+            <div class="grid gap-4 md:grid-cols-2">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('profile.full_name') }}</label>
-                <InputText v-model="profileForm.full_name" class="w-full" placeholder="Jean Dupont" />
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.full_name") }}</label>
+                <InputText v-model="profileForm.full_name" fluid autocomplete="name" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('profile.email') }}</label>
-                <InputText :value="authStore.userEmail" class="w-full" disabled />
-                <small class="text-gray-500">{{ t('profile.email_readonly') }}</small>
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.phone") }}</label>
+                <InputText v-model="profileForm.phone" fluid inputmode="tel" autocomplete="tel" placeholder="+237 6XX XXX XXX" />
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('profile.phone') }}</label>
-                <InputText v-model="profileForm.phone" class="w-full" placeholder="+237 6XX XXX XXX" />
+              <div class="md:col-span-2">
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.email") }}</label>
+                <InputText :modelValue="authStore.userEmail" fluid disabled />
+                <small class="mt-1 block text-xs text-faint">{{ t("profile.email_readonly") }}</small>
               </div>
             </div>
-            <div class="flex justify-end gap-3 pt-4">
-              <Button :label="t('profile.cancel')" severity="secondary" outlined @click="resetForm" />
-              <Button :label="t('profile.save')"   icon="pi pi-save" :loading="loading" type="submit" />
+
+            <div class="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
+              <Button :label="t('profile.cancel')" severity="secondary" outlined :disabled="!profileDirty" @click="resetForm" />
+              <Button
+                :label="t('profile.save')"
+                icon="pi pi-save"
+                type="submit"
+                :loading="loading"
+                :disabled="!profileDirty || !profileForm.full_name.trim()"
+              />
             </div>
           </form>
-        </template>
-      </Card>
-    </div>
+        </section>
 
-    <!-- Change Password -->
-    <Card class="mt-6">
-      <template #title>{{ t('profile.change_password') }}</template>
-      <template #content>
-        <Message v-if="passwordSuccess" severity="success" :closable="true" @close="passwordSuccess = ''">{{ passwordSuccess }}</Message>
-        <Message v-if="passwordError"   severity="error"   :closable="true" @close="passwordError = ''">{{ passwordError }}</Message>
+        <!-- Mot de passe -->
+        <section class="rounded-card border border-line bg-card p-5 shadow-soft sm:p-6">
+          <h2 class="mb-4 font-semibold text-ink">{{ t("profile.change_password") }}</h2>
 
-        <form @submit.prevent="changePassword" class="space-y-6 mt-4">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('profile.current_password') }}</label>
-              <Password v-model="passwordForm.current_password" class="w-full" toggleMask :feedback="false" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('profile.new_password') }}</label>
-              <Password v-model="passwordForm.new_password" class="w-full" toggleMask />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('profile.confirm_password') }}</label>
-              <Password v-model="passwordForm.confirm_password" class="w-full" toggleMask :feedback="false" />
-            </div>
-          </div>
-          <div class="flex justify-end gap-3 pt-4">
-            <Button :label="t('profile.cancel')"          severity="secondary" outlined @click="resetPasswordForm" />
-            <Button :label="t('profile.change_password_btn')" icon="pi pi-lock" :loading="passwordLoading" type="submit" />
-          </div>
-        </form>
-      </template>
-    </Card>
+          <Message v-if="passwordSuccess" severity="success" closable class="mb-4" @close="passwordSuccess = ''">
+            {{ passwordSuccess }}
+          </Message>
+          <Message v-if="passwordError" severity="error" closable class="mb-4" @close="passwordError = ''">
+            {{ passwordError }}
+          </Message>
 
-    <!-- Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-      <Card>
-        <template #title>
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <i class="pi pi-check-circle text-2xl text-blue-600"></i>
-            </div>
+          <form class="space-y-5" @submit.prevent="changePassword">
             <div>
-              <p class="text-2xl font-bold text-gray-900">12</p>
-              <p class="text-sm text-gray-600">{{ t('profile.stats_exams') }}</p>
+              <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.current_password") }}</label>
+              <Password
+                v-model="passwordForm.current_password"
+                fluid
+                toggleMask
+                :feedback="false"
+                :inputProps="{ autocomplete: 'current-password' }"
+              />
             </div>
-          </div>
-        </template>
-      </Card>
-      <Card>
-        <template #title>
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <i class="pi pi-chart-line text-2xl text-green-600"></i>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.new_password") }}</label>
+                <Password
+                  v-model="passwordForm.new_password"
+                  fluid
+                  toggleMask
+                  :feedback="false"
+                  :invalid="newPasswordTooShort"
+                  :inputProps="{ autocomplete: 'new-password' }"
+                />
+                <small class="mt-1 block text-xs" :class="newPasswordTooShort ? 'text-red-600' : 'text-faint'">
+                  {{ t("profile.error_length") }}
+                </small>
+              </div>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.confirm_password") }}</label>
+                <Password
+                  v-model="passwordForm.confirm_password"
+                  fluid
+                  toggleMask
+                  :feedback="false"
+                  :invalid="passwordMismatch"
+                  :inputProps="{ autocomplete: 'new-password' }"
+                />
+                <small v-if="passwordMismatch" class="mt-1 block text-xs text-red-600">{{ t("profile.error_match") }}</small>
+              </div>
             </div>
-            <div>
-              <p class="text-2xl font-bold text-gray-900">85%</p>
-              <p class="text-sm text-gray-600">{{ t('profile.stats_score') }}</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-      <Card>
-        <template #title>
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <i class="pi pi-clock text-2xl text-purple-600"></i>
-            </div>
-            <div>
-              <p class="text-2xl font-bold text-gray-900">24h</p>
-              <p class="text-sm text-gray-600">{{ t('profile.stats_time') }}</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-    </div>
 
-    <!-- Danger Zone -->
-    <Card class="mt-6 border-2 border-red-200">
-      <template #title>
-        <div class="flex items-center gap-2 text-red-600">
-          <i class="pi pi-exclamation-triangle"></i>
-          <span>{{ t('profile.danger_zone') }}</span>
-        </div>
-      </template>
-      <template #content>
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-semibold text-gray-900 mb-1">{{ t('profile.delete_account') }}</h3>
-            <p class="text-sm text-gray-600">{{ t('profile.delete_desc') }}</p>
-          </div>
-          <Button :label="t('profile.delete_btn')" severity="danger" outlined @click="confirmDelete" />
-        </div>
-      </template>
-    </Card>
-
-    <!-- Delete Dialog -->
-    <Dialog
-      v-model:visible="deleteDialogVisible"
-      :header="t('profile.delete_dialog_title')"
-      :modal="true" :style="{ width: '90vw', maxWidth: '450px' }"
-    >
-      <div class="flex flex-col gap-4">
-        <Message severity="error" :closable="false">{{ t('profile.delete_warning') }}</Message>
-        <p>{{ t('profile.delete_confirm_text') }}</p>
-        <div>
-          <label class="block text-sm font-medium mb-2" v-html="t('profile.delete_type')" />
-          <InputText v-model="deleteConfirmText" class="w-full" :placeholder="t('profile.delete_placeholder')" />
-        </div>
+            <div class="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
+              <Button :label="t('profile.cancel')" severity="secondary" outlined @click="resetPasswordForm" />
+              <Button
+                :label="t('profile.change_password_btn')"
+                icon="pi pi-lock"
+                type="submit"
+                :loading="passwordLoading"
+                :disabled="!passwordReady"
+              />
+            </div>
+          </form>
+        </section>
       </div>
-      <template #footer>
-        <Button :label="t('profile.cancel')" text @click="deleteDialogVisible = false" />
-        <Button
-          :label="t('profile.delete_confirm_btn')" severity="danger"
-          :disabled="deleteConfirmText !== t('profile.delete_confirm_word')"
-          @click="deleteAccount"
-        />
-      </template>
-    </Dialog>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard' })
+definePageMeta({ layout: "dashboard", watermark: "Profil" });
 
-const { t }      = useI18n()
-const authStore  = useAuthStore()
+const { t, locale } = useI18n();
+const authStore = useAuthStore();
 
-const loading         = ref(false)
-const passwordLoading = ref(false)
-const successMessage  = ref('')
-const errorMessage    = ref('')
-const passwordSuccess = ref('')
-const passwordError   = ref('')
-const deleteDialogVisible = ref(false)
-const deleteConfirmText   = ref('')
+const loading = ref(false);
+const passwordLoading = ref(false);
+const successMessage = ref("");
+const errorMessage = ref("");
+const passwordSuccess = ref("");
+const passwordError = ref("");
 
-const userDetails = computed(() => authStore.user)
+const userDetails = computed(() => authStore.user as any);
 
-const profileForm = ref({ full_name: '', phone: '' })
-const passwordForm = ref({ current_password: '', new_password: '', confirm_password: '' })
+// ── Identité ──
+const initials = computed(() =>
+  (authStore.userName || authStore.userEmail || "?")
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p: string) => p[0]!.toUpperCase())
+    .join(""),
+);
+
+const memberSince = computed<string | undefined>(() => userDetails.value?.created_at);
+
+const intlLocale = computed(() => ({ fr: "fr-FR", de: "de-DE" } as Record<string, string>)[locale.value] ?? "en-GB");
+const formatDate = (dateString?: string) =>
+  dateString
+    ? new Date(dateString).toLocaleDateString(intlLocale.value, { year: "numeric", month: "long", day: "numeric" })
+    : "-";
+
+// ── Infos personnelles ──
+const profileForm = ref({ full_name: "", phone: "" });
 
 const initForm = () => {
   profileForm.value = {
-    full_name: authStore.userName || '',
-    phone:     (userDetails.value as any)?.phone || '',
-  }
-}
+    full_name: authStore.userName || "",
+    phone: userDetails.value?.phone || "",
+  };
+};
 
-const formatDate = (dateString?: string) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
-}
+const profileDirty = computed(
+  () =>
+    profileForm.value.full_name.trim() !== (authStore.userName || "") ||
+    profileForm.value.phone.trim() !== (userDetails.value?.phone || ""),
+);
 
 const updateProfile = async () => {
-  loading.value        = true
-  successMessage.value = ''
-  errorMessage.value   = ''
-  const result = await authStore.updateProfile(profileForm.value.full_name, profileForm.value.phone)
-  successMessage.value = result.success ? t('profile.success_update') : ''
-  errorMessage.value   = result.success ? '' : (result.error || t('profile.error_update'))
-  loading.value        = false
-}
+  if (!profileDirty.value) return;
+  loading.value = true;
+  successMessage.value = "";
+  errorMessage.value = "";
+  const result = await authStore.updateProfile(profileForm.value.full_name.trim(), profileForm.value.phone.trim());
+  if (result.success) {
+    successMessage.value = t("profile.success_update");
+    initForm();
+  } else {
+    errorMessage.value = result.error || t("profile.error_update");
+  }
+  loading.value = false;
+};
 
 const resetForm = () => {
-  initForm()
-  successMessage.value = ''
-  errorMessage.value   = ''
-}
+  initForm();
+  successMessage.value = "";
+  errorMessage.value = "";
+};
+
+// ── Mot de passe ──
+const passwordForm = ref({ current_password: "", new_password: "", confirm_password: "" });
+
+const newPasswordTooShort = computed(
+  () => passwordForm.value.new_password.length > 0 && passwordForm.value.new_password.length < 8,
+);
+const passwordMismatch = computed(
+  () =>
+    passwordForm.value.confirm_password.length > 0 &&
+    passwordForm.value.new_password !== passwordForm.value.confirm_password,
+);
+const passwordReady = computed(
+  () =>
+    !!passwordForm.value.current_password &&
+    passwordForm.value.new_password.length >= 8 &&
+    passwordForm.value.new_password === passwordForm.value.confirm_password,
+);
 
 const changePassword = async () => {
-  passwordSuccess.value = ''
-  passwordError.value   = ''
+  passwordSuccess.value = "";
+  passwordError.value = "";
   if (!passwordForm.value.current_password || !passwordForm.value.new_password) {
-    passwordError.value = t('profile.error_fields'); return
+    passwordError.value = t("profile.error_fields");
+    return;
   }
-  if (passwordForm.value.new_password !== passwordForm.value.confirm_password) {
-    passwordError.value = t('profile.error_match'); return
+  if (passwordMismatch.value) {
+    passwordError.value = t("profile.error_match");
+    return;
   }
   if (passwordForm.value.new_password.length < 8) {
-    passwordError.value = t('profile.error_length'); return
+    passwordError.value = t("profile.error_length");
+    return;
   }
-  passwordLoading.value = true
-  const result = await authStore.changePassword(passwordForm.value.current_password, passwordForm.value.new_password)
-  if (result.success) { passwordSuccess.value = t('profile.success_password'); resetPasswordForm() }
-  else passwordError.value = result.error || t('profile.error_password')
-  passwordLoading.value = false
-}
+  passwordLoading.value = true;
+  const result = await authStore.changePassword(passwordForm.value.current_password, passwordForm.value.new_password);
+  if (result.success) {
+    passwordForm.value = { current_password: "", new_password: "", confirm_password: "" };
+    passwordSuccess.value = t("profile.success_password");
+  } else {
+    passwordError.value = result.error || t("profile.error_password");
+  }
+  passwordLoading.value = false;
+};
 
 const resetPasswordForm = () => {
-  passwordForm.value    = { current_password: '', new_password: '', confirm_password: '' }
-  passwordSuccess.value = ''
-  passwordError.value   = ''
-}
+  passwordForm.value = { current_password: "", new_password: "", confirm_password: "" };
+  passwordSuccess.value = "";
+  passwordError.value = "";
+};
 
-const confirmDelete = () => { deleteDialogVisible.value = true; deleteConfirmText.value = '' }
-const deleteAccount = async () => { deleteDialogVisible.value = false; authStore.logout() }
-
-onMounted(() => initForm())
+onMounted(initForm);
 </script>

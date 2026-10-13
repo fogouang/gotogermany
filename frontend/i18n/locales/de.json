@@ -23,7 +23,15 @@
     "have_account": "Bereits ein Konto?",
     "login_link": "Anmelden",
     "login_error": "Anmeldefehler",
-    "signup_error": "Registrierungsfehler"
+    "signup_error": "Registrierungsfehler",
+    "phone_invalid": "Unvollständige Nummer: bitte prüfen oder das Feld leer lassen.",
+    "password_digit": "Mindestens eine Ziffer",
+    "password_upper": "Mindestens ein Großbuchstabe",
+    "country": "Land",
+    "phone_placeholder": "Ihre Nummer",
+    "whatsapp_opt_in": "Der GoToGermany-Community auf WhatsApp beitreten",
+    "whatsapp_opt_in_hint": "Tipps, neue Themen und gegenseitige Hilfe unter Prüflingen. Sie können jederzeit austreten.",
+    "whatsapp_needs_phone": "Geben Sie Ihre WhatsApp-Nummer an, um der Community beizutreten."
   },
   "exam": {
     "start": "Starten",
@@ -346,7 +354,10 @@
     "access_active": "Aktiver Zugang",
     "free": "Kostenlos",
     "premium": "Premium",
-    "see_subjects": "Themen ansehen"
+    "see_subjects": "Themen ansehen",
+    "coming_soon": "Demnächst verfügbar",
+    "coming_soon_text": "Die Themen für diese Prüfung folgen in Kürze.",
+    "unlock_price": "Freischalten · {price}"
   },
   "dashboard": {
     "greeting": "Hallo",
@@ -359,7 +370,8 @@
       "results": "Meine Ergebnisse",
       "results_sub": "Fortschrittsverfolgung",
       "start_deutsch": "Start Deutsch A1/A2",
-      "start_deutsch_sub": "Übe, während du auf deinen echten Test wartest"
+      "start_deutsch_sub": "Übe, während du auf deinen echten Test wartest",
+      "sprechen_sub": "Mündliches Training mit einem KI-Prüfer"
     },
     "choose_exam": "Prüfung wählen",
     "see_all": "Alle ansehen →",
@@ -380,7 +392,37 @@
       "factures": "Rechnungen",
       "credits": "Guthaben",
       "start_deutsch": "Start Deutsch A1/A2",
-      "sessions-live": "Live-Sprechprüfung"
+      "sessions-live": "Live-Sprechprüfung",
+      "devoirs": "Hausaufgaben"
+    },
+    "resume_title": "Dort weitermachen, wo Sie aufgehört haben",
+    "resume_btn": "Fortsetzen",
+    "my_levels": "Meine Niveaus",
+    "level_active": "Zugang aktiv",
+    "level_free": "Kostenlos",
+    "level_preview": "Probethemen",
+    "unlock": "Freischalten",
+    "in_progress": "Läuft",
+    "passed": "Bestanden",
+    "failed": "Nicht bestanden",
+    "progress_title": "Mein Fortschritt",
+    "no_progress": "Schließen Sie ein Thema ab, um Ihren Fortschritt hier zu sehen.",
+    "sessions_done": "Abgeschlossene Themen",
+    "passed_count": "Bestanden",
+    "avg_score": "Durchschnitt",
+    "assignments_title": "Hausaufgaben",
+    "assignments_todo": "Keine offenen Hausaufgaben | 1 offene Hausaufgabe | {n} offene Hausaufgaben",
+    "assignments_late": "Keine überfällig | 1 Hausaufgabe überfällig | {n} Hausaufgaben überfällig",
+    "next_due": "Nächste Frist: {date}",
+    "see_assignments": "Meine Hausaufgaben ansehen",
+    "status": {
+      "no_level_title": "Ihr Zentrum hat Ihre Prüfung noch nicht festgelegt",
+      "no_level_text": "Bitten Sie Ihr Zentrum, Ihnen ein Niveau zuzuweisen. Ihre Themen erscheinen dann hier.",
+      "not_activated_title": "Ihr Konto ist noch nicht aktiviert",
+      "not_activated_text": "Sie können die kostenlosen Themen ausprobieren. Ihr Zentrum schaltet den vollen Zugang nach Ihrer Anmeldung frei.",
+      "expiring_title": "Ihr Zugang läuft bald ab",
+      "expiring_text": "Er endet am {date}.",
+      "renew": "Verlängern"
     },
     "space": "Lernbereich",
     "role": "Lernende(r)"
@@ -389,7 +431,10 @@
     "main": "Übersicht",
     "account": "Konto",
     "logout": "Abmelden",
-    "collapse": "Einklappen"
+    "collapse": "Einklappen",
+    "my_class": "Meine Klasse",
+    "practice": "Üben",
+    "follow_up": "Mein Fortschritt"
   },
   "session": {
     "loading": "Sitzung wird geladen...",
@@ -512,6 +557,12 @@
     "free_per_level": "Kostenlose Themen",
     "subject_default": "Thema",
     "modules": "Module",
+    "subject_meta": "{modules} Module · {minutes} Min.",
+    "more_subjects": "Keine weiteren Themen | 1 weiteres Thema mit Vollzugang | {n} weitere Themen mit Vollzugang",
+    "more_subjects_text": "Schalten Sie das Niveau {level} frei, um alle Themen zu nutzen.",
+    "done_count": "{done} / {total} Themen bereits absolviert",
+    "active_level": "Aktives Niveau",
+    "set_active": "Als aktives Niveau wählen",
     "level_names": {
       "A1": "Anfänger",
       "A2": "Grundstufe",
@@ -558,6 +609,8 @@
   "invoices": {
     "title": "Meine Zahlungen",
     "subtitle": "Verlauf deiner Käufe und Rechnungen",
+    "all": "Alle",
+    "count": "Keine Zahlungen | {n} Zahlung | {n} Zahlungen",
     "empty_title": "Keine Zahlungen",
     "empty_subtitle": "Du hast noch keine Käufe getätigt",
     "see_pricing": "Preise ansehen",
@@ -1566,5 +1619,119 @@
       "correct_count": "{correct}/{total} richtig",
       "question": "F{n}"
     }
+  },
+  "ai_credits": {
+    "subtitle": "Verwalten Sie Ihr KI-Korrekturguthaben.",
+    "available": "kein Guthaben verfügbar | Credit verfügbar | Credits verfügbar",
+    "total_purchased": "Gekaufte Credits",
+    "total_spent": "Insgesamt ausgegeben",
+    "buy_title": "Credits kaufen",
+    "per_credit": "{price} pro Credit. 1 Credit = 1 vollständige Korrektur.",
+    "quantity": "Anzahl der Credits",
+    "range": "Zwischen {min} und {max} Credits",
+    "preset": "{n} Credits",
+    "phone_invalid": "Ungültige Nummer: 9 Ziffern, beginnend mit 6 oder 9.",
+    "pay": "{amount} bezahlen",
+    "error": "Kauf fehlgeschlagen.",
+    "success_title": "Credits hinzugefügt!",
+    "success_text": "Keine Credits hinzugefügt. | {n} Credit wurde Ihrem Konto gutgeschrieben. | {n} Credits wurden Ihrem Konto gutgeschrieben.",
+    "buy_more": "Weitere Credits kaufen",
+    "failed_title": "Zahlung nicht abgeschlossen",
+    "failed_text": "Die Zahlung wurde abgelehnt oder abgebrochen. Sie können es erneut versuchen.",
+    "timeout_title": "Bestätigung ausstehend",
+    "timeout_text": "Wir haben die Bestätigung noch nicht erhalten. Wenn Sie auf Ihrem Telefon bestätigt haben, erscheint der Kauf in wenigen Minuten im Verlauf.",
+    "retry": "Erneut versuchen",
+    "history_title": "Kaufverlauf",
+    "history_empty": "Noch keine Käufe.",
+    "help_title": "Probleme mit Mobile Money?",
+    "help_whatsapp": "Schreiben Sie uns auf WhatsApp",
+    "whatsapp_message": "Hallo, ich möchte KI-Credits auf GoToGermany kaufen."
+  },
+  "student_assignments": {
+    "subtitle": "Die Hausaufgaben Ihrer Lehrkräfte.",
+    "tabs": {
+      "todo": "Offen",
+      "submitted": "Abgegeben",
+      "graded": "Korrigiert"
+    },
+    "status": {
+      "pending": "Nicht begonnen",
+      "in_progress": "In Bearbeitung",
+      "submitted": "Wird korrigiert",
+      "graded": "Korrigiert"
+    },
+    "by": "von {name}",
+    "due": "fällig am {date}",
+    "no_due": "Ohne Frist",
+    "late": "Überfällig",
+    "start": "Beginnen",
+    "continue": "Weitermachen",
+    "waiting": "Ihre Lehrkraft korrigiert Ihre Arbeit.",
+    "score": "Note",
+    "empty_todo": "Im Moment gibt es keine offenen Hausaufgaben.",
+    "empty_submitted": "Keine Hausaufgaben warten auf Korrektur.",
+    "empty_graded": "Noch keine korrigierten Hausaufgaben.",
+    "error": "Ihre Hausaufgaben konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "exit_warning": "Ihre Antworten sind gespeichert. Sie können diese Hausaufgabe später fortsetzen.",
+    "submitted_title": "Hausaufgabe abgegeben!",
+    "submitted_auto": "Sie wurde automatisch korrigiert. Ihre Note sehen Sie bei Ihren Hausaufgaben.",
+    "submitted_teacher": "Ihre Lehrkraft korrigiert Ihre Arbeit. Ihre Note erscheint bei Ihren Hausaufgaben.",
+    "back": "Zurück zu meinen Hausaufgaben"
+  },
+  "onboarding": {
+    "title": "Auf welche Prüfung bereiten Sie sich vor?",
+    "subtitle": "Ihr Bereich passt sich dieser Wahl an. Sie können das Niveau jederzeit wechseln.",
+    "skip": "Überspringen",
+    "continue": "Weiter",
+    "empty": "Derzeit sind keine Prüfungen verfügbar.",
+    "error": "Ihre Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen."
+  },
+  "level_switch": {
+    "title": "Niveau wechseln",
+    "note": "Ihr Fortschritt wird für jedes Niveau separat gespeichert.",
+    "all_exams": "Alle Prüfungen ansehen",
+    "locked": "Niveau von Ihrem Zentrum festgelegt"
+  },
+  "api_errors": {
+    "generic": "Ein Fehler ist aufgetreten. Bitte erneut versuchen.",
+    "register": "Die Registrierung ist fehlgeschlagen. Bitte prüfen Sie Ihre Angaben.",
+    "network": "Der Server ist nicht erreichbar. Bitte prüfen Sie Ihre Internetverbindung.",
+    "server": "Der Server hat ein Problem. Bitte versuchen Sie es gleich noch einmal.",
+    "fields": {
+      "password": "Das Passwort",
+      "email": "Die E-Mail-Adresse",
+      "full_name": "Der vollständige Name",
+      "phone": "Die Telefonnummer"
+    },
+    "rules": {
+      "min_length": "{field} muss mindestens {n} Zeichen lang sein.",
+      "max_length": "{field} darf höchstens {n} Zeichen lang sein.",
+      "email": "Ungültige E-Mail-Adresse.",
+      "required": "{field} ist erforderlich."
+    }
+  },
+  "toast": {
+    "close": "Schließen",
+    "error_title": "Hoppla, das hat nicht geklappt",
+    "welcome": "Willkommen, {name}!",
+    "welcome_detail": "Ihr Konto ist erstellt. Wählen Sie Ihre Prüfung, um loszulegen.",
+    "welcome_back": "Schön, Sie wiederzusehen, {name}!",
+    "session_started": "Thema {n} gestartet",
+    "session_started_detail": "Die Zeit läuft. Viel Erfolg!",
+    "session_resumed": "Thema {n} wird fortgesetzt",
+    "session_resumed_detail": "Keine Antworten wiederhergestellt. | 1 Antwort wiederhergestellt. | {n} Antworten wiederhergestellt.",
+    "time_left": "Nur noch wenige Sekunden | Nur noch eine Minute | Nur noch {n} Minuten",
+    "time_left_detail": "Prüfen Sie Ihre Antworten, bevor die Zeit abläuft.",
+    "time_up": "Zeit abgelaufen",
+    "time_up_detail": "Ihre Arbeit wurde automatisch abgegeben.",
+    "submitted": "Thema abgeschlossen!",
+    "submitted_detail": "Ihre Antworten sind gespeichert. Hier sind Ihre Ergebnisse.",
+    "save_failed": "Antwort nicht synchronisiert",
+    "save_failed_detail": "Sie bleibt auf diesem Gerät und wird bei der Abgabe gesendet.",
+    "offline": "Sie sind offline",
+    "offline_detail": "Ihre Antworten bleiben auf diesem Gerät, bis die Verbindung zurück ist.",
+    "online": "Verbindung wiederhergestellt",
+    "level_changed": "Aktives Niveau: {level}"
   }
 }
