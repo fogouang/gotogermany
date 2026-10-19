@@ -95,3 +95,27 @@ class CenterCreditTransactionResponse(BaseSchema):
 class CenterPoolResponse(BaseSchema):
     ai_credit_pool_balance: int
     default_credits_per_student: int
+    
+    
+# ─────────────────────────────────────────────
+# Lien d'inscription des élèves
+# ─────────────────────────────────────────────
+class JoinBranchOption(BaseSchema):
+    id: uuid.UUID
+    name: str
+
+
+class JoinInfoResponse(BaseSchema):
+    """Page publique /rejoindre/{token} : nom du centre et succursales."""
+    center_name: str
+    branches: list[JoinBranchOption]
+
+
+class JoinLinkResponse(BaseSchema):
+    token: str
+    enabled: bool
+    center_name: str
+
+
+class JoinLinkUpdateRequest(BaseSchema):
+    enabled: bool

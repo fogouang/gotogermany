@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DirectorCreateRequest } from '../models/DirectorCreateRequest';
+import type { JoinRequestApproveRequest } from '../models/JoinRequestApproveRequest';
+import type { JoinRequestResponse } from '../models/JoinRequestResponse';
 import type { SecretaryCreateRequest } from '../models/SecretaryCreateRequest';
 import type { StudentCreateRequest } from '../models/StudentCreateRequest';
 import type { StudentCreditAdjustRequest } from '../models/StudentCreditAdjustRequest';
@@ -250,6 +252,81 @@ export class UsersService {
             },
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Join Requests
+     * Secrétaire : sa succursale. Directeur : tout le centre.
+     * @param accessToken
+     * @returns JoinRequestResponse Successful Response
+     * @throws ApiError
+     */
+    public static listJoinRequestsApiV1UsersJoinRequestsGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<Array<JoinRequestResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/users/join-requests',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Approve Join Request
+     * @param studentId
+     * @param requestBody
+     * @param accessToken
+     * @returns StudentResponse Successful Response
+     * @throws ApiError
+     */
+    public static approveJoinRequestApiV1UsersJoinRequestsStudentIdApprovePost(
+        studentId: string,
+        requestBody: JoinRequestApproveRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<StudentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/join-requests/{student_id}/approve',
+            path: {
+                'student_id': studentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Reject Join Request
+     * @param studentId
+     * @param accessToken
+     * @returns SuccessResponse Successful Response
+     * @throws ApiError
+     */
+    public static rejectJoinRequestApiV1UsersJoinRequestsStudentIdRejectPost(
+        studentId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<SuccessResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/join-requests/{student_id}/reject',
+            path: {
+                'student_id': studentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
             errors: {
                 422: `Validation Error`,
             },

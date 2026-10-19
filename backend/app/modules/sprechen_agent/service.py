@@ -174,6 +174,16 @@ class SprechenAgentService:
 
         return transition
 
+    async def end_teil_now(self, session: SessionState) -> orchestrator.StepTransition:
+        """Temps du Teil écoulé (appelé par router.py). Même suite qu'une
+        fin de Teil normale : préparation du Teil suivant, ou fin de
+        session si c'était le dernier."""
+        transition = orchestrator.force_end_teil(session)
+        if transition.teil_changed:
+            session.status = SessionStatus.PREPARING
+        await _save_session(session)
+        return transition
+
     async def open_segment_for_current_step(
         self,
         session: SessionState,

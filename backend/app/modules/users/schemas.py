@@ -4,6 +4,7 @@ app/modules/users/schemas.py
 from app.shared.utils.phone import normalize_phone
 import uuid
 from datetime import datetime
+from typing import Literal
 from pydantic import EmailStr, Field, field_validator
 from app.shared.schemas.base import BaseSchema
 from app.modules.users.models import UserRole
@@ -41,6 +42,8 @@ class UserUpdateRequest(BaseSchema):
     # Ignoré/refusé pour un élève de centre : c'est le centre qui fixe son niveau.
     target_level_id: uuid.UUID | None = None
     whatsapp_opt_in: bool | None = None
+    # Parcours choisi à l'accueil (étudiant individuel uniquement)
+    learning_track: Literal["exam", "start_deutsch"] | None = None
         
     @field_validator("full_name")
     @classmethod
@@ -140,6 +143,7 @@ class UserResponse(BaseSchema):
     is_ambassador: bool
     role: UserRole
     whatsapp_opt_in: bool = False
+    learning_track: str | None = None
 
 
 class UserAdminResponse(UserResponse):
@@ -159,6 +163,8 @@ class UserMeResponse(UserResponse):
     branch_id: uuid.UUID | None
     target_level_id: uuid.UUID | None
     access_expires_at: datetime | None
+    # Inscription via le lien d'un centre, en attente de validation
+    requested_branch_id: uuid.UUID | None = None
 
 
 class StudentResponse(BaseSchema):
@@ -269,3 +275,18 @@ class TeacherCreateRequest(BaseSchema):
     @classmethod
     def full_name_strip(cls, v: str) -> str:
         return v.strip()
+    
+# ── Inscriptions via le lien du centre ───────
+
+class JoinRequestResponse(BaseSchema):
+    id: uuid.UUID
+    full_name: str
+    phone: str | None
+    email: str | None
+    branch_id: uuid.UUID
+    branch_name: str
+    requested_at: datetime | None
+
+
+class JoinRequestApproveRequest(BaseSchema):
+    target_level_id: uuid.UUID

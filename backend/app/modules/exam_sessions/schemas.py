@@ -73,6 +73,8 @@ class SessionListResponse(BaseSchema):
     submitted_at: datetime | None
     duration_seconds: int | None
     module_slugs: list[str] | None = None
+    # Score par module en % ({slug: score, ou None si en attente de correction})
+    score_breakdown: dict[str, Any] | None = None
 
 
 class TeilResultResponse(BaseSchema):

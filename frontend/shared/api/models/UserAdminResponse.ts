@@ -18,6 +18,7 @@ export type UserAdminResponse = {
     is_ambassador: boolean;
     role: UserRole;
     whatsapp_opt_in?: boolean;
+    learning_track?: (string | null);
     is_admin: boolean;
     updated_at: string;
     center_id: (string | null);

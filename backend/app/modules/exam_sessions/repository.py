@@ -33,7 +33,7 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
             .order_by(ExamSession.started_at.desc())
             .limit(1)
         )
-        return result.scalars.first()
+        return result.scalars().first()
 
     async def get_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 20

@@ -317,6 +317,10 @@ def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilC
         # in that shape) — harmless, nothing to show there.
         content = mapping.content_payload(teil_raw)
 
+        # Les deux avis sont affichés à l'élève (choix pédagogique) ;
+        # l'examinatrice garde la répartition A (élève) / B (elle) à l'oral.
+        stimulus_people = mapping.resolve_stimulus_people(teil_raw)
+
         configs.append(
             TeilConfig(
                 teil_number=teil_raw.get("teil_number", len(configs) + 1),
@@ -328,7 +332,7 @@ def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilC
                 content_points=mapping.extract_content_points(teil_raw),
                 themes=_resolve_available_themes(teil_raw),
                 scenario=content.get("scenario"),
-                stimulus_people=mapping.resolve_stimulus_people(teil_raw),
+                stimulus_people=stimulus_people,
                 stimulus_text=content.get("text"),
                 sprachliche_mittel=_resolve_sprachliche_mittel(teil_raw, subject_raw),
                 scoring_system=scoring_system,
@@ -479,6 +483,17 @@ def advance(session: SessionState) -> StepTransition:
         new_teil=session.current_teil(),
         new_step=session.current_step(),
     )
+
+
+def force_end_teil(session: SessionState) -> StepTransition:
+    """Temps officiel du Teil écoulé : clôt les étapes restantes et
+    passe au Teil suivant (ou termine la session si c'était le
+    dernier), exactement comme une fin de Teil normale via advance()."""
+    teil = session.current_teil()
+    for step in teil.sequence[session.current_step_index:-1]:
+        step.completed = True
+    session.current_step_index = len(teil.sequence) - 1
+    return advance(session)
 
 
 def is_agent_turn_next(session: SessionState) -> bool:

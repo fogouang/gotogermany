@@ -2,7 +2,7 @@
 app/modules/centers/router.py
 """
 from uuid import UUID
-from fastapi import Depends, File, UploadFile
+from fastapi import Depends, File, HTTPException, UploadFile
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,12 +17,72 @@ from app.modules.centers.schemas import (
     CenterDefaultCreditsUpdateRequest,
     CenterCreditTransactionResponse,
     CenterPoolResponse,
+    JoinBranchOption,
+    JoinInfoResponse,
+    JoinLinkResponse,
+    JoinLinkUpdateRequest,
 )
 from app.modules.centers.service import CenterService
 from app.shared.database.session import get_db
 from app.shared.exceptions.http import BadRequestException
 
 router = APIRouter()
+
+
+# ── Public : page d'inscription via le lien du centre ──
+
+@router.get("/join/{token}", response_model=JoinInfoResponse)
+async def get_join_info(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    service = CenterService(db)
+    center = await service.find_open_center_by_join_token(token)
+    if center is None:
+        raise HTTPException(status_code=404, detail="Lien d'inscription invalide ou désactivé.")
+    branches = await service.list_my_branches(center.id)
+    branches.sort(key=lambda b: (not b.is_main, b.name))
+    return JoinInfoResponse(
+        center_name=center.name,
+        branches=[JoinBranchOption(id=b.id, name=b.name) for b in branches],
+    )
+
+
+# ── Lien d'inscription : secrétaire (lecture) et directeur (gestion) ──
+
+def _join_link_response(center) -> JoinLinkResponse:
+    return JoinLinkResponse(
+        token=center.join_token, enabled=center.join_enabled, center_name=center.name
+    )
+
+
+@router.get("/me/join-link", response_model=JoinLinkResponse)
+async def get_my_join_link(
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    service = CenterService(db)
+    center_id = await service.center_id_for_staff(staff)
+    return _join_link_response(await service.get_join_link(center_id))
+
+
+@router.post("/me/join-link/regenerate", response_model=JoinLinkResponse)
+async def regenerate_my_join_link(
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    center = await CenterService(db).regenerate_join_link(current_director.center_id)
+    return _join_link_response(center)
+
+
+@router.patch("/me/join-link", response_model=JoinLinkResponse)
+async def update_my_join_link(
+    data: JoinLinkUpdateRequest,
+    current_director: CurrentDirector,
+    db: AsyncSession = Depends(get_db),
+):
+    center = await CenterService(db).set_join_enabled(current_director.center_id, data.enabled)
+    return _join_link_response(center)
 
 
 # ── Directeur (routes /me/... déclarées avant /{center_id}/...) ──

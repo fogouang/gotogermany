@@ -1,811 +1,13 @@
-<template>
-  <div
-    class="h-screen flex flex-col overflow-hidden transition-colors duration-500"
-    :class="
-      isCallTheme
-        ? 'bg-[radial-gradient(ellipse_at_50%_-10%,#10534a_0%,#0b2b26_50%,#061412_100%)] text-white'
-        : 'bg-canvas text-ink'
-    "
-  >
-    <!-- Connexion -->
-    <div
-      v-if="status === 'connecting' || status === 'idle'"
-      class="flex-1 flex items-center justify-center"
-    >
-      <div class="flex flex-col items-center gap-5">
-        <div class="relative w-28 h-28 flex items-center justify-center">
-          <span
-            class="absolute inset-0 rounded-full bg-teal-400/10 blur-xl animate-pulse"
-          />
-          <span
-            class="absolute inset-2 rounded-full bg-linear-to-br from-teal-400/40 via-emerald-500/20 to-transparent"
-          />
-          <div
-            class="relative w-16 h-16 rounded-full bg-white/10 border border-white/15 backdrop-blur flex items-center justify-center"
-          >
-            <ProgressSpinner
-              style="width: 26px; height: 26px"
-              strokeWidth="4"
-            />
-          </div>
-        </div>
-        <p class="text-sm font-medium text-white/60 tracking-wide">
-          {{ t("sprechen_subject.connecting") }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Erreur -->
-    <div
-      v-else-if="status === 'error'"
-      class="flex-1 flex items-center justify-center"
-    >
-      <div class="max-w-lg px-6 text-center space-y-4">
-        <div
-          class="w-14 h-14 mx-auto rounded-full bg-red-500/10 border border-red-400/20 flex items-center justify-center"
-        >
-          <i class="pi pi-exclamation-circle text-red-300 text-2xl"></i>
-        </div>
-        <p class="text-red-200 font-medium">
-          {{ errorMessage || t("sprechen_subject.connection_error") }}
-        </p>
-        <Button
-          :label="t('sprechen_subject.back')"
-          outlined
-          class="border-white/25! text-white!"
-          @click="goToList"
-        />
-      </div>
-    </div>
-
-    <!-- Session active / préparation / terminée -->
-    <template v-else>
-      <!-- Barre d'appel -->
-      <div
-        class="shrink-0 backdrop-blur border-b px-4 py-3 flex items-center gap-3"
-        :class="
-          isCallTheme ? 'bg-white/5 border-white/10' : 'bg-card border-line'
-        "
-      >
-        <Button
-          icon="pi pi-arrow-left"
-          text
-          rounded
-          :class="isCallTheme ? 'text-white!' : ''"
-          :aria-label="t('sprechen_subject.back')"
-          @click="confirmLeave"
-        />
-        <div class="flex items-center gap-2.5 min-w-0 flex-1">
-          <span
-            class="w-2 h-2 rounded-full shrink-0"
-            :class="
-              status === 'active' ? 'bg-red-500 animate-pulse' : 'bg-faint'
-            "
-          />
-          <h1
-            class="text-sm font-semibold truncate"
-            :class="isCallTheme ? 'text-white/90' : 'text-ink'"
-          >
-            {{ headerTeilName }}
-          </h1>
-        </div>
-        <span
-          v-if="headerTeilNumber"
-          class="ml-auto text-xs font-medium shrink-0 rounded-full px-2.5 py-1"
-          :class="
-            isCallTheme ? 'bg-white/10 text-white/70' : 'bg-card-2 text-muted'
-          "
-        >
-          Teil {{ headerTeilNumber }} / {{ totalTeile }}
-        </span>
-      </div>
-
-      <!-- ═══════════════ Préparation ═══════════════ -->
-      <div
-        v-if="status === 'preparing' && preparationInfo"
-        class="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden"
-      >
-        <!-- Consignes -->
-        <div
-          class="bg-white/5 border-r border-white/10 p-6 flex flex-col gap-5 overflow-y-auto"
-        >
-          <div>
-            <span
-              class="text-xs font-medium text-white/50 uppercase tracking-wide"
-            >
-              Teil {{ preparationInfo.teil_number }}
-            </span>
-            <h2 class="text-lg font-medium text-white/90 mt-1">
-              {{ preparationInfo.teil_name }}
-            </h2>
-          </div>
-
-          <p class="text-sm text-white/70 leading-relaxed">
-            {{ preparationInfo.instructions }}
-          </p>
-
-          <div
-            v-if="preparationInfo.scenario"
-            class="bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-3"
-          >
-            <p
-              class="text-[11px] font-semibold text-indigo-200/80 uppercase tracking-wide mb-1"
-            >
-              {{ t("sprechen_subject.scenario_label") }}
-            </p>
-            <p class="text-sm text-white/85 leading-relaxed">
-              {{ preparationInfo.scenario }}
-            </p>
-          </div>
-
-          <div
-            v-if="preparationInfo.stimulus_people?.length"
-            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
-          >
-            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
-              <p
-                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
-              >
-                {{ t("sprechen_subject.stimulus_people_label") }}
-              </p>
-            </div>
-            <div class="divide-y divide-white/10">
-              <div
-                v-for="person in preparationInfo.stimulus_people"
-                :key="person.name"
-                class="px-4 py-3"
-              >
-                <p class="text-sm font-medium text-white/90">
-                  {{ person.name }}
-                </p>
-                <p class="text-xs text-white/60 italic mt-0.5">
-                  „{{ person.opinion }}“
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="preparationInfo.stimulus_text"
-            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
-          >
-            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
-              <p
-                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
-              >
-                {{ t("sprechen_subject.reading_text_label") }}
-              </p>
-            </div>
-            <p
-              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-80 overflow-y-auto"
-            >
-              {{ preparationInfo.stimulus_text }}
-            </p>
-          </div>
-
-          <ThemeChoicePanel
-            v-if="preparationInfo.themes"
-            :themes="preparationInfo.themes"
-          />
-          <div
-            v-else-if="preparationInfo.content_points.length"
-            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
-          >
-            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
-              <p
-                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
-              >
-                {{ t("sprechen_subject.points_to_cover") }}
-              </p>
-            </div>
-            <ul class="px-4 py-3 space-y-1.5">
-              <li
-                v-for="point in preparationInfo.content_points"
-                :key="point"
-                class="flex gap-2 text-sm text-white/80"
-              >
-                <i
-                  class="pi pi-circle-fill text-[5px] text-teal-300/80 mt-2 shrink-0"
-                ></i>
-                <span>{{ point }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Chrono de préparation + démarrage -->
-        <div class="flex-1 flex items-center justify-center p-8">
-          <div class="flex flex-col items-center gap-6 max-w-sm w-full">
-            <div class="flex flex-col items-center gap-1.5">
-              <span class="text-3xl font-medium text-white/90 tabular-nums">{{
-                prepElapsedLabel
-              }}</span>
-              <span class="text-xs text-white/40 uppercase tracking-wide">{{
-                t("sprechen_subject.preparing")
-              }}</span>
-            </div>
-
-            <!-- Repère : temps officiel de préparation (jamais imposé) -->
-            <span
-              v-if="officialPrepSeconds > 0"
-              class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-colors"
-              :class="
-                prepSecondsLeft === 0
-                  ? 'bg-white/10 text-white/70 border-white/15'
-                  : prepTimerIsAlert
-                    ? 'bg-red-500/15 text-red-200 border-red-400/30 animate-pulse'
-                    : 'bg-amber-400/10 text-amber-200 border-amber-300/20'
-              "
-            >
-              <i class="pi pi-clock text-[11px]"></i>
-              {{
-                prepSecondsLeft > 0
-                  ? t("sprechen_subject.official_prep_left", {
-                      time: prepCountdownLabel,
-                    })
-                  : t("sprechen_subject.official_prep_over")
-              }}
-            </span>
-
-            <p class="text-sm text-white/60 text-center leading-relaxed">
-              {{ t("sprechen_subject.preparation_no_limit") }}
-            </p>
-            <Button
-              :label="t('sprechen_subject.start_now')"
-              class="w-full"
-              @click="sendReadyToStart"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════════ Session en cours (interface d'appel) ═══════════════ -->
-      <div
-        v-else-if="status === 'active' && currentTeil"
-        class="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden"
-      >
-        <!-- Consignes -->
-        <div
-          class="bg-white/5 border-r border-white/10 p-6 flex flex-col gap-5 overflow-y-auto"
-        >
-          <div>
-            <span
-              class="text-xs font-medium text-white/50 uppercase tracking-wide"
-            >
-              Teil {{ currentTeil.teil_number }}
-            </span>
-            <h2 class="text-lg font-medium text-white/90 mt-1">
-              {{ currentTeil.teil_name }}
-            </h2>
-          </div>
-
-          <p class="text-sm text-white/70 leading-relaxed">
-            {{ currentTeil.instructions }}
-          </p>
-
-          <span
-            class="inline-flex items-center self-start text-xs font-bold px-3 py-1 rounded-full border transition-colors"
-            :class="
-              teilTimerIsAlert
-                ? 'bg-red-500/15 text-red-200 border-red-400/30 animate-pulse'
-                : 'bg-amber-400/10 text-amber-200 border-amber-300/20'
-            "
-          >
-            <i class="pi pi-clock mr-1.5"></i>
-            {{ teilCountdownLabel }}
-          </span>
-
-          <div
-            v-if="currentTeil.scenario"
-            class="bg-indigo-400/10 border border-indigo-300/20 rounded-xl px-4 py-3"
-          >
-            <p
-              class="text-[11px] font-semibold text-indigo-200/80 uppercase tracking-wide mb-1"
-            >
-              {{ t("sprechen_subject.scenario_label") }}
-            </p>
-            <p class="text-sm text-white/85 leading-relaxed">
-              {{ currentTeil.scenario }}
-            </p>
-          </div>
-
-          <div
-            v-if="currentTeil.stimulus_people?.length"
-            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
-          >
-            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
-              <p
-                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
-              >
-                {{ t("sprechen_subject.stimulus_people_label") }}
-              </p>
-            </div>
-            <div class="divide-y divide-white/10">
-              <div
-                v-for="person in currentTeil.stimulus_people"
-                :key="person.name"
-                class="px-4 py-3"
-              >
-                <p class="text-sm font-medium text-white/90">
-                  {{ person.name }}
-                </p>
-                <p class="text-xs text-white/60 italic mt-0.5">
-                  „{{ person.opinion }}“
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="currentTeil.stimulus_text"
-            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
-          >
-            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
-              <p
-                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
-              >
-                {{ t("sprechen_subject.reading_text_label") }}
-              </p>
-            </div>
-            <p
-              class="px-4 py-3 text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-80 overflow-y-auto"
-            >
-              {{ currentTeil.stimulus_text }}
-            </p>
-          </div>
-
-          <ThemeChoicePanel
-            v-if="currentTeil.themes"
-            :themes="currentTeil.themes"
-          />
-          <div
-            v-if="currentTeil.content_points.length"
-            class="bg-white/8 border border-white/10 rounded-2xl overflow-hidden"
-          >
-            <div class="bg-white/5 border-b border-white/10 px-4 py-2">
-              <p
-                class="text-[11px] font-semibold text-white/50 uppercase tracking-wide"
-              >
-                {{ t("sprechen_subject.points_to_cover") }}
-              </p>
-            </div>
-            <ul class="px-4 py-3 space-y-1.5">
-              <li
-                v-for="point in currentTeil.content_points"
-                :key="point"
-                class="flex gap-2 text-sm text-white/80"
-              >
-                <i
-                  class="pi pi-circle-fill text-[5px] text-teal-300/80 mt-2 shrink-0"
-                ></i>
-                <span>{{ point }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Conversation -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-          <div
-            class="flex items-center justify-center gap-10 pt-6 pb-2 shrink-0"
-          >
-            <div
-              class="flex flex-col items-center gap-2 transition-opacity duration-300"
-              :class="
-                micState === 'student_turn' ? 'opacity-40' : 'opacity-100'
-              "
-            >
-              <div class="relative w-16 h-16 flex items-center justify-center">
-                <span
-                  class="absolute inset-0 rounded-full bg-teal-400/40 blur-md transition-opacity duration-300"
-                  :class="
-                    micState === 'agent_speaking'
-                      ? 'opacity-100 animate-pulse'
-                      : 'opacity-0'
-                  "
-                />
-                <span
-                  class="absolute inset-0 rounded-full border-2 transition-colors duration-300"
-                  :class="
-                    micState === 'agent_speaking'
-                      ? 'border-teal-300/70'
-                      : 'border-white/10'
-                  "
-                />
-                <AvatarExaminer
-                  class="relative w-[88%] h-[88%]"
-                  :talking="micState === 'agent_speaking'"
-                />
-              </div>
-              <p class="text-xs font-medium text-white/60 tracking-wide">
-                {{ t("sprechen_subject.examiner") }}
-              </p>
-            </div>
-
-            <div
-              class="flex flex-col items-center gap-2 transition-opacity duration-300"
-              :class="
-                micState === 'agent_speaking' ? 'opacity-40' : 'opacity-100'
-              "
-            >
-              <div class="relative w-16 h-16 flex items-center justify-center">
-                <span
-                  class="absolute inset-0 rounded-full bg-emerald-300/35 blur-md transition-opacity duration-300"
-                  :class="
-                    micState === 'student_turn'
-                      ? 'opacity-100 animate-pulse'
-                      : 'opacity-0'
-                  "
-                />
-                <span
-                  class="absolute inset-0 rounded-full border-2 transition-colors duration-300"
-                  :class="
-                    micState === 'student_turn'
-                      ? 'border-emerald-300/70'
-                      : 'border-white/10'
-                  "
-                />
-                <AvatarStudent
-                  class="relative w-[88%] h-[88%]"
-                  :talking="micState === 'student_turn'"
-                />
-              </div>
-              <p class="text-xs font-medium text-white/60 tracking-wide">
-                {{ t("sprechen_subject.you") }}
-              </p>
-            </div>
-          </div>
-          <p
-            class="text-center text-xs text-white/40 uppercase tracking-widest mb-2 shrink-0"
-          >
-            {{ micLabel }}
-          </p>
-
-          <!-- Fil de discussion -->
-          <div class="flex-1 overflow-y-auto px-6 pb-6">
-            <div class="max-w-xl mx-auto space-y-3 py-2">
-              <div
-                v-for="(line, i) in groupedTranscript"
-                :key="i"
-                class="flex items-end gap-2"
-                :class="
-                  line.speaker === 'student' ? 'flex-row-reverse' : 'flex-row'
-                "
-              >
-                <div
-                  class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden border"
-                  :class="
-                    line.speaker === 'student'
-                      ? 'border-emerald-300/30'
-                      : 'border-white/15'
-                  "
-                >
-                  <AvatarStudent
-                    v-if="line.speaker === 'student'"
-                    class="w-full h-full"
-                  />
-                  <AvatarExaminer v-else class="w-full h-full" />
-                </div>
-                <div
-                  class="max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
-                  :class="
-                    line.speaker === 'student'
-                      ? 'bg-linear-to-br from-[#eafaf5] to-[#d3f1e8] text-[#0b2420] rounded-br-sm shadow-md shadow-black/20'
-                      : 'bg-white/10 border border-white/10 backdrop-blur text-white/85 rounded-bl-sm'
-                  "
-                >
-                  {{ line.text }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════════ Notation en cours ═══════════════ -->
-      <div
-        v-else-if="status === 'ended' && !gradingResult"
-        class="flex-1 flex items-center justify-center p-6"
-      >
-        <div
-          class="bg-card text-ink rounded-card p-7 max-w-sm w-full text-center shadow-soft"
-        >
-          <div
-            class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4"
-          >
-            <i class="pi pi-comments text-primary text-2xl"></i>
-          </div>
-          <h3 class="text-base font-semibold text-ink mb-1">
-            {{ t("sprechen_subject.grading_modal_title") }}
-          </h3>
-          <p class="text-sm text-muted mb-5">
-            {{ t("sprechen_subject.grading_modal_subtitle") }}
-          </p>
-
-          <div class="flex flex-col gap-2 text-left">
-            <div
-              v-for="(step, i) in gradingSteps"
-              :key="step.key"
-              class="flex items-center gap-2.5 rounded-leaf px-3 py-2.5 transition-colors"
-              :class="gradingStepStateClass(i)"
-            >
-              <i
-                :class="[
-                  'text-lg shrink-0',
-                  i < gradingStepIndex
-                    ? 'pi pi-check-circle text-emerald-600'
-                    : '',
-                  i === gradingStepIndex
-                    ? 'pi pi-spin pi-spinner text-primary'
-                    : '',
-                  i > gradingStepIndex ? 'pi pi-circle text-faint' : '',
-                ]"
-              ></i>
-              <span
-                class="text-sm"
-                :class="
-                  i <= gradingStepIndex ? 'font-medium text-ink' : 'text-faint'
-                "
-              >
-                {{ t(step.labelKey) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════════ Résultat ═══════════════ -->
-      <div
-        v-else-if="status === 'ended' && gradingResult"
-        class="flex-1 overflow-y-auto"
-      >
-        <div class="max-w-2xl mx-auto px-4 py-8 space-y-5">
-          <!-- En-tête -->
-          <div
-            class="bg-card border border-line rounded-card shadow-soft overflow-hidden"
-          >
-            <div
-              :class="[
-                'h-1.5',
-                gradingResult.passed ? 'bg-emerald-500' : 'bg-amber-500',
-              ]"
-            ></div>
-            <div class="px-6 py-5 flex items-center justify-between gap-4">
-              <div>
-                <p
-                  class="text-xs font-semibold uppercase tracking-wider text-muted mb-1"
-                >
-                  {{ gradingResult.provider.toUpperCase() }} ·
-                  {{ gradingResult.level.toUpperCase() }} · Sprechen
-                </p>
-                <h1 class="text-2xl font-bold text-ink">
-                  {{
-                    gradingResult.passed
-                      ? t("sprechen_subject.passed")
-                      : t("sprechen_subject.not_passed")
-                  }}
-                </h1>
-                <p class="text-sm text-muted mt-1 tabular-nums">
-                  {{ gradingResult.total_score }} /
-                  {{ gradingResult.total_max_score }}
-                  {{ t("sprechen_subject.points") }}
-                </p>
-              </div>
-              <p
-                :class="[
-                  'text-3xl font-extrabold tabular-nums shrink-0',
-                  gradingResult.passed ? 'text-emerald-600' : 'text-amber-600',
-                ]"
-              >
-                {{ scorePercent }}%
-              </p>
-            </div>
-          </div>
-
-          <!-- Évolution -->
-          <div
-            v-if="gradingResult.score_delta_percent !== null"
-            class="bg-card border border-line rounded-card px-5 py-4 flex items-center justify-between"
-          >
-            <div>
-              <p class="text-xs text-muted mb-0.5">
-                {{ t("sprechen_subject.score_delta_since_last") }}
-              </p>
-              <p class="text-lg font-semibold text-ink tabular-nums">
-                {{ Math.round(gradingResult.previous_score_percent!) }}%
-              </p>
-            </div>
-            <span
-              class="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold tabular-nums"
-              :class="
-                gradingResult.score_delta_percent >= 0
-                  ? 'bg-emerald-500/10 text-emerald-700'
-                  : 'bg-amber-500/10 text-amber-700'
-              "
-            >
-              <i
-                :class="
-                  gradingResult.score_delta_percent >= 0
-                    ? 'pi pi-arrow-up'
-                    : 'pi pi-arrow-down'
-                "
-              ></i>
-              {{ gradingResult.score_delta_percent >= 0 ? "+" : ""
-              }}{{ Math.round(gradingResult.score_delta_percent) }}%
-            </span>
-          </div>
-
-          <!-- Détail par Teil -->
-          <div class="bg-card border border-line rounded-card overflow-hidden">
-            <div class="px-5 py-4 border-b border-line">
-              <h2 class="font-semibold text-ink text-sm">
-                {{ t("sprechen_subject.detail_by_teil") }}
-              </h2>
-            </div>
-            <div class="divide-y divide-line">
-              <div
-                v-for="teil in gradingResult.teile"
-                :key="teil.teil_number"
-                class="px-5 py-4 space-y-3"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm font-semibold text-ink"
-                    >Teil {{ teil.teil_number }} · {{ teil.teil_name }}</span
-                  >
-                  <span
-                    class="text-xs font-semibold text-muted tabular-nums shrink-0"
-                  >
-                    {{ teil.teil_score }} / {{ teil.teil_max_score }}
-                  </span>
-                </div>
-
-                <div
-                  v-for="c in teil.criteria"
-                  :key="c.criterion_name"
-                  class="rounded-leaf bg-card-2 border border-line p-3.5"
-                >
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-ink">{{
-                      c.criterion_name
-                    }}</span>
-                    <span
-                      class="text-xs font-semibold tabular-nums"
-                      :class="
-                        c.max_score && c.score / c.max_score >= 0.75
-                          ? 'text-emerald-600'
-                          : 'text-amber-600'
-                      "
-                    >
-                      {{ c.score }} / {{ c.max_score }}
-                    </span>
-                  </div>
-
-                  <div
-                    v-if="c.issue"
-                    class="flex gap-2 rounded-leaf bg-amber-500/10 px-3 py-2 mb-2"
-                  >
-                    <i
-                      class="pi pi-exclamation-circle text-amber-600 text-xs mt-0.5 shrink-0"
-                    ></i>
-                    <p class="text-xs text-ink leading-relaxed">
-                      <span class="font-semibold"
-                        >{{
-                          t("sprechen_subject.criterion_issue_label")
-                        }}
-                        :</span
-                      >
-                      {{ c.issue }}
-                    </p>
-                  </div>
-
-                  <div
-                    v-if="c.model_phrase"
-                    class="flex gap-2 rounded-leaf bg-primary/10 px-3 py-2 mb-2"
-                  >
-                    <i
-                      class="pi pi-comment text-primary text-xs mt-0.5 shrink-0"
-                    ></i>
-                    <p class="text-xs text-ink leading-relaxed italic">
-                      <span class="font-semibold not-italic"
-                        >{{
-                          t("sprechen_subject.criterion_model_phrase_label")
-                        }}
-                        :</span
-                      >
-                      „{{ c.model_phrase }}“
-                    </p>
-                  </div>
-
-                  <div v-if="c.tip" class="flex gap-2 px-1">
-                    <i
-                      class="pi pi-lightbulb text-faint text-xs mt-0.5 shrink-0"
-                    ></i>
-                    <p class="text-xs text-muted leading-relaxed">
-                      <span class="font-semibold"
-                        >{{ t("sprechen_subject.criterion_tip_label") }} :</span
-                      >
-                      {{ c.tip }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Points forts / à améliorer -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div v-if="gradingResult.strengths.length">
-              <p
-                class="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-2 flex items-center gap-1.5"
-              >
-                <i class="pi pi-check-circle" />{{
-                  t("sprechen_subject.strengths")
-                }}
-              </p>
-              <ul class="space-y-1.5">
-                <li
-                  v-for="(s, i) in gradingResult.strengths"
-                  :key="i"
-                  class="flex items-start gap-2 text-sm text-ink bg-emerald-500/10 rounded-leaf px-3 py-2"
-                >
-                  <i
-                    class="pi pi-check text-emerald-600 mt-0.5 shrink-0 text-xs"
-                  /><span>{{ s }}</span>
-                </li>
-              </ul>
-            </div>
-            <div v-if="gradingResult.improvement_areas.length">
-              <p
-                class="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-2 flex items-center gap-1.5"
-              >
-                <i class="pi pi-exclamation-circle" />{{
-                  t("sprechen_subject.to_improve")
-                }}
-              </p>
-              <ul class="space-y-1.5">
-                <li
-                  v-for="(a, i) in gradingResult.improvement_areas"
-                  :key="i"
-                  class="flex items-start gap-2 text-sm text-ink bg-amber-500/10 rounded-leaf px-3 py-2"
-                >
-                  <i
-                    class="pi pi-arrow-right text-amber-600 mt-0.5 shrink-0 text-xs"
-                  /><span>{{ a }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex flex-col sm:flex-row gap-3 pb-8">
-            <Button
-              :label="t('sprechen_subject.redo')"
-              icon="pi pi-refresh"
-              outlined
-              severity="secondary"
-              class="flex-1"
-              @click="redo"
-            />
-            <Button
-              :label="t('sprechen_subject.choose_another')"
-              icon="pi pi-list"
-              class="flex-1"
-              @click="goToList"
-            />
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useSprechenSession } from "~/composables/useSprechenSession";
 import { createBrowserAudioIO } from "~/composables/audioIO";
-import AvatarExaminer from "~/components/sprechen/AvatarExaminer.vue";
-import AvatarStudent from "~/components/sprechen/AvatarStudent.vue";
 import ThemeChoicePanel from "~/components/sprechen/ThemeChoicePanel.vue";
+import ExaminerTile from "~/components/sprechen/ExaminerTile.vue";
+import CandidateTile from "~/components/sprechen/CandidateTile.vue";
+import TranscriptPanel from "~/components/sprechen/TranscriptPanel.vue";
+import CallControls from "~/components/sprechen/CallControls.vue";
+import ExaminerAvatar from "~/components/sprechen/ExaminerAvatar.vue";
 
 definePageMeta({ layout: "dashboard" });
 
@@ -816,7 +18,7 @@ const runtimeConfig = useRuntimeConfig();
 
 const subjectId = route.params.subjectId as string;
 const wsBaseUrl = runtimeConfig.public.sprechenWsBaseUrl as string;
-const audioIO = createBrowserAudioIO();
+const audioIO = createBrowserAudioIO({ muteMicWhilePlaying: true });
 
 const {
   status,
@@ -827,6 +29,7 @@ const {
   transcript,
   gradingResult,
   errorMessage,
+  errorCode,
   connect,
   sendReadyToStart,
   abandonSession,
@@ -841,23 +44,105 @@ const isCallTheme = computed(
     (status.value === "ended" && !gradingResult.value),
 );
 
-const headerTeilName = computed(
-  () => currentTeil.value?.teil_name ?? preparationInfo.value?.teil_name ?? "",
+// Pendant la préparation, currentTeil est encore l'ANCIEN Teil :
+// on affiche celui qu'on prépare.
+const headerTeilName = computed(() =>
+  status.value === "preparing"
+    ? (preparationInfo.value?.teil_name ?? "")
+    : (currentTeil.value?.teil_name ?? preparationInfo.value?.teil_name ?? ""),
 );
-const headerTeilNumber = computed(
-  () =>
-    currentTeil.value?.teil_number ??
-    preparationInfo.value?.teil_number ??
-    null,
+const headerTeilNumber = computed(() =>
+  status.value === "preparing"
+    ? (preparationInfo.value?.teil_number ?? null)
+    : (currentTeil.value?.teil_number ??
+      preparationInfo.value?.teil_number ??
+      null),
 );
 
-const micLabel = computed(() => {
-  if (micState.value === "agent_speaking")
-    return t("sprechen_subject.examiner_speaking");
-  if (micState.value === "student_turn") return t("sprechen_subject.your_turn");
-  return "";
+// ── Interface d'appel ──
+// Une seule scène pour la préparation et l'échange : l'avatar 3D se
+// charge pendant la préparation et n'est jamais remonté entre deux Teile.
+const isStage = computed(
+  () =>
+    (status.value === "preparing" && !!preparationInfo.value) ||
+    (status.value === "active" && !!currentTeil.value),
+);
+
+// Teil affiché dans le panneau de consignes
+const panelTeil = computed(() =>
+  status.value === "preparing" ? preparationInfo.value : currentTeil.value,
+);
+
+const callState = computed<"preparing" | "agent" | "student" | "waiting">(
+  () => {
+    if (status.value === "preparing") return "preparing";
+    if (micState.value === "agent_speaking") return "agent";
+    if (micState.value === "student_turn") return "student";
+    return "waiting";
+  },
+);
+
+const authStore = useAuthStore();
+
+// Message d'erreur affiché : les causes connues sont traduites
+const errorText = computed(() =>
+  errorCode.value === "insufficient_credits"
+    ? t("sprechen_subject.insufficient_credits")
+    : errorMessage.value || t("sprechen_subject.connection_error"),
+);
+
+// Les crédits sont débités au premier "Commencer" : on rafraîchit le
+// solde affiché dès que l'oral démarre vraiment.
+let creditsRefreshed = false;
+watch(status, (value) => {
+  if (value === "active" && !creditsRefreshed) {
+    creditsRefreshed = true;
+    void authStore.fetchUser();
+  }
 });
 
+const showTranscript = ref(true);
+
+const cameraEnabled = ref(false);
+
+// Tuile de l'examinatrice : expose la sortie audio de l'avatar 3D
+// (branchement de la voix pour le lip-sync à faire dans audioIO).
+const examinerRef = ref<{
+  getAudioOutput: () => { ctx: AudioContext; node: AudioNode } | null;
+  resume: () => Promise<void> | undefined;
+} | null>(null);
+
+// La voix de l'examinatrice passe par l'avatar 3D dès qu'il est prêt
+// (lip-sync). Avant ça, audioIO joue sur son contexte habituel.
+audioIO.setOutputTarget(() => {
+  const out = examinerRef.value?.getAudioOutput() ?? null;
+  // Contexte de l'avatar en pause (pas encore débloqué par un clic) :
+  // on garde la lecture habituelle plutôt que de jouer dans le vide.
+  return out && out.ctx.state === "running" ? out : null;
+});
+
+// Chaque clic dans la page débloque l'audio de l'avatar s'il est en pause
+function unlockAvatarAudio() {
+  try {
+    void Promise.resolve(examinerRef.value?.resume()).catch(() => {});
+  } catch {
+    // avatar pas prêt
+  }
+}
+onMounted(() => window.addEventListener("pointerdown", unlockAvatarAudio));
+onUnmounted(() => window.removeEventListener("pointerdown", unlockAvatarAudio));
+
+function startNow() {
+  // L'envoi au backend passe en premier : rien ne doit pouvoir le bloquer
+  sendReadyToStart();
+
+  // Geste utilisateur : on en profite pour débloquer l'audio de l'avatar
+  try {
+    void Promise.resolve(examinerRef.value?.resume()).catch(() => {});
+  } catch {
+    // avatar pas prêt : audioIO relancera le contexte au premier son
+  }
+}
 const groupedTranscript = computed(() => {
   const groups: { speaker: "student" | "agent"; text: string }[] = [];
   for (const line of transcript.value) {
@@ -1002,6 +287,7 @@ const redo = () => {
 
 onMounted(() => connect());
 onUnmounted(() => {
+  audioIO.setOutputTarget(null);
   disconnect();
   if (prepIntervalId) clearInterval(prepIntervalId);
   if (teilIntervalId) clearInterval(teilIntervalId);
@@ -1010,3 +296,640 @@ onUnmounted(() => {
 
 useHead({ title: t("sprechen_subject.page_title") });
 </script>
+
+<template>
+  <div>
+    <!-- Pendant l'appel, l'écran sort du layout (sinon son en-tête passe par-dessus) -->
+    <Teleport to="body" :disabled="!isCallTheme">
+      <div
+        class="flex flex-col bg-canvas text-ink"
+        :class="
+          isCallTheme
+            ? 'fixed inset-0 z-100 overflow-hidden'
+            : 'h-screen overflow-hidden'
+        "
+      >
+        <div class="relative flex min-h-0 flex-1 flex-col">
+          <!-- Connexion -->
+          <div
+            v-if="status === 'connecting' || status === 'idle'"
+            class="flex flex-1 items-center justify-center"
+          >
+            <div class="flex flex-col items-center gap-5">
+              <div class="relative grid size-28 place-items-center">
+                <span
+                  class="absolute inset-0 animate-pulse rounded-full bg-primary/15 blur-xl"
+                />
+                <span
+                  class="relative grid size-16 place-items-center rounded-full border border-line bg-card shadow-soft"
+                >
+                  <i class="pi pi-spin pi-spinner text-xl text-primary" />
+                </span>
+              </div>
+              <p class="text-sm font-medium tracking-wide text-muted">
+                {{ t("sprechen_subject.connecting") }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Erreur -->
+          <div
+            v-else-if="status === 'error'"
+            class="flex flex-1 items-center justify-center"
+          >
+            <div class="max-w-lg space-y-4 px-6 text-center">
+              <span
+                class="mx-auto grid size-14 place-items-center rounded-full border border-red-400/25 bg-red-500/10"
+              >
+                <i class="pi pi-exclamation-circle text-2xl text-red-500" />
+              </span>
+              <p class="font-medium text-ink">
+                {{ errorText }}
+              </p>
+              <Button
+                :label="t('sprechen_subject.back')"
+                icon="pi pi-arrow-left"
+                outlined
+                severity="secondary"
+                @click="goToList"
+              />
+            </div>
+          </div>
+
+          <!-- Session : préparation / échange / notation / résultat -->
+          <template v-else>
+            <!-- Barre d'appel -->
+            <header
+              v-if="isCallTheme"
+              class="flex shrink-0 items-center gap-3 border-b border-line bg-card/80 px-4 py-3 backdrop-blur-md"
+            >
+              <button
+                type="button"
+                :aria-label="t('sprechen_subject.back')"
+                class="grid size-9 shrink-0 place-items-center rounded-leaf text-muted transition-colors hover:bg-card-2 hover:text-ink"
+                @click="confirmLeave"
+              >
+                <i class="pi pi-arrow-left text-sm" />
+              </button>
+
+              <div class="flex min-w-0 flex-1 items-center gap-2.5">
+                <span
+                  class="size-2 shrink-0 rounded-full"
+                  :class="
+                    status === 'active'
+                      ? 'animate-pulse bg-red-500 shadow-[0_0_0_4px_rgb(239_68_68/0.25)]'
+                      : 'bg-faint'
+                  "
+                />
+                <h1 class="truncate text-sm font-bold text-ink">
+                  {{ headerTeilName }}
+                </h1>
+              </div>
+
+              <span
+                v-if="isStage"
+                class="hidden shrink-0 items-center gap-1.5 rounded-full bg-card-2 px-2.5 py-1 text-xs font-semibold text-muted sm:inline-flex"
+              >
+                <i class="pi pi-shield text-[0.65rem]" />
+                {{ t("sprechen_subject.call.exam_mode") }}
+              </span>
+              <span
+                v-if="headerTeilNumber"
+                class="shrink-0 rounded-full bg-card-2 px-2.5 py-1 text-xs font-semibold text-muted"
+              >
+                Teil {{ headerTeilNumber }} / {{ totalTeile }}
+              </span>
+            </header>
+
+            <!-- ═══════════════ Scène : préparation + échange ═══════════════ -->
+            <div
+              v-if="isStage"
+              class="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[320px_minmax(0,1fr)] md:grid-rows-1"
+            >
+              <!-- Consignes -->
+              <aside
+                v-if="panelTeil"
+                class="flex max-h-52 flex-col gap-5 overflow-y-auto border-b border-line bg-card/70 p-5 backdrop-blur md:max-h-none md:border-b-0 md:border-r md:p-6"
+              >
+                <div>
+                  <span
+                    class="text-xs font-semibold uppercase tracking-wide text-faint"
+                  >
+                    Teil {{ panelTeil.teil_number }}
+                  </span>
+                  <h2 class="mt-1 text-lg font-semibold text-ink">
+                    {{ panelTeil.teil_name }}
+                  </h2>
+                </div>
+
+                <p class="text-sm leading-relaxed text-muted">
+                  {{ panelTeil.instructions }}
+                </p>
+
+                <div
+                  v-if="panelTeil.scenario"
+                  class="rounded-leaf border border-primary/20 bg-primary/10 px-4 py-3"
+                >
+                  <p
+                    class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary"
+                  >
+                    {{ t("sprechen_subject.scenario_label") }}
+                  </p>
+                  <p class="text-sm leading-relaxed text-ink">
+                    {{ panelTeil.scenario }}
+                  </p>
+                </div>
+
+                <div
+                  v-if="panelTeil.stimulus_people?.length"
+                  class="overflow-hidden rounded-card border border-line bg-card-2"
+                >
+                  <div class="border-b border-line px-4 py-2">
+                    <p
+                      class="text-[11px] font-semibold uppercase tracking-wide text-faint"
+                    >
+                      {{ t("sprechen_subject.stimulus_people_label") }}
+                    </p>
+                  </div>
+                  <div class="divide-y divide-line">
+                    <div
+                      v-for="person in panelTeil.stimulus_people"
+                      :key="person.name"
+                      class="px-4 py-3"
+                    >
+                      <p class="text-sm font-semibold text-ink">
+                        {{ person.name }}
+                      </p>
+                      <p class="mt-1.5 text-sm italic leading-relaxed text-ink">
+                        „{{ person.opinion }}“
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  v-if="panelTeil.stimulus_text"
+                  class="overflow-hidden rounded-card border border-line bg-card-2"
+                >
+                  <div class="border-b border-line px-4 py-2">
+                    <p
+                      class="text-[11px] font-semibold uppercase tracking-wide text-faint"
+                    >
+                      {{ t("sprechen_subject.reading_text_label") }}
+                    </p>
+                  </div>
+                  <p
+                    class="max-h-80 overflow-y-auto whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-ink"
+                  >
+                    {{ panelTeil.stimulus_text }}
+                  </p>
+                </div>
+
+                <ThemeChoicePanel
+                  v-if="panelTeil.themes"
+                  :themes="panelTeil.themes"
+                />
+                <div
+                  v-if="
+                    panelTeil.content_points.length &&
+                    (status === 'active' || !panelTeil.themes)
+                  "
+                  class="overflow-hidden rounded-card border border-line bg-card-2"
+                >
+                  <div class="border-b border-line px-4 py-2">
+                    <p
+                      class="text-[11px] font-semibold uppercase tracking-wide text-faint"
+                    >
+                      {{ t("sprechen_subject.points_to_cover") }}
+                    </p>
+                  </div>
+                  <ul class="space-y-1.5 px-4 py-3">
+                    <li
+                      v-for="point in panelTeil.content_points"
+                      :key="point"
+                      class="flex gap-2 text-sm text-ink"
+                    >
+                      <i
+                        class="pi pi-circle-fill mt-2 shrink-0 text-[5px] text-primary"
+                      />
+                      <span>{{ point }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </aside>
+
+              <!-- Scène d'appel -->
+              <section class="flex min-h-0 flex-col">
+                <div class="flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row">
+                  <div class="relative min-h-0 flex-1">
+                    <ExaminerTile
+                      ref="examinerRef"
+                      avatar-url="/avatars/brunette.glb"
+                      :speaking="micState === 'agent_speaking'"
+                      :listening="micState === 'student_turn'"
+                    />
+
+                    <!-- Vignette candidat -->
+                    <div
+                      class="absolute bottom-3 right-3 z-10 h-32 w-24 sm:h-40 sm:w-32"
+                    >
+                      <CandidateTile
+                        class="size-full"
+                        :mic-active="status === 'active'"
+                        :speaking="micState === 'student_turn'"
+                        :camera-enabled="cameraEnabled"
+                        @camera-error="cameraEnabled = false"
+                      />
+                    </div>
+
+                    <!-- Préparation : carte posée sur la scène -->
+                    <div
+                      v-if="status === 'preparing'"
+                      class="absolute inset-0 z-20 grid place-items-center rounded-card bg-canvas/55 p-4 backdrop-blur-sm"
+                    >
+                      <div
+                        class="flex w-full max-w-sm flex-col items-center gap-5 rounded-card border border-line bg-card p-6 shadow-soft"
+                      >
+                        <div class="flex flex-col items-center gap-1.5">
+                          <span
+                            class="text-3xl font-semibold tabular-nums text-ink"
+                          >
+                            {{ prepElapsedLabel }}
+                          </span>
+                          <span
+                            class="text-xs uppercase tracking-wide text-faint"
+                          >
+                            {{ t("sprechen_subject.preparing") }}
+                          </span>
+                        </div>
+
+                        <!-- Repère : temps officiel de préparation (jamais imposé) -->
+                        <span
+                          v-if="officialPrepSeconds > 0"
+                          class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors"
+                          :class="
+                            prepSecondsLeft === 0
+                              ? 'border-line bg-card-2 text-muted'
+                              : prepTimerIsAlert
+                                ? 'animate-pulse border-red-400/40 bg-red-500/15 text-red-600'
+                                : 'border-primary/25 bg-primary/10 text-primary'
+                          "
+                        >
+                          <i class="pi pi-clock text-[11px]" />
+                          {{
+                            prepSecondsLeft > 0
+                              ? t("sprechen_subject.official_prep_left", {
+                                  time: prepCountdownLabel,
+                                })
+                              : t("sprechen_subject.official_prep_over")
+                          }}
+                        </span>
+
+                        <p
+                          class="text-center text-sm leading-relaxed text-muted"
+                        >
+                          {{ t("sprechen_subject.preparation_no_limit") }}
+                        </p>
+                        <Button
+                          :label="t('sprechen_subject.start_now')"
+                          icon="pi pi-play"
+                          class="w-full"
+                          @click="startNow"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <TranscriptPanel
+                    v-if="status === 'active' && showTranscript"
+                    :lines="groupedTranscript"
+                    class="h-44 shrink-0 lg:h-auto lg:w-80"
+                  />
+                </div>
+
+                <CallControls
+                  :state="callState"
+                  :timer-label="status === 'active' ? teilCountdownLabel : null"
+                  :timer-alert="teilTimerIsAlert"
+                  :transcript-available="status === 'active'"
+                  :transcript-visible="showTranscript"
+                  :camera-enabled="cameraEnabled"
+                  @toggle-transcript="showTranscript = !showTranscript"
+                  @toggle-camera="cameraEnabled = !cameraEnabled"
+                />
+              </section>
+            </div>
+
+            <!-- ═══════════════ Notation en cours ═══════════════ -->
+            <div
+              v-else-if="status === 'ended' && !gradingResult"
+              class="flex flex-1 items-center justify-center p-6"
+            >
+              <div
+                class="w-full max-w-sm rounded-card bg-card p-7 text-center text-ink shadow-soft"
+              >
+                <div
+                  class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10"
+                >
+                  <i class="pi pi-comments text-2xl text-primary"></i>
+                </div>
+                <h3 class="mb-1 text-base font-semibold text-ink">
+                  {{ t("sprechen_subject.grading_modal_title") }}
+                </h3>
+                <p class="mb-5 text-sm text-muted">
+                  {{ t("sprechen_subject.grading_modal_subtitle") }}
+                </p>
+
+                <div class="flex flex-col gap-2 text-left">
+                  <div
+                    v-for="(step, i) in gradingSteps"
+                    :key="step.key"
+                    class="flex items-center gap-2.5 rounded-leaf px-3 py-2.5 transition-colors"
+                    :class="gradingStepStateClass(i)"
+                  >
+                    <i
+                      :class="[
+                        'shrink-0 text-lg',
+                        i < gradingStepIndex
+                          ? 'pi pi-check-circle text-emerald-600'
+                          : '',
+                        i === gradingStepIndex
+                          ? 'pi pi-spin pi-spinner text-primary'
+                          : '',
+                        i > gradingStepIndex ? 'pi pi-circle text-faint' : '',
+                      ]"
+                    ></i>
+                    <span
+                      class="text-sm"
+                      :class="
+                        i <= gradingStepIndex
+                          ? 'font-medium text-ink'
+                          : 'text-faint'
+                      "
+                    >
+                      {{ t(step.labelKey) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ═══════════════ Résultat ═══════════════ -->
+            <div
+              v-else-if="status === 'ended' && gradingResult"
+              class="flex-1 overflow-y-auto"
+            >
+              <div class="mx-auto max-w-2xl space-y-5 px-4 py-8">
+                <!-- En-tête -->
+                <div
+                  class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+                >
+                  <div
+                    :class="[
+                      'h-1.5',
+                      gradingResult.passed ? 'bg-emerald-500' : 'bg-amber-500',
+                    ]"
+                  ></div>
+                  <div
+                    class="flex items-center justify-between gap-4 px-6 py-5"
+                  >
+                    <div>
+                      <p
+                        class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted"
+                      >
+                        {{ gradingResult.provider.toUpperCase() }} ·
+                        {{ gradingResult.level.toUpperCase() }} · Sprechen
+                      </p>
+                      <h1 class="text-2xl font-bold text-ink">
+                        {{
+                          gradingResult.passed
+                            ? t("sprechen_subject.passed")
+                            : t("sprechen_subject.not_passed")
+                        }}
+                      </h1>
+                      <p class="mt-1 text-sm tabular-nums text-muted">
+                        {{ gradingResult.total_score }} /
+                        {{ gradingResult.total_max_score }}
+                        {{ t("sprechen_subject.points") }}
+                      </p>
+                    </div>
+                    <p
+                      :class="[
+                        'shrink-0 text-3xl font-extrabold tabular-nums',
+                        gradingResult.passed
+                          ? 'text-emerald-600'
+                          : 'text-amber-600',
+                      ]"
+                    >
+                      {{ scorePercent }}%
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Évolution -->
+                <div
+                  v-if="gradingResult.score_delta_percent !== null"
+                  class="flex items-center justify-between rounded-card border border-line bg-card px-5 py-4"
+                >
+                  <div>
+                    <p class="mb-0.5 text-xs text-muted">
+                      {{ t("sprechen_subject.score_delta_since_last") }}
+                    </p>
+                    <p class="text-lg font-semibold tabular-nums text-ink">
+                      {{ Math.round(gradingResult.previous_score_percent!) }}%
+                    </p>
+                  </div>
+                  <span
+                    class="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums"
+                    :class="
+                      gradingResult.score_delta_percent >= 0
+                        ? 'bg-emerald-500/10 text-emerald-700'
+                        : 'bg-amber-500/10 text-amber-700'
+                    "
+                  >
+                    <i
+                      :class="
+                        gradingResult.score_delta_percent >= 0
+                          ? 'pi pi-arrow-up'
+                          : 'pi pi-arrow-down'
+                      "
+                    ></i>
+                    {{ gradingResult.score_delta_percent >= 0 ? "+" : ""
+                    }}{{ Math.round(gradingResult.score_delta_percent) }}%
+                  </span>
+                </div>
+
+                <!-- Détail par Teil -->
+                <div
+                  class="overflow-hidden rounded-card border border-line bg-card"
+                >
+                  <div class="border-b border-line px-5 py-4">
+                    <h2 class="text-sm font-semibold text-ink">
+                      {{ t("sprechen_subject.detail_by_teil") }}
+                    </h2>
+                  </div>
+                  <div class="divide-y divide-line">
+                    <div
+                      v-for="teil in gradingResult.teile"
+                      :key="teil.teil_number"
+                      class="space-y-3 px-5 py-4"
+                    >
+                      <div class="flex items-center justify-between gap-3">
+                        <span class="text-sm font-semibold text-ink"
+                          >Teil {{ teil.teil_number }} ·
+                          {{ teil.teil_name }}</span
+                        >
+                        <span
+                          class="shrink-0 text-xs font-semibold tabular-nums text-muted"
+                        >
+                          {{ teil.teil_score }} / {{ teil.teil_max_score }}
+                        </span>
+                      </div>
+
+                      <div
+                        v-for="c in teil.criteria"
+                        :key="c.criterion_name"
+                        class="rounded-leaf border border-line bg-card-2 p-3.5"
+                      >
+                        <div class="mb-2 flex items-center justify-between">
+                          <span class="text-sm font-medium text-ink">{{
+                            c.criterion_name
+                          }}</span>
+                          <span
+                            class="text-xs font-semibold tabular-nums"
+                            :class="
+                              c.max_score && c.score / c.max_score >= 0.75
+                                ? 'text-emerald-600'
+                                : 'text-amber-600'
+                            "
+                          >
+                            {{ c.score }} / {{ c.max_score }}
+                          </span>
+                        </div>
+
+                        <div
+                          v-if="c.issue"
+                          class="mb-2 flex gap-2 rounded-leaf bg-amber-500/10 px-3 py-2"
+                        >
+                          <i
+                            class="pi pi-exclamation-circle mt-0.5 shrink-0 text-xs text-amber-600"
+                          ></i>
+                          <p class="text-xs leading-relaxed text-ink">
+                            <span class="font-semibold"
+                              >{{
+                                t("sprechen_subject.criterion_issue_label")
+                              }}
+                              :</span
+                            >
+                            {{ c.issue }}
+                          </p>
+                        </div>
+
+                        <div
+                          v-if="c.model_phrase"
+                          class="mb-2 flex gap-2 rounded-leaf bg-primary/10 px-3 py-2"
+                        >
+                          <i
+                            class="pi pi-comment mt-0.5 shrink-0 text-xs text-primary"
+                          ></i>
+                          <p class="text-xs italic leading-relaxed text-ink">
+                            <span class="font-semibold not-italic"
+                              >{{
+                                t(
+                                  "sprechen_subject.criterion_model_phrase_label",
+                                )
+                              }}
+                              :</span
+                            >
+                            „{{ c.model_phrase }}“
+                          </p>
+                        </div>
+
+                        <div v-if="c.tip" class="flex gap-2 px-1">
+                          <i
+                            class="pi pi-lightbulb mt-0.5 shrink-0 text-xs text-faint"
+                          ></i>
+                          <p class="text-xs leading-relaxed text-muted">
+                            <span class="font-semibold"
+                              >{{
+                                t("sprechen_subject.criterion_tip_label")
+                              }}
+                              :</span
+                            >
+                            {{ c.tip }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Points forts / à améliorer -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div v-if="gradingResult.strengths.length">
+                    <p
+                      class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-600"
+                    >
+                      <i class="pi pi-check-circle" />{{
+                        t("sprechen_subject.strengths")
+                      }}
+                    </p>
+                    <ul class="space-y-1.5">
+                      <li
+                        v-for="(s, i) in gradingResult.strengths"
+                        :key="i"
+                        class="flex items-start gap-2 rounded-leaf bg-emerald-500/10 px-3 py-2 text-sm text-ink"
+                      >
+                        <i
+                          class="pi pi-check mt-0.5 shrink-0 text-xs text-emerald-600"
+                        /><span>{{ s }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div v-if="gradingResult.improvement_areas.length">
+                    <p
+                      class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-600"
+                    >
+                      <i class="pi pi-exclamation-circle" />{{
+                        t("sprechen_subject.to_improve")
+                      }}
+                    </p>
+                    <ul class="space-y-1.5">
+                      <li
+                        v-for="(a, i) in gradingResult.improvement_areas"
+                        :key="i"
+                        class="flex items-start gap-2 rounded-leaf bg-amber-500/10 px-3 py-2 text-sm text-ink"
+                      >
+                        <i
+                          class="pi pi-arrow-right mt-0.5 shrink-0 text-xs text-amber-600"
+                        /><span>{{ a }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-3 pb-8 sm:flex-row">
+                  <Button
+                    :label="t('sprechen_subject.redo')"
+                    icon="pi pi-refresh"
+                    outlined
+                    severity="secondary"
+                    class="flex-1"
+                    @click="redo"
+                  />
+                  <Button
+                    :label="t('sprechen_subject.choose_another')"
+                    icon="pi pi-list"
+                    class="flex-1"
+                    @click="goToList"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>

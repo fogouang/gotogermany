@@ -416,6 +416,7 @@ class ExamSessionService:
                 submitted_at=s.submitted_at,
                 duration_seconds=s.duration_seconds,
                 module_slugs=s.module_slugs,
+                 score_breakdown=s.score_breakdown,
             ))
         return result
 

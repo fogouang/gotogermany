@@ -33,6 +33,11 @@ export const useAuthStore = defineStore("auth", {
       state.user && "center_id" in state.user ? state.user.center_id : null,
     branchId: (state) =>
       state.user && "branch_id" in state.user ? state.user.branch_id : null,
+      /** Inscription via le lien d'un centre, en attente de validation */
+    pendingBranchId: (state) =>
+      state.user && "requested_branch_id" in state.user
+        ? ((state.user as any).requested_branch_id ?? null)
+        : null,
     targetLevelId: (state) =>
       state.user && "target_level_id" in state.user
         ? state.user.target_level_id
@@ -89,7 +94,12 @@ export const useAuthStore = defineStore("auth", {
         this.user = response.user;
         this.aiCredits = (response.user as any)?.ai_credits ?? 0;
 
-        return { success: true, user: response.user };
+        // La réponse de login ne contient pas le profil complet
+        // (target_level_id, branch_id, learning_track...) : on le charge
+        // tout de suite, sinon l'espace croit que rien n'a été choisi.
+        await this.fetchUser();
+
+        return { success: true, user: this.user ?? response.user };
       } catch (error: any) {
         return {
           success: false,
@@ -104,26 +114,31 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    async register(
-      email: string,
-      password: string,
-      fullName: string,
-      phone?: string,
-      referralCode?: string,
-      whatsappOptIn = false,
-    ) {
+       async register(payload: {
+      fullName: string;
+      phone: string;
+      password: string;
+      email?: string | null;
+      referralCode?: string | null;
+      whatsappOptIn?: boolean;
+      /** Inscription via le lien d'un centre */
+      centerJoinToken?: string | null;
+      branchId?: string | null;
+    }) {
       this._ensureApiConfig();
       this.loading = true;
 
       try {
         const response = await AuthService.registerApiV1AuthRegisterPost({
-          email,
-          password,
-          full_name: fullName,
-          phone: phone || null,
-          referral_code: referralCode || null,
-          whatsapp_opt_in: whatsappOptIn,
-        });
+          full_name: payload.fullName,
+          phone: payload.phone,
+          password: payload.password,
+          email: payload.email || null,
+          referral_code: payload.referralCode || null,
+          whatsapp_opt_in: payload.whatsappOptIn ?? false,
+          center_join_token: payload.centerJoinToken || null,
+          branch_id: payload.branchId || null,
+        } as any);
 
         const tokenCookie = useCookie("access_token", {
           maxAge: 60 * 60 * 24 * 7,
@@ -135,9 +150,12 @@ export const useAuthStore = defineStore("auth", {
         OpenAPI.TOKEN = response.access_token;
         this.token = response.access_token;
         this.user = response.user;
-        this.aiCredits = (response.user as any)?.ai_credits ?? 2;
+        this.aiCredits = (response.user as any)?.ai_credits ?? 0;
 
-        return { success: true, user: response.user };
+        // Même raison qu'au login : profil complet tout de suite
+        await this.fetchUser();
+
+        return { success: true, user: this.user ?? response.user };
       } catch (error: any) {
         return {
           success: false,
@@ -218,6 +236,26 @@ export const useAuthStore = defineStore("auth", {
         return {
           success: false,
           error: error.body?.detail || "Erreur lors du changement de niveau",
+        };
+      }
+    },
+
+    /** Parcours choisi à l'accueil, enregistré dans le compte */
+    async setLearningTrack(track: "exam" | "start_deutsch") {
+      this._ensureApiConfig();
+      try {
+        const response = await UsersService.updateMeApiV1UsersMePatch({
+          learning_track: track,
+        });
+        this.user = response;
+        return { success: true };
+      } catch (error: any) {
+        return {
+          success: false,
+          error:
+            typeof error.body?.detail === "string"
+              ? error.body.detail
+              : "Erreur lors de l'enregistrement du parcours",
         };
       }
     },

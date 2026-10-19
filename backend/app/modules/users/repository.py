@@ -20,14 +20,23 @@ class UserRepository(BaseRepository[User]):
             select(User).where(User.email == email)
         )
         return result.scalar_one_or_none()
-
-    async def find_by_verification_token(self, token: str) -> User | None:
-        result = await self.db.execute(
-            select(User).where(User.verification_token == token)
-        )
+    
+    async def find_by_phone(self, phone: str) -> User | None:
+        result = await self.db.execute(select(User).where(User.phone == phone))
         return result.scalar_one_or_none()
 
-    async def find_by_reset_token(self, token: str) -> User | None:
+    async def find_join_requests(self, branch_ids: list[UUID]) -> list[User]:
+        """Inscriptions via le lien du centre, pas encore validées."""
+        if not branch_ids:
+            return []
+        result = await self.db.execute(
+            select(User)
+            .where(User.requested_branch_id.in_(branch_ids), User.branch_id.is_(None))
+            .order_by(User.join_requested_at.asc())
+        )
+        return list(result.scalars().all())
+
+    async def find_by_verification_token(self, token: str) -> User | None:
         result = await self.db.execute(
             select(User).where(User.reset_token == token)
         )

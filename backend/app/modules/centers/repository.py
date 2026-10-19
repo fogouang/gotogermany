@@ -14,6 +14,10 @@ class CenterRepository(BaseRepository[Center]):
     def __init__(self, db: AsyncSession):
         super().__init__(Center, db)
 
+    async def find_by_join_token(self, token: str) -> Center | None:
+        result = await self.db.execute(select(Center).where(Center.join_token == token))
+        return result.scalar_one_or_none()
+
 
 class BranchRepository(BaseRepository[Branch]):
     def __init__(self, db: AsyncSession):

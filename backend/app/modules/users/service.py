@@ -20,6 +20,10 @@ from app.modules.users.schemas import (
 )
 from app.shared.exceptions.http import BadRequestException, ForbiddenException
 from app.shared.security.password import hash_password, verify_password
+from app.shared.utils.phone import normalize_phone
+
+# Adresse interne des comptes créés sans email
+PLACEHOLDER_EMAIL_DOMAIN = "@internal.gotogermany"
 
 # Normalise les différents slugs de module selon le provider
 # (TELC: leseverstehen/hoerverstehen/muendlicher_ausdruck ;
@@ -50,8 +54,19 @@ class UserService:
         if not update_data:
             return current_user
 
+        if "phone" in update_data:
+            await self._check_phone_available(update_data["phone"], current_user.id)
+
         if "target_level_id" in update_data:
             await self._check_target_level(current_user, update_data["target_level_id"])
+            # Choisir un niveau du catalogue (B1/B2) = parcours examen
+            update_data.setdefault("learning_track", "exam")
+
+        if "learning_track" in update_data:
+            if current_user.role != UserRole.student or current_user.branch_id:
+                raise ForbiddenException(
+                    detail="Le parcours est défini par votre centre."
+                )
 
         if "whatsapp_opt_in" in update_data:
             if update_data["whatsapp_opt_in"]:
@@ -129,6 +144,21 @@ class UserService:
         existing = await self.repo.find_by_email(email)
         if existing:
             raise BadRequestException(detail="Cet email est déjà utilisé.")
+
+    @staticmethod
+    def _normalized_phone(raw: str | None) -> str | None:
+        try:
+            return normalize_phone(raw)
+        except ValueError:
+            raise BadRequestException(detail="Numéro de téléphone invalide.")
+
+    async def _check_phone_available(self, phone: str | None, exclude_user_id: UUID | None = None) -> None:
+        """Un numéro = un compte (le numéro sert à se connecter)."""
+        if not phone:
+            return
+        existing = await self.repo.find_by_phone(phone)
+        if existing and existing.id != exclude_user_id:
+            raise BadRequestException(detail="Ce numéro est déjà utilisé par un autre compte.")
 
     async def create_director(self, data: DirectorCreateRequest) -> User:
         """Créé par l'admin ITIA, une fois la licence négociée/payée."""
@@ -230,6 +260,8 @@ class UserService:
 
         branch = await BranchRepository(self.db).get_by_id_or_404(secretary.branch_id)
         await self._check_email_available(data.email)
+        phone = self._normalized_phone(data.phone)
+        await self._check_phone_available(phone)
 
         center_service = CenterService(self.db)
         center = await center_service.center_repo.get_by_id_or_404(branch.center_id)
@@ -248,7 +280,7 @@ class UserService:
             email=data.email,
             hashed_password=hash_password(data.password),
             full_name=data.full_name,
-            phone=data.phone,
+            phone=phone,
             is_active=True,
             is_admin=False,
             is_verified=True,
@@ -561,14 +593,16 @@ class UserService:
             branch = await branch_repo.get_by_id_or_404(staff.branch_id)
             target_branch_id = staff.branch_id
 
-        placeholder_email = f"eleve-{uuid4().hex[:12]}@internal.gotogermany"
+        placeholder_email = f"eleve-{uuid4().hex[:12]}{PLACEHOLDER_EMAIL_DOMAIN}"
         placeholder_password = secrets.token_urlsafe(24)
+        phone = self._normalized_phone(data.phone)
+        await self._check_phone_available(phone)
 
         return await self.repo.create(
             email=placeholder_email,
             hashed_password=hash_password(placeholder_password),
             full_name=data.full_name,
-            phone=data.phone,
+            phone=phone,
             is_active=True,
             is_admin=False,
             is_verified=False,
@@ -582,3 +616,105 @@ class UserService:
 
     async def list_teachers_for_secretary(self, secretary: User) -> list[User]:
         return await self.repo.find_teachers_by_branch(secretary.branch_id)
+    
+        # ── Inscriptions via le lien du centre ───
+
+    async def _staff_branch_ids(self, staff: User) -> list[UUID]:
+        """Secrétaire : sa succursale. Directeur : toutes celles du centre."""
+        from app.modules.centers.repository import BranchRepository
+
+        if staff.role == UserRole.branch_secretary and staff.branch_id:
+            return [staff.branch_id]
+        if staff.role == UserRole.center_director and staff.center_id:
+            branches = await BranchRepository(self.db).find_by_center(staff.center_id)
+            return [b.id for b in branches]
+        raise ForbiddenException(detail="Action réservée aux secrétaires et directeurs.")
+
+    async def list_join_requests(self, staff: User) -> list[dict]:
+        from sqlalchemy import select
+        from app.modules.centers.models import Branch
+
+        branch_ids = await self._staff_branch_ids(staff)
+        students = await self.repo.find_join_requests(branch_ids)
+        if not students:
+            return []
+
+        result = await self.db.execute(select(Branch).where(Branch.id.in_(branch_ids)))
+        branch_names = {b.id: b.name for b in result.scalars().all()}
+
+        return [
+            {
+                "id": s.id,
+                "full_name": s.full_name,
+                "phone": s.phone,
+                "email": None if s.email.endswith(PLACEHOLDER_EMAIL_DOMAIN) else s.email,
+                "branch_id": s.requested_branch_id,
+                "branch_name": branch_names.get(s.requested_branch_id, ""),
+                "requested_at": s.join_requested_at,
+            }
+            for s in students
+        ]
+
+    async def _get_join_request(self, student_id: UUID, staff: User) -> User:
+        student = await self.repo.get_by_id_or_404(student_id)
+        if student.branch_id or not student.requested_branch_id:
+            raise BadRequestException(detail="Cette inscription a déjà été traitée.")
+        if student.requested_branch_id not in await self._staff_branch_ids(staff):
+            raise ForbiddenException(detail="Cette inscription ne concerne pas votre succursale.")
+        return student
+
+    async def approve_join_request(
+        self, student_id: UUID, target_level_id: UUID, staff: User
+    ) -> User:
+        """Validation : rattachement à la succursale, niveau, crédits par
+        défaut prélevés sur le pool du centre (même règle qu'une création
+        manuelle). L'accès aux sujets s'ouvre ensuite à l'activation."""
+        from app.modules.centers.repository import BranchRepository
+        from app.modules.centers.service import CenterService
+        from app.modules.exams.models import Level
+
+        student = await self._get_join_request(student_id, staff)
+        branch = await BranchRepository(self.db).get_by_id_or_404(student.requested_branch_id)
+
+        if not await self.db.get(Level, target_level_id):
+            raise BadRequestException(detail="Niveau introuvable.")
+
+        center_service = CenterService(self.db)
+        center = await center_service.center_repo.get_by_id_or_404(branch.center_id)
+        default_credits = center.default_credits_per_student
+        if center.ai_credit_pool_balance < default_credits:
+            raise BadRequestException(
+                detail=(
+                    f"Pool de crédits insuffisant pour valider cet élève "
+                    f"({center.ai_credit_pool_balance} restants, {default_credits} requis). "
+                    "Contactez GoToGermany pour un rechargement."
+                )
+            )
+
+        updated = await self.repo.update(
+            student.id,
+            branch_id=branch.id,
+            requested_branch_id=None,
+            join_requested_at=None,
+            target_level_id=target_level_id,
+            learning_track="exam",
+            ai_credits=student.ai_credits + default_credits,
+        )
+
+        new_balance = center.ai_credit_pool_balance - default_credits
+        await center_service.center_repo.update(center.id, ai_credit_pool_balance=new_balance)
+        await center_service.credit_txn_repo.create(
+            center_id=center.id,
+            student_id=student.id,
+            performed_by=staff.id,
+            amount=default_credits,
+            pool_balance_after=new_balance,
+            reason="Attribution à la validation de l'inscription",
+        )
+        return updated
+
+    async def reject_join_request(self, student_id: UUID, staff: User) -> None:
+        """Refus : la demande est retirée, le compte reste un compte
+        individuel sans crédit."""
+        student = await self._get_join_request(student_id, staff)
+        await self.repo.update(student.id, requested_branch_id=None, join_requested_at=None)

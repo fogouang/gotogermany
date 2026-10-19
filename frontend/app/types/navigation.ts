@@ -1,4 +1,5 @@
 // app/types/navigation.ts
+import type { LearningTrack } from "~/composables/useLearningTrack";
 
 // Rôles côté navigation : un rôle = un menu.
 // (directeur et secrétaire partagent l'espace Centre mais n'ont pas le même menu)
@@ -26,6 +27,12 @@ export interface NavItem {
    * Absent = visible par tous.
    */
   audience?: "center" | "independent";
+  /**
+   * Parcours de l'étudiant qui voit cette entrée :
+   * "exam" = B1/B2 (telc, Goethe, ÖSD), "start_deutsch" = A1/A2.
+   * Absent = visible dans les deux parcours.
+   */
+  track?: LearningTrack;
 }
 
 export interface NavSection {

@@ -31,7 +31,14 @@
     "phone_placeholder": "Your number",
     "whatsapp_opt_in": "Join the GoToGermany community on WhatsApp",
     "whatsapp_opt_in_hint": "Tips, new subjects and support between candidates. You can leave at any time.",
-    "whatsapp_needs_phone": "Enter your WhatsApp number to join the community."
+    "whatsapp_needs_phone": "Enter your WhatsApp number to join the community.",
+    "login_identifier": "Phone number",
+    "login_identifier_placeholder": "6 90 00 00 00",
+    "phone_required": "Enter your phone number.",
+    "email_optional": "Email (optional)",
+    "branch": "Your branch",
+    "branch_placeholder": "Choose your branch",
+    "branch_required": "Choose your branch."
   },
   "exam": {
     "start": "Start",
@@ -362,6 +369,30 @@
   "dashboard": {
     "greeting": "Hello",
     "subtitle": "What would you like to do today?",
+    "track": {
+      "start_title": "Your path: Start Deutsch A1 / A2",
+      "start_text": "Practice papers in the official format, so you are ready on test day.",
+      "start_cta": "See the papers",
+      "switch_to_exam": "I'm preparing for B1 or B2 instead",
+      "switch_to_start": "Aiming for A1 or A2? Switch to the Start Deutsch path"
+    },
+    "subjects_count": "{n} paper available | {n} papers available",
+    "my_exam": {
+      "eyebrow": "My exam",
+      "progress": "{done} of {total} papers completed",
+      "modules_title": "By module",
+      "module_pending": "Being marked",
+      "best_score": "Best score",
+      "passed": "Exams passed",
+      "last_activity": "Last activity",
+      "start": "Start paper {n}",
+      "resume": "Resume paper {n}",
+      "redo": "Retake a paper",
+      "unlock": "Unlock this exam",
+      "explore": "Explore other exams ({n})",
+      "choose_title": "Choose your exam",
+      "choose_text": "Select the exam you are preparing for to get started."
+    },
     "quick_actions": {
       "exam": "Take an exam",
       "exam_sub": "Goethe, TELC, ÖSD",
@@ -1074,9 +1105,25 @@
     "subject_default": "Subject",
     "no_results_title": "No sessions yet",
     "no_results_subtitle": "Your graded speaking sessions will show up here.",
-    "see_subjects": "See subjects"
+    "see_subjects": "See subjects",
+    "view_subject": "View subject"
   },
   "sprechen_subject": {
+    "call": {
+      "examiner_default_name": "Your examiner",
+      "examiner_role": "Examiner · Sprechen",
+      "avatar_loading": "Your examiner is joining… {progress}%",
+      "transcript": "Transcript",
+      "transcript_empty": "The transcript will appear here.",
+      "show_transcript": "Show transcript",
+      "hide_transcript": "Hide transcript",
+      "camera_on": "Turn on my camera",
+      "camera_off": "Turn off my camera",
+      "status_preparing": "Preparation · not recording",
+      "status_waiting": "Waiting",
+      "exam_mode": "Exam mode",
+      "insufficient_credits": "Not enough credits to take the oral exam with the examiner."
+    },
     "page_title": "Sprechen session",
     "connection_error": "The connection to the examiner was interrupted.",
     "back": "Back",
@@ -1239,7 +1286,12 @@
       "pending_review": "Correction in progress",
       "good_score": "Good score, keep it up!",
       "keep_practicing": "Keep practicing",
-      "retry": "Try again"
+      "retry": "Try again",
+      "provisional": "Provisional score",
+      "pending_note": "{modules} still being marked: your score will be updated.",
+      "points_of": "{score} / {max} pts",
+      "oral_not_scored": "Speaking: practise out loud, not scored here",
+      "refresh": "Refresh"
     },
     "free_text": {
       "word_count": "{count} words",
@@ -1900,7 +1952,14 @@
     "error": "We couldn't save your choice. Please try again.",
     "community_title": "All set!",
     "community_text": "Your space is ready for {level}.",
-    "go_dashboard": "Go to my space"
+    "go_dashboard": "Go to my space",
+    "track_title": "Which level are you aiming for?",
+    "track_subtitle": "We adapt your space to your goal. You can change it later.",
+    "track_exam_title": "I'm preparing for B1 or B2",
+    "track_exam_text": "telc, Goethe and ÖSD mock exams, speaking with an examiner, AI marking for Schreiben.",
+    "track_start_title": "I'm preparing for A1 or A2",
+    "track_start_text": "Start Deutsch and Goethe-Zertifikat A2: practice papers in the official format.",
+    "back": "Back"
   },
   "level_switch": {
     "title": "Switch level",
@@ -1948,13 +2007,78 @@
     "offline_detail": "Your answers stay on this device until the connection comes back.",
     "online": "Back online",
     "level_changed": "Active level: {level}"
-  },"methodology": {
-  "eyebrow": "Writing guide",
-  "title": "Schreiben methodology",
-  "subtitle": "Expected structures, key phrases and tips by exam and level.",
-  "notice_title": "Guide being updated",
-  "notice_text": "We are revising this guide using the official documents from telc, the Goethe-Institut and ÖSD, so that every structure and score matches the exam exactly. In the meantime, practise with the simulator: the AI marking shows you what is expected for each task.",
-  "cta_simulator": "Practise Schreiben",
-  "cta_exams": "See the exams"
-}
+  },
+  "methodology": {
+    "eyebrow": "Writing guide",
+    "title": "Schreiben methodology",
+    "subtitle": "Expected structures, key phrases and tips by exam and level.",
+    "notice_title": "Guide being updated",
+    "notice_text": "We are revising this guide using the official documents from telc, the Goethe-Institut and ÖSD, so that every structure and score matches the exam exactly. In the meantime, practise with the simulator: the AI marking shows you what is expected for each task.",
+    "cta_simulator": "Practise Schreiben",
+    "cta_exams": "See the exams"
+  },
+  "sprechen_preview": {
+    "page_title": "Subject preview",
+    "back": "Back to subjects",
+    "start": "Take the oral exam with the examiner",
+    "cost": "Cost: {cost} credits · Balance: {credits}",
+    "no_credit_title": "You need {cost} credits to take this oral exam",
+    "no_credit_text": "You can read the subject and prepare your ideas. The oral exam with the examiner unlocks as soon as your balance allows it.",
+    "your_text": "Your text",
+    "exam_note": "As in the real exam, you only see your own document.",
+    "load_error": "Could not load this subject.",
+    "balance": "Balance: {credits} credits",
+    "cost_only": "A full oral exam: {cost} credits",
+    "partner_text": "Your partner's text"
+  },
+  "join_center": {
+    "page_title": "Join {center}",
+    "page_title_generic": "Join a centre",
+    "title": "Join {center}",
+    "subtitle": "Create your account in one minute. Your centre will then approve your registration.",
+    "invalid_title": "Invalid link",
+    "invalid_text": "This sign-up link does not exist or has been disabled. Ask your centre for a new link.",
+    "back_home": "Back to home"
+  },
+  "pending_join": {
+    "page_title": "Registration pending",
+    "title": "Your registration is pending",
+    "text": "Thanks {name}! Your centre still needs to approve your account. As soon as it's done, you'll get access to your exams.",
+    "step_1": "Your secretary checks your registration",
+    "step_2": "They choose your exam level",
+    "step_3": "Your access opens, you can start",
+    "refresh": "Check again",
+    "logout": "Log out"
+  },
+  "centre_join": {
+    "title": "Student sign-up link",
+    "subtitle": "Share this link: your students create their own account, you only have to approve them.",
+    "copy": "Copy",
+    "copied": "Link copied",
+    "share_whatsapp": "WhatsApp",
+    "share_message": "Create your GoToGermany account with {center}: {url}",
+    "disabled_badge": "Link disabled",
+    "disabled_hint": "Nobody can sign up with this link for now.",
+    "regenerate": "New link",
+    "regenerate_confirm": "The old link will stop working. Continue?",
+    "regenerated": "New link created",
+    "disable": "Disable link",
+    "enable": "Enable link",
+    "load_error": "Could not load the link.",
+    "error_generic": "Something went wrong.",
+    "requests_title": "Registrations to approve",
+    "requests_empty": "No pending registrations.",
+    "requested_on": "requested on {date}",
+    "refresh": "Refresh",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approve_title": "Approve {name}'s registration",
+    "level_label": "Exam level",
+    "level_placeholder": "Choose a level",
+    "approve_hint": "The centre's default credits will be assigned. Access then opens at activation, as for a student created by hand.",
+    "cancel": "Cancel",
+    "approved": "Registration approved",
+    "rejected": "Registration rejected",
+    "reject_confirm": "Reject {name}'s registration?"
+  }
 }

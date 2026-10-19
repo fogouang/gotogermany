@@ -10,6 +10,13 @@ from typing import Annotated, Any, Literal, TypeAlias, Union
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+# ---------------------------------------------------------------------------
+# Aperçu d'un sujet (lecture libre, sans crédit)
+# ---------------------------------------------------------------------------
+from typing import Any as _Any
+from uuid import UUID as _UUID
+
+from pydantic import BaseModel as _BaseModel
 
 
 # ---------------------------------------------------------------------------
@@ -189,3 +196,32 @@ class SessionHistoryItem(BaseModel):
 class SessionHistoryListResponse(BaseModel):
     items: list[SessionHistoryItem]
     total: int
+    
+
+
+
+class SprechenPreviewTeil(_BaseModel):
+    """Ce que l'élève a le droit de voir d'un Teil : jamais le matériel
+    de l'examinatrice (texte de B, présentation de Kandidat B...)."""
+    teil_number: int
+    name: str
+    format_type: str
+    instructions: str
+    duration_minutes: int
+    max_score: float | None = None
+    content_points: list[str] = []
+    themes: dict[str, _Any] | None = None
+    scenario: str | None = None
+    stimulus_people: list[dict[str, str]] | None = None
+    stimulus_text: str | None = None
+
+
+class SprechenPreviewResponse(_BaseModel):
+    subject_id: _UUID
+    provider: str
+    level: str
+    total_minutes: int
+    teile: list[SprechenPreviewTeil]
+    credit_cost: int
+    credits_available: int
+    can_start: bool

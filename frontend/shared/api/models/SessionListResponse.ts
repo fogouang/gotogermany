@@ -16,5 +16,6 @@ export type SessionListResponse = {
     submitted_at: (string | null);
     duration_seconds: (number | null);
     module_slugs?: (Array<string> | null);
+    score_breakdown?: (Record<string, any> | null);
 };
 

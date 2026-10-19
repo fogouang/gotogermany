@@ -31,7 +31,14 @@
     "phone_placeholder": "Votre numéro",
     "whatsapp_opt_in": "Rejoindre la communauté GoToGermany sur WhatsApp",
     "whatsapp_opt_in_hint": "Conseils, nouveaux sujets et entraide entre candidats. Vous pouvez quitter à tout moment.",
-    "whatsapp_needs_phone": "Indiquez votre numéro WhatsApp pour rejoindre la communauté."
+    "whatsapp_needs_phone": "Indiquez votre numéro WhatsApp pour rejoindre la communauté.",
+    "login_identifier": "Numéro de téléphone",
+    "login_identifier_placeholder": "6 90 00 00 00",
+    "phone_required": "Indique ton numéro de téléphone.",
+    "email_optional": "Email (facultatif)",
+    "branch": "Ta succursale",
+    "branch_placeholder": "Choisis ta succursale",
+    "branch_required": "Choisis ta succursale."
   },
   "seo": {
     "home": {
@@ -352,6 +359,30 @@
   "dashboard": {
     "greeting": "Bonjour",
     "subtitle": "Que souhaitez-vous faire aujourd'hui ?",
+    "track": {
+      "start_title": "Ton parcours : Start Deutsch A1 / A2",
+      "start_text": "Des sujets d'entraînement dans le format officiel, pour arriver prêt le jour du test.",
+      "start_cta": "Voir les sujets",
+      "switch_to_exam": "Je prépare plutôt le B1 ou le B2",
+      "switch_to_start": "Tu vises l'A1 ou l'A2 ? Passe au parcours Start Deutsch"
+    },
+    "subjects_count": "{n} sujet disponible | {n} sujets disponibles",
+    "my_exam": {
+      "eyebrow": "Mon examen",
+      "progress": "{done} sujet(s) terminé(s) sur {total}",
+      "modules_title": "Par module",
+      "module_pending": "En correction",
+      "best_score": "Meilleur score",
+      "passed": "Examens réussis",
+      "last_activity": "Dernière activité",
+      "start": "Commencer le sujet {n}",
+      "resume": "Reprendre le sujet {n}",
+      "redo": "Refaire un sujet",
+      "unlock": "Débloquer cet examen",
+      "explore": "Explorer les autres examens ({n})",
+      "choose_title": "Choisissez votre examen",
+      "choose_text": "Sélectionnez l'examen que vous préparez pour commencer."
+    },
     "quick_actions": {
       "exam": "Passer un examen",
       "exam_sub": "Goethe, TELC, ÖSD",
@@ -1065,9 +1096,25 @@
     "subject_default": "Sujet",
     "no_results_title": "Pas encore de session",
     "no_results_subtitle": "Tes sessions de speaking notées apparaîtront ici.",
-    "see_subjects": "Voir les sujets"
+    "see_subjects": "Voir les sujets",
+    "view_subject": "Voir le sujet"
   },
   "sprechen_subject": {
+    "call": {
+      "examiner_default_name": "Votre examinatrice",
+      "examiner_role": "Examinatrice · Sprechen",
+      "avatar_loading": "Arrivée de l'examinatrice… {progress} %",
+      "transcript": "Transcription",
+      "transcript_empty": "La transcription apparaîtra ici.",
+      "show_transcript": "Afficher la transcription",
+      "hide_transcript": "Masquer la transcription",
+      "camera_on": "Activer ma caméra",
+      "camera_off": "Couper ma caméra",
+      "status_preparing": "Préparation · pas d'enregistrement",
+      "status_waiting": "En attente",
+      "exam_mode": "Mode examen",
+      "insufficient_credits": "Crédits insuffisants pour passer l'oral avec l'examinatrice."
+    },
     "page_title": "Session Sprechen",
     "connection_error": "La connexion à l'examinateur a été interrompue.",
     "back": "Retour",
@@ -1230,7 +1277,12 @@
       "pending_review": "En cours de correction",
       "good_score": "Bon score, continue comme ça !",
       "keep_practicing": "Continue à t'entraîner",
-      "retry": "Recommencer"
+      "retry": "Recommencer",
+      "provisional": "Score provisoire",
+      "pending_note": "{modules} en cours de correction : ton score sera mis à jour.",
+      "points_of": "{score} / {max} pts",
+      "oral_not_scored": "Oral : entraîne-toi à voix haute, non noté ici",
+      "refresh": "Actualiser"
     },
     "free_text": {
       "word_count": "{count} mots",
@@ -1901,7 +1953,14 @@
     "error": "Impossible d'enregistrer votre choix. Réessayez.",
     "community_title": "C'est noté !",
     "community_text": "Votre espace est prêt pour {level}.",
-    "go_dashboard": "Accéder à mon espace"
+    "go_dashboard": "Accéder à mon espace",
+    "track_title": "Quel niveau vises-tu ?",
+    "track_subtitle": "On adapte ton espace à ton objectif. Tu pourras changer plus tard.",
+    "track_exam_title": "Je prépare le B1 ou le B2",
+    "track_exam_text": "Examens blancs telc, Goethe et ÖSD, oral avec examinateur, correction IA du Schreiben.",
+    "track_start_title": "Je prépare l'A1 ou l'A2",
+    "track_start_text": "Start Deutsch et Goethe-Zertifikat A2 : des sujets d'entraînement dans le format officiel.",
+    "back": "Retour"
   },
   "level_switch": {
     "title": "Changer de niveau",
@@ -1958,5 +2017,69 @@
     "notice_text": "Nous révisons ce guide à partir des documents officiels de telc, du Goethe-Institut et de l'ÖSD, pour que chaque structure et chaque barème corresponde exactement à l'examen. En attendant, entraînez-vous avec le simulateur : la correction IA vous indique ce qui est attendu pour chaque tâche.",
     "cta_simulator": "S'entraîner au Schreiben",
     "cta_exams": "Voir les examens"
+  },
+  "sprechen_preview": {
+    "page_title": "Aperçu du sujet",
+    "back": "Retour aux sujets",
+    "start": "Passer l'oral avec l'examinatrice",
+    "cost": "Coût : {cost} crédits · Solde : {credits}",
+    "no_credit_title": "Il te faut {cost} crédits pour passer cet oral",
+    "no_credit_text": "Tu peux lire le sujet et préparer tes idées. L'oral avec l'examinatrice se débloque dès que ton solde le permet.",
+    "your_text": "Ton texte",
+    "exam_note": "Comme à l'examen, tu ne vois que ton propre document.",
+    "load_error": "Impossible de charger ce sujet.",
+    "balance": "Solde : {credits} crédits",
+    "cost_only": "Un oral complet : {cost} crédits",
+    "partner_text": "Texte de ton/ta partenaire"
+  },
+  "join_center": {
+    "page_title": "Rejoindre {center}",
+    "page_title_generic": "Rejoindre un centre",
+    "title": "Rejoins {center}",
+    "subtitle": "Crée ton compte en une minute. Ton centre validera ensuite ton inscription.",
+    "invalid_title": "Lien invalide",
+    "invalid_text": "Ce lien d'inscription n'existe pas ou a été désactivé. Demande un nouveau lien à ton centre.",
+    "back_home": "Retour à l'accueil"
+  },
+  "pending_join": {
+    "page_title": "Inscription en attente",
+    "title": "Ton inscription est en attente",
+    "text": "Merci {name} ! Ton centre doit encore valider ton compte. Dès que c'est fait, tu auras accès à tes examens.",
+    "step_1": "Ta secrétaire vérifie ton inscription",
+    "step_2": "Elle choisit ton niveau d'examen",
+    "step_3": "Ton accès s'ouvre, tu peux commencer",
+    "refresh": "Vérifier à nouveau",
+    "logout": "Se déconnecter"
+  },
+  "centre_join": {
+    "title": "Lien d'inscription de vos élèves",
+    "subtitle": "Partagez ce lien : vos élèves créent leur compte eux-mêmes, vous n'avez plus qu'à valider.",
+    "copy": "Copier",
+    "copied": "Lien copié",
+    "share_whatsapp": "WhatsApp",
+    "share_message": "Crée ton compte GoToGermany avec le centre {center} : {url}",
+    "disabled_badge": "Lien désactivé",
+    "disabled_hint": "Personne ne peut s'inscrire avec ce lien pour le moment.",
+    "regenerate": "Nouveau lien",
+    "regenerate_confirm": "L'ancien lien ne fonctionnera plus. Continuer ?",
+    "regenerated": "Nouveau lien créé",
+    "disable": "Désactiver le lien",
+    "enable": "Activer le lien",
+    "load_error": "Impossible de charger le lien.",
+    "error_generic": "Une erreur est survenue.",
+    "requests_title": "Inscriptions à valider",
+    "requests_empty": "Aucune inscription en attente.",
+    "requested_on": "demande du {date}",
+    "refresh": "Actualiser",
+    "approve": "Valider",
+    "reject": "Refuser",
+    "approve_title": "Valider l'inscription de {name}",
+    "level_label": "Niveau préparé",
+    "level_placeholder": "Choisir un niveau",
+    "approve_hint": "Les crédits par défaut du centre lui seront attribués. Son accès s'ouvrira ensuite à l'activation, comme pour un élève créé à la main.",
+    "cancel": "Annuler",
+    "approved": "Inscription validée",
+    "rejected": "Inscription refusée",
+    "reject_confirm": "Refuser l'inscription de {name} ?"
   }
 }

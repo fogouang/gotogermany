@@ -65,49 +65,91 @@
         class="text-center py-16 bg-card border border-line rounded-card"
       >
         <i class="pi pi-inbox text-4xl text-faint mb-3 block" />
-        <p class="font-medium text-ink">{{ t("sprechen.no_subjects_title") }}</p>
-        <p class="text-sm text-muted mb-4">{{ t("sprechen.no_subjects_subtitle") }}</p>
-        <Button :label="t('sprechen.show_all')" icon="pi pi-refresh" @click="resetFilters" />
+        <p class="font-medium text-ink">
+          {{ t("sprechen.no_subjects_title") }}
+        </p>
+        <p class="text-sm text-muted mb-4">
+          {{ t("sprechen.no_subjects_subtitle") }}
+        </p>
+        <Button
+          :label="t('sprechen.show_all')"
+          icon="pi pi-refresh"
+          @click="resetFilters"
+        />
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <NuxtLink
           v-for="subject in sprechenSubjects"
           :key="subject.id"
-          :to="localePath(`/dashboard/sprechen/${subject.id}`)"
+          :to="localePath(`/dashboard/sprechen/apercu/${subject.id}`)"
           class="group bg-card border border-line rounded-card p-5 hover:border-primary/40 hover:shadow-soft transition-all flex flex-col gap-3"
         >
           <div class="flex items-start gap-3">
-            <span class="w-10 h-10 rounded-leaf flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+            <span
+              class="w-10 h-10 rounded-leaf flex items-center justify-center shrink-0 bg-primary/10 text-primary"
+            >
               <i class="pi pi-microphone" />
             </span>
-            <p class="flex-1 min-w-0 font-semibold text-ink group-hover:text-primary transition-colors text-sm leading-snug">
+            <p
+              class="flex-1 min-w-0 font-semibold text-ink group-hover:text-primary transition-colors text-sm leading-snug"
+            >
               {{ subject.title }}
             </p>
           </div>
 
-          <p
-            v-if="subject.preview"
-            class="text-xs text-muted line-clamp-2 leading-relaxed bg-card-2 rounded-leaf px-3 py-2"
+          <ul
+            v-if="subject.teile.length"
+            class="space-y-1 rounded-leaf bg-card-2 px-3 py-2"
           >
-            {{ subject.preview }}
-          </p>
+            <li
+              v-for="teil in subject.teile"
+              :key="teil.number"
+              class="flex items-baseline gap-2 text-xs"
+            >
+              <span class="shrink-0 font-semibold text-faint"
+                >Teil {{ teil.number }}</span
+              >
+              <span class="min-w-0 truncate text-muted">
+                {{ teil.name
+                }}<template v-if="teil.topic">
+                  ·
+                  <span class="font-medium text-ink">{{
+                    teil.topic
+                  }}</span></template
+                >
+              </span>
+            </li>
+          </ul>
 
           <div class="flex items-center justify-between pt-1">
             <div class="flex items-center gap-2">
-              <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', info(subject.provider).badge]">
+              <span
+                :class="[
+                  'text-[11px] font-semibold px-2 py-0.5 rounded-full',
+                  info(subject.provider).badge,
+                ]"
+              >
                 {{ info(subject.provider).name }}
               </span>
-              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-card-2 border border-line text-ink">
+              <span
+                class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-card-2 border border-line text-ink"
+              >
                 {{ subject.level }}
               </span>
               <span class="text-xs text-muted">
                 {{ subject.teilCount }}
-                {{ subject.teilCount > 1 ? t("sprechen.teile_plural") : t("sprechen.teil") }}
+                {{
+                  subject.teilCount > 1
+                    ? t("sprechen.teile_plural")
+                    : t("sprechen.teil")
+                }}
               </span>
             </div>
-            <span class="text-xs text-primary font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-              {{ t("sprechen.start") }}
+            <span
+              class="text-xs text-primary font-semibold flex items-center gap-1 group-hover:gap-2 transition-all"
+            >
+              {{ t("sprechen.view_subject") }}
               <i class="pi pi-arrow-right text-xs" />
             </span>
           </div>
@@ -127,8 +169,14 @@
       >
         <i class="pi pi-history text-4xl text-faint mb-3 block" />
         <p class="font-medium text-ink">{{ t("sprechen.no_results_title") }}</p>
-        <p class="text-sm text-muted mb-4">{{ t("sprechen.no_results_subtitle") }}</p>
-        <Button :label="t('sprechen.see_subjects')" icon="pi pi-list-check" @click="activeTab = 'sujets'" />
+        <p class="text-sm text-muted mb-4">
+          {{ t("sprechen.no_results_subtitle") }}
+        </p>
+        <Button
+          :label="t('sprechen.see_subjects')"
+          icon="pi pi-list-check"
+          @click="activeTab = 'sujets'"
+        />
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -140,7 +188,15 @@
           <div class="flex items-start gap-3">
             <div class="shrink-0 relative w-14 h-14">
               <svg class="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
-                <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" stroke-width="6" class="text-line" />
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="22"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="6"
+                  class="text-line"
+                />
                 <circle
                   cx="28"
                   cy="28"
@@ -153,31 +209,52 @@
                   :stroke-dasharray="`${(percentOf(result) / 100) * 138} 138`"
                 />
               </svg>
-              <span class="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-ink tabular-nums">
+              <span
+                class="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-ink tabular-nums"
+              >
                 {{ percentOf(result) }}%
               </span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-semibold text-ink text-sm leading-snug">{{ result.subject_name }}</p>
-              <p class="text-xs text-muted mt-0.5">{{ formatDate(result.completed_at) }}</p>
+              <p class="font-semibold text-ink text-sm leading-snug">
+                {{ result.subject_name }}
+              </p>
+              <p class="text-xs text-muted mt-0.5">
+                {{ formatDate(result.completed_at) }}
+              </p>
               <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-                <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', info(result.provider).badge]">
+                <span
+                  :class="[
+                    'text-[11px] font-semibold px-2 py-0.5 rounded-full',
+                    info(result.provider).badge,
+                  ]"
+                >
                   {{ info(result.provider).name }}
                 </span>
-                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-card-2 border border-line text-ink">
+                <span
+                  class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-card-2 border border-line text-ink"
+                >
                   {{ result.level.toUpperCase() }}
                 </span>
                 <Tag
-                  :value="result.passed ? t('sprechen_subject.passed') : t('sprechen_subject.not_passed')"
+                  :value="
+                    result.passed
+                      ? t('sprechen_subject.passed')
+                      : t('sprechen_subject.not_passed')
+                  "
                   :severity="result.passed ? 'success' : 'danger'"
                 />
               </div>
             </div>
           </div>
           <span
-            :class="['text-xs font-bold tabular-nums', result.passed ? 'text-emerald-600' : 'text-amber-600']"
+            :class="[
+              'text-xs font-bold tabular-nums',
+              result.passed ? 'text-emerald-600' : 'text-amber-600',
+            ]"
           >
-            {{ result.total_score }} / {{ result.total_max_score }} {{ t("sprechen_subject.points") }}
+            {{ result.total_score }} / {{ result.total_max_score }}
+            {{ t("sprechen_subject.points") }}
           </span>
         </div>
       </div>
@@ -220,11 +297,15 @@ const chipClass = (active: boolean) => [
 
 // ── Sujets : arbre de l'examen filtré sur les sujets ayant un module oral ──
 
-const availableProviders = computed(() => [...new Set(examsStore.catalog.map((e) => e.provider))]);
+const availableProviders = computed(() => [
+  ...new Set(examsStore.catalog.map((e) => e.provider)),
+]);
 
 const availableLevels = computed(() => {
   const set = new Set<string>();
-  examsStore.catalog.forEach((e) => e.levels?.forEach((l) => set.add(l.cefr_code)));
+  examsStore.catalog.forEach((e) =>
+    e.levels?.forEach((l) => set.add(l.cefr_code)),
+  );
   return [...set];
 });
 
@@ -233,7 +314,7 @@ interface SprechenSubjectCard {
   provider: string;
   level: string;
   title: string;
-  preview?: string;
+  teile: { number: number; name: string; topic: string | null }[];
   teilCount: number;
 }
 
@@ -243,7 +324,8 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
 
   const cards: SprechenSubjectCard[] = [];
   for (const level of exam.levels ?? []) {
-    if (selectedLevel.value && level.cefr_code !== selectedLevel.value) continue;
+    if (selectedLevel.value && level.cefr_code !== selectedLevel.value)
+      continue;
 
     for (const subject of level.subjects ?? []) {
       const sprechenModule = (subject.modules ?? []).find((m) =>
@@ -251,13 +333,30 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
       );
       if (!sprechenModule) continue;
 
+      const teile = [...(sprechenModule.teile ?? [])]
+        .sort((a, b) => a.teil_number - b.teil_number)
+        .map((teil) => {
+          const config = (teil.config ?? {}) as Record<string, unknown>;
+          const topic = config.topic ?? config.thema ?? config.title;
+          return {
+            number: teil.teil_number,
+            name:
+              typeof config.name === "string"
+                ? config.name
+                : `Teil ${teil.teil_number}`,
+            topic: typeof topic === "string" ? topic : null,
+          };
+        });
+
       cards.push({
         id: subject.id,
         provider: exam.provider,
         level: level.cefr_code,
-        title: subject.name || `${t("sprechen.subject_default")} ${subject.subject_number}`,
-        preview: sprechenModule.teile?.[0]?.instructions ?? undefined,
-        teilCount: sprechenModule.teile?.length ?? 0,
+        title:
+          subject.name ||
+          `${t("sprechen.subject_default")} ${subject.subject_number}`,
+        teile,
+        teilCount: teile.length,
       });
     }
   }
@@ -267,10 +366,14 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
 // Un fournisseur peut avoir plusieurs Exam (un par niveau) : on choisit le bon slug
 const targetExamSlug = computed(() => {
   if (!selectedProvider.value) return null;
-  const candidates = examsStore.catalog.filter((e) => e.provider === selectedProvider.value);
+  const candidates = examsStore.catalog.filter(
+    (e) => e.provider === selectedProvider.value,
+  );
   if (!candidates.length) return null;
   if (!selectedLevel.value) return candidates[0]!.slug;
-  const match = candidates.find((e) => e.levels?.some((l) => l.cefr_code === selectedLevel.value));
+  const match = candidates.find((e) =>
+    e.levels?.some((l) => l.cefr_code === selectedLevel.value),
+  );
   return (match ?? candidates[0]!).slug;
 });
 
@@ -339,7 +442,9 @@ onMounted(async () => {
 
   // TELC par défaut, sinon la liste reste vide tant qu'aucun filtre n'est choisi
   if (!selectedProvider.value) {
-    const telc = availableProviders.value.find((p) => p.toLowerCase() === "telc");
+    const telc = availableProviders.value.find(
+      (p) => p.toLowerCase() === "telc",
+    );
     selectedProvider.value = telc ?? availableProviders.value[0] ?? "";
   }
 });

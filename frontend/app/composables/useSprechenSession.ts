@@ -65,6 +65,8 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
   const transcript: Ref<TranscriptLine[]> = ref([]);
   const gradingResult: Ref<GradingResultMessage | null> = shallowRef(null);
   const errorMessage = ref<string | null>(null);
+  /** Cause d'erreur connue, traduite par la page (ex. "insufficient_credits") */
+  const errorCode = ref<string | null>(null);
 
   const createWs =
     options.createWebSocket ?? ((url: string) => new WebSocket(url));
@@ -98,6 +100,9 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
       case "preparation_started":
         preparationInfo.value = msg;
         status.value = "preparing";
+        // Teil terminé (temps écoulé ou fin normale) : micro coupé
+        micState.value = null;
+        options.audioIO.stopCapture();
         break;
 
       case "teil_started":
@@ -152,6 +157,7 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     if (ws) return; // already connecting/connected — connect() is idempotent
     status.value = "connecting";
     errorMessage.value = null;
+    errorCode.value = null;
     sessionEndedCleanly = false;
 
     const socket = createWs(`${options.wsBaseUrl}/ws/${options.subjectId}`);
@@ -178,8 +184,12 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
         // state so the UI doesn't sit on a stale spinner or a
         // grading screen that will never receive its result.
         status.value = "error";
-        errorMessage.value =
-          errorMessage.value ?? `Connexion interrompue (code ${event.code}).`;
+        if (event.code === 4402) {
+          errorCode.value = "insufficient_credits";
+        } else {
+          errorMessage.value =
+            errorMessage.value ?? `Connexion interrompue (code ${event.code}).`;
+        }
       }
       ws = null;
     };
@@ -192,7 +202,11 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
    * backend to open the Live segment for the Teil currently in
    * preparationInfo. No-op if we're not actually in "preparing". */
   function sendReadyToStart(): void {
-      console.log("sendReadyToStart called", { ws: !!ws, readyState: ws?.readyState, prepInfo: preparationInfo.value });
+    console.log("sendReadyToStart called", {
+      ws: !!ws,
+      readyState: ws?.readyState,
+      prepInfo: preparationInfo.value,
+    });
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     if (!preparationInfo.value) return;
     ws.send(
@@ -235,6 +249,7 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     transcript,
     gradingResult,
     errorMessage,
+    errorCode,
     // actions
     connect,
     sendReadyToStart,

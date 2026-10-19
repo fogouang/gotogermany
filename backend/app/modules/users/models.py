@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime, timezone
 import enum
-from sqlalchemy import Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, UniqueConstraint, true, false
+from sqlalchemy import Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, Index, UniqueConstraint, text, true, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.shared.database.base import Base, UUIDMixin, TimestampMixin
@@ -27,6 +27,11 @@ class UserRole(str, enum.Enum):
 
 class User(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "users"
+    __table_args__ = (
+        # Un numéro = un compte (connexion par téléphone). Index partiel :
+        # plusieurs comptes sans numéro restent possibles.
+        Index("uq_users_phone", "phone", unique=True, postgresql_where=text("phone IS NOT NULL")),
+    )
 
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -86,9 +91,24 @@ class User(Base, UUIDMixin, TimestampMixin):
     branch_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("branches.id"), nullable=True, index=True
     )
+    # Inscription via le lien d'un centre, en attente de validation :
+    # succursale choisie par l'élève. branch_id reste vide jusqu'à la
+    # validation par la secrétaire (crédits et accès attribués à ce moment).
+    requested_branch_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    join_requested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Ciblage examen (pertinent uniquement pour un student rattaché à un centre)
+    # Parcours de l'étudiant individuel : "exam" (B1/B2) ou "start_deutsch" (A1/A2).
+    # Null = jamais choisi (affiche l'accueil). Sans objet pour un élève de centre.
+    learning_track: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Ciblage examen (pertinent uniquement pour un student rattaché à un centre)
     target_level_id: Mapped[UUID | None] = mapped_column(ForeignKey("levels.id"), nullable=True)
+    
     target_level: Mapped["Level | None"] = relationship("Level", foreign_keys=[target_level_id], lazy="noload")
 
     # Durée de vie du compte : 2 mois silencieux à partir de la première connexion

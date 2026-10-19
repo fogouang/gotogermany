@@ -257,22 +257,29 @@ from fastapi import UploadFile, File, Form
 @router.post("/admin/import", status_code=201)
 async def import_exam_json(
     _: CurrentAdmin,
-    file: UploadFile = File(..., description="Fichier JSON de l'examen"),
+    file: UploadFile = File(..., description="Fichier JSON du sujet (ex. sujet3.json)"),
     replace: bool = Form(default=False),
+    dry_run: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Importe un examen complet depuis un fichier JSON.
-    Le JSON est celui généré par generate_telc_b1.py ou generate_exam.py.
-    Si replace=true, supprime et réinsère les questions existantes.
+    Importe un sujet complet depuis un fichier JSON.
+    L'examen et le niveau sont créés s'ils n'existent pas.
+    Numéro du sujet : champ subject_number du JSON, sinon nom du fichier (sujet3.json -> 3).
+    replace=true : remplace un sujet existant, sauf s'il est utilisé par des sessions ou des devoirs.
+    dry_run=true : vérifie tout et renvoie le rapport sans rien enregistrer.
     """
     from app.modules.exams.import_service import ExamImportService
-    if not file.filename.endswith(".json"):
+    if not file.filename or not file.filename.lower().endswith(".json"):
         raise HTTPException(status_code=400, detail="Le fichier doit être un JSON.")
     json_bytes = await file.read()
-    return await ExamImportService(db).import_from_json(json_bytes, replace=replace)
-
-
+    return await ExamImportService(db).import_from_json(
+        json_bytes,
+        filename=file.filename,
+        replace=replace,
+        dry_run=dry_run,
+    )
+    
 @router.post("/admin/{exam_id}/audio")
 async def import_exam_audio(
     _: CurrentAdmin,

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
 import enum
-from sqlalchemy import String, Integer, Boolean, DateTime, Enum, ForeignKey, true
+from sqlalchemy import String, Integer, Boolean, DateTime, Enum, ForeignKey, Index, true
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.shared.database.base import Base, UUIDMixin, TimestampMixin
@@ -27,6 +27,7 @@ class PaymentMethod(str, enum.Enum):
 
 class Center(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "centers"
+    __table_args__ = (Index("uq_centers_join_token", "join_token", unique=True),)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -34,6 +35,13 @@ class Center(Base, UUIDMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     address: Mapped[str | None] = mapped_column(String(255), nullable=True)
     logo_path: Mapped[str | None] = mapped_column(String(255), nullable=True) 
+
+    # Lien d'inscription des élèves (un par centre), créé à la première
+    # consultation par le directeur ou la secrétaire. Désactivable.
+    join_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    join_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, server_default=true()
+    )
 
     # Pool de crédits IA du centre — alimenté manuellement par l'admin ITIA
     # à l'achat/rechargement de licence, décompté à chaque attribution/ajustement

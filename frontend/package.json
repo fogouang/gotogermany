@@ -12,6 +12,7 @@
     "generate:api:prod": "openapi-typescript-codegen --input https://api.deutschtest.com/openapi.json --output ./shared/api --client fetch"
   },
   "dependencies": {
+    "@met4citizen/talkinghead": "^1.7.0",
     "@nuxtjs/i18n": "10.4.0",
     "@nuxtjs/robots": "^6.0.9",
     "@nuxtjs/sitemap": "^8.0.15",

@@ -12,10 +12,97 @@ import type { CenterDefaultCreditsUpdateRequest } from '../models/CenterDefaultC
 import type { CenterPoolResponse } from '../models/CenterPoolResponse';
 import type { CenterResponse } from '../models/CenterResponse';
 import type { CenterUpdateRequest } from '../models/CenterUpdateRequest';
+import type { JoinInfoResponse } from '../models/JoinInfoResponse';
+import type { JoinLinkResponse } from '../models/JoinLinkResponse';
+import type { JoinLinkUpdateRequest } from '../models/JoinLinkUpdateRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class CentersService {
+    /**
+     * Get Join Info
+     * @param token
+     * @returns JoinInfoResponse Successful Response
+     * @throws ApiError
+     */
+    public static getJoinInfoApiV1CentersJoinTokenGet(
+        token: string,
+    ): CancelablePromise<JoinInfoResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/centers/join/{token}',
+            path: {
+                'token': token,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get My Join Link
+     * @param accessToken
+     * @returns JoinLinkResponse Successful Response
+     * @throws ApiError
+     */
+    public static getMyJoinLinkApiV1CentersMeJoinLinkGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<JoinLinkResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/centers/me/join-link',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Update My Join Link
+     * @param requestBody
+     * @param accessToken
+     * @returns JoinLinkResponse Successful Response
+     * @throws ApiError
+     */
+    public static updateMyJoinLinkApiV1CentersMeJoinLinkPatch(
+        requestBody: JoinLinkUpdateRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<JoinLinkResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/centers/me/join-link',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Regenerate My Join Link
+     * @param accessToken
+     * @returns JoinLinkResponse Successful Response
+     * @throws ApiError
+     */
+    public static regenerateMyJoinLinkApiV1CentersMeJoinLinkRegeneratePost(
+        accessToken?: (string | null),
+    ): CancelablePromise<JoinLinkResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/centers/me/join-link/regenerate',
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
     /**
      * Get My Center
      * @param accessToken

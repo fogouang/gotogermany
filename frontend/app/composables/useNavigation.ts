@@ -32,6 +32,7 @@ export function useNavigation(roleImpose?: NavRole) {
   const route = useRoute();
   const { t } = useI18n();
   const localePath = useLocalePath();
+  const { track } = useLearningTrack();
 
   // Rôle de navigation : imposé par le layout, sinon déduit du store.
   const role = computed<NavRole>(() => {
@@ -59,12 +60,14 @@ export function useNavigation(roleImpose?: NavRole) {
   // Élève de centre : même règle que useVisibleCatalog
   const estEleveCentre = computed(() => !!authStore.branchId);
 
+  // Audience (centre / indépendant) et parcours (examen B1/B2 / Start Deutsch A1/A2)
   const visible = (item: NavItem) =>
-    !item.audience ||
-    item.audience === (estEleveCentre.value ? "center" : "independent");
+    (!item.audience ||
+      item.audience === (estEleveCentre.value ? "center" : "independent")) &&
+    (!item.track || item.track === track.value);
 
   // Sections avec libellés traduits et liens localisés : le layout n'a plus qu'à afficher.
-  // Les entrées hors audience sont retirées, puis les sections vides.
+  // Les entrées hors audience ou hors parcours sont retirées, puis les sections vides.
   const sections = computed<NavSectionResolue[]>(() =>
     NAVIGATION[role.value]
       .map((section) => ({
@@ -91,10 +94,12 @@ export function useNavigation(roleImpose?: NavRole) {
     const chemin = sansLangue(route.path);
 
     // Espace étudiant : clé i18n par segment, comme le faisait déjà le layout dashboard.
+    // Les clés utilisent « _ » là où l'URL a « - » (start-deutsch -> start_deutsch).
     if (role.value === "etudiant") {
       const apres = chemin.replace(/^\/dashboard/, "");
       const segment = apres.split("/").filter(Boolean)[0] || "dashboard";
-      return { title: t(`dashboard.pages.${segment}`, segment) };
+      const cle = segment.replace(/-/g, "_");
+      return { title: t(`dashboard.pages.${cle}`, segment) };
     }
 
     const meta = getPageMeta(chemin, espace.value.label);

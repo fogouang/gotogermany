@@ -29,6 +29,8 @@ from app.modules.users.schemas import (
     StudentCreateRequest,
     StudentResponse,
     StudentCreditAdjustRequest,
+    JoinRequestResponse,
+    JoinRequestApproveRequest,
 )
 from app.modules.users.service import UserService
 from app.shared.database.session import get_db
@@ -122,6 +124,36 @@ async def create_student_quick(
     db: AsyncSession = Depends(get_db),
 ):
     return await UserService(db).create_student_quick(data, staff)
+
+
+# ── Inscriptions via le lien du centre ───────
+@router.get("/join-requests", response_model=list[JoinRequestResponse])
+async def list_join_requests(
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Secrétaire : sa succursale. Directeur : tout le centre."""
+    return await UserService(db).list_join_requests(staff)
+
+
+@router.post("/join-requests/{student_id}/approve", response_model=StudentResponse)
+async def approve_join_request(
+    student_id: UUID,
+    data: JoinRequestApproveRequest,
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    return await UserService(db).approve_join_request(student_id, data.target_level_id, staff)
+
+
+@router.post("/join-requests/{student_id}/reject", response_model=SuccessResponse)
+async def reject_join_request(
+    student_id: UUID,
+    staff: CurrentCenterStaff,
+    db: AsyncSession = Depends(get_db),
+):
+    await UserService(db).reject_join_request(student_id, staff)
+    return SuccessResponse(message="Inscription refusée.")
 
 
 # ── Admin ────────────────────────────────────

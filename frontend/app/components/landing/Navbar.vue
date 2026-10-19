@@ -233,13 +233,14 @@
 
         <div class="space-y-1.5">
           <label class="text-sm font-medium text-ink">{{
-            t("auth.email")
+            t("auth.login_identifier")
           }}</label>
           <InputText
-            v-model="loginForm.email"
-            type="email"
-            autocomplete="email"
-            placeholder="jean@example.com"
+            v-model="loginForm.identifier"
+            type="text"
+            inputmode="text"
+            autocomplete="username"
+            :placeholder="t('auth.login_identifier_placeholder')"
             fluid
           />
         </div>
@@ -327,7 +328,7 @@ const { cheminApresConnexion } = useChoixExamen();
 
 const mobileMenuOpen = ref(false);
 const loginError = ref("");
-const loginForm = ref({ email: "", password: "" });
+const loginForm = ref({ identifier: "", password: "" });
 
 const mainItems = computed(() => [
   { key: "home", label: t("nav.home"), icon: "pi pi-home", to: "/" },
@@ -405,12 +406,12 @@ const handleLogin = async () => {
   loginError.value = "";
   const savedLocale = locale.value;
   const result = await authStore.login(
-    loginForm.value.email,
+    loginForm.value.identifier.trim(),
     loginForm.value.password,
   );
   if (result.success) {
     loginVisible.value = false;
-    loginForm.value = { email: "", password: "" };
+    loginForm.value = { identifier: "", password: "" };
     await setLocale(savedLocale);
 
     if (authStore.isAdmin) {

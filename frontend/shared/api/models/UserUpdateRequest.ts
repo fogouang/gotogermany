@@ -7,5 +7,6 @@ export type UserUpdateRequest = {
     phone?: (string | null);
     target_level_id?: (string | null);
     whatsapp_opt_in?: (boolean | null);
+    learning_track?: ('exam' | 'start_deutsch' | null);
 };
 

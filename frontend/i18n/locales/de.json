@@ -31,7 +31,14 @@
     "phone_placeholder": "Ihre Nummer",
     "whatsapp_opt_in": "Der GoToGermany-Community auf WhatsApp beitreten",
     "whatsapp_opt_in_hint": "Tipps, neue Themen und gegenseitige Hilfe unter Prüflingen. Sie können jederzeit austreten.",
-    "whatsapp_needs_phone": "Geben Sie Ihre WhatsApp-Nummer an, um der Community beizutreten."
+    "whatsapp_needs_phone": "Geben Sie Ihre WhatsApp-Nummer an, um der Community beizutreten.",
+    "login_identifier": "Telefonnummer",
+    "login_identifier_placeholder": "6 90 00 00 00",
+    "phone_required": "Gib deine Telefonnummer ein.",
+    "email_optional": "E-Mail (optional)",
+    "branch": "Deine Filiale",
+    "branch_placeholder": "Wähle deine Filiale",
+    "branch_required": "Wähle deine Filiale."
   },
   "exam": {
     "start": "Starten",
@@ -362,6 +369,30 @@
   "dashboard": {
     "greeting": "Hallo",
     "subtitle": "Was möchtest du heute tun?",
+    "track": {
+      "start_title": "Dein Weg: Start Deutsch A1 / A2",
+      "start_text": "Übungssätze im offiziellen Format, damit du am Prüfungstag bereit bist.",
+      "start_cta": "Übungssätze ansehen",
+      "switch_to_exam": "Ich bereite mich eher auf B1 oder B2 vor",
+      "switch_to_start": "Du willst A1 oder A2? Wechsle zum Weg Start Deutsch"
+    },
+    "subjects_count": "{n} Übungssatz verfügbar | {n} Übungssätze verfügbar",
+    "my_exam": {
+      "eyebrow": "Meine Prüfung",
+      "progress": "{done} von {total} Übungssätzen abgeschlossen",
+      "modules_title": "Nach Modul",
+      "module_pending": "In Korrektur",
+      "best_score": "Bestes Ergebnis",
+      "passed": "Bestandene Prüfungen",
+      "last_activity": "Letzte Aktivität",
+      "start": "Übungssatz {n} starten",
+      "resume": "Übungssatz {n} fortsetzen",
+      "redo": "Einen Übungssatz wiederholen",
+      "unlock": "Diese Prüfung freischalten",
+      "explore": "Weitere Prüfungen entdecken ({n})",
+      "choose_title": "Wähle deine Prüfung",
+      "choose_text": "Wähle die Prüfung, auf die du dich vorbereitest, um loszulegen."
+    },
     "quick_actions": {
       "exam": "Prüfung ablegen",
       "exam_sub": "Goethe, TELC, ÖSD",
@@ -1074,9 +1105,25 @@
     "subject_default": "Thema",
     "no_results_title": "Noch keine Sitzung",
     "no_results_subtitle": "Deine bewerteten Sprechsitzungen erscheinen hier.",
-    "see_subjects": "Themen ansehen"
+    "see_subjects": "Themen ansehen",
+    "view_subject": "Thema ansehen"
   },
   "sprechen_subject": {
+    "call": {
+      "examiner_default_name": "Ihre Prüferin",
+      "examiner_role": "Prüferin · Sprechen",
+      "avatar_loading": "Ihre Prüferin kommt… {progress} %",
+      "transcript": "Transkript",
+      "transcript_empty": "Das Transkript erscheint hier.",
+      "show_transcript": "Transkript anzeigen",
+      "hide_transcript": "Transkript ausblenden",
+      "camera_on": "Kamera einschalten",
+      "camera_off": "Kamera ausschalten",
+      "status_preparing": "Vorbereitung · keine Aufnahme",
+      "status_waiting": "Bitte warten",
+      "exam_mode": "Prüfungsmodus",
+      "insufficient_credits": "Nicht genug Credits für die mündliche Prüfung mit der Prüferin."
+    },
     "page_title": "Sprechen-Sitzung",
     "connection_error": "Die Verbindung zum Prüfer wurde unterbrochen.",
     "back": "Zurück",
@@ -1238,7 +1285,12 @@
       "pending_review": "Korrektur läuft",
       "good_score": "Gutes Ergebnis, weiter so!",
       "keep_practicing": "Weiter üben",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "provisional": "Vorläufiges Ergebnis",
+      "pending_note": "{modules} wird noch korrigiert: Dein Ergebnis wird aktualisiert.",
+      "points_of": "{score} / {max} Pkt.",
+      "oral_not_scored": "Sprechen: Übe laut, wird hier nicht bewertet",
+      "refresh": "Aktualisieren"
     },
     "free_text": {
       "word_count": "{count} Wörter",
@@ -1906,7 +1958,14 @@
     "error": "Ihre Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "community_title": "Alles klar!",
     "community_text": "Ihr Bereich ist bereit für {level}.",
-    "go_dashboard": "Zu meinem Bereich"
+    "go_dashboard": "Zu meinem Bereich",
+    "track_title": "Welches Niveau strebst du an?",
+    "track_subtitle": "Wir passen deinen Bereich an dein Ziel an. Du kannst es später ändern.",
+    "track_exam_title": "Ich bereite mich auf B1 oder B2 vor",
+    "track_exam_text": "Modellprüfungen von telc, Goethe und ÖSD, Sprechen mit Prüfer/in, KI-Korrektur im Schreiben.",
+    "track_start_title": "Ich bereite mich auf A1 oder A2 vor",
+    "track_start_text": "Start Deutsch und Goethe-Zertifikat A2: Übungssätze im offiziellen Format.",
+    "back": "Zurück"
   },
   "level_switch": {
     "title": "Niveau wechseln",
@@ -1963,5 +2022,69 @@
     "notice_text": "Wir überarbeiten diesen Leitfaden anhand der offiziellen Unterlagen von telc, dem Goethe-Institut und dem ÖSD, damit jede Struktur und jede Bewertung genau der Prüfung entspricht. Üben Sie in der Zwischenzeit mit dem Simulator: Die KI-Korrektur zeigt Ihnen, was in jeder Aufgabe erwartet wird.",
     "cta_simulator": "Schreiben üben",
     "cta_exams": "Prüfungen ansehen"
+  },
+  "sprechen_preview": {
+    "page_title": "Themenvorschau",
+    "back": "Zurück zu den Themen",
+    "start": "Mündliche Prüfung mit der Prüferin starten",
+    "cost": "Kosten: {cost} Credits · Guthaben: {credits}",
+    "no_credit_title": "Für diese Prüfung brauchst du {cost} Credits",
+    "no_credit_text": "Du kannst das Thema lesen und deine Ideen vorbereiten. Die Prüfung mit der Prüferin wird freigeschaltet, sobald dein Guthaben reicht.",
+    "your_text": "Dein Text",
+    "exam_note": "Wie in der Prüfung siehst du nur dein eigenes Material.",
+    "load_error": "Dieses Thema konnte nicht geladen werden.",
+    "balance": "Guthaben: {credits} Credits",
+    "cost_only": "Eine komplette Prüfung: {cost} Credits",
+    "partner_text": "Text deiner Gesprächspartnerin / deines Gesprächspartners"
+  },
+  "join_center": {
+    "page_title": "{center} beitreten",
+    "page_title_generic": "Einem Zentrum beitreten",
+    "title": "Tritt {center} bei",
+    "subtitle": "Erstelle dein Konto in einer Minute. Dein Zentrum bestätigt danach deine Anmeldung.",
+    "invalid_title": "Ungültiger Link",
+    "invalid_text": "Dieser Anmeldelink existiert nicht oder wurde deaktiviert. Bitte dein Zentrum um einen neuen Link.",
+    "back_home": "Zur Startseite"
+  },
+  "pending_join": {
+    "page_title": "Anmeldung ausstehend",
+    "title": "Deine Anmeldung wird geprüft",
+    "text": "Danke {name}! Dein Zentrum muss dein Konto noch bestätigen. Sobald das erledigt ist, hast du Zugang zu deinen Prüfungen.",
+    "step_1": "Das Sekretariat prüft deine Anmeldung",
+    "step_2": "Es wählt dein Prüfungsniveau",
+    "step_3": "Dein Zugang wird freigeschaltet, du kannst loslegen",
+    "refresh": "Erneut prüfen",
+    "logout": "Abmelden"
+  },
+  "centre_join": {
+    "title": "Anmeldelink für Ihre Lernenden",
+    "subtitle": "Teilen Sie diesen Link: Ihre Lernenden erstellen ihr Konto selbst, Sie müssen nur noch bestätigen.",
+    "copy": "Kopieren",
+    "copied": "Link kopiert",
+    "share_whatsapp": "WhatsApp",
+    "share_message": "Erstelle dein GoToGermany-Konto mit dem Zentrum {center}: {url}",
+    "disabled_badge": "Link deaktiviert",
+    "disabled_hint": "Mit diesem Link kann sich derzeit niemand anmelden.",
+    "regenerate": "Neuer Link",
+    "regenerate_confirm": "Der alte Link funktioniert dann nicht mehr. Fortfahren?",
+    "regenerated": "Neuer Link erstellt",
+    "disable": "Link deaktivieren",
+    "enable": "Link aktivieren",
+    "load_error": "Der Link konnte nicht geladen werden.",
+    "error_generic": "Ein Fehler ist aufgetreten.",
+    "requests_title": "Anmeldungen zur Bestätigung",
+    "requests_empty": "Keine offenen Anmeldungen.",
+    "requested_on": "angefragt am {date}",
+    "refresh": "Aktualisieren",
+    "approve": "Bestätigen",
+    "reject": "Ablehnen",
+    "approve_title": "Anmeldung von {name} bestätigen",
+    "level_label": "Prüfungsniveau",
+    "level_placeholder": "Niveau wählen",
+    "approve_hint": "Die Standard-Credits des Zentrums werden zugewiesen. Der Zugang öffnet sich danach bei der Aktivierung, wie bei einem manuell angelegten Lernenden.",
+    "cancel": "Abbrechen",
+    "approved": "Anmeldung bestätigt",
+    "rejected": "Anmeldung abgelehnt",
+    "reject_confirm": "Anmeldung von {name} ablehnen?"
   }
 }

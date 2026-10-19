@@ -1,10 +1,16 @@
 """
 app/modules/exams/import_service.py
 
-Import d'un sujet complet depuis un JSON généré par le pipeline.
-Le JSON est validé ENTIÈREMENT avant toute écriture en base : un barème
-incohérent (max_score manquant, somme des Teile différente du module,
-format inconnu, Teil sans question) bloque l'import.
+Import d'un sujet complet depuis un JSON.
+
+- Le JSON est validé ENTIÈREMENT avant toute écriture : un barème incohérent
+  (max_score manquant, somme des Teile différente du module, format inconnu,
+  Teil sans question) bloque l'import.
+- L'examen et le niveau sont créés s'ils n'existent pas (base vide comprise).
+- Le numéro du sujet vient du JSON (subject_number) ou du nom du fichier
+  (sujet3.json -> 3). Un sujet existant n'est remplacé que sur demande, et
+  jamais s'il est déjà utilisé par des sessions d'élèves ou des devoirs.
+- dry_run : tout l'import est joué puis annulé, pour voir le rapport sans rien écrire.
 """
 import json
 import re
@@ -52,7 +58,7 @@ def _normalize_slug(value: str) -> str:
     s = re.sub(r"[\s\-]+", "_", s)
     return re.sub(r"[^a-z0-9_]", "", s)
 
-# Variantes de format_type rencontrées dans les JSON du pipeline
+# Variantes de format_type rencontrées dans les JSON
 FORMAT_ALIASES = {
     "zuordnung_paragrafen": "zuordnung_paragraphen",
 }
@@ -62,6 +68,20 @@ def _normalize_format(value: str) -> str:
     """'lückentext_sätze' -> 'lueckentext_saetze', 'zuordnung_paragrafen' -> 'zuordnung_paragraphen'."""
     fmt = _normalize_slug(value)
     return FORMAT_ALIASES.get(fmt, fmt)
+
+
+def _subject_number_from(data: dict, filename: str | None) -> int | None:
+    """Numéro du sujet : champ 'subject_number' du JSON, sinon nom du fichier (sujet3.json -> 3)."""
+    value = data.get("subject_number")
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return value
+    if isinstance(value, str) and value.strip().isdigit() and int(value) > 0:
+        return int(value)
+    if filename:
+        match = re.search(r"sujet[_\-\s]?(\d+)", filename, re.IGNORECASE)
+        if match and int(match.group(1)) > 0:
+            return int(match.group(1))
+    return None
 
 
 # Champs de contexte d'un Teil gardés tels quels dans Teil.config (affichage).
@@ -288,7 +308,7 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
     if "audio_file" in teil_data and "audio_file" not in config:
         config["audio_file"] = teil_data["audio_file"]
 
-    # Nombre d'écoutes : 'ecoutes' (pipeline actuel) ou 'max_plays' (ancien format)
+    # Nombre d'écoutes : 'ecoutes' (format actuel) ou 'max_plays' (ancien format)
     plays = teil_data.get("ecoutes") or teil_data.get("max_plays")
     if plays:
         config["max_plays"] = plays
@@ -331,12 +351,50 @@ class ExamImportService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    # ── Remplacement d'un sujet ──────────────────────────
+
+    async def _ensure_replaceable(self, subject: Subject) -> None:
+        """Refuse de remplacer un sujet déjà utilisé : ses réponses d'élèves seraient perdues."""
+        from app.modules.assignments.models import Assignment
+        from app.modules.exam_sessions.models import ExamSession
+
+        sessions = (
+            await self.db.execute(
+                select(func.count()).select_from(ExamSession).where(ExamSession.subject_id == subject.id)
+            )
+        ).scalar() or 0
+        assignments = (
+            await self.db.execute(
+                select(func.count()).select_from(Assignment).where(Assignment.subject_id == subject.id)
+            )
+        ).scalar() or 0
+
+        if sessions or assignments:
+            raise BadRequestException(
+                detail=(
+                    f"Le sujet {subject.subject_number} ne peut pas être remplacé : "
+                    f"{sessions} session(s) d'élèves et {assignments} devoir(s) l'utilisent. "
+                    f"Importez-le sous un autre numéro ou supprimez d'abord ces données."
+                )
+            )
+
+    async def _clear_subject(self, subject: Subject) -> None:
+        """Supprime modules, Teile et questions du sujet. Le sujet garde son id et son nom."""
+        module_ids = select(Module.id).where(Module.subject_id == subject.id)
+        teil_ids = select(Teil.id).where(Teil.module_id.in_(module_ids))
+        await self.db.execute(delete(Question).where(Question.teil_id.in_(teil_ids)))
+        await self.db.execute(delete(Teil).where(Teil.module_id.in_(module_ids)))
+        await self.db.execute(delete(Module).where(Module.subject_id == subject.id))
+        await self.db.flush()
+
     # ── Import JSON ──────────────────────────────────────
 
     async def import_from_json(
         self,
         json_bytes: bytes,
+        filename: str | None = None,
         replace: bool = False,
+        dry_run: bool = False,
     ) -> dict:
         try:
             data = json.loads(json_bytes.decode("utf-8"))
@@ -346,9 +404,11 @@ class ExamImportService:
         slug = data.get("slug")
         if not slug:
             raise BadRequestException(detail="Le JSON doit contenir un champ 'slug'.")
+        if not data.get("name"):
+            raise BadRequestException(detail="Le JSON doit contenir un champ 'name' (nom de l'examen).")
 
         total_questions = 0
-        log = []
+        log: list[str] = []
 
         # 0. Lecture seule : exam existant éventuel (pour connaître le provider)
         result = await self.db.execute(select(Exam).where(Exam.slug == slug))
@@ -363,9 +423,9 @@ class ExamImportService:
             )
         log.extend(f"⚠️ {w}" for w in warnings)
 
-        # 2. Exam
+        # 2. Exam : réutilisé ou créé
         if exam:
-            log.append(f"⚠️ Exam '{slug}' existe déjà.")
+            log.append(f"↪️ Examen existant : {exam.name}")
         else:
             exam = Exam(
                 name=data["name"],
@@ -376,9 +436,9 @@ class ExamImportService:
             )
             self.db.add(exam)
             await self.db.flush()
-            log.append(f"✅ Exam créé : {exam.name}")
+            log.append(f"✅ Examen créé : {exam.name} ({provider})")
 
-        # 3. Level
+        # 3. Level : réutilisé ou créé
         cefr_code = data.get("cefr_code", "B1")
         result = await self.db.execute(
             select(Level).where(
@@ -391,7 +451,7 @@ class ExamImportService:
         pass_threshold = data.get("pass_threshold") or data.get("pass_threshold_percent") or 60
         scoring_model = data.get("scoring_model") or DEFAULT_SCORING_MODEL.get(exam.provider)
         if level:
-            log.append(f"⚠️ Level '{cefr_code}' existe déjà.")
+            log.append(f"↪️ Niveau existant : {cefr_code}")
         else:
             level = Level(
                 exam_id=exam.id,
@@ -408,26 +468,52 @@ class ExamImportService:
             )
             self.db.add(level)
             await self.db.flush()
-            log.append(f"✅ Level créé : {cefr_code}")
+            log.append(f"✅ Niveau créé : {cefr_code}")
 
-        # 4. Subject
-        result = await self.db.execute(
-            select(func.max(Subject.subject_number)).where(Subject.level_id == level.id)
-        )
-        subject_count = result.scalar() or 0
-        next_number = subject_count + 1
+        # 4. Sujet : numéro du JSON ou du fichier, sinon le suivant
+        number = _subject_number_from(data, filename)
+        subject: Subject | None = None
+        action = "created"
 
-        subject = Subject(
-            level_id=level.id,
-            subject_number=next_number,
-            name=f"Sujet {next_number}",
-            is_active=True,
-        )
-        self.db.add(subject)
-        await self.db.flush()
-        log.append(f"✅ Subject créé : Sujet {next_number}")
+        if number is not None:
+            result = await self.db.execute(
+                select(Subject).where(
+                    Subject.level_id == level.id,
+                    Subject.subject_number == number,
+                )
+            )
+            subject = result.scalar_one_or_none()
 
-        # 5. Modules → Teile → Questions
+        if subject:
+            if not replace:
+                raise BadRequestException(
+                    detail=(
+                        f"Le sujet {number} existe déjà pour {exam.name} {cefr_code}. "
+                        f"Cochez « Remplacer » pour l'écraser."
+                    )
+                )
+            await self._ensure_replaceable(subject)
+            await self._clear_subject(subject)
+            action = "replaced"
+            log.append(f"🔄 Sujet {number} : ancien contenu supprimé, réimport")
+        else:
+            if number is None:
+                result = await self.db.execute(
+                    select(func.max(Subject.subject_number)).where(Subject.level_id == level.id)
+                )
+                number = (result.scalar() or 0) + 1
+                log.append(f"⚠️ Numéro de sujet absent du fichier : attribué automatiquement ({number})")
+            subject = Subject(
+                level_id=level.id,
+                subject_number=number,
+                name=f"Sujet {number}",
+                is_active=True,
+            )
+            self.db.add(subject)
+            await self.db.flush()
+            log.append(f"✅ Sujet créé : Sujet {number}")
+
+        # 5. Modules → Teile → Questions (toujours neufs : le sujet est neuf ou vidé)
         for order, module_data in enumerate(data.get("modules", [])):
             module = Module(
                 subject_id=subject.id,
@@ -442,54 +528,42 @@ class ExamImportService:
             log.append(f"  ✅ Module : {module.name} ({module.slug})")
 
             for teil_data in module_data.get("teile", []):
-                teil_number = teil_data["teil_number"]
                 format_type = _normalize_format(teil_data.get("format_type", ""))
-
-                result = await self.db.execute(
-                    select(Teil).where(
-                        Teil.module_id == module.id,
-                        Teil.teil_number == teil_number,
-                    )
+                teil = Teil(
+                    module_id=module.id,
+                    teil_number=teil_data["teil_number"],
+                    format_type=format_type,
+                    instructions=teil_data.get("instructions"),
+                    max_score=teil_data["max_score"],
+                    time_minutes=teil_data.get("time_minutes") or teil_data.get("duration_minutes"),
+                    config=_build_teil_config(teil_data, format_type),
                 )
-                teil = result.scalar_one_or_none()
-
-                if teil and replace:
-                    await self.db.execute(
-                        delete(Question).where(Question.teil_id == teil.id)
-                    )
-                elif teil:
-                    log.append(f"    ⚠️ Teil {teil_number} existe, ignoré.")
-                    continue
-                else:
-                    teil = Teil(
-                        module_id=module.id,
-                        teil_number=teil_number,
-                        format_type=format_type,
-                        instructions=teil_data.get("instructions"),
-                        max_score=teil_data["max_score"],
-                        time_minutes=teil_data.get("time_minutes") or teil_data.get("duration_minutes"),
-                        config=_build_teil_config(teil_data, format_type),
-                    )
-                    self.db.add(teil)
-                    await self.db.flush()
+                self.db.add(teil)
+                await self.db.flush()
 
                 questions_data = PARSERS[format_type](teil_data)
                 instances = [Question(teil_id=teil.id, **q) for q in questions_data]
                 self.db.add_all(instances)
                 total_questions += len(instances)
                 log.append(
-                    f"    ✅ Teil {teil_number} ({format_type}) : "
+                    f"    ✅ Teil {teil.teil_number} ({format_type}) : "
                     f"{len(instances)} questions, {teil.max_score:g} pts"
                 )
 
-        await self.db.commit()
+        # 6. Import à blanc : on annule tout ; sinon on enregistre
+        if dry_run:
+            await self.db.rollback()
+            log.insert(0, "🧪 Vérification à blanc : rien n'a été enregistré.")
+        else:
+            await self.db.commit()
 
         return {
             "success": True,
-            "exam_id": str(exam.id),
-            "exam_name": exam.name,
-            "subject_id": str(subject.id),
-            "subject_number": next_number,
+            "dry_run": dry_run,
+            "action": action,
+            "exam_name": data["name"],
+            "cefr_code": cefr_code,
+            "subject_number": number,
             "total_questions": total_questions,
             "log": log,
         }
@@ -505,7 +579,7 @@ class ExamImportService:
         """
         Reçoit plusieurs fichiers MP3 et les associe aux questions.
 
-        Convention de nommage (générée par generate_telc_b1.py) :
+        Convention de nommage :
           horen_teil1_audio1.mp3  → Hören, Teil 1, audio_number 1
           horen_teil1_audio2.mp3  → Hören, Teil 1, audio_number 2
           horen_teil2.mp3         → Hören, Teil 2 (1 seul audio long)

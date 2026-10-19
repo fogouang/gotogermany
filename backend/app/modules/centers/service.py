@@ -1,6 +1,7 @@
 """
 app/modules/centers/service.py
 """
+import secrets
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -141,6 +142,54 @@ class CenterService:
     ) -> list[CenterCreditTransactionResponse]:
         transactions = await self.credit_txn_repo.find_by_performer(secretary.id)
         return [_to_transaction_response(t) for t in transactions]
+
+    # ── Lien d'inscription des élèves ─────────
+
+    async def center_id_for_staff(self, user: User) -> UUID:
+        """Directeur : son centre. Secrétaire : le centre de sa succursale."""
+        if user.center_id:
+            return user.center_id
+        if user.branch_id:
+            branch = await self.branch_repo.get_by_id_or_404(user.branch_id)
+            return branch.center_id
+        raise BadRequestException(detail="Aucun centre rattaché à ce compte.")
+
+    async def get_join_link(self, center_id: UUID) -> Center:
+        """Crée le jeton à la première consultation."""
+        center = await self.center_repo.get_by_id_or_404(center_id)
+        if not center.join_token:
+            center = await self.center_repo.update(center_id, join_token=_new_join_token())
+        return center
+
+    async def regenerate_join_link(self, center_id: UUID) -> Center:
+        """L'ancien lien cesse immédiatement de fonctionner."""
+        return await self.center_repo.update(center_id, join_token=_new_join_token())
+
+    async def set_join_enabled(self, center_id: UUID, enabled: bool) -> Center:
+        await self.get_join_link(center_id)
+        return await self.center_repo.update(center_id, join_enabled=enabled)
+
+    async def find_open_center_by_join_token(self, token: str) -> Center | None:
+        """Centre dont le lien est valide : jeton connu, lien actif, centre actif."""
+        center = await self.center_repo.find_by_join_token(token)
+        if center is None or not center.join_enabled or not center.is_active:
+            return None
+        return center
+
+    async def resolve_join_branch(self, token: str, branch_id: UUID | None) -> Branch:
+        center = await self.find_open_center_by_join_token(token)
+        if center is None:
+            raise BadRequestException(detail="Ce lien d'inscription n'est plus valide.")
+        if branch_id is None:
+            raise BadRequestException(detail="Choisissez votre succursale.")
+        branch = await self.branch_repo.get_by_id(branch_id)
+        if branch is None or branch.center_id != center.id:
+            raise BadRequestException(detail="Cette succursale n'appartient pas à ce centre.")
+        return branch
+
+
+def _new_join_token() -> str:
+    return secrets.token_urlsafe(16)
 
 
 def _to_transaction_response(txn: CenterCreditTransaction) -> CenterCreditTransactionResponse:

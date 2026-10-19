@@ -18,10 +18,12 @@ export type UserMeResponse = {
     is_ambassador: boolean;
     role: UserRole;
     whatsapp_opt_in?: boolean;
+    learning_track?: (string | null);
     is_admin: boolean;
     center_id: (string | null);
     branch_id: (string | null);
     target_level_id: (string | null);
     access_expires_at: (string | null);
+    requested_branch_id?: (string | null);
 };
 

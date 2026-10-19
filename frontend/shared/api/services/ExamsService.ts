@@ -571,9 +571,11 @@ export class ExamsService {
     }
     /**
      * Import Exam Json
-     * Importe un examen complet depuis un fichier JSON.
-     * Le JSON est celui généré par generate_telc_b1.py ou generate_exam.py.
-     * Si replace=true, supprime et réinsère les questions existantes.
+     * Importe un sujet complet depuis un fichier JSON.
+     * L'examen et le niveau sont créés s'ils n'existent pas.
+     * Numéro du sujet : champ subject_number du JSON, sinon nom du fichier (sujet3.json -> 3).
+     * replace=true : remplace un sujet existant, sauf s'il est utilisé par des sessions ou des devoirs.
+     * dry_run=true : vérifie tout et renvoie le rapport sans rien enregistrer.
      * @param formData
      * @param accessToken
      * @returns any Successful Response

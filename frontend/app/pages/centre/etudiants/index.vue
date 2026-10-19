@@ -12,10 +12,14 @@
           {{ t("centre.dashboard.blocked_title") }}
         </p>
         <p class="mt-0.5 text-sm text-muted">
-          {{ salesStore.mySummary?.block_reason || t("centre.dashboard.blocked_default") }}
+          {{
+            salesStore.mySummary?.block_reason ||
+            t("centre.dashboard.blocked_default")
+          }}
         </p>
       </div>
     </div>
+
 
     <!-- ── Filtres rapides (cliquables) ── -->
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
@@ -37,7 +41,9 @@
     </div>
 
     <!-- ── Barre d'outils ── -->
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
       <IconField class="w-full sm:max-w-sm">
         <InputIcon class="pi pi-search" />
         <InputText
@@ -57,7 +63,11 @@
 
     <!-- ── États ── -->
     <div v-if="loading" class="space-y-3">
-      <div v-for="n in 5" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
+      <div
+        v-for="n in 5"
+        :key="n"
+        class="h-16 animate-pulse rounded-card bg-card-2"
+      />
     </div>
 
     <div
@@ -71,29 +81,51 @@
       v-else-if="filteredStudents.length === 0"
       class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <span
+        class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+      >
         <i class="pi pi-users" />
       </span>
       <p class="text-sm font-medium text-ink">
-        {{ students.length === 0 ? t("centre.students.empty_title") : t("centre.progress.no_results") }}
+        {{
+          students.length === 0
+            ? t("centre.students.empty_title")
+            : t("centre.progress.no_results")
+        }}
       </p>
       <p class="text-xs text-muted">
-        {{ students.length === 0 ? t("centre.students.empty_text") : t("centre.students.no_results_hint") }}
+        {{
+          students.length === 0
+            ? t("centre.students.empty_text")
+            : t("centre.students.no_results_hint")
+        }}
       </p>
     </div>
 
     <template v-else>
       <!-- ── Tableau (écran large) ── -->
-      <div class="hidden overflow-hidden rounded-card border border-line bg-card shadow-soft md:block">
+      <div
+        class="hidden overflow-hidden rounded-card border border-line bg-card shadow-soft md:block"
+      >
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="border-b border-line text-left text-xs text-muted">
               <tr>
-                <th class="px-5 py-3 font-medium">{{ t("centre.dashboard.col_student") }}</th>
-                <th class="px-5 py-3 font-medium">{{ t("centre.students.col_target") }}</th>
-                <th class="px-5 py-3 font-medium">{{ t("centre.students.col_access") }}</th>
-                <th class="px-5 py-3 font-medium">{{ t("centre.students.col_class") }}</th>
-                <th class="px-5 py-3 text-right font-medium">{{ t("centre.students.col_actions") }}</th>
+                <th class="px-5 py-3 font-medium">
+                  {{ t("centre.dashboard.col_student") }}
+                </th>
+                <th class="px-5 py-3 font-medium">
+                  {{ t("centre.students.col_target") }}
+                </th>
+                <th class="px-5 py-3 font-medium">
+                  {{ t("centre.students.col_access") }}
+                </th>
+                <th class="px-5 py-3 font-medium">
+                  {{ t("centre.students.col_class") }}
+                </th>
+                <th class="px-5 py-3 text-right font-medium">
+                  {{ t("centre.students.col_actions") }}
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-line">
@@ -119,11 +151,18 @@
                           {{ t("centre.account.disabled") }}
                         </span>
                       </p>
-                      <p class="truncate text-xs text-muted">{{ student.email }}</p>
+                      <p
+                        v-if="displayEmail(student.email)"
+                        class="truncate text-xs text-muted"
+                      >
+                        {{ displayEmail(student.email) }}
+                      </p>
                     </div>
                   </div>
                 </td>
-                <td class="px-5 py-3 text-muted">{{ levelLabel(student.target_level_id) }}</td>
+                <td class="px-5 py-3 text-muted">
+                  {{ levelLabel(student.target_level_id) }}
+                </td>
                 <td class="px-5 py-3">
                   <span
                     class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -134,7 +173,10 @@
                   </span>
                 </td>
                 <td class="px-5 py-3">
-                  <span v-if="inActiveClass(student.id)" class="text-xs text-muted">
+                  <span
+                    v-if="inActiveClass(student.id)"
+                    class="text-xs text-muted"
+                  >
                     {{ classOf(student.id) }}
                   </span>
                   <span
@@ -148,7 +190,11 @@
                 <td class="px-5 py-3">
                   <div class="flex items-center justify-end gap-1">
                     <Button
-                      :label="hasAccess(student) ? t('centre.students.extend') : t('centre.students.activate')"
+                      :label="
+                        hasAccess(student)
+                          ? t('centre.students.extend')
+                          : t('centre.students.activate')
+                      "
                       icon="pi pi-bolt"
                       size="small"
                       :outlined="accessState(student) === 'active'"
@@ -157,12 +203,18 @@
                     />
                     <Button
                       v-if="authStore.isDirector"
-                      :icon="student.is_active ? 'pi pi-ban' : 'pi pi-check-circle'"
+                      :icon="
+                        student.is_active ? 'pi pi-ban' : 'pi pi-check-circle'
+                      "
                       text
                       rounded
                       size="small"
                       :severity="student.is_active ? 'danger' : 'success'"
-                      v-tooltip.top="student.is_active ? t('centre.students.deactivate_account') : t('centre.students.reactivate_account')"
+                      v-tooltip.top="
+                        student.is_active
+                          ? t('centre.students.deactivate_account')
+                          : t('centre.students.reactivate_account')
+                      "
                       @click="handleToggleActivation(student)"
                     />
                   </div>
@@ -188,8 +240,12 @@
               {{ initials(student.full_name) }}
             </span>
             <div class="min-w-0 flex-1">
-              <p class="truncate font-medium text-ink">{{ student.full_name }}</p>
-              <p class="truncate text-xs text-muted">{{ levelLabel(student.target_level_id) }}</p>
+              <p class="truncate font-medium text-ink">
+                {{ student.full_name }}
+              </p>
+              <p class="truncate text-xs text-muted">
+                {{ levelLabel(student.target_level_id) }}
+              </p>
               <div class="mt-2 flex flex-wrap items-center gap-1.5">
                 <span
                   class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -209,7 +265,11 @@
           </div>
           <div class="mt-3 flex items-center gap-2 border-t border-line pt-3">
             <Button
-              :label="hasAccess(student) ? t('centre.students.extend') : t('centre.activation.title')"
+              :label="
+                hasAccess(student)
+                  ? t('centre.students.extend')
+                  : t('centre.activation.title')
+              "
               icon="pi pi-bolt"
               size="small"
               class="flex-1"
@@ -223,7 +283,11 @@
               rounded
               size="small"
               :severity="student.is_active ? 'danger' : 'success'"
-              :aria-label="student.is_active ? t('centre.students.deactivate_account') : t('centre.students.reactivate_account')"
+              :aria-label="
+                student.is_active
+                  ? t('centre.students.deactivate_account')
+                  : t('centre.students.reactivate_account')
+              "
               @click="handleToggleActivation(student)"
             />
           </div>
@@ -245,7 +309,11 @@
     <Dialog
       v-model:visible="showActivation"
       modal
-      :header="activationResult ? t('centre.activation.done_title') : t('centre.activation.title')"
+      :header="
+        activationResult
+          ? t('centre.activation.done_title')
+          : t('centre.activation.title')
+      "
       :style="{ width: '95vw', maxWidth: '34rem' }"
     >
       <div v-if="selectedStudent" class="space-y-5">
@@ -257,8 +325,15 @@
             {{ initials(selectedStudent.full_name) }}
           </span>
           <div class="min-w-0 flex-1">
-            <p class="truncate font-semibold text-ink">{{ selectedStudent.full_name }}</p>
-            <p class="truncate text-xs text-muted">{{ selectedStudent.email }}</p>
+            <p class="truncate font-semibold text-ink">
+              {{ selectedStudent.full_name }}
+            </p>
+            <p
+              v-if="displayEmail(selectedStudent.email)"
+              class="truncate text-xs text-muted"
+            >
+              {{ displayEmail(selectedStudent.email) }}
+            </p>
           </div>
           <span
             class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -271,29 +346,52 @@
         <!-- ── Résultat après activation ── -->
         <template v-if="activationResult">
           <div class="flex flex-col items-center gap-2 py-2 text-center">
-            <span class="flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+            <span
+              class="flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600"
+            >
               <i class="pi pi-check text-lg" />
             </span>
             <p class="font-semibold text-ink">
-              {{ t("centre.activation.valid_until", { date: formatDate(activationResult.access_expires_at) }) }}
+              {{
+                t("centre.activation.valid_until", {
+                  date: formatDate(activationResult.access_expires_at),
+                })
+              }}
             </p>
           </div>
-          <dl class="divide-y divide-line rounded-leaf border border-line text-sm">
+          <dl
+            class="divide-y divide-line rounded-leaf border border-line text-sm"
+          >
             <div class="flex justify-between px-4 py-2.5">
-              <dt class="text-muted">{{ t("centre.activation.price_paid") }}</dt>
-              <dd class="font-medium text-ink">{{ fcfa(activationResult.sale.price) }}</dd>
+              <dt class="text-muted">
+                {{ t("centre.activation.price_paid") }}
+              </dt>
+              <dd class="font-medium text-ink">
+                {{ fcfa(activationResult.sale.price) }}
+              </dd>
             </div>
             <div class="flex justify-between px-4 py-2.5">
-              <dt class="text-muted">{{ t("centre.activation.centre_share") }}</dt>
-              <dd class="font-medium text-emerald-600">{{ fcfa(activationResult.sale.partner_share) }}</dd>
+              <dt class="text-muted">
+                {{ t("centre.activation.centre_share") }}
+              </dt>
+              <dd class="font-medium text-emerald-600">
+                {{ fcfa(activationResult.sale.partner_share) }}
+              </dd>
             </div>
             <div class="flex justify-between px-4 py-2.5">
               <dt class="text-muted">{{ t("centre.activation.to_pay") }}</dt>
-              <dd class="font-semibold text-ink">{{ fcfa(activationResult.sale.amount_due) }}</dd>
+              <dd class="font-semibold text-ink">
+                {{ fcfa(activationResult.sale.amount_due) }}
+              </dd>
             </div>
-            <div v-if="activationResult.sale.due_at" class="flex justify-between px-4 py-2.5">
+            <div
+              v-if="activationResult.sale.due_at"
+              class="flex justify-between px-4 py-2.5"
+            >
               <dt class="text-muted">{{ t("centre.activation.before") }}</dt>
-              <dd class="font-medium text-amber-600">{{ formatDateTime(activationResult.sale.due_at) }}</dd>
+              <dd class="font-medium text-amber-600">
+                {{ formatDateTime(activationResult.sale.due_at) }}
+              </dd>
             </div>
           </dl>
           <p
@@ -308,7 +406,9 @@
         <!-- ── Formulaire ── -->
         <template v-else>
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("centre.form.level") }}</label>
+            <label class="mb-1.5 block text-sm font-medium text-ink">{{
+              t("centre.form.level")
+            }}</label>
             <Select
               v-model="activationForm.level_id"
               :options="allLevels"
@@ -321,8 +421,13 @@
           </div>
 
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("centre.dashboard.col_plan") }}</label>
-            <div v-if="activePlans.length === 0" class="rounded-leaf bg-card-2 p-3 text-sm text-muted">
+            <label class="mb-1.5 block text-sm font-medium text-ink">{{
+              t("centre.dashboard.col_plan")
+            }}</label>
+            <div
+              v-if="activePlans.length === 0"
+              class="rounded-leaf bg-card-2 p-3 text-sm text-muted"
+            >
               {{ t("centre.activation.no_plans") }}
             </div>
             <div v-else class="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -338,9 +443,15 @@
                 "
                 @click="activationForm.plan_id = plan.id"
               >
-                <span class="text-sm font-semibold text-ink">{{ plan.name }}</span>
-                <span class="text-xs text-muted">{{ t("centre.activation.plan_days", plan.duration_days) }}</span>
-                <span class="mt-2 text-base font-bold text-primary">{{ fcfa(plan.price) }}</span>
+                <span class="text-sm font-semibold text-ink">{{
+                  plan.name
+                }}</span>
+                <span class="text-xs text-muted">{{
+                  t("centre.activation.plan_days", plan.duration_days)
+                }}</span>
+                <span class="mt-2 text-base font-bold text-primary">{{
+                  fcfa(plan.price)
+                }}</span>
               </button>
             </div>
           </div>
@@ -348,17 +459,32 @@
           <!-- Récapitulatif -->
           <div v-if="selectedPlan" class="rounded-leaf border border-line p-4">
             <div class="flex items-center justify-between">
-              <span class="text-sm text-muted">{{ t("centre.activation.to_collect") }}</span>
-              <span class="text-lg font-bold text-ink">{{ fcfa(selectedPlan.price) }}</span>
+              <span class="text-sm text-muted">{{
+                t("centre.activation.to_collect")
+              }}</span>
+              <span class="text-lg font-bold text-ink">{{
+                fcfa(selectedPlan.price)
+              }}</span>
             </div>
             <div class="mt-1 flex items-center justify-between">
-              <span class="text-sm text-muted">{{ t("centre.activation.estimated") }}</span>
-              <span class="text-sm font-medium text-ink">{{ formatDate(estimatedExpiry) }}</span>
+              <span class="text-sm text-muted">{{
+                t("centre.activation.estimated")
+              }}</span>
+              <span class="text-sm font-medium text-ink">{{
+                formatDate(estimatedExpiry)
+              }}</span>
             </div>
-            <label class="mt-4 flex cursor-pointer items-start gap-2 text-sm text-ink">
+            <label
+              class="mt-4 flex cursor-pointer items-start gap-2 text-sm text-ink"
+            >
               <Checkbox v-model="activationForm.paid" binary class="mt-0.5" />
               <span>
-                {{ t("centre.activation.paid_confirm", { amount: fcfa(selectedPlan.price), name: selectedStudent.full_name }) }}
+                {{
+                  t("centre.activation.paid_confirm", {
+                    amount: fcfa(selectedPlan.price),
+                    name: selectedStudent.full_name,
+                  })
+                }}
               </span>
             </label>
           </div>
@@ -371,10 +497,17 @@
 
       <template #footer>
         <template v-if="activationResult">
-          <Button :label="t('centre.activation.finish')" @click="showActivation = false" />
+          <Button
+            :label="t('centre.activation.finish')"
+            @click="showActivation = false"
+          />
         </template>
         <template v-else>
-          <Button :label="t('common.cancel')" text @click="showActivation = false" />
+          <Button
+            :label="t('common.cancel')"
+            text
+            @click="showActivation = false"
+          />
           <Button
             :label="t('centre.activation.submit')"
             icon="pi pi-bolt"
@@ -390,6 +523,8 @@
 
 <script setup lang="ts">
 import type { ActivationResponse, StudentResponse } from "#shared/api";
+import CentreJoinLinkCard from "~/components/centre/JoinLinkCard.vue";
+import CentreJoinRequestsPanel from "~/components/centre/JoinRequestsPanel.vue";
 
 definePageMeta({ layout: "centre", watermark: "Lernende" });
 
@@ -418,11 +553,28 @@ const students = ref<StudentResponse[]>([]);
 const errorMessage = ref<string | null>(null);
 
 // ── Formatage ──
-const fcfa = (n: number) => `${new Intl.NumberFormat(locale.value).format(n)} FCFA`;
+const fcfa = (n: number) =>
+  `${new Intl.NumberFormat(locale.value).format(n)} FCFA`;
 const formatDate = (d: string | Date) =>
-  new Date(d).toLocaleDateString(locale.value, { day: "2-digit", month: "short", year: "numeric" });
+  new Date(d).toLocaleDateString(locale.value, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 const formatDateTime = (d: string) =>
-  new Date(d).toLocaleString(locale.value, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  new Date(d).toLocaleString(locale.value, {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const PLACEHOLDER_EMAIL_DOMAIN = "@internal.gotogermany";
+
+function displayEmail(email: string | null | undefined) {
+  if (!email || email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) return "";
+  return email;
+}
 
 function initials(name: string) {
   return name
@@ -469,15 +621,24 @@ function hasAccess(s: StudentResponse) {
 function accessBadge(s: StudentResponse) {
   const state = accessState(s);
   if (state === "none")
-    return { label: t("centre.students.access_none"), icon: "pi pi-minus-circle", class: "bg-card-2 text-muted" };
+    return {
+      label: t("centre.students.access_none"),
+      icon: "pi pi-minus-circle",
+      class: "bg-card-2 text-muted",
+    };
   if (state === "expired")
     return {
-      label: t("centre.students.access_expired", { date: formatDate(s.access_expires_at!) }),
+      label: t("centre.students.access_expired", {
+        date: formatDate(s.access_expires_at!),
+      }),
       icon: "pi pi-times-circle",
       class: "bg-red-500/10 text-red-600",
     };
   if (state === "soon") {
-    const days = Math.max(1, Math.ceil((new Date(s.access_expires_at!).getTime() - Date.now()) / DAY));
+    const days = Math.max(
+      1,
+      Math.ceil((new Date(s.access_expires_at!).getTime() - Date.now()) / DAY),
+    );
     return {
       label: t("centre.students.access_soon", days),
       icon: "pi pi-clock",
@@ -485,7 +646,9 @@ function accessBadge(s: StudentResponse) {
     };
   }
   return {
-    label: t("centre.students.access_until", { date: formatDate(s.access_expires_at!) }),
+    label: t("centre.students.access_until", {
+      date: formatDate(s.access_expires_at!),
+    }),
     icon: "pi pi-check-circle",
     class: "bg-emerald-500/10 text-emerald-600",
   };
@@ -505,7 +668,8 @@ function computeActiveClasses() {
   const now = Date.now();
   const map: Record<string, string> = {};
   for (const session of trainingSessionsStore.sessions) {
-    if (session.end_date && new Date(session.end_date).getTime() < now) continue;
+    if (session.end_date && new Date(session.end_date).getTime() < now)
+      continue;
     for (const s of session.students) {
       if (!s.ended_at) map[s.student_id] = session.label || session.level_name;
     }
@@ -522,7 +686,12 @@ const filters = computed(() => {
   const list = students.value;
   const count = (fn: (s: StudentResponse) => boolean) => list.filter(fn).length;
   return [
-    { key: "all" as const, label: t("centre.students.filter_all"), count: list.length, tone: "text-ink" },
+    {
+      key: "all" as const,
+      label: t("centre.students.filter_all"),
+      count: list.length,
+      tone: "text-ink",
+    },
     {
       key: "active" as const,
       label: t("centre.students.filter_active"),
@@ -553,7 +722,12 @@ const filters = computed(() => {
 const filteredStudents = computed(() => {
   const q = search.value.trim().toLowerCase();
   return students.value.filter((s) => {
-    if (q && !s.full_name.toLowerCase().includes(q) && !s.email.toLowerCase().includes(q)) return false;
+    if (
+      q &&
+      !s.full_name.toLowerCase().includes(q) &&
+      !s.email.toLowerCase().includes(q)
+    )
+      return false;
     const st = accessState(s);
     switch (activeFilter.value) {
       case "active":
@@ -574,7 +748,10 @@ const filteredStudents = computed(() => {
 const rowsPerPage = ref(8);
 const firstRecordIndex = ref(0);
 const pagedStudents = computed(() =>
-  filteredStudents.value.slice(firstRecordIndex.value, firstRecordIndex.value + rowsPerPage.value),
+  filteredStudents.value.slice(
+    firstRecordIndex.value,
+    firstRecordIndex.value + rowsPerPage.value,
+  ),
 );
 function onPageChange(event: { first: number; rows: number }) {
   firstRecordIndex.value = event.first;
@@ -609,7 +786,9 @@ async function loadAll() {
   await Promise.all([
     loadStudents(),
     loadClasses(),
-    examsStore.catalog.length === 0 ? examsStore.fetchCatalog() : Promise.resolve(),
+    examsStore.catalog.length === 0
+      ? examsStore.fetchCatalog()
+      : Promise.resolve(),
     plansStore.plans.length === 0 ? plansStore.fetchPlans() : Promise.resolve(),
     salesStore.fetchMySummary(),
   ]);
@@ -636,7 +815,9 @@ const activationResult = ref<ActivationResponse | null>(null);
 const activationForm = ref({ level_id: "", plan_id: "", paid: false });
 
 const selectedPlan = computed(
-  () => activePlans.value.find((p) => p.id === activationForm.value.plan_id) ?? null,
+  () =>
+    activePlans.value.find((p) => p.id === activationForm.value.plan_id) ??
+    null,
 );
 
 // Estimation : le backend prolonge à partir de l'échéance en cours si elle n'est pas passée

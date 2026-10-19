@@ -1,3 +1,4 @@
+<!-- pages/dashboard/index.vue -->
 <template>
   <div class="space-y-5 pb-10">
     <!-- ── Accueil ── -->
@@ -36,9 +37,13 @@
     <div class="grid items-start gap-5 lg:grid-cols-3">
       <!-- ══════════ Colonne principale ══════════ -->
       <div class="space-y-5 lg:col-span-2">
-        <!-- Reprendre -->
+        <!-- Reprendre : session en cours sur un autre examen que l'examen actif -->
         <button
-          v-if="inProgress"
+          v-if="
+            inProgress &&
+            !isStartDeutsch &&
+            inProgress.exam_id !== myExam?.exam.id
+          "
           type="button"
           class="group flex w-full items-center gap-4 rounded-card border border-primary/30 bg-primary/10 p-5 text-left transition-colors hover:border-primary"
           @click="
@@ -53,8 +58,9 @@
           <span class="min-w-0 flex-1">
             <span
               class="block text-xs font-semibold uppercase tracking-wide text-primary"
-              >{{ t("dashboard.resume_title") }}</span
             >
+              {{ t("dashboard.resume_title") }}
+            </span>
             <span class="block truncate font-semibold text-ink">{{
               inProgress.exam_name
             }}</span>
@@ -73,112 +79,320 @@
           </span>
         </button>
 
-        <!-- Mes niveaux -->
+        <!-- ══ Parcours Start Deutsch ══ -->
         <section
-          class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+          v-if="isStartDeutsch"
+          class="rounded-card border border-primary/30 bg-primary/10 p-5 sm:p-6"
         >
-          <header
-            class="flex items-center justify-between gap-3 border-b border-line px-5 py-4"
-          >
-            <h2 class="font-semibold text-ink">
-              {{ t("dashboard.my_levels") }}
-            </h2>
-            <NuxtLink
-              :to="localePath('/dashboard/examens/catalogue')"
-              class="text-sm font-medium text-primary hover:underline"
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <span
+              class="flex size-12 shrink-0 items-center justify-center rounded-leaf bg-primary text-white"
             >
-              {{ t("dashboard.see_all") }}
-            </NuxtLink>
-          </header>
-
-          <div
-            v-if="examsStore.loading && levelRows.length === 0"
-            class="space-y-2 p-5"
-          >
-            <div
-              v-for="n in 3"
-              :key="n"
-              class="h-14 animate-pulse rounded-leaf bg-card-2"
+              <i class="pi pi-graduation-cap" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <h2 class="font-semibold text-ink">
+                {{ t("dashboard.track.start_title") }}
+              </h2>
+              <p class="mt-0.5 text-sm text-muted">
+                {{ t("dashboard.track.start_text") }}
+              </p>
+            </div>
+            <Button
+              :label="t('dashboard.track.start_cta')"
+              icon="pi pi-arrow-right"
+              icon-pos="right"
+              class="shrink-0"
+              @click="navigateTo(localePath('/dashboard/start-deutsch'))"
             />
           </div>
-
-          <div
-            v-else-if="levelRows.length === 0"
-            class="flex flex-col items-center gap-2 px-6 py-10 text-center"
+          <button
+            v-if="canSwitchTrack"
+            type="button"
+            class="mt-4 text-xs font-medium text-muted hover:text-primary hover:underline"
+            @click="navigateTo(localePath('/dashboard/bienvenue?step=level'))"
           >
-            <span
-              class="flex size-12 items-center justify-center rounded-full bg-card-2 text-muted"
-            >
-              <i class="pi pi-inbox" />
-            </span>
-            <p class="text-sm text-muted">{{ t("dashboard.no_exams") }}</p>
-          </div>
+            {{ t("dashboard.track.switch_to_exam") }}
+          </button>
+        </section>
 
-          <ul v-else class="divide-y divide-line">
-            <li v-for="row in levelRows" :key="row.level.id">
-              <button
-                type="button"
-                class="group flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors hover:bg-card-2/60"
-                @click="openLevel(row)"
+        <!-- ══ Parcours examen ══ -->
+        <template v-else>
+          <!-- Mon examen -->
+          <section
+            v-if="myExam"
+            class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+          >
+            <div class="p-5 sm:p-6">
+              <div class="flex items-start gap-4">
+                <span
+                  class="flex size-14 shrink-0 items-center justify-center rounded-leaf text-base font-extrabold"
+                  :class="info(myExam.exam.provider).badge"
+                >
+                  {{ myExam.level.cefr_code }}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="text-xs font-semibold uppercase tracking-wide text-primary"
+                  >
+                    {{ t("dashboard.my_exam.eyebrow") }}
+                  </p>
+                  <h2 class="truncate text-lg font-bold text-ink">
+                    {{ myExam.exam.name }}
+                  </h2>
+                  <p class="text-xs text-muted">
+                    {{
+                      t(
+                        "dashboard.subjects_count",
+                        { n: totalSubjects },
+                        totalSubjects,
+                      )
+                    }}
+                  </p>
+                </div>
+                <span
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                  :class="accessBadge(myExam.level).class"
+                >
+                  {{ accessBadge(myExam.level).label }}
+                </span>
+              </div>
+
+              <template v-if="totalSubjects > 0">
+                <!-- Sujets terminés -->
+                <div class="mt-5">
+                  <div class="mb-1.5 flex items-center justify-between text-xs">
+                    <span class="text-muted">
+                      {{
+                        t("dashboard.my_exam.progress", {
+                          done: doneCount,
+                          total: totalSubjects,
+                        })
+                      }}
+                    </span>
+                    <span class="font-semibold tabular-nums text-ink"
+                      >{{ progressPct }}%</span
+                    >
+                  </div>
+                  <div class="h-2 overflow-hidden rounded-full bg-card-2">
+                    <div
+                      class="h-full rounded-full bg-primary transition-[width] duration-500"
+                      :style="{ width: `${progressPct}%` }"
+                    />
+                  </div>
+                </div>
+
+                <!-- Avancement par module : meilleur score obtenu dans chaque module -->
+                <div v-if="moduleProgress.length" class="mt-5 space-y-2.5">
+                  <p
+                    class="text-xs font-semibold uppercase tracking-wide text-faint"
+                  >
+                    {{ t("dashboard.my_exam.modules_title") }}
+                  </p>
+                  <div
+                    v-for="m in moduleProgress"
+                    :key="m.slug"
+                    class="flex items-center gap-3"
+                  >
+                    <span class="w-32 shrink-0 truncate text-sm text-ink">{{
+                      m.label
+                    }}</span>
+                    <div
+                      class="h-1.5 flex-1 overflow-hidden rounded-full bg-card-2"
+                    >
+                      <div
+                        v-if="m.pct !== null"
+                        class="h-full rounded-full transition-[width] duration-500"
+                        :class="m.pct >= 60 ? 'bg-emerald-500' : 'bg-amber-500'"
+                        :style="{ width: `${m.pct}%` }"
+                      />
+                    </div>
+                    <span
+                      class="w-24 shrink-0 text-right text-xs tabular-nums"
+                      :class="m.pct === null ? 'text-amber-600' : 'text-muted'"
+                    >
+                      {{
+                        m.pct === null
+                          ? t("dashboard.my_exam.module_pending")
+                          : `${m.pct} %`
+                      }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Chiffres -->
+                <dl class="mt-5 grid grid-cols-3 gap-2 text-center">
+                  <div class="rounded-leaf bg-card-2 px-2 py-3">
+                    <dd class="text-lg font-bold tabular-nums text-ink">
+                      {{ bestScore !== null ? `${bestScore} %` : "-" }}
+                    </dd>
+                    <dt class="text-[11px] leading-tight text-muted">
+                      {{ t("dashboard.my_exam.best_score") }}
+                    </dt>
+                  </div>
+                  <div class="rounded-leaf bg-card-2 px-2 py-3">
+                    <dd class="text-lg font-bold tabular-nums text-emerald-600">
+                      {{ examPassed }}/{{ examCompleted.length }}
+                    </dd>
+                    <dt class="text-[11px] leading-tight text-muted">
+                      {{ t("dashboard.my_exam.passed") }}
+                    </dt>
+                  </div>
+                  <div class="rounded-leaf bg-card-2 px-2 py-3">
+                    <dd class="truncate text-sm font-bold leading-7 text-ink">
+                      {{ lastActivity ? formatShort(lastActivity) : "-" }}
+                    </dd>
+                    <dt class="text-[11px] leading-tight text-muted">
+                      {{ t("dashboard.my_exam.last_activity") }}
+                    </dt>
+                  </div>
+                </dl>
+
+                <!-- Une seule action -->
+                <Button
+                  v-if="primaryAction"
+                  :label="primaryAction.label"
+                  :icon="primaryAction.icon"
+                  class="mt-5 w-full sm:w-auto"
+                  @click="navigateTo(localePath(primaryAction.to))"
+                />
+              </template>
+
+              <p
+                v-else
+                class="mt-5 rounded-leaf bg-card-2 px-4 py-3 text-sm text-muted"
+              >
+                {{ t("dashboard_exams.coming_soon") }}
+              </p>
+            </div>
+          </section>
+
+          <!-- Autres examens : repliés si un examen est actif, sinon étape de choix -->
+          <section
+            class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+          >
+            <button
+              v-if="myExam"
+              type="button"
+              class="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-card-2/60"
+              :aria-expanded="showOthers"
+              @click="showOthers = !showOthers"
+            >
+              <span class="font-semibold text-ink">
+                {{ t("dashboard.my_exam.explore", { n: otherRows.length }) }}
+              </span>
+              <i
+                class="pi pi-chevron-down text-xs text-faint transition-transform"
+                :class="{ 'rotate-180': showOthers }"
+              />
+            </button>
+            <header
+              v-else
+              class="flex items-center justify-between gap-3 border-b border-line px-5 py-4"
+            >
+              <div class="min-w-0">
+                <h2 class="font-semibold text-ink">
+                  {{ t("dashboard.my_exam.choose_title") }}
+                </h2>
+                <p class="mt-0.5 text-xs text-muted">
+                  {{ t("dashboard.my_exam.choose_text") }}
+                </p>
+              </div>
+              <NuxtLink
+                :to="localePath('/dashboard/examens/catalogue')"
+                class="shrink-0 text-sm font-medium text-primary hover:underline"
+              >
+                {{ t("dashboard.see_all") }}
+              </NuxtLink>
+            </header>
+
+            <div
+              v-show="!myExam || showOthers"
+              :class="{ 'border-t border-line': myExam }"
+            >
+              <div
+                v-if="examsStore.loading && levelRows.length === 0"
+                class="space-y-2 p-5"
+              >
+                <div
+                  v-for="n in 3"
+                  :key="n"
+                  class="h-14 animate-pulse rounded-leaf bg-card-2"
+                />
+              </div>
+
+              <div
+                v-else-if="otherRows.length === 0"
+                class="flex flex-col items-center gap-2 px-6 py-10 text-center"
               >
                 <span
-                  class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-xs font-bold"
-                  :class="info(row.exam.provider).badge"
+                  class="flex size-12 items-center justify-center rounded-full bg-card-2 text-muted"
                 >
-                  {{ row.level.cefr_code }}
+                  <i class="pi pi-inbox" />
                 </span>
-                <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium text-ink">{{
-                    row.exam.name
-                  }}</span>
-                  <span class="block text-xs text-muted">
-                    {{ row.level.subject_count ?? 0 }} {{ t("payment.subjet") }}
-                  </span>
-                </span>
+                <p class="text-sm text-muted">{{ t("dashboard.no_exams") }}</p>
+              </div>
 
-                <span
-                  v-if="row.level.id === activeLevelId"
-                  class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
-                >
-                  <i class="pi pi-bookmark-fill text-[9px]" />
-                  {{ t("exam_detail.active_level") }}
-                </span>
-                <span
-                  v-if="!row.level.subject_count"
-                  class="shrink-0 rounded-full bg-card-2 px-2 py-0.5 text-[11px] font-semibold text-muted"
-                >
-                  {{ t("dashboard_exams.coming_soon") }}
-                </span>
-                <span
-                  v-else-if="row.level.has_access || row.level.is_free"
-                  class="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600"
-                >
-                  {{
-                    row.level.is_free
-                      ? t("dashboard.level_free")
-                      : t("dashboard.level_active")
-                  }}
-                </span>
-                <template v-else>
-                  <span
-                    class="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
+              <ul v-else class="divide-y divide-line">
+                <li v-for="row in otherRows" :key="row.level.id">
+                  <button
+                    type="button"
+                    class="group flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors hover:bg-card-2/60"
+                    @click="openLevel(row)"
                   >
-                    {{ t("dashboard.level_preview") }}
-                  </span>
-                  <span
-                    v-if="!isCenterStudent"
-                    class="hidden shrink-0 text-xs font-semibold text-primary sm:inline"
-                  >
-                    {{ t("dashboard.unlock") }}
-                  </span>
-                </template>
-                <i
-                  class="pi pi-chevron-right shrink-0 text-xs text-faint transition-transform group-hover:translate-x-0.5"
-                />
-              </button>
-            </li>
-          </ul>
-        </section>
+                    <span
+                      class="flex size-10 shrink-0 items-center justify-center rounded-leaf text-xs font-bold"
+                      :class="info(row.exam.provider).badge"
+                    >
+                      {{ row.level.cefr_code }}
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate font-medium text-ink">{{
+                        row.exam.name
+                      }}</span>
+                      <span class="block text-xs text-muted">
+                        {{
+                          t(
+                            "dashboard.subjects_count",
+                            { n: row.level.subject_count ?? 0 },
+                            row.level.subject_count ?? 0,
+                          )
+                        }}
+                      </span>
+                    </span>
+                    <span
+                      class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                      :class="accessBadge(row.level).class"
+                    >
+                      {{ accessBadge(row.level).label }}
+                    </span>
+                    <span
+                      v-if="
+                        row.level.subject_count &&
+                        !hasOpenAccess(row.level) &&
+                        !isCenterStudent
+                      "
+                      class="hidden shrink-0 text-xs font-semibold text-primary sm:inline"
+                    >
+                      {{ t("dashboard.unlock") }}
+                    </span>
+                    <i
+                      class="pi pi-chevron-right shrink-0 text-xs text-faint transition-transform group-hover:translate-x-0.5"
+                    />
+                  </button>
+                </li>
+              </ul>
+
+              <NuxtLink
+                v-if="myExam"
+                :to="localePath('/dashboard/examens/catalogue')"
+                class="block border-t border-line px-5 py-3 text-center text-sm font-medium text-primary hover:underline"
+              >
+                {{ t("dashboard.see_all") }}
+              </NuxtLink>
+            </div>
+          </section>
+        </template>
 
         <!-- Activité récente -->
         <section
@@ -221,7 +435,15 @@
               :label="t('dashboard.start')"
               size="small"
               outlined
-              @click="navigateTo(localePath('/dashboard/examens'))"
+              @click="
+                navigateTo(
+                  localePath(
+                    isStartDeutsch
+                      ? '/dashboard/start-deutsch'
+                      : '/dashboard/examens',
+                  ),
+                )
+              "
             />
           </div>
 
@@ -259,7 +481,7 @@
 
       <!-- ══════════ Colonne latérale ══════════ -->
       <aside class="space-y-5 lg:sticky lg:top-0">
-        <!-- Progression -->
+        <!-- Progression globale -->
         <section
           class="rounded-card border border-line bg-card p-5 shadow-soft"
         >
@@ -414,6 +636,7 @@
 <script setup lang="ts">
 import { AssignmentsService } from "#shared/api";
 import { SITE } from "~/config/site";
+import type { LearningTrack } from "~/composables/useLearningTrack";
 import type {
   LevelAccessResponse,
   SessionListResponse,
@@ -431,6 +654,7 @@ const sessionStore = useSessionStore();
 const { visibleCatalog, isCenterStudent } = useVisibleCatalog();
 const { needsOnboarding, activeOption } = useActiveLevel();
 const { info } = useProviders();
+const { track, isStartDeutsch, canSwitchTrack, setTrack } = useLearningTrack();
 const activeLevelId = computed(() => activeOption.value?.level.id ?? null);
 
 const me = computed(() => authStore.user as UserMeResponse | null);
@@ -447,6 +671,11 @@ const formatDate = (d: string) =>
     day: "2-digit",
     month: "long",
     year: "numeric",
+  });
+const formatShort = (d: string) =>
+  new Date(d).toLocaleDateString(intlLocale.value, {
+    day: "2-digit",
+    month: "short",
   });
 const formatDateTime = (d: string) =>
   new Date(d).toLocaleDateString(intlLocale.value, {
@@ -466,11 +695,9 @@ const levelRows = computed<LevelRow[]>(() => {
   const rows = visibleCatalog.value.flatMap((exam) =>
     (exam.levels ?? []).map((level) => ({ exam, level })),
   );
-  // Niveau actif d'abord, puis niveaux avec sujets, puis accès ouverts
+  // Niveaux avec sujets d'abord, puis accès ouverts, puis ordre d'affichage
   return rows.sort(
     (a, b) =>
-      Number(b.level.id === activeLevelId.value) -
-        Number(a.level.id === activeLevelId.value) ||
       Number((b.level.subject_count ?? 0) > 0) -
         Number((a.level.subject_count ?? 0) > 0) ||
       Number(b.level.has_access) - Number(a.level.has_access) ||
@@ -478,10 +705,34 @@ const levelRows = computed<LevelRow[]>(() => {
   );
 });
 
+const hasOpenAccess = (level: LevelAccessResponse) =>
+  level.has_access || level.is_free || isCenterStudent.value;
+
+const accessBadge = (level: LevelAccessResponse) => {
+  if (!level.subject_count)
+    return {
+      label: t("dashboard_exams.coming_soon"),
+      class: "bg-card-2 text-muted",
+    };
+  if (level.is_free)
+    return {
+      label: t("dashboard.level_free"),
+      class: "bg-emerald-500/10 text-emerald-600",
+    };
+  if (hasOpenAccess(level))
+    return {
+      label: t("dashboard.level_active"),
+      class: "bg-emerald-500/10 text-emerald-600",
+    };
+  return {
+    label: t("dashboard.level_preview"),
+    class: "bg-amber-500/15 text-amber-600",
+  };
+};
+
 const openLevel = (row: LevelRow) => {
   if (!row.level.subject_count) return;
-
-  if (row.level.has_access || row.level.is_free || isCenterStudent.value) {
+  if (hasOpenAccess(row.level)) {
     navigateTo(localePath(`/dashboard/examens/${row.exam.slug}`));
   } else {
     navigateTo(localePath(`/dashboard/paiement?level_id=${row.level.id}`));
@@ -550,8 +801,9 @@ const banners = computed(() => {
 const sessionsLoading = ref(true);
 const sessions = ref<SessionListResponse[]>([]);
 
+// Seule une session réellement en cours se reprend (pas une session abandonnée ou en correction)
 const inProgress = computed(
-  () => sessions.value.find((s) => s.status !== "COMPLETED") ?? null,
+  () => sessions.value.find((s) => s.status === "IN_PROGRESS") ?? null,
 );
 const completed = computed(() =>
   sessions.value.filter((s) => s.status === "COMPLETED"),
@@ -592,6 +844,146 @@ const sessionLabel = (s: SessionListResponse) => {
   return s.score != null ? `${verdict} · ${Math.round(s.score)}` : verdict;
 };
 
+// ── Mon examen ──
+const myExam = computed(() => activeOption.value);
+const showOthers = ref(false);
+
+// L'examen actif a sa carte : il n'apparaît pas dans la liste des autres
+const otherRows = computed(() =>
+  levelRows.value.filter((r) => r.level.id !== activeLevelId.value),
+);
+
+const totalSubjects = computed(() => myExam.value?.level.subject_count ?? 0);
+
+// Sessions de l'examen actif, de la plus récente à la plus ancienne
+const examSessions = computed(() =>
+  myExam.value
+    ? sessions.value.filter((s) => s.exam_id === myExam.value!.exam.id)
+    : [],
+);
+const examCompleted = computed(() =>
+  examSessions.value.filter((s) => s.status === "COMPLETED"),
+);
+const examPassed = computed(
+  () => examCompleted.value.filter((s) => s.passed).length,
+);
+const examInProgress = computed(
+  () => examSessions.value.find((s) => s.status === "IN_PROGRESS") ?? null,
+);
+
+// Un sujet compte comme terminé seulement en examen complet (pas en mode module seul)
+const doneSubjects = computed(
+  () =>
+    new Set(
+      examCompleted.value
+        .filter((s) => !s.module_slugs?.length)
+        .map((s) => s.subject_number),
+    ),
+);
+const doneCount = computed(() =>
+  Math.min(doneSubjects.value.size, totalSubjects.value),
+);
+
+const progressPct = computed(() =>
+  totalSubjects.value
+    ? Math.round((doneCount.value / totalSubjects.value) * 100)
+    : 0,
+);
+
+const bestScore = computed(() => {
+  const scores = examCompleted.value
+    .map((s) => s.score)
+    .filter((v): v is number => v != null);
+  return scores.length ? Math.round(Math.max(...scores)) : null;
+});
+
+const lastActivity = computed(() => examSessions.value[0]?.started_at ?? null);
+
+// ── Avancement par module ──
+// Meilleur score de chaque module, toutes sessions de l'examen confondues
+// (examen complet ou module seul). null = en attente de correction.
+const MODULE_LABELS: Record<string, string> = {
+  lesen: "Lesen",
+  hoeren: "Hören",
+  horen: "Hören",
+  hören: "Hören",
+  schreiben: "Schreiben",
+  sprechen: "Sprechen",
+  sprachbausteine: "Sprachbausteine",
+};
+
+const moduleLabel = (slug: string) =>
+  MODULE_LABELS[slug.toLowerCase()] ??
+  slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
+
+const breakdownOf = (s: SessionListResponse) =>
+  ((
+    s as SessionListResponse & {
+      score_breakdown?: Record<string, unknown> | null;
+    }
+  ).score_breakdown ?? {}) as Record<string, unknown>;
+
+const moduleProgress = computed(() => {
+  const best = new Map<string, number | null>();
+  for (const s of examSessions.value) {
+    if (s.status !== "COMPLETED" && s.status !== "PENDING_REVIEW") continue;
+    for (const [slug, value] of Object.entries(breakdownOf(s))) {
+      const prev = best.get(slug);
+      if (typeof value === "number") {
+        best.set(slug, prev == null ? value : Math.max(prev, value));
+      } else if (!best.has(slug)) {
+        best.set(slug, null);
+      }
+    }
+  }
+  return [...best.entries()].map(([slug, pct]) => ({
+    slug,
+    label: moduleLabel(slug),
+    pct: pct === null ? null : Math.round(pct),
+  }));
+});
+
+// Premier sujet pas encore terminé (même logique que le choix automatique du backend)
+const nextSubject = computed(() => {
+  for (let n = 1; n <= totalSubjects.value; n++)
+    if (!doneSubjects.value.has(n)) return n;
+  return null;
+});
+
+const primaryAction = computed(() => {
+  const o = myExam.value;
+  if (!o || !totalSubjects.value) return null;
+  const examPath = `/dashboard/examens/${o.exam.slug}`;
+  if (!hasOpenAccess(o.level)) {
+    return {
+      label: t("dashboard.my_exam.unlock"),
+      icon: "pi pi-lock-open",
+      to: `/dashboard/paiement?level_id=${o.level.id}`,
+    };
+  }
+  if (examInProgress.value) {
+    return {
+      label: t("dashboard.my_exam.resume", {
+        n: examInProgress.value.subject_number,
+      }),
+      icon: "pi pi-play",
+      to: examPath,
+    };
+  }
+  if (nextSubject.value) {
+    return {
+      label: t("dashboard.my_exam.start", { n: nextSubject.value }),
+      icon: "pi pi-arrow-right",
+      to: examPath,
+    };
+  }
+  return {
+    label: t("dashboard.my_exam.redo"),
+    icon: "pi pi-refresh",
+    to: examPath,
+  };
+});
+
 // ── Devoirs ──
 const assignments = ref<StudentAssignmentResponse[]>([]);
 const DONE_STATUSES = ["submitted", "graded"];
@@ -624,15 +1016,27 @@ async function loadAssignments() {
   }
 }
 
-// ── Raccourcis ──
+// ── Raccourcis : même découpage par parcours que le menu ──
+type Shortcut = {
+  to: string;
+  label: string;
+  sub: string;
+  icon: string;
+  iconClass: string;
+  hideForCenter?: boolean;
+  /** Absent = visible dans les deux parcours */
+  track?: LearningTrack;
+};
+
 const shortcuts = computed(() => {
-  const list = [
+  const list: Shortcut[] = [
     {
       to: "/dashboard/examens",
       label: t("dashboard.quick_actions.exam"),
       sub: t("dashboard.quick_actions.exam_sub"),
       icon: "pi pi-book",
       iconClass: "bg-primary/10 text-primary",
+      track: "exam",
     },
     {
       to: "/dashboard/sprechen",
@@ -640,6 +1044,7 @@ const shortcuts = computed(() => {
       sub: t("dashboard.quick_actions.sprechen_sub"),
       icon: "pi pi-microphone",
       iconClass: "bg-rose-500/10 text-rose-600",
+      track: "exam",
     },
     {
       to: "/dashboard/simulateur",
@@ -647,6 +1052,7 @@ const shortcuts = computed(() => {
       sub: t("dashboard.quick_actions.simulator_sub"),
       icon: "pi pi-pen-to-square",
       iconClass: "bg-indigo-500/10 text-indigo-600",
+      track: "exam",
     },
     {
       to: "/dashboard/start-deutsch",
@@ -655,6 +1061,7 @@ const shortcuts = computed(() => {
       icon: "pi pi-graduation-cap",
       iconClass: "bg-sky-500/10 text-sky-600",
       hideForCenter: true,
+      track: "start_deutsch",
     },
     {
       to: "/dashboard/resultats",
@@ -671,7 +1078,11 @@ const shortcuts = computed(() => {
       iconClass: "bg-amber-500/15 text-amber-600",
     },
   ];
-  return list.filter((a) => !(a.hideForCenter && isCenterStudent.value));
+  return list.filter(
+    (a) =>
+      !(a.hideForCenter && isCenterStudent.value) &&
+      (!a.track || a.track === track.value),
+  );
 });
 
 // ── Communauté WhatsApp : carte masquée après "Rejoindre" ou la croix (préférence locale) ──
@@ -699,7 +1110,7 @@ onMounted(() => {
 onMounted(async () => {
   await authStore.fetchUser();
 
-  // Étudiant individuel qui n'a pas encore choisi son niveau : accueil d'abord
+  // Étudiant individuel qui n'a encore rien choisi : accueil d'abord
   if (needsOnboarding.value) {
     await navigateTo(localePath("/dashboard/bienvenue"), { replace: true });
     return;
@@ -709,7 +1120,8 @@ onMounted(async () => {
   if (examsStore.catalog.length === 0) tasks.push(examsStore.fetchCatalog());
   if (isCenterStudent.value) tasks.push(loadAssignments());
   tasks.push(
-    sessionStore.getMySessions(0, 10).then((result: any) => {
+    // 50 dernières sessions : assez pour calculer l'avancement de l'examen actif
+    sessionStore.getMySessions(0, 50).then((result: any) => {
       if (result.success) {
         sessions.value = [
           ...((result.data ?? []) as SessionListResponse[]),

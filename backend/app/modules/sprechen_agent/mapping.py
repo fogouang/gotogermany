@@ -131,16 +131,24 @@ FORMAT_TYPE_BEHAVIOR: dict[str, SingleRoleBehavior] = {
         behavior_note="Listen to the description/interpretation, then ask one brief clarifying question.",
         min_turns=3,  # description, agent's question, student's brief answer
     ),
+    # telc "Gespräch über ein Thema" (vérifié sur l'Übungstest officiel) :
+    # chaque partenaire lit un texte DIFFÉRENT. A (l'élève) rapporte le
+    # sien en premier, puis B (l'agent) rapporte le sien, puis ils
+    # discutent (avis + expériences personnelles).
     "oral_thema": SingleRoleBehavior(
         role=AgentRole.PARTNER,
-        agent_opens=True,
+        agent_opens=False,
         behavior_note=(
-            "Briefly report what the two stimulus people (person_a/person_b in the subject "
-            "data) think about the topic — their names and opinions are given in the content "
-            "block below. Then discuss the topic genuinely with the student: ask their opinion, "
-            "react to it, compare it with the two given viewpoints."
+            "Exam flow: you and the student each read a DIFFERENT short text on the topic "
+            "(see the reading stimulus below). The student speaks first and reports their "
+            "own text. Listen without interrupting (short backchannel at most). Never "
+            "report, quote or reveal the student's text yourself. Then report YOUR text "
+            "briefly in your own words: who the person is and what they think. Then discuss "
+            "together: give your own opinion, share a short personal experience, ask the "
+            "student for their opinion and experiences, and react to what they say. If the "
+            "student has not reported their text, ask them once what their text was about."
         ),
-        min_turns=4,  # report the stimulus, then a real back-and-forth discussion
+        min_turns=4,  # élève rapporte, agent rapporte, puis vraie discussion
     ),
         # TestDaF digital (ESQUISSE) : format semi-direct, pas de vrai partenaire.
     # L'agent joue l'interlocuteur fictif : il pose la situation/la question
@@ -231,7 +239,7 @@ def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
         # even though the real exam hands the student this exact text.
         "text": teil_raw.get("text"),
     }
-    for key in ("person_a", "person_b", "person1", "person2"):
+    for key in ("person_a", "person_b", "person1", "person2", "opinion_a", "opinion_b"):
         if key in teil_raw:
             payload[key] = teil_raw[key]
 
@@ -243,24 +251,28 @@ def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
 
 def _resolve_stimulus_people(teil_raw: dict[str, Any]) -> list[dict[str, str]] | None:
     """Normalizes the two-stimulus-person pattern used by oral_thema
-    (telc: person_a/person_b) and oral_meinungsaustausch (ÖSD:
-    person1/person2) into one provider-agnostic shape:
+    (telc: person_a/person_b or opinion_a/opinion_b) and
+    oral_meinungsaustausch (ÖSD: person1/person2) into one
+    provider-agnostic shape:
     [{"name": ..., "opinion": ...}, {"name": ..., "opinion": ...}].
 
     Exists so TeilConfig (and therefore the frontend preparation
-    screen) can show the actual reading stimulus — until now this data
-    only ever reached the agent's own prompt (prompt_builder.py's
-    _format_stimulus_people, kept separate and untouched), never the
-    student, even though the real exam hands the student this exact
-    text/card during the 20-min Vorbereitungszeit.
+    screen) can show the actual reading stimulus. An empty dict (e.g.
+    person_a: {} left by the import) counts as absent, so the next
+    known pair is tried.
     """
-    for first_key, second_key in (("person_a", "person_b"), ("person1", "person2")):
+    for first_key, second_key in (
+        ("person_a", "person_b"),
+        ("person1", "person2"),
+        # telc B1 "Gespräch über ein Thema" : {"person": ..., "text": ...}
+        ("opinion_a", "opinion_b"),
+    ):
         first, second = teil_raw.get(first_key), teil_raw.get(second_key)
         if first and second:
             return [
                 {
-                    "name": p.get("name", "?"),
-                    "opinion": p.get("meinung") or p.get("position") or "",
+                    "name": p.get("name") or p.get("person") or "?",
+                    "opinion": p.get("meinung") or p.get("position") or p.get("text") or "",
                 }
                 for p in (first, second)
             ]

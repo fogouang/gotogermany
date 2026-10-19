@@ -4,9 +4,10 @@
 /* eslint-disable */
 export type Body_import_exam_json_api_v1_exams_admin_import_post = {
     /**
-     * Fichier JSON de l'examen
+     * Fichier JSON du sujet (ex. sujet3.json)
      */
     file: string;
     replace?: boolean;
+    dry_run?: boolean;
 };
 

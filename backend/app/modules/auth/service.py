@@ -2,7 +2,7 @@
 app/modules/auth/service.py
 """
 import secrets
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -15,7 +15,11 @@ from app.modules.users.repository import UserRepository, UserDeviceRepository
 from app.shared.exceptions.http import BadRequestException, UnauthorizedException
 from app.shared.security.jwt import create_access_token, decode_access_token
 from app.shared.security.password import hash_password, verify_password
+from app.shared.utils.phone import normalize_phone
 from app.modules.referrals.service import ReferralService
+
+# Adresse interne des comptes créés sans email (même domaine que la création rapide)
+PLACEHOLDER_EMAIL_DOMAIN = "@internal.gotogermany"
 
 
 class AuthService:
@@ -27,10 +31,27 @@ class AuthService:
         self.referral_service = ReferralService(db)
 
     async def register(self, data: RegisterRequest) -> AuthResponse:
-        # Email unique
-        existing = await self.repo.find_by_email(data.email)
-        if existing:
-            raise BadRequestException(detail="Cet email est déjà utilisé.")
+        # Email unique, seulement s'il est fourni
+        if data.email:
+            existing = await self.repo.find_by_email(data.email)
+            if existing:
+                raise BadRequestException(detail="Cet email est déjà utilisé.")
+
+        # Un numéro = un compte (le numéro sert à se connecter)
+        if await self.repo.find_by_phone(data.phone):
+            raise BadRequestException(
+                detail="Ce numéro est déjà utilisé. Connectez-vous avec ce numéro."
+            )
+
+        # Inscription via le lien d'un centre : demande en attente de validation
+        requested_branch_id = None
+        if data.center_join_token:
+            from app.modules.centers.service import CenterService
+
+            branch = await CenterService(self.db).resolve_join_branch(
+                data.center_join_token, data.branch_id
+            )
+            requested_branch_id = branch.id
 
         # Résolution du parrainage (silencieuse si code invalide/inexistant)
         referred_by_user_id = None
@@ -39,23 +60,33 @@ class AuthService:
             if ambassador:
                 referred_by_user_id = ambassador.id
 
-        # Créer l'utilisateur
+        now = datetime.now(timezone.utc)
+        extra: dict = {}
+        if requested_branch_id:
+            # Pas de crédits offerts : ceux du centre arrivent à la validation
+            extra.update(
+                requested_branch_id=requested_branch_id,
+                join_requested_at=now,
+                ai_credits=0,
+            )
+
         verification_token = secrets.token_urlsafe(32)
         user = await self.repo.create(
-            email=data.email,
+            email=data.email or f"compte-{uuid4().hex[:12]}{PLACEHOLDER_EMAIL_DOMAIN}",
             hashed_password=hash_password(data.password),
-            full_name=data.full_name.strip(),
+            full_name=data.full_name,
             phone=data.phone,
             whatsapp_opt_in=data.whatsapp_opt_in,
-            whatsapp_opt_in_at=datetime.now(timezone.utc) if data.whatsapp_opt_in else None,
+            whatsapp_opt_in_at=now if data.whatsapp_opt_in else None,
             is_active=True,
             is_admin=False,
             is_verified=False,
             verification_token=verification_token,
             referred_by_user_id=referred_by_user_id,
+            **extra,
         )
 
-        # TODO: envoyer email de vérification avec verification_token
+        # TODO: envoyer email de vérification avec verification_token (si email fourni)
 
         access_token = create_access_token({"sub": str(user.id)})
         return AuthResponse(
@@ -63,12 +94,22 @@ class AuthService:
             user=AuthUserResponse.model_validate(user),
         )
 
+    async def _find_by_identifier(self, identifier: str) -> User | None:
+        """Email si l'identifiant contient un @, sinon numéro de téléphone
+        (normalisé : "6 90 00 00 00" et "+237690000000" donnent le même compte)."""
+        if "@" in identifier:
+            return await self.repo.find_by_email(identifier)
+        try:
+            phone = normalize_phone(identifier)
+        except ValueError:
+            return None
+        return await self.repo.find_by_phone(phone) if phone else None
         
     async def login(self, data: LoginRequest) -> AuthResponse:
-        user = await self.repo.find_by_email(data.email)
+        user = await self._find_by_identifier(data.login_id)
 
         if not user or not verify_password(data.password, user.hashed_password):
-            raise UnauthorizedException(detail="Email ou mot de passe incorrect.")
+            raise UnauthorizedException(detail="Numéro ou mot de passe incorrect.")
 
         if not user.is_active:
             raise UnauthorizedException(detail="Compte désactivé.")

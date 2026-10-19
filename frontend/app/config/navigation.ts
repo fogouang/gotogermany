@@ -229,6 +229,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
 
   // Étudiant : regroupé par intention.
   // audience "center" = élève de centre uniquement, "independent" = étudiant individuel uniquement.
+  // track "exam" = parcours B1/B2, "start_deutsch" = parcours A1/A2 ; absent = les deux.
   // Les sections vides après filtrage sont retirées par useNavigation.
   etudiant: [
     {
@@ -256,6 +257,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           to: "/dashboard/sessions-live",
           icon: "pi pi-video",
           audience: "center",
+          track: "exam",
         },
       ],
     },
@@ -266,22 +268,26 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           labelKey: "dashboard.pages.examens",
           to: "/dashboard/examens",
           icon: "pi pi-book",
+          track: "exam",
         },
         {
           labelKey: "dashboard.pages.sprechen",
           to: "/dashboard/sprechen",
           icon: "pi pi-microphone",
+          track: "exam",
         },
         {
           labelKey: "dashboard.pages.simulateur",
           to: "/dashboard/simulateur",
           icon: "pi pi-pen-to-square",
+          track: "exam",
         },
         {
           labelKey: "dashboard.pages.start_deutsch",
           to: "/dashboard/start-deutsch",
           icon: "pi pi-graduation-cap",
           audience: "independent",
+          track: "start_deutsch",
         },
       ],
     },
@@ -297,6 +303,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           labelKey: "dashboard.pages.methodologie",
           to: "/dashboard/methodologie",
           icon: "pi pi-compass",
+          track: "exam",
         },
       ],
     },

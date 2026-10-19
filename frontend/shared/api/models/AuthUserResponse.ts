@@ -10,11 +10,13 @@ export type AuthUserResponse = {
     id: string;
     email: string;
     full_name: string;
+    phone?: (string | null);
     is_admin: boolean;
     is_verified: boolean;
     is_ambassador: boolean;
     role: UserRole;
     center_id?: (string | null);
     branch_id?: (string | null);
+    requested_branch_id?: (string | null);
 };
 
