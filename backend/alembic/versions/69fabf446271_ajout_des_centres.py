@@ -88,7 +88,7 @@ def upgrade() -> None:
     sa.UniqueConstraint('user_id', 'device_fingerprint', name='uq_user_device_fingerprint')
     )
     op.create_index(op.f('ix_user_devices_user_id'), 'user_devices', ['user_id'], unique=False)
-    op.drop_index(op.f('uq_one_active_session_per_user_exam_subject'), table_name='exam_sessions', postgresql_where="((status)::text = 'IN_PROGRESS'::text)")
+    op.execute("DROP INDEX IF EXISTS uq_one_active_session_per_user_exam_subject")
     op.add_column('users', sa.Column('role', sa.Enum('student', 'branch_secretary', 'center_director', name='user_role'), server_default='student', nullable=False))
     op.add_column('users', sa.Column('center_id', sa.UUID(), nullable=True))
     op.add_column('users', sa.Column('branch_id', sa.UUID(), nullable=True))
