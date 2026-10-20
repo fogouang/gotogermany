@@ -320,6 +320,20 @@
                       rounded
                       size="small"
                       :severity="subject.has_audio ? 'secondary' : 'warn'"
+                      v-tooltip.top="
+                        subject.has_audio
+                          ? 'Ajouter des audios'
+                          : 'Audios manquants : les ajouter'
+                      "
+                      aria-label="Ajouter des audios"
+                      @click="openImportAudio(exam, subject)"
+                    />
+                    <Button
+                      icon="pi pi-trash"
+                      text
+                      rounded
+                      size="small"
+                      severity="danger"
                       v-tooltip.top="'Supprimer'"
                       aria-label="Supprimer"
                       @click="openDelete(exam, subject)"

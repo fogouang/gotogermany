@@ -81,6 +81,15 @@ class ExamSession(Base, UUIDMixin, TimestampMixin):
     # Modules choisis en mode "module seul" (ex. ["lesen"]) ; None = examen complet
     module_slugs: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
+    # Bloc chronométré en cours et son heure de fin (reprise après rechargement,
+    # jamais de retour vers un bloc terminé)
+    current_block: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    block_deadline: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

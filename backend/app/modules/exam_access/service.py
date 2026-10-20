@@ -2,14 +2,15 @@
 app/modules/exam_access/service.py
 
 Logique d'accès :
-  - Sujet privé : jamais depuis le catalogue (admin uniquement).
+  - Sujet privé : admin, devoir en cours, ou élève indépendant (règles normales).
+    Jamais pour un élève de centre en dehors d'un devoir.
   - Élève indépendant : sujets 1 à 3 libres, puis ExamAccess actif sur le niveau.
   - Élève de centre : ExamAccess actif ET classe active, sans aperçu gratuit.
 """
-from datetime import datetime, timezone,timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.exam_access.models import ExamAccess
@@ -19,11 +20,12 @@ from app.modules.exam_access.schemas import (
     ExamAccessWithLevelResponse,
     UserLevelsResponse,
 )
+from app.modules.exam_access.visibility import can_see_private
 from app.modules.exams.models import Exam, Subject
-from app.modules.users.models import User, UserRole
 from app.modules.exams.repository import ExamRepository, LevelRepository
 from app.modules.exams.schemas import ExamCatalogResponse, LevelAccessResponse
-from app.shared.exceptions.http import BadRequestException, ForbiddenException
+from app.modules.users.models import User, UserRole
+from app.shared.exceptions.http import ForbiddenException
 
 
 class ExamAccessService:
@@ -34,21 +36,31 @@ class ExamAccessService:
         self.exam_repo = ExamRepository(db)
         self.level_repo = LevelRepository(db)
 
-
     # ── Élèves de centre ─────────────────────────────────
 
     @staticmethod
     def _is_center_student(user: User | None) -> bool:
         return bool(user and user.role == UserRole.student and user.branch_id)
 
+    async def _get_user(self, user_id: UUID) -> User | None:
+        from app.modules.users.repository import UserRepository
+
+        return await UserRepository(self.db).get_by_id(user_id)
+
     async def _has_active_class(self, user_id: UUID) -> bool:
         """L'élève est-il dans au moins une classe en cours ?"""
-        from app.modules.training_sessions.models import TrainingSession, TrainingSessionStudent
+        from app.modules.training_sessions.models import (
+            TrainingSession,
+            TrainingSessionStudent,
+        )
 
         now = datetime.now(timezone.utc)
         result = await self.db.execute(
             select(func.count(TrainingSessionStudent.id))
-            .join(TrainingSession, TrainingSession.id == TrainingSessionStudent.training_session_id)
+            .join(
+                TrainingSession,
+                TrainingSession.id == TrainingSessionStudent.training_session_id,
+            )
             .where(
                 TrainingSessionStudent.student_id == user_id,
                 TrainingSessionStudent.ended_at.is_(None),
@@ -56,27 +68,34 @@ class ExamAccessService:
             )
         )
         return result.scalar_one() > 0
-    
+
     # ── Vérification d'accès ─────────────────────────────
-    async def check_subject_access(
-        self, user_id: UUID, subject: Subject
-    ) -> bool:
+
+    async def check_subject_access(self, user_id: UUID, subject: Subject) -> bool:
         """
-        - Sujet privé : jamais depuis le catalogue (admin uniquement ; devoirs au lot 5).
+        - Sujet privé : admin, devoir non rendu sur ce sujet, ou élève indépendant
+          (il suit alors les règles normales ci-dessous).
         - Élève indépendant : 3 premiers sujets libres, puis ExamAccess actif.
         - Élève de centre : ExamAccess actif ET classe active, pas d'aperçu gratuit.
         """
         from app.modules.settings.service import AppSettingsService
-        from app.modules.users.repository import UserRepository
 
-        user = await UserRepository(self.db).get_by_id(user_id)
+        user = await self._get_user(user_id)
 
         if subject.is_private:
             if user and user.is_admin:
                 return True
-            # Sujet privé : accessible seulement via un devoir non rendu
+            # Devoir non rendu sur ce sujet : toujours accessible
             from app.modules.assignments.service import AssignmentService
-            return await AssignmentService(self.db).student_has_open_assignment(user_id, subject.id)
+
+            if await AssignmentService(self.db).student_has_open_assignment(
+                user_id, subject.id
+            ):
+                return True
+            # Élève de centre : les sujets privés sont réservés aux devoirs
+            if not can_see_private(user):
+                return False
+            # Élève indépendant : sujet comme les autres, règles ci-dessous
 
         if await AppSettingsService(self.db).is_free_access_mode():
             return True
@@ -91,27 +110,22 @@ class ExamAccessService:
 
         return await self.repo.user_has_access(user_id, subject.level_id)
 
-    async def require_subject_access(
-        self, user_id: UUID, subject: Subject
-    ) -> None:
+    async def require_subject_access(self, user_id: UUID, subject: Subject) -> None:
         if await self.check_subject_access(user_id, subject):
             return
 
-        from app.modules.users.repository import UserRepository
-        user = await UserRepository(self.db).get_by_id(user_id)
-
-        if self._is_center_student(user) and await self.repo.user_has_access(user_id, subject.level_id):
+        user = await self._get_user(user_id)
+        if self._is_center_student(user) and await self.repo.user_has_access(
+            user_id, subject.level_id
+        ):
             raise ForbiddenException(
                 detail="Votre centre doit vous affecter à une classe pour accéder aux sujets."
             )
         raise ForbiddenException(detail="Accès requis : veuillez souscrire à ce niveau.")
-    
 
     async def check_level_access(
         self, user_id: UUID, level_id: UUID
     ) -> AccessCheckResponse:
-        from app.modules.users.repository import UserRepository
-
         access = await self.repo.get_active_by_user_and_level(user_id, level_id)
         if not access:
             return AccessCheckResponse(
@@ -122,7 +136,7 @@ class ExamAccessService:
                 reason="Accès requis : veuillez souscrire à ce niveau.",
             )
 
-        user = await UserRepository(self.db).get_by_id(user_id)
+        user = await self._get_user(user_id)
         if self._is_center_student(user) and not await self._has_active_class(user_id):
             return AccessCheckResponse(
                 level_id=level_id,
@@ -217,92 +231,87 @@ class ExamAccessService:
             expires_at=expires_at,
             granted_at=now,
         )
-        
+
     # ── Listing ──────────────────────────────────────────
 
     async def get_user_levels(self, user_id: UUID) -> UserLevelsResponse:
-        """Tous les levels accessibles d'un user."""
+        """Tous les niveaux accessibles d'un utilisateur."""
         accesses = await self.repo.get_all_by_user(user_id)
 
-        paid_levels = []
-        for access in accesses:
-            paid_levels.append(
-                ExamAccessWithLevelResponse(
-                    id=access.id,
-                    level_id=access.level_id,
-                    access_type=access.access_type,
-                    granted_at=access.granted_at,
-                    expires_at=access.expires_at,
-                    is_active=access.is_active,
-                    cefr_code=access.level.cefr_code if access.level else "",
-                    exam_name=access.level.exam.name if access.level and access.level.exam else "",
-                    exam_provider=access.level.exam.provider if access.level and access.level.exam else "",
-                )
+        paid_levels = [
+            ExamAccessWithLevelResponse(
+                id=access.id,
+                level_id=access.level_id,
+                access_type=access.access_type,
+                granted_at=access.granted_at,
+                expires_at=access.expires_at,
+                is_active=access.is_active,
+                cefr_code=access.level.cefr_code if access.level else "",
+                exam_name=(
+                    access.level.exam.name if access.level and access.level.exam else ""
+                ),
+                exam_provider=(
+                    access.level.exam.provider
+                    if access.level and access.level.exam
+                    else ""
+                ),
             )
+            for access in accesses
+        ]
 
-        return UserLevelsResponse(
-            paid_levels=paid_levels,
-            total=len(accesses),
-        )
+        return UserLevelsResponse(paid_levels=paid_levels, total=len(accesses))
 
     # ── Catalogue enrichi ────────────────────────────────
-    
+
     async def enrich_catalog(
         self, exams: list[Exam], user_id: UUID
     ) -> list[ExamCatalogResponse]:
         """
         Enrichit le catalogue avec :
-        - has_access : user a un ExamAccess pour ce level, actif (et classe active pour un élève de centre
-        - subject_count : nb de sujets disponibles
+        - has_access    : ExamAccess actif sur le niveau (et classe active pour un élève de centre)
+        - subject_count : sujets visibles par l'utilisateur (privés inclus pour un indépendant)
         """
         from app.modules.settings.service import AppSettingsService
-        free_access_mode = await AppSettingsService(self.db).is_free_access_mode()
 
-        from app.modules.users.repository import UserRepository
+        free_access_mode = await AppSettingsService(self.db).is_free_access_mode()
 
         user_accesses = await self.repo.get_all_by_user(user_id)
         # Seuls les accès non expirés comptent
         accessible_level_ids = {a.level_id for a in user_accesses if a.is_active}
 
         # Élève de centre sans classe active : aucun niveau ouvert
-        user = await UserRepository(self.db).get_by_id(user_id)
+        user = await self._get_user(user_id)
         if self._is_center_student(user) and not await self._has_active_class(user_id):
             accessible_level_ids = set()
 
-        level_ids = [
-            level.id
-            for exam in exams
-            for level in exam.levels
-        ]
+        level_ids = [level.id for exam in exams for level in exam.levels]
         subject_counts: dict[UUID, int] = {}
         if level_ids:
+            conditions = [Subject.level_id.in_(level_ids), Subject.is_active == True]
+            if not can_see_private(user):
+                conditions.append(Subject.is_private == False)
             result = await self.db.execute(
                 select(Subject.level_id, func.count(Subject.id))
-                .where(Subject.level_id.in_(level_ids), Subject.is_active == True,Subject.is_private == False,)
+                .where(*conditions)
                 .group_by(Subject.level_id)
             )
             subject_counts = {row[0]: row[1] for row in result.all()}
 
         catalog = []
         for exam in exams:
-            levels = []
-            for level in exam.levels:
-                has_access = (
-                    free_access_mode
-                    or (level.id in accessible_level_ids)
+            levels = [
+                LevelAccessResponse(
+                    id=level.id,
+                    cefr_code=level.cefr_code,
+                    total_pass_score=level.total_pass_score,
+                    display_order=level.display_order,
+                    is_free=level.is_free,
+                    has_access=free_access_mode or (level.id in accessible_level_ids),
+                    subject_count=subject_counts.get(level.id, 0),
+                    price=None,
                 )
-                levels.append(
-                    LevelAccessResponse(
-                        id=level.id,
-                        cefr_code=level.cefr_code,
-                        total_pass_score=level.total_pass_score,
-                        display_order=level.display_order,
-                        is_free=level.is_free,
-                        has_access=has_access,
-                        subject_count=subject_counts.get(level.id, 0),
-                        price=None,
-                    )
-                )
+                for level in exam.levels
+            ]
             catalog.append(
                 ExamCatalogResponse(
                     id=exam.id,

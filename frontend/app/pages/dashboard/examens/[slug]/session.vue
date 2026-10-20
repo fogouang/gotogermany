@@ -586,7 +586,15 @@ function goToStep(idx: number) {
   stepIndex.value = idx;
 }
 
-function startBlock(bi: number) {
+// Heure de fin du serveur, corrigée de l'écart d'horloge du navigateur
+const serverDeadline = (s: {
+  block_deadline?: string | null;
+  server_now: string;
+}) =>
+  Date.parse(s.block_deadline as string) +
+  (Date.now() - Date.parse(s.server_now));
+
+function runBlock(bi: number, deadline: number) {
   const block = blocks.value[bi];
   const firstModule = block?.moduleIndexes[0];
   if (!block || firstModule === undefined) return;
@@ -595,10 +603,48 @@ function startBlock(bi: number) {
   stepIndex.value = 0;
   sessionStore.sharedTimer = true; // le chrono est géré par la page, bloc par bloc
   sessionStore.switchToModule(firstModule);
-  sessionStore.timeRemaining = block.minutes * 60;
-  sessionStore.deadline = Date.now() + block.minutes * 60_000;
+  sessionStore.deadline = deadline;
+  sessionStore.timeRemaining = Math.max(
+    0,
+    Math.round((deadline - Date.now()) / 1000),
+  );
   phase.value = "running";
   startTimer();
+}
+
+async function startBlock(bi: number) {
+  const block = blocks.value[bi];
+  if (!block) return;
+  // Le serveur fixe l'heure de fin et refuse tout retour en arrière
+  const state = await sessionStore.advanceBlock(bi, block.minutes);
+  runBlock(
+    bi,
+    state?.block_deadline
+      ? serverDeadline(state)
+      : Date.now() + block.minutes * 60_000,
+  );
+}
+
+// Reprise après rechargement : bloc et temps restant donnés par le serveur
+async function resumeFromServer(): Promise<boolean> {
+  const state = await sessionStore.fetchBlockState();
+  if (!state?.block_deadline || !blocks.value.length) return false;
+
+  const bi = Math.min(state.current_block, blocks.value.length - 1);
+  const deadline = serverDeadline(state);
+  if (deadline > Date.now()) {
+    runBlock(bi, deadline);
+    return true;
+  }
+
+  // Le temps du bloc s'est écoulé pendant l'absence
+  blockIndex.value = bi;
+  if (bi >= blocks.value.length - 1) {
+    submit(true);
+  } else {
+    phase.value = "transition";
+  }
+  return true;
 }
 
 async function begin(fullscreen: boolean) {
@@ -780,6 +826,9 @@ async function loadSession() {
     ) || 30;
 
   restoredCount.value = Object.keys(sessionStore.answers).length;
+
+  // Session déjà commencée : on reprend au bon bloc, sans repasser par l'intro
+  await resumeFromServer();
   initialized.value = true;
 }
 

@@ -20,6 +20,12 @@ class PlanCreate(BaseSchema):
         default=None,
         description="Clés de features cochées, ex: ['unlimited', 'corrections']",
     )
+    ai_credits: int = Field(
+        default=0,
+        ge=0,
+        le=1000,
+        description="Crédits IA ajoutés à l'élève à chaque activation de la formule",
+    )
     display_order: int = Field(default=0, ge=0)
 
 
@@ -30,6 +36,7 @@ class PlanUpdate(BaseSchema):
     is_active: bool | None = None
     description: str | None = None
     features: list[str] | None = None
+    ai_credits: int | None = Field(None, ge=0, le=1000)
     display_order: int | None = None
 
 
@@ -41,4 +48,5 @@ class PlanResponse(BaseSchema):
     is_active: bool
     description: str | None = None
     features: list[str] | None = None
+    ai_credits: int = 0
     display_order: int

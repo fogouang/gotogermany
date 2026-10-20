@@ -299,6 +299,32 @@ export const useSessionStore = defineStore("session", {
       }
     },
 
+    // ── Blocs chronométrés (état tenu par le serveur) ──
+    async fetchBlockState() {
+      this._ensureApiConfig();
+      if (!this.sessionId) return null;
+      try {
+        return await SessionsService.getBlockStateApiV1SessionsSessionIdBlockGet(
+          this.sessionId,
+        );
+      } catch {
+        return null;
+      }
+    },
+
+    async advanceBlock(blockIndex: number, minutes: number) {
+      this._ensureApiConfig();
+      if (!this.sessionId) return null;
+      try {
+        return await SessionsService.advanceBlockApiV1SessionsSessionIdBlockPost(
+          this.sessionId,
+          { block_index: blockIndex, minutes },
+        );
+      } catch {
+        return null;
+      }
+    },
+
     nextQuestion() {
       if (!this.isLastQuestion) this.currentQuestionIndex++;
     },

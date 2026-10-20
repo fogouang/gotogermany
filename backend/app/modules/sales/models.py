@@ -129,6 +129,11 @@ class PartnerSale(Base, UUIDMixin, TimestampMixin):
     )
     settled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Activation offerte pendant la période d'essai du centre
+    is_trial: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    
     def __repr__(self) -> str:
         return f"<PartnerSale {self.direction} due={self.amount_due} settled={self.settled_amount}>"
 

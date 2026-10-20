@@ -81,6 +81,7 @@ class PartnerSaleResponse(BaseSchema):
     is_overdue: bool
     status: str
     created_at: datetime
+    is_trial: bool = False      # activation offerte pendant l'essai du centre
 
 
 class ActivationResponse(BaseSchema):
@@ -95,6 +96,9 @@ class PartnerSettingsUpdate(BaseSchema):
     # Envoyer null explicitement pour retirer le plafond
     unpaid_limit: int | None = Field(default=None, ge=0)
     payment_delay_hours: int | None = Field(default=None, ge=1, le=720)
+    # Période d'essai (centres uniquement) : null explicite sur trial_ends_at = fin de l'essai
+    trial_ends_at: datetime | None = None
+    trial_activations_left: int | None = Field(default=None, ge=0, le=500)
 
 
 class PartnerSummaryResponse(BaseSchema):
@@ -111,6 +115,10 @@ class PartnerSummaryResponse(BaseSchema):
     overdue_count: int
     is_blocked: bool
     block_reason: str | None
+    earned_total: int = 0       # part du partenaire sur toutes ses ventes
+    trial_active: bool = False
+    trial_ends_at: datetime | None = None
+    trial_activations_left: int = 0
 
 
 # ── Règlements ───────────────────────────────────────────
@@ -136,3 +144,17 @@ class SettlementResponse(BaseSchema):
     note: str | None
     validated_by: uuid.UUID | None
     created_at: datetime
+
+
+# ── Chiffre de la plateforme (admin) ─────────────────────
+
+class PlatformRevenueResponse(BaseSchema):
+    """Chiffre de la plateforme, en FCFA."""
+    gross_total: int
+    commissions_total: int
+    net_total: int
+    gross_month: int
+    commissions_month: int
+    net_month: int
+    direct_total: int           # en ligne + paiements manuels
+    partner_total: int          # ventes activées par les centres et ambassadeurs

@@ -191,13 +191,14 @@ class PaymentService:
         from app.modules.exam_access.repository import ExamAccessRepository
         from app.modules.plans.models import Plan
 
+        plan = await self.db.get(Plan, payment.plan_id) if payment.plan_id else None
+        if payment.plan_id and not plan:
+            logger.error(f"Plan {payment.plan_id} introuvable pour payment {payment.id}")
+            return
+
         if payment.duration_days:
             duration = payment.duration_days
-        elif payment.plan_id:
-            plan = await self.db.get(Plan, payment.plan_id)
-            if not plan:
-                logger.error(f"Plan {payment.plan_id} introuvable pour payment {payment.id}")
-                return
+        elif plan:
             duration = plan.duration_days
         else:
             return
@@ -205,6 +206,9 @@ class PaymentService:
         now = datetime.now(timezone.utc)
         repo = ExamAccessRepository(self.db)
         existing = await repo.find_by_user_and_level(payment.user_id, payment.level_id)
+
+        # Meme paiement deja traite (webhook recu deux fois) : pas de credits en double
+        already_applied = existing is not None and existing.payment_id == payment.id
 
         # Renouvellement avant échéance : les jours restants sont conservés
         start = existing.expires_at if existing and existing.expires_at and existing.expires_at > now else now
@@ -229,6 +233,22 @@ class PaymentService:
             ))
             await self.db.flush()
             logger.info(f"ExamAccess créé : user {payment.user_id} level {payment.level_id} jusqu'au {expires_at}")
+
+        from app.modules.users.models import User
+
+        student = await self.db.get(User, payment.user_id)
+        if student:
+            # Echeance affichee dans la liste des eleves (la plus lointaine si plusieurs niveaux)
+            if not student.access_expires_at or student.access_expires_at < expires_at:
+                student.access_expires_at = expires_at
+
+            # Credits IA inclus dans la formule (paiement en ligne ou activation par un centre)
+            if plan and plan.ai_credits and not already_applied:
+                student.ai_credits = (student.ai_credits or 0) + plan.ai_credits
+                logger.info(
+                    f"Credits IA : +{plan.ai_credits} pour user {payment.user_id} "
+                    f"(plan {plan.id}, payment {payment.id})"
+                )
 
         await self.db.commit()
 

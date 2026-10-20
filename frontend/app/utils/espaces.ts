@@ -4,8 +4,8 @@ type AuthStore = ReturnType<typeof useAuthStore>;
 export function espaceAccueil(auth: AuthStore): string {
   if (auth.isAdmin) return "/admin";
   if (auth.isDirector) return "/centre/dashboard";
-  if (auth.isSecretary) return "/centre/secretaire";
-  if (auth.isTeacher) return "/enseignant";
+  if (auth.isSecretary) return "/centre/etudiants";
+  if (auth.isTeacher) return "/enseignant/sessions";
   return "/dashboard";
 }
 

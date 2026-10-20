@@ -12,7 +12,8 @@ const REGLES: { prefixe: string; autorise: (a: Auth) => boolean }[] = [
   // Centre : pages réservées au directeur
   { prefixe: "/centre/dashboard", autorise: directeur },
   { prefixe: "/centre/reglages", autorise: directeur },
-  { prefixe: "/centre/secretaires", autorise: directeur },
+  { prefixe: "/centre/ventes", autorise: directeur },
+  { prefixe: "/centre/secretaire", autorise: directeur },
   { prefixe: "/centre/succursales", autorise: directeur },
   // Centre : page réservée à la secrétaire
   { prefixe: "/centre/etudiants/nouveau", autorise: secretaire },

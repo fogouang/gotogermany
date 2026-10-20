@@ -256,12 +256,17 @@
             <span
               class="flex size-11 shrink-0 items-center justify-center rounded-leaf text-sm font-bold transition-colors"
               :class="
-                canOpen(level, subject)
-                  ? 'bg-card-2 text-ink group-hover:bg-primary/10 group-hover:text-primary'
-                  : 'bg-card-2 text-faint'
+                isDone(subject.id)
+                  ? attempts[subject.id]?.passed
+                    ? 'bg-emerald-500/10 text-emerald-600'
+                    : 'bg-card-2 text-muted'
+                  : canOpen(level, subject)
+                    ? 'bg-card-2 text-ink group-hover:bg-primary/10 group-hover:text-primary'
+                    : 'bg-card-2 text-faint'
               "
             >
               <i v-if="!canOpen(level, subject)" class="pi pi-lock text-xs" />
+              <i v-else-if="isDone(subject.id)" class="pi pi-check text-sm" />
               <template v-else>{{ subject.subject_number }}</template>
             </span>
 
@@ -287,27 +292,29 @@
                   })
                 }}
               </span>
-              <span
-                class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold"
-                :class="subjectBadge(level, subject).class"
-              >
-                <i
-                  class="pi text-[9px]"
-                  :class="subjectBadge(level, subject).icon"
-                />
-                {{ subjectBadge(level, subject).label }}
+              <span class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span
+                  class="inline-flex items-center gap-1 text-[11px] font-semibold"
+                  :class="subjectBadge(level, subject).class"
+                >
+                  <i
+                    class="pi text-[9px]"
+                    :class="subjectBadge(level, subject).icon"
+                  />
+                  {{ subjectBadge(level, subject).label }}
+                </span>
+                <span
+                  v-if="attemptBadge(subject.id)"
+                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                  :class="attemptBadge(subject.id)!.class"
+                >
+                  <i
+                    class="pi text-[9px]"
+                    :class="attemptBadge(subject.id)!.icon"
+                  />
+                  {{ attemptBadge(subject.id)!.label }}
+                </span>
               </span>
-            </span>
-            <span
-              v-if="attemptBadge(subject.id)"
-              class="mt-1.5 mr-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-              :class="attemptBadge(subject.id)!.class"
-            >
-              <i
-                class="pi text-[9px]"
-                :class="attemptBadge(subject.id)!.icon"
-              />
-              {{ attemptBadge(subject.id)!.label }}
             </span>
 
             <i
@@ -578,6 +585,7 @@ type Attempt = {
   best: number | null;
   passed: boolean;
   inProgress: boolean;
+  pending: boolean; // rendu, correction (IA ou enseignant) en cours
   done: number;
 };
 const attempts = ref<Record<string, Attempt>>({});
@@ -591,13 +599,19 @@ async function loadAttempts() {
       best: null,
       passed: false,
       inProgress: false,
+      pending: false,
       done: 0,
     });
-    if (s.status !== "COMPLETED") {
+    if (s.status === "IN_PROGRESS") {
       a.inProgress = true;
       continue;
     }
+    if (s.status === "ABANDONED") continue;
     a.done++;
+    if (s.status === "PENDING_REVIEW") {
+      a.pending = true;
+      continue;
+    }
     if (s.passed) a.passed = true;
     if (s.score != null && (a.best === null || s.score > a.best))
       a.best = s.score;
@@ -605,9 +619,20 @@ async function loadAttempts() {
   attempts.value = map;
 }
 
+const isDone = (subjectId: string) =>
+  (attempts.value[subjectId]?.done ?? 0) > 0;
+
 const attemptBadge = (subjectId: string) => {
   const a = attempts.value[subjectId];
   if (!a) return null;
+  // Rendu mais pas encore noté (aucune tentative notée sur ce sujet)
+  if (a.pending && a.best === null && !a.passed) {
+    return {
+      label: t("exam_detail.done_pending"),
+      icon: "pi-hourglass",
+      class: "bg-sky-500/10 text-sky-600",
+    };
+  }
   if (a.done > 0) {
     const verdict = a.passed ? t("dashboard.passed") : t("dashboard.failed");
     return {

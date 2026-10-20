@@ -27,6 +27,40 @@
       </div>
     </div>
 
+    <!-- ── Chiffre de la plateforme ── -->
+    <section class="rounded-card border border-line bg-card p-5 shadow-soft">
+      <div class="mb-4">
+        <h3 class="font-semibold text-ink">Chiffre de la plateforme</h3>
+        <p class="text-xs text-muted">
+          Tout ce qui est encaissé, en ligne et par les partenaires
+        </p>
+      </div>
+
+      <div v-if="loading" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div v-for="n in 3" :key="n" class="h-24 animate-pulse rounded-leaf bg-card-2" />
+      </div>
+
+      <p v-else-if="!revenue" class="text-sm text-muted">Chiffres indisponibles.</p>
+
+      <template v-else>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div
+            v-for="r in revenueCards"
+            :key="r.label"
+            class="rounded-leaf border border-line p-4"
+          >
+            <p class="text-xs font-medium text-muted">{{ r.label }}</p>
+            <p class="mt-1 text-2xl font-bold" :class="r.tone">{{ fcfa(r.total) }}</p>
+            <p class="mt-1 text-xs text-muted">Ce mois : {{ fcfa(r.month) }}</p>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-muted">
+          Dont en ligne et manuels : {{ fcfa(revenue.direct_total) }} · via partenaires :
+          {{ fcfa(revenue.partner_total) }}
+        </p>
+      </template>
+    </section>
+
     <FreeAccessToggle />
 
     <!-- ── Accès rapides ── -->
@@ -156,6 +190,45 @@ const salesError = ref<string | null>(null);
 
 const fcfa = (n: number) => `${new Intl.NumberFormat("fr-FR").format(n)} FCFA`;
 
+// ── Chiffre de la plateforme ──
+interface PlatformRevenue {
+  gross_total: number;
+  commissions_total: number;
+  net_total: number;
+  gross_month: number;
+  commissions_month: number;
+  net_month: number;
+  direct_total: number;
+  partner_total: number;
+}
+
+const runtimeConfig = useRuntimeConfig();
+const tokenCookie = useCookie("access_token");
+const apiBase = runtimeConfig.public.apiBaseUrl || "http://localhost:8001";
+const revenue = ref<PlatformRevenue | null>(null);
+
+const revenueCards = computed(() => {
+  const r = revenue.value;
+  if (!r) return [];
+  return [
+    { label: "Chiffre d'affaires brut", total: r.gross_total, month: r.gross_month, tone: "text-ink" },
+    { label: "Commissions partenaires", total: r.commissions_total, month: r.commissions_month, tone: "text-amber-600" },
+    { label: "Net GoToGermany", total: r.net_total, month: r.net_month, tone: "text-emerald-600" },
+  ];
+});
+
+async function loadRevenue() {
+  const headers: Record<string, string> = {};
+  if (tokenCookie.value) headers.Authorization = `Bearer ${tokenCookie.value}`;
+  try {
+    revenue.value = await $fetch<PlatformRevenue>(`${apiBase}/api/v1/sales/admin/revenue`, {
+      headers,
+    });
+  } catch {
+    revenue.value = null;
+  }
+}
+
 // ── Indicateurs ──
 const newUsersThisWeek = computed(() => {
   const limit = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -225,6 +298,7 @@ onMounted(async () => {
     usersStore.users.length === 0 ? usersStore.fetchUsers() : Promise.resolve(),
     centersStore.centers.length === 0 ? centersStore.fetchCenters() : Promise.resolve(),
     salesStore.fetchPartners(),
+    loadRevenue(),
   ]);
   if (!sales.success) salesError.value = sales.error;
   loading.value = false;

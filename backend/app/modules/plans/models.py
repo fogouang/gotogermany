@@ -51,6 +51,15 @@ class Plan(Base, UUIDMixin, TimestampMixin):
         doc="Liste des features affichées pour ce plan sur la page tarifs"
     )
     # Ordre d'affichage sur la page tarifs
+    
+    ai_credits: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+        comment="Credits IA ajoutes a l'eleve a chaque activation de la formule",
+    )
+     
     display_order: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0
     )

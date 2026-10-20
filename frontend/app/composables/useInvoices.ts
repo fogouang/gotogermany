@@ -2,19 +2,21 @@
  * composables/useInvoices.ts
  */
 import { useInvoicesStore } from "~/stores/invoice";
-const { locale } = useI18n();
-const intlLocale = computed(
-  () =>
-    (({ fr: "fr-FR", de: "de-DE" }) as Record<string, string>)[locale.value] ??
-    "en-GB",
-);
 
 export const useInvoices = () => {
+  // Composables Nuxt : appelés ici, dans le setup du composant qui utilise useInvoices
+  const { locale } = useI18n();
+  const config = useRuntimeConfig();
   const invoicesStore = useInvoicesStore();
+
+  const intlLocale = computed(
+    () =>
+      (({ fr: "fr-FR", de: "de-DE" }) as Record<string, string>)[locale.value] ??
+      "en-GB",
+  );
 
   // Télécharger la facture PDF
   const downloadInvoice = (invoiceUrl: string, filename?: string) => {
-    const config = useRuntimeConfig();
     const base =
       (config.public.apiBaseUrl as string) || "http://localhost:8001";
     const fullUrl = invoiceUrl.startsWith("http")

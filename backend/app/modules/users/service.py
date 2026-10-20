@@ -253,28 +253,15 @@ class UserService:
         return await self.repo.update(teacher_id, is_active=not teacher.is_active)
       
     async def create_student(self, data: StudentCreateRequest, secretary: User) -> User:
-        """Créé par la secrétaire. Le compte n'a pas encore accès aux sujets :
-        l'accès s'ouvre à l'activation (POST /sales/activations)."""
-        from app.modules.centers.service import CenterService
+        """Créé par la secrétaire. Le compte n'a pas encore accès aux sujets ni
+        de crédits IA : l'accès et les crédits arrivent à l'activation
+        (POST /sales/activations), quand le centre encaisse le paiement."""
         from app.modules.centers.repository import BranchRepository
 
         branch = await BranchRepository(self.db).get_by_id_or_404(secretary.branch_id)
         await self._check_email_available(data.email)
         phone = self._normalized_phone(data.phone)
         await self._check_phone_available(phone)
-
-        center_service = CenterService(self.db)
-        center = await center_service.center_repo.get_by_id_or_404(branch.center_id)
-        default_credits = center.default_credits_per_student
-
-        if center.ai_credit_pool_balance < default_credits:
-            raise BadRequestException(
-                detail=(
-                    f"Pool de crédits insuffisant pour créer un nouvel étudiant "
-                    f"({center.ai_credit_pool_balance} restants, {default_credits} requis). "
-                    "Contactez GoToGermany pour un rechargement."
-                )
-            )
 
         student = await self.repo.create(
             email=data.email,
@@ -286,18 +273,7 @@ class UserService:
             is_verified=True,
             role=UserRole.student,
             branch_id=secretary.branch_id,
-            ai_credits=default_credits,
-        )
-
-        new_balance = center.ai_credit_pool_balance - default_credits
-        await center_service.center_repo.update(branch.center_id, ai_credit_pool_balance=new_balance)
-        await center_service.credit_txn_repo.create(
-            center_id=branch.center_id,
-            student_id=student.id,
-            performed_by=secretary.id,
-            amount=default_credits,
-            pool_balance_after=new_balance,
-            reason="Attribution initiale à la création du compte",
+            ai_credits=0,
         )
         return student
     
@@ -666,11 +642,10 @@ class UserService:
     async def approve_join_request(
         self, student_id: UUID, target_level_id: UUID, staff: User
     ) -> User:
-        """Validation : rattachement à la succursale, niveau, crédits par
-        défaut prélevés sur le pool du centre (même règle qu'une création
-        manuelle). L'accès aux sujets s'ouvre ensuite à l'activation."""
+        """Validation : rattachement à la succursale et au niveau, rien de plus.
+        Les crédits et l'accès aux sujets arrivent à l'activation, quand le
+        centre encaisse le paiement de l'élève."""
         from app.modules.centers.repository import BranchRepository
-        from app.modules.centers.service import CenterService
         from app.modules.exams.models import Level
 
         student = await self._get_join_request(student_id, staff)
@@ -679,39 +654,14 @@ class UserService:
         if not await self.db.get(Level, target_level_id):
             raise BadRequestException(detail="Niveau introuvable.")
 
-        center_service = CenterService(self.db)
-        center = await center_service.center_repo.get_by_id_or_404(branch.center_id)
-        default_credits = center.default_credits_per_student
-        if center.ai_credit_pool_balance < default_credits:
-            raise BadRequestException(
-                detail=(
-                    f"Pool de crédits insuffisant pour valider cet élève "
-                    f"({center.ai_credit_pool_balance} restants, {default_credits} requis). "
-                    "Contactez GoToGermany pour un rechargement."
-                )
-            )
-
-        updated = await self.repo.update(
+        return await self.repo.update(
             student.id,
             branch_id=branch.id,
             requested_branch_id=None,
             join_requested_at=None,
             target_level_id=target_level_id,
             learning_track="exam",
-            ai_credits=student.ai_credits + default_credits,
         )
-
-        new_balance = center.ai_credit_pool_balance - default_credits
-        await center_service.center_repo.update(center.id, ai_credit_pool_balance=new_balance)
-        await center_service.credit_txn_repo.create(
-            center_id=center.id,
-            student_id=student.id,
-            performed_by=staff.id,
-            amount=default_credits,
-            pool_balance_after=new_balance,
-            reason="Attribution à la validation de l'inscription",
-        )
-        return updated
 
     async def reject_join_request(self, student_id: UUID, staff: User) -> None:
         """Refus : la demande est retirée, le compte reste un compte

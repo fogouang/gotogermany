@@ -157,6 +157,7 @@ def _validate_exam_json(data: dict, provider: str) -> tuple[list[str], list[str]
             continue
 
         teile_total = 0.0
+        teil_maxes: list[float] = []
         seen_teile: set = set()
 
         for t in teile:
@@ -181,6 +182,7 @@ def _validate_exam_json(data: dict, provider: str) -> tuple[list[str], list[str]
                 tmax = None
             else:
                 teile_total += tmax
+                teil_maxes.append(float(tmax))
 
             try:
                 questions = parser(t)
@@ -201,7 +203,21 @@ def _validate_exam_json(data: dict, provider: str) -> tuple[list[str], list[str]
                     f"(question manquante ?)."
                 )
 
-        if mmax and teile_total and abs(teile_total - mmax) > 0.01:
+        # Module a choix (ex. TELC B2 Schriftlicher Ausdruck : Aufgabe A ou B) :
+        # chaque Teil vaut a elle seule le max du module, le candidat n'en traite qu'une.
+        is_choice_module = (
+            mmax
+            and len(teil_maxes) > 1
+            and len(teil_maxes) == len(teile)
+            and all(abs(tm - mmax) <= 0.01 for tm in teil_maxes)
+        )
+
+        if (
+            mmax
+            and teile_total
+            and not is_choice_module
+            and abs(teile_total - mmax) > 0.01
+        ):
             msg = (
                 f"Module '{name}' : somme des Teile ({teile_total:g}) "
                 f"différente du max du module ({mmax:g})."

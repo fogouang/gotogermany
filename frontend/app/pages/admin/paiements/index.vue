@@ -267,6 +267,10 @@ const {
 
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
+// Composables Nuxt : appelés en haut du setup, jamais après un await
+const config = useRuntimeConfig();
+const tokenCookie = useCookie("access_token");
+
 // ── Résumé ──
 const summary = ref<PaymentSummaryResponse | null>(null);
 
@@ -383,13 +387,8 @@ async function loadData() {
   loadingPayments.value = true;
   try {
     const { PaymentsService, OpenAPI } = await import("#shared/api");
-    const config = useRuntimeConfig();
     OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
-    const tokenCookie = useCookie("access_token");
     OpenAPI.TOKEN = tokenCookie.value ?? undefined;
-
-    summary.value =
-      await PaymentsService.getSummaryApiV1PaymentsAdminSummaryGet();
 
     // Seule liste disponible côté admin : les paiements manuels
     const [sum, list] = await Promise.all([

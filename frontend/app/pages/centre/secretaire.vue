@@ -2,8 +2,13 @@
 <template>
   <div class="space-y-5">
     <!-- ── En-tête ── -->
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p class="text-sm text-muted">{{ t("centre.secretaries.count", secretaries.length) }}</p>
+    <div
+      v-if="authStore.isDirector"
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p class="text-sm text-muted">
+        {{ t("centre.secretaries.count", secretaries.length) }}
+      </p>
       <Button
         :label="t('centre.secretaries.new')"
         icon="pi pi-user-plus"
@@ -14,7 +19,11 @@
 
     <!-- ── Chargement ── -->
     <div v-if="loading" class="space-y-3">
-      <div v-for="n in 3" :key="n" class="h-16 animate-pulse rounded-card bg-card-2" />
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="h-16 animate-pulse rounded-card bg-card-2"
+      />
     </div>
 
     <!-- ── Erreur ── -->
@@ -30,11 +39,17 @@
       v-else-if="secretaries.length === 0"
       class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <span
+        class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+      >
         <i class="pi pi-users" />
       </span>
-      <p class="text-sm font-medium text-ink">{{ t("centre.secretaries.empty_title") }}</p>
-      <p class="max-w-sm text-xs text-muted">{{ t("centre.secretaries.empty_text") }}</p>
+      <p class="text-sm font-medium text-ink">
+        {{ t("centre.secretaries.empty_title") }}
+      </p>
+      <p class="max-w-sm text-xs text-muted">
+        {{ t("centre.secretaries.empty_text") }}
+      </p>
     </div>
 
     <!-- ── Liste ── -->
@@ -63,9 +78,17 @@
         </span>
         <span
           class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-          :class="sec.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'"
+          :class="
+            sec.is_active
+              ? 'bg-emerald-500/10 text-emerald-600'
+              : 'bg-red-500/10 text-red-600'
+          "
         >
-          {{ sec.is_active ? t("centre.account.active") : t("centre.account.disabled") }}
+          {{
+            sec.is_active
+              ? t("centre.account.active")
+              : t("centre.account.disabled")
+          }}
         </span>
       </li>
     </ul>
@@ -101,13 +124,20 @@
             />
           </div>
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("profile.phone") }}</label>
-            <InputText v-model="form.phone" class="w-full" placeholder="+237 6XX XXX XXX" />
+            <label class="mb-1.5 block text-sm font-medium text-ink">{{
+              t("profile.phone")
+            }}</label>
+            <InputText
+              v-model="form.phone"
+              class="w-full"
+              placeholder="+237 6XX XXX XXX"
+            />
           </div>
         </div>
         <div>
           <label class="mb-1.5 block text-sm font-medium text-ink">
-            {{ t("centre.form.temp_password") }} <span class="text-red-600">*</span>
+            {{ t("centre.form.temp_password") }}
+            <span class="text-red-600">*</span>
           </label>
           <div class="flex gap-2">
             <Password
@@ -141,10 +171,16 @@
             class="w-full"
           />
         </div>
-        <Message v-if="createError" severity="error" :closable="false">{{ createError }}</Message>
+        <Message v-if="createError" severity="error" :closable="false">{{
+          createError
+        }}</Message>
       </form>
       <template #footer>
-        <Button :label="t('common.cancel')" text @click="showCreateDialog = false" />
+        <Button
+          :label="t('common.cancel')"
+          text
+          @click="showCreateDialog = false"
+        />
         <Button
           :label="t('common.create')"
           icon="pi pi-check"
@@ -162,6 +198,8 @@ import type { UserAdminResponse, BranchResponse } from "#shared/api";
 definePageMeta({ layout: "centre", watermark: "Sekretariat" });
 
 const { t } = useI18n();
+const localePath = useLocalePath();
+const authStore = useAuthStore();
 const centerStaffStore = useCenterStaffStore();
 const toast = useToast();
 
@@ -173,7 +211,13 @@ const errorMessage = ref<string | null>(null);
 const showCreateDialog = ref(false);
 const creating = ref(false);
 const createError = ref<string | null>(null);
-const formVide = () => ({ full_name: "", email: "", phone: "", password: "", branch_id: "" });
+const formVide = () => ({
+  full_name: "",
+  email: "",
+  phone: "",
+  password: "",
+  branch_id: "",
+});
 const form = ref(formVide());
 
 function initials(name: string) {
@@ -249,7 +293,10 @@ async function handleCreate() {
     toast.add({
       severity: "success",
       summary: t("centre.form.account_created"),
-      detail: t("centre.form.credentials", { email: f.email.trim(), password: f.password }),
+      detail: t("centre.form.credentials", {
+        email: f.email.trim(),
+        password: f.password,
+      }),
       life: 10000,
     });
     await loadData();
@@ -258,5 +305,12 @@ async function handleCreate() {
   }
 }
 
-onMounted(loadData);
+onMounted(async () => {
+  // Page reservee au directeur : la secretaire est renvoyee vers ses eleves
+  if (!authStore.isDirector) {
+    await navigateTo(localePath("/centre/etudiants"), { replace: true });
+    return;
+  }
+  await loadData();
+});
 </script>

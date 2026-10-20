@@ -64,7 +64,8 @@ export function useNavigation(roleImpose?: NavRole) {
   const visible = (item: NavItem) =>
     (!item.audience ||
       item.audience === (estEleveCentre.value ? "center" : "independent")) &&
-    (!item.track || item.track === track.value);
+    (!item.track || item.track === track.value) &&
+    (!item.ambassadorOnly || authStore.isAmbassador);
 
   // Sections avec libellés traduits et liens localisés : le layout n'a plus qu'à afficher.
   // Les entrées hors audience ou hors parcours sont retirées, puis les sections vides.

@@ -33,6 +33,8 @@ export interface NavItem {
    * Absent = visible dans les deux parcours.
    */
   track?: LearningTrack;
+  /** Visible seulement si l'utilisateur est ambassadeur (is_ambassador) */
+  ambassadorOnly?: boolean;
 }
 
 export interface NavSection {

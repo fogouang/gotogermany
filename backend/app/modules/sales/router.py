@@ -20,6 +20,7 @@ from app.modules.sales.schemas import (
     PartnerSummaryResponse,
     SettlementCreate,
     SettlementResponse,
+    PlatformRevenueResponse
 )
 from app.modules.sales.service import SalesService
 from app.shared.database.session import get_db
@@ -90,6 +91,10 @@ async def delete_rule(rule_id: UUID, _: CurrentAdmin, db: AsyncSession = Depends
     await SalesService(db).delete_rule(rule_id)
     return SuccessResponse(message="Règle supprimée.")
 
+@router.get("/admin/revenue", response_model=PlatformRevenueResponse)
+async def platform_revenue(_: CurrentAdmin, db: AsyncSession = Depends(get_db)):
+    """[Admin] Chiffre de la plateforme, total et mois en cours."""
+    return await SalesService(db).platform_revenue()
 
 # ── Admin : partenaires ──────────────────────────────────
 

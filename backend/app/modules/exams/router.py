@@ -20,6 +20,7 @@ from app.modules.exams.service import ExamService
 from app.modules.exam_access.service import ExamAccessService
 from app.shared.database.session import get_db
 from app.shared.schemas.responses import SuccessResponse
+from app.modules.exam_access.visibility import can_see_private
 
 router = APIRouter()
 
@@ -42,7 +43,7 @@ async def get_exam_detail(
     db: AsyncSession = Depends(get_db),
 ):
     return await ExamService(db).get_detail(
-        exam_id, include_private=bool(current_user.is_admin)
+        exam_id, include_private=can_see_private(current_user)
     )
 
 
@@ -53,7 +54,7 @@ async def get_exam_by_slug(
     db: AsyncSession = Depends(get_db),
 ):
     return await ExamService(db).get_by_slug(
-        slug, include_private=bool(current_user.is_admin)
+        slug, include_private=can_see_private(current_user)
     )
 
 

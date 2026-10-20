@@ -10,6 +10,7 @@ import type { CommissionRuleUpdate } from '../models/CommissionRuleUpdate';
 import type { PartnerSaleResponse } from '../models/PartnerSaleResponse';
 import type { PartnerSettingsUpdate } from '../models/PartnerSettingsUpdate';
 import type { PartnerSummaryResponse } from '../models/PartnerSummaryResponse';
+import type { PlatformRevenueResponse } from '../models/PlatformRevenueResponse';
 import type { SettlementCreate } from '../models/SettlementCreate';
 import type { SettlementResponse } from '../models/SettlementResponse';
 import type { SuccessResponse } from '../models/SuccessResponse';
@@ -200,6 +201,27 @@ export class SalesService {
             path: {
                 'rule_id': ruleId,
             },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Platform Revenue
+     * [Admin] Chiffre de la plateforme, total et mois en cours.
+     * @param accessToken
+     * @returns PlatformRevenueResponse Successful Response
+     * @throws ApiError
+     */
+    public static platformRevenueApiV1SalesAdminRevenueGet(
+        accessToken?: (string | null),
+    ): CancelablePromise<PlatformRevenueResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/sales/admin/revenue',
             cookies: {
                 'access_token': accessToken,
             },

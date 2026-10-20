@@ -15,6 +15,10 @@ export type PlanCreate = {
      * Clés de features cochées, ex: ['unlimited', 'corrections']
      */
     features?: (Array<string> | null);
+    /**
+     * Crédits IA ajoutés à l'élève à chaque activation de la formule
+     */
+    ai_credits?: number;
     display_order?: number;
 };
 

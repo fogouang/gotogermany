@@ -18,17 +18,24 @@
     <!-- richtig_falsch / ja_nein -->
     <div v-if="type === 'richtig_falsch' || type === 'ja_nein'">
       <div v-if="type === 'ja_nein' && c.text" class="mb-4">
-        <p v-if="c.author" class="text-sm font-semibold text-ink mb-1">{{ c.author }}</p>
+        <p v-if="c.author" class="text-sm font-semibold text-ink mb-1">
+          {{ c.author }}
+        </p>
         <p class="text-[15px] text-ink leading-relaxed">{{ c.text }}</p>
       </div>
-      <p v-else class="text-[15px] text-ink leading-relaxed mb-4">{{ c.statement || c.text }}</p>
+      <p v-else class="text-[15px] text-ink leading-relaxed mb-4">
+        {{ c.statement || c.text }}
+      </p>
 
       <div class="grid grid-cols-2 gap-3">
         <button
           v-for="opt in binaryOptions"
           :key="opt.value"
           type="button"
-          :class="['py-3 px-4 rounded-leaf border-2 text-sm font-semibold transition-colors', optionClass(isSel(opt.value))]"
+          :class="[
+            'py-3 px-4 rounded-leaf border-2 text-sm font-semibold transition-colors',
+            optionClass(isSel(opt.value)),
+          ]"
           @click="choose(opt.value)"
         >
           {{ opt.label }}
@@ -38,16 +45,23 @@
 
     <!-- qcm_abc -->
     <div v-else-if="type === 'qcm_abc'">
-      <p class="text-[15px] text-ink leading-relaxed mb-4">{{ c.stem || c.question }}</p>
+      <p class="text-[15px] text-ink leading-relaxed mb-4">
+        {{ c.stem || c.question }}
+      </p>
       <div class="space-y-2">
         <button
           v-for="(text, key) in c.options"
           :key="key"
           type="button"
-          :class="['w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3', optionClass(isSel(key))]"
+          :class="[
+            'w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          <span :class="keyClass(isSel(key))">{{
+            String(key).toUpperCase()
+          }}</span>
           <span class="pt-0.5">{{ text }}</span>
         </button>
       </div>
@@ -75,7 +89,11 @@
         </button>
       </div>
       <p class="text-xs text-muted mt-2">
-        {{ noMatchKey === "x" ? t("session.q.no_match_x") : t("session.q.no_match_0") }}
+        {{
+          noMatchKey === "x"
+            ? t("session.q.no_match_x")
+            : t("session.q.no_match_0")
+        }}
       </p>
     </div>
 
@@ -87,11 +105,18 @@
           v-for="(name, key) in c.speakers"
           :key="key"
           type="button"
-          :class="['py-3 px-2 rounded-leaf border-2 text-center transition-colors', optionClass(isSel(key))]"
+          :class="[
+            'py-3 px-2 rounded-leaf border-2 text-center transition-colors',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span class="block font-bold text-base">{{ String(key).toUpperCase() }}</span>
-          <span class="block text-xs text-muted mt-0.5 leading-tight">{{ speakerName(name) }}</span>
+          <span class="block font-bold text-base">{{
+            String(key).toUpperCase()
+          }}</span>
+          <span class="block text-xs text-muted mt-0.5 leading-tight">{{
+            speakerName(name)
+          }}</span>
         </button>
       </div>
     </div>
@@ -104,15 +129,51 @@
       >
         {{ c.stimulus_text }}
       </div>
-      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
         {{ t("session.q.choose_title") }}
-      </label>
-      <select :value="selected" :class="selectClass" @change="onSelect">
-        <option value="" disabled>{{ t("session.q.select_placeholder") }}</option>
-        <option v-for="(titre, key) in c.titres" :key="key" :value="String(key)">
-          {{ key }}) {{ titre }}
-        </option>
-      </select>
+      </p>
+
+      <!-- Lettres a à j, comme la ligne de cases de l'Antwortbogen -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="key in titreKeys"
+          :key="key"
+          type="button"
+          :aria-pressed="isSel(key)"
+          :title="c.titres?.[key]"
+          :class="[
+            'relative w-10 h-10 rounded-leaf border-2 font-bold text-sm transition-colors',
+            titreClass(key),
+          ]"
+          @click="choose(key)"
+        >
+          {{ key }}
+          <span
+            v-if="!isSel(key) && takenBy(key)"
+            class="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-card-2 px-1 text-[9px] font-semibold leading-4 text-muted"
+          >
+            {{ takenBy(key) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Titre choisi, en clair -->
+      <p
+        v-if="selected"
+        class="mt-3 rounded-leaf border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-ink"
+      >
+        <span class="font-bold text-primary">{{ selected }})</span>
+        {{ c.titres?.[selected] }}
+      </p>
+
+      <!-- Même titre déjà donné à un autre texte -->
+      <p
+        v-if="selected && takenBy(selected)"
+        class="mt-2 flex items-start gap-1.5 text-xs text-amber-600"
+      >
+        <i class="pi pi-exclamation-triangle mt-0.5 text-[11px]" />
+        {{ t("session.q.title_taken", { n: takenBy(selected) }) }}
+      </p>
     </div>
 
     <!-- qcm_gap_fill -->
@@ -127,10 +188,15 @@
           v-for="(text, key) in c.options"
           :key="key"
           type="button"
-          :class="['px-3 py-2.5 rounded-leaf border-2 text-sm font-medium transition-colors flex items-center gap-2', optionClass(isSel(key))]"
+          :class="[
+            'px-3 py-2.5 rounded-leaf border-2 text-sm font-medium transition-colors flex items-center gap-2',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          <span :class="keyClass(isSel(key))">{{
+            String(key).toUpperCase()
+          }}</span>
           {{ text }}
         </button>
       </div>
@@ -143,15 +209,44 @@
         class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-sm text-ink leading-loose"
         v-html="highlightGap(c.text_with_gaps, c.gap_number)"
       />
-      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
         {{ t("session.q.choose_word") }}
-      </label>
-      <select :value="selected" :class="selectClass" @change="onSelect">
-        <option value="" disabled>{{ t("session.q.select_placeholder") }}</option>
-        <option v-for="(word, key) in wordBank" :key="key" :value="String(key)">
-          {{ String(key).toUpperCase() }}) {{ word }}
-        </option>
-      </select>
+      </p>
+
+      <!-- Banque de mots : chaque mot ne sert qu'une fois -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <button
+          v-for="(word, key) in wordBank"
+          :key="key"
+          type="button"
+          :aria-pressed="isSel(key)"
+          :class="[
+            'relative flex items-center gap-2 rounded-leaf border-2 px-3 py-2 text-left text-sm transition-colors',
+            uniqueChoiceClass(String(key)),
+          ]"
+          @click="choose(key)"
+        >
+          <span :class="keyClass(isSel(key))">{{
+            String(key).toUpperCase()
+          }}</span>
+          <span class="truncate">{{ word }}</span>
+          <span
+            v-if="!isSel(key) && takenBy(String(key))"
+            class="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-card-2 px-1 text-[9px] font-semibold leading-4 text-muted"
+          >
+            {{ takenBy(String(key)) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Même mot déjà placé dans une autre lacune -->
+      <p
+        v-if="selected && takenBy(selected)"
+        class="mt-2 flex items-start gap-1.5 text-xs text-amber-600"
+      >
+        <i class="pi pi-exclamation-triangle mt-0.5 text-[11px]" />
+        {{ t("session.q.word_taken", { n: takenBy(selected) }) }}
+      </p>
     </div>
 
     <!-- zuordnung_personen (Goethe B2 Lesen T1) -->
@@ -162,11 +257,20 @@
           v-for="(person, key) in c.persons"
           :key="key"
           type="button"
-          :class="['p-3 rounded-leaf border-2 text-left transition-colors', optionClass(isSel(key))]"
+          :class="[
+            'p-3 rounded-leaf border-2 text-left transition-colors',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span class="font-semibold">{{ String(key).toUpperCase() }} · {{ person.name }}</span>
-          <span v-if="!stimulusInSide" class="block text-xs text-muted mt-1 line-clamp-2">{{ person.text }}</span>
+          <span class="font-semibold"
+            >{{ String(key).toUpperCase() }} · {{ person.name }}</span
+          >
+          <span
+            v-if="!stimulusInSide"
+            class="block text-xs text-muted mt-1 line-clamp-2"
+            >{{ person.text }}</span
+          >
         </button>
       </div>
     </div>
@@ -181,10 +285,15 @@
           v-for="(text, key) in c.candidates"
           :key="key"
           type="button"
-          :class="['w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3', optionClass(isSel(key))]"
+          :class="[
+            'w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          <span :class="keyClass(isSel(key))">{{
+            String(key).toUpperCase()
+          }}</span>
           <span class="pt-0.5">{{ text }}</span>
         </button>
       </div>
@@ -193,7 +302,9 @@
     <!-- zuordnung_meinungen (Goethe B2 Lesen T4) -->
     <div v-else-if="type === 'zuordnung_meinungen'">
       <div class="rounded-leaf border border-line bg-card-2 px-4 py-3 mb-4">
-        <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-1">
+        <p
+          class="text-xs font-semibold uppercase tracking-wide text-muted mb-1"
+        >
           {{ t("session.q.title_to_match") }}
         </p>
         <p class="text-[15px] font-semibold text-ink">{{ c.title }}</p>
@@ -203,11 +314,20 @@
           v-for="(opinion, key) in c.opinions"
           :key="key"
           type="button"
-          :class="['px-3 py-2.5 rounded-leaf border-2 text-left text-sm transition-colors', optionClass(isSel(key))]"
+          :class="[
+            'px-3 py-2.5 rounded-leaf border-2 text-left text-sm transition-colors',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span class="font-semibold">{{ String(key).toUpperCase() }} · {{ opinion.author }}</span>
-          <span v-if="!stimulusInSide" class="block text-xs text-muted mt-1 line-clamp-2">{{ opinion.text }}</span>
+          <span class="font-semibold"
+            >{{ String(key).toUpperCase() }} · {{ opinion.author }}</span
+          >
+          <span
+            v-if="!stimulusInSide"
+            class="block text-xs text-muted mt-1 line-clamp-2"
+            >{{ opinion.text }}</span
+          >
         </button>
       </div>
     </div>
@@ -228,10 +348,15 @@
           v-for="(heading, key) in c.headings"
           :key="key"
           type="button"
-          :class="['w-full text-left px-4 py-2.5 rounded-leaf border-2 text-sm transition-colors flex items-center gap-3', optionClass(isSel(key))]"
+          :class="[
+            'w-full text-left px-4 py-2.5 rounded-leaf border-2 text-sm transition-colors flex items-center gap-3',
+            optionClass(isSel(key)),
+          ]"
           @click="choose(key)"
         >
-          <span :class="keyClass(isSel(key))">{{ String(key).toUpperCase() }}</span>
+          <span :class="keyClass(isSel(key))">{{
+            String(key).toUpperCase()
+          }}</span>
           <span>{{ heading }}</span>
         </button>
       </div>
@@ -239,13 +364,19 @@
 
     <!-- gap_fill_letters (ÖSD Lesen T3) -->
     <div v-else-if="type === 'gap_fill_letters'">
-      <div class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-[15px] text-ink leading-relaxed">
+      <div
+        class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-[15px] text-ink leading-relaxed"
+      >
         {{ c.visible_text }}
-        <span class="inline-block min-w-10 border-b-2 border-primary px-1.5 mx-1 font-bold text-primary">
+        <span
+          class="inline-block min-w-10 border-b-2 border-primary px-1.5 mx-1 font-bold text-primary"
+        >
           {{ textDraft || "___" }}
         </span>
       </div>
-      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+      <label
+        class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+      >
         {{ t("session.q.letters_hint") }}
       </label>
       <input
@@ -256,7 +387,9 @@
         spellcheck="false"
         :value="textDraft"
         :class="[inputClass, 'w-32']"
-        @input="onTextInput(($event.target as HTMLInputElement).value.toLowerCase())"
+        @input="
+          onTextInput(($event.target as HTMLInputElement).value.toLowerCase())
+        "
       />
     </div>
 
@@ -267,7 +400,9 @@
         class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-sm text-ink leading-loose"
         v-html="highlightGap(c.text_with_gaps, c.gap_number)"
       />
-      <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+      <label
+        class="block text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+      >
         {{ t("session.q.word_hint") }}
       </label>
       <input
@@ -286,14 +421,21 @@
       <p class="text-sm font-semibold text-ink mb-3">{{ c.zeile_name }}</p>
 
       <div v-if="c.type === 'checkbox'" class="space-y-3">
-        <div v-for="col in c.spalten" :key="col" class="rounded-leaf border border-line p-3">
+        <div
+          v-for="col in c.spalten"
+          :key="col"
+          class="rounded-leaf border border-line p-3"
+        >
           <p class="text-xs font-semibold text-muted mb-2">{{ col }}</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="opt in c.options"
               :key="opt"
               type="button"
-              :class="['px-3 py-1.5 rounded-leaf border-2 text-xs font-medium transition-colors', optionClass(tableauHas(col, opt))]"
+              :class="[
+                'px-3 py-1.5 rounded-leaf border-2 text-xs font-medium transition-colors',
+                optionClass(tableauHas(col, opt)),
+              ]"
               @click="toggleTableauOption(col, opt)"
             >
               {{ opt }}
@@ -312,15 +454,22 @@
             :value="tableauDraft[col] ?? ''"
             :placeholder="t('session.q.your_answer')"
             :class="[inputClass, 'w-full']"
-            @input="setTableauText(col, ($event.target as HTMLInputElement).value)"
+            @input="
+              setTableauText(col, ($event.target as HTMLInputElement).value)
+            "
           />
         </div>
       </div>
     </div>
 
     <!-- Format inconnu -->
-    <div v-else class="rounded-leaf border border-amber-500/30 bg-amber-500/10 p-4">
-      <p class="text-sm text-amber-700">{{ t("session.q.unsupported", { type }) }}</p>
+    <div
+      v-else
+      class="rounded-leaf border border-amber-500/30 bg-amber-500/10 p-4"
+    >
+      <p class="text-sm text-amber-700">
+        {{ t("session.q.unsupported", { type }) }}
+      </p>
     </div>
   </div>
 </template>
@@ -333,8 +482,11 @@ const props = withDefaults(
     teilAnzeigen?: Record<string, any>;
     teilWordBank?: Record<string, string>;
     stimulusInSide?: boolean; // le support est déjà affiché dans la colonne de gauche
+    // Choix uniques (zuordnung_titre, word_bank_gap_fill) : lettres prises par les AUTRES
+    // questions du Teil { lettre: numéro du texte ou de la lacune }
+    takenTitres?: Record<string, number | string>;
   }>(),
-  { stimulusInSide: false },
+  { stimulusInSide: false, takenTitres: () => ({}) },
 );
 
 const emit = defineEmits<{ answer: [value: any] }>();
@@ -352,9 +504,11 @@ const selected = computed(() =>
 
 // Comparaison insensible à la casse (ÖSD : réponses "C" pour la clé "c")
 const isSel = (key: string | number) =>
-  selected.value !== "" && selected.value.toLowerCase() === String(key).toLowerCase();
+  selected.value !== "" &&
+  selected.value.toLowerCase() === String(key).toLowerCase();
 
-const choose = (key: string | number) => emit("answer", { answer: String(key) });
+const choose = (key: string | number) =>
+  emit("answer", { answer: String(key) });
 
 const onSelect = (e: Event) => choose((e.target as HTMLSelectElement).value);
 
@@ -398,8 +552,14 @@ const badge = computed(() => {
 // Vocabulaire de la copie d'examen : reste en allemand
 const binaryOptions = computed(() =>
   type.value === "ja_nein"
-    ? [{ value: "ja", label: "Ja" }, { value: "nein", label: "Nein" }]
-    : [{ value: "richtig", label: "Richtig" }, { value: "falsch", label: "Falsch" }],
+    ? [
+        { value: "ja", label: "Ja" },
+        { value: "nein", label: "Nein" },
+      ]
+    : [
+        { value: "richtig", label: "Richtig" },
+        { value: "falsch", label: "Falsch" },
+      ],
 );
 
 const noMatchKey = computed(() => (type.value === "matching" ? "0" : "x"));
@@ -413,6 +573,28 @@ const wordBank = computed(() => props.teilWordBank || c.value.word_bank || {});
 
 const speakerName = (speaker: any) =>
   typeof speaker === "object" ? (speaker?.name ?? "") : String(speaker);
+
+// ── zuordnung_titre ───────────────────────────────────
+
+const titreKeys = computed(() => Object.keys(c.value.titres || {}));
+
+const takenBy = (key: string) =>
+  props.takenTitres?.[String(key).toLowerCase()] ?? null;
+
+const titreClass = (key: string) => {
+  if (isSel(key)) return "border-primary bg-primary text-white";
+  if (takenBy(key))
+    return "border-dashed border-line bg-card-2 text-faint hover:border-primary/40";
+  return "border-line bg-card text-ink hover:border-primary/40";
+};
+
+// Banque de mots (word_bank_gap_fill) : même règle, rendu « lettre + mot »
+const uniqueChoiceClass = (key: string) => {
+  if (isSel(key)) return "border-primary bg-primary/10 text-ink";
+  if (takenBy(key))
+    return "border-dashed border-line bg-card-2 text-faint hover:border-primary/40";
+  return optionClass(false);
+};
 
 // ── Texte à trous (échappé avant v-html) ──────────────
 
@@ -453,7 +635,9 @@ function flushText() {
 
 // ── tableau_mixed ─────────────────────────────────────
 
-const tableauDraft = reactive<Record<string, any>>({ ...(props.answer?.answers || {}) });
+const tableauDraft = reactive<Record<string, any>>({
+  ...(props.answer?.answers || {}),
+});
 let tableauTimer: ReturnType<typeof setTimeout> | null = null;
 
 const tableauHas = (col: string, opt: string) =>
@@ -461,7 +645,9 @@ const tableauHas = (col: string, opt: string) =>
 
 function toggleTableauOption(col: string, opt: string) {
   const values: string[] = tableauDraft[col] || [];
-  tableauDraft[col] = values.includes(opt) ? values.filter((v) => v !== opt) : [...values, opt];
+  tableauDraft[col] = values.includes(opt)
+    ? values.filter((v) => v !== opt)
+    : [...values, opt];
   emit("answer", { answers: { ...tableauDraft } });
 }
 

@@ -45,6 +45,8 @@ from .schemas import (
 )
 from .service import SprechenAgentService
 from .session_state import SessionState, SessionStatus
+from app.modules.exam_access.visibility import can_see_private
+
 
 router = APIRouter()
 
@@ -84,7 +86,7 @@ async def load_subject_data(
     # Sujet inexistant, ou sujet privé (réservé à la banque des
     # enseignants) ouvert par un non-admin : même réponse, pour ne pas
     # révéler l'existence d'un sujet privé.
-    if subject is None or (subject.is_private and not bool(user.is_admin)):
+    if subject is None or (subject.is_private and not can_see_private(user)):
         raise _SubjectUnavailable("Sujet introuvable.")
 
     level = await LevelRepository(db).get_by_id_or_404(subject.level_id)

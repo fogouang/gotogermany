@@ -9,6 +9,7 @@ export type PlanUpdate = {
     is_active?: (boolean | null);
     description?: (string | null);
     features?: (Array<string> | null);
+    ai_credits?: (number | null);
     display_order?: (number | null);
 };
 

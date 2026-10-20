@@ -36,6 +36,31 @@
       </p>
     </div>
 
+    <!-- ── Période d'essai ── -->
+    <div
+      v-if="summary?.trial_active && summary.trial_ends_at"
+      class="flex items-start gap-3 rounded-card border border-violet-500/30 bg-violet-500/5 p-4"
+    >
+      <i class="pi pi-gift mt-0.5 text-violet-600" />
+      <div>
+        <p class="text-sm font-semibold text-ink">
+          {{ t("centre.dashboard.trial_title") }}
+        </p>
+        <p class="mt-0.5 text-sm text-muted">
+          {{
+            t(
+              "centre.dashboard.trial_text",
+              {
+                n: summary.trial_activations_left ?? 0,
+                date: formatDate(summary.trial_ends_at),
+              },
+              summary.trial_activations_left ?? 0,
+            )
+          }}
+        </p>
+      </div>
+    </div>
+
     <!-- ── Indicateurs ── -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <div
@@ -100,108 +125,35 @@
       </p>
     </section>
 
-    <!-- ── Dernières activations ── -->
-    <section
-      class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+    <!-- ── Accès aux ventes ── -->
+    <NuxtLink
+      :to="localePath('/centre/ventes')"
+      class="flex items-center gap-4 rounded-card border border-line bg-card p-5 shadow-soft transition-colors hover:border-primary/30 hover:bg-primary/5"
     >
-      <header class="border-b border-line px-5 py-4">
-        <h3 class="font-semibold text-ink">
-          {{ t("centre.dashboard.recent_title") }}
-        </h3>
-        <p class="text-xs text-muted">
-          {{ t("centre.dashboard.recent_text") }}
-        </p>
-      </header>
-
-      <div v-if="loadingSales" class="space-y-3 p-5">
-        <div
-          v-for="n in 4"
-          :key="n"
-          class="h-10 animate-pulse rounded-leaf bg-card-2"
-        />
-      </div>
-
-      <div
-        v-else-if="salesStore.mySales.length === 0"
-        class="flex flex-col items-center gap-2 px-5 py-10 text-center"
+      <span
+        class="flex size-10 shrink-0 items-center justify-center rounded-leaf bg-emerald-500/10 text-emerald-600"
       >
-        <span
-          class="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary"
-        >
-          <i class="pi pi-shopping-bag" />
-        </span>
-        <p class="text-sm font-medium text-ink">
-          {{ t("centre.dashboard.empty_title") }}
+        <i class="pi pi-wallet" />
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-ink">
+          {{ t("centre.pages.sales.title") }}
         </p>
-        <p class="text-xs text-muted">{{ t("centre.dashboard.empty_text") }}</p>
+        <p class="text-xs text-muted">{{ t("centre.pages.sales.subtitle") }}</p>
       </div>
-
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="border-b border-line text-left text-xs text-muted">
-            <tr>
-              <th class="px-5 py-3 font-medium">
-                {{ t("centre.dashboard.col_student") }}
-              </th>
-              <th class="px-5 py-3 font-medium">
-                {{ t("centre.dashboard.col_plan") }}
-              </th>
-              <th class="px-5 py-3 text-right font-medium">
-                {{ t("centre.dashboard.col_price") }}
-              </th>
-              <th class="px-5 py-3 text-right font-medium">
-                {{ t("centre.dashboard.col_remaining") }}
-              </th>
-              <th class="px-5 py-3 font-medium">
-                {{ t("centre.dashboard.col_status") }}
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-line">
-            <tr v-for="sale in recentSales" :key="sale.id">
-              <td class="px-5 py-3">
-                <p class="font-medium text-ink">{{ sale.student_name }}</p>
-                <p class="text-xs text-muted">
-                  {{ formatDate(sale.created_at) }}
-                </p>
-              </td>
-              <td class="px-5 py-3 text-muted">{{ sale.plan_name || "-" }}</td>
-              <td class="whitespace-nowrap px-5 py-3 text-right text-ink">
-                {{ money(sale.price) }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-3 text-right font-medium text-ink"
-              >
-                {{
-                  sale.direction === "partner_owes"
-                    ? money(sale.remaining)
-                    : "-"
-                }}
-              </td>
-              <td class="px-5 py-3">
-                <span
-                  class="whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  :class="saleBadge(sale).class"
-                >
-                  {{ saleBadge(sale).label }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+      <i class="pi pi-arrow-right text-sm text-muted" />
+    </NuxtLink>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { PartnerSaleResponse } from "#shared/api";
 import CentreJoinLinkCard from "~/components/centre/JoinLinkCard.vue";
 import CentreJoinRequestsPanel from "~/components/centre/JoinRequestsPanel.vue";
 
 definePageMeta({ layout: "centre", watermark: "Übersicht" });
 
 const { t, locale } = useI18n();
+const localePath = useLocalePath();
 const salesStore = useSalesStore();
 
 const money = (n: number) =>
@@ -209,7 +161,7 @@ const money = (n: number) =>
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString(locale.value, {
     day: "2-digit",
-    month: "short",
+    month: "long",
   });
 
 // ── Solde partenaire ──
@@ -282,39 +234,9 @@ const limitBarColor = computed(() => {
   return "bg-emerald-500";
 });
 
-// ── Ventes ──
-const loadingSales = ref(true);
-const recentSales = computed(() => salesStore.mySales.slice(0, 8));
-
-function saleBadge(sale: PartnerSaleResponse) {
-  if (sale.status === "settled")
-    return {
-      label: t("centre.sales.status.settled"),
-      class: "bg-emerald-500/10 text-emerald-600",
-    };
-  if (sale.is_overdue)
-    return {
-      label: t("centre.sales.status.overdue"),
-      class: "bg-red-500/10 text-red-600",
-    };
-  if (sale.status === "partial")
-    return {
-      label: t("centre.sales.status.partial"),
-      class: "bg-amber-500/10 text-amber-600",
-    };
-  return {
-    label: t("centre.sales.status.due"),
-    class: "bg-sky-500/10 text-sky-600",
-  };
-}
-
 onMounted(async () => {
-  const [sum] = await Promise.all([
-    salesStore.fetchMySummary(),
-    salesStore.fetchMySales(20),
-  ]);
+  const sum = await salesStore.fetchMySummary();
   if (!sum.success) summaryError.value = sum.error;
   loadingSummary.value = false;
-  loadingSales.value = false;
 });
 </script>

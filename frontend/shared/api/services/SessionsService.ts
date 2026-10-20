@@ -5,6 +5,8 @@
 import type { ActiveSessionResponse } from '../models/ActiveSessionResponse';
 import type { AnswerSubmitRequest } from '../models/AnswerSubmitRequest';
 import type { AnswerSubmitResponse } from '../models/AnswerSubmitResponse';
+import type { BlockAdvanceRequest } from '../models/BlockAdvanceRequest';
+import type { BlockStateResponse } from '../models/BlockStateResponse';
 import type { BulkAnswerSubmitRequest } from '../models/BulkAnswerSubmitRequest';
 import type { SessionListResponse } from '../models/SessionListResponse';
 import type { SessionResultResponse } from '../models/SessionResultResponse';
@@ -146,6 +148,62 @@ export class SessionsService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/sessions/{session_id}/answers/bulk',
+            path: {
+                'session_id': sessionId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Block State
+     * Bloc en cours et heure de fin, pour reprendre après un rechargement.
+     * @param sessionId
+     * @param accessToken
+     * @returns BlockStateResponse Successful Response
+     * @throws ApiError
+     */
+    public static getBlockStateApiV1SessionsSessionIdBlockGet(
+        sessionId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<BlockStateResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/sessions/{session_id}/block',
+            path: {
+                'session_id': sessionId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Advance Block
+     * Démarre le bloc suivant (ou renvoie le bloc en cours s'il a déjà démarré).
+     * @param sessionId
+     * @param requestBody
+     * @param accessToken
+     * @returns BlockStateResponse Successful Response
+     * @throws ApiError
+     */
+    public static advanceBlockApiV1SessionsSessionIdBlockPost(
+        sessionId: string,
+        requestBody: BlockAdvanceRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<BlockStateResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/sessions/{session_id}/block',
             path: {
                 'session_id': sessionId,
             },

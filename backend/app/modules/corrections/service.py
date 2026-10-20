@@ -38,6 +38,7 @@ from app.modules.exams.models import Subject, Level
 
 from app.config import get_settings
 from app.modules.questions.models import Question
+from app.modules.exam_access.visibility import is_assignment_session
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -175,7 +176,7 @@ class CorrectionService:
         session = await self._load_session(request.exam_session_id, current_user_id)
         
         # Les devoirs sont corrigés par l'enseignant, jamais par l'IA
-        if session.subject.is_private:
+        if session.subject.is_private and await is_assignment_session(self.db, session.id):
             raise ValueError("Ce devoir est corrigé par votre enseignant.")
         
         # 3. Extraire provider + level depuis la hiérarchie

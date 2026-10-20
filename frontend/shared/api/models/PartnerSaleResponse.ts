@@ -22,5 +22,6 @@ export type PartnerSaleResponse = {
     is_overdue: boolean;
     status: string;
     created_at: string;
+    is_trial?: boolean;
 };
 

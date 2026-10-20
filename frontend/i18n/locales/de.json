@@ -203,6 +203,7 @@
     "popular": "Am häufigsten gewählt",
     "per_day": "also",
     "per_day_suffix": "FCFA/Tag",
+    "ai_credits": "{n} KI-Credit inklusive | {n} KI-Credits inklusive",
     "features": {
       "full_access": "Voller Zugang zu Ihrer gewählten Prüfung und Stufe",
       "all_modules": "Lesen, Hören, Schreiben und Sprechen inklusive",
@@ -508,6 +509,8 @@
       "paragraph": "Absatz {n}",
       "abschnitt": "Abschnitt {n}",
       "choose_title": "Wählen Sie die Überschrift",
+      "title_taken": "Diese Überschrift ist schon für Text {n} gewählt. Jede Überschrift nur einmal benutzen.",
+      "word_taken": "Dieses Wort steht schon in Lücke {n}. Jedes Wort passt nur einmal.",
       "choose_word": "Wählen Sie das Wort",
       "choose_heading": "Wählen Sie die Überschrift des Absatzes",
       "choose_sentence": "Wählen Sie den passenden Satz",
@@ -693,6 +696,7 @@
   },
   "exam_detail": {
     "not_found": "Prüfung nicht gefunden",
+    "done_pending": "Erledigt · wird korrigiert",
     "back": "Zurück",
     "levels": "Niveaus",
     "subjects": "Themen",
@@ -1376,12 +1380,24 @@
       "live": "Live-Sitzung",
       "progression": "Fortschritt",
       "credits_history": "Guthabenverlauf",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "join_requests": "Anmeldungen",
+      "sales": "Meine Verkäufe"
     },
     "pages": {
+      "sales": {
+        "title": "Meine Verkäufe",
+        "subtitle": "Was Ihr Zentrum verdient hat und seine Verkäufe"
+      },
       "dashboard": {
         "title": "Übersicht",
-        "subtitle": "Aktivität und KI-Guthaben Ihres Zentrums"
+        "subtitle": "Aktivität und KI-Guthaben Ihres Zentrums",
+        "kpi_earned": "Verdient",
+        "kpi_earned_hint": "Ihr Anteil an allen Verkäufen"
+      },
+      "join_requests": {
+        "title": "Anmeldungen",
+        "subtitle": "Anmeldelink und zu bestätigende Konten"
       },
       "branches": {
         "title": "Meine Zentren",
@@ -1614,9 +1630,12 @@
       "col_plan": "Tarif",
       "col_price": "Preis",
       "col_remaining": "Offen",
-      "col_status": "Status"
+      "col_status": "Status",
+      "trial_title": "Testphase läuft",
+      "trial_text": "Keine kostenlosen Freischaltungen mehr. | Noch {n} kostenlose Freischaltung, bis zum {date}. | Noch {n} kostenlose Freischaltungen, bis zum {date}."
     },
     "sales": {
+      "col_share": "Part du centre",
       "status": {
         "settled": "Beglichen",
         "overdue": "Überfällig",
@@ -1649,6 +1668,7 @@
       "access_until": "Bis {date}"
     },
     "activation": {
+      "trial_free": "Kostenlose Freischaltung · Testphase. Noch {n} kostenlose Freischaltung(en) bis zum {date}.",
       "title": "Zugang freischalten",
       "done_title": "Zugang freigeschaltet",
       "valid_until": "Zugang gültig bis {date}",
@@ -1924,6 +1944,17 @@
       "submitted": "Abgegeben",
       "graded": "Korrigiert"
     },
+    "sheet": {
+      "view": "Mein Ergebnis ansehen",
+      "kicker": "Ergebnisübersicht",
+      "written": "Schriftliche Prüfung",
+      "pending": "Wartet auf die Lehrkraft",
+      "result": "Ergebnis",
+      "passed": "Bestanden",
+      "failed": "Nicht bestanden",
+      "provisional": "Vorläufig",
+      "provisional_hint": "Dein schriftlicher Ausdruck wird noch von deiner Lehrkraft korrigiert. Summe und Ergebnis sind danach endgültig."
+    },
     "status": {
       "pending": "Nicht begonnen",
       "in_progress": "In Bearbeitung",
@@ -2086,5 +2117,27 @@
     "approved": "Anmeldung bestätigt",
     "rejected": "Anmeldung abgelehnt",
     "reject_confirm": "Anmeldung von {name} ablehnen?"
+  },
+  "error_page": {
+    "not_found_title": "Seite nicht gefunden",
+    "not_found_text": "Diese Seite existiert nicht oder wurde verschoben.",
+    "error_title": "Ein Fehler ist aufgetreten",
+    "error_text": "Bei uns ist etwas schiefgelaufen. Bitte versuche es gleich noch einmal.",
+    "home": "Zur Startseite",
+    "my_space": "Zu meinem Bereich",
+    "back": "Zurück"
+  },
+  "ambassador": {
+    "space": "Botschafterbereich",
+    "role": "Botschafter",
+    "nav": {
+      "program": "Botschafterprogramm"
+    },
+    "pages": {
+      "referrals": {
+        "title": "Botschafterprogramm",
+        "subtitle": "Ihre Empfehlungen und Provisionen"
+      }
+    }
   }
 }

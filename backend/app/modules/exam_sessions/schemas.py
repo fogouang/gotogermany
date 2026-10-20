@@ -59,6 +59,17 @@ class SessionStartResponse(BaseSchema):
     existing_answers: dict[str, Any] = {}
 
 
+class BlockAdvanceRequest(BaseSchema):
+    block_index: int
+    minutes: int
+
+
+class BlockStateResponse(BaseSchema):
+    current_block: int
+    block_deadline: datetime | None
+    server_now: datetime  # pour corriger l'écart d'horloge du navigateur
+
+
 class SessionListResponse(BaseSchema):
     id: uuid.UUID
     exam_id: uuid.UUID

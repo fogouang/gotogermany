@@ -203,6 +203,7 @@
     "popular": "Most chosen",
     "per_day": "that's",
     "per_day_suffix": "FCFA/day",
+    "ai_credits": "{n} AI credit included | {n} AI credits included",
     "features": {
       "full_access": "Full access to your chosen exam and level",
       "all_modules": "Lesen, Hören, Schreiben and Sprechen included",
@@ -508,6 +509,8 @@
       "paragraph": "Paragraph {n}",
       "abschnitt": "Section {n}",
       "choose_title": "Choose the heading",
+      "title_taken": "This heading is already used for text {n}. Each heading can only be used once.",
+      "word_taken": "This word is already used in gap {n}. Each word can only be used once.",
       "choose_word": "Choose the word",
       "choose_heading": "Choose the paragraph heading",
       "choose_sentence": "Choose the right sentence",
@@ -693,6 +696,7 @@
   },
   "exam_detail": {
     "not_found": "Exam not found",
+    "done_pending": "Done · being marked",
     "back": "Back",
     "levels": "Levels",
     "subjects": "Subjects",
@@ -1377,12 +1381,24 @@
       "live": "Live session",
       "progression": "Progress",
       "credits_history": "Credit history",
-      "settings": "Settings"
+      "settings": "Settings",
+      "join_requests": "Sign-ups",
+      "sales": "My sales"
     },
     "pages": {
+      "sales": {
+        "title": "My sales",
+        "subtitle": "What your centre has earned and its sales"
+      },
       "dashboard": {
         "title": "Overview",
-        "subtitle": "Your centre's activity and AI credits"
+        "subtitle": "Your centre's activity and AI credits",
+        "kpi_earned": "Earned",
+        "kpi_earned_hint": "Your share of all your sales"
+      },
+      "join_requests": {
+        "title": "Sign-ups",
+        "subtitle": "Sign-up link and accounts to approve"
       },
       "branches": {
         "title": "My centres",
@@ -1612,9 +1628,12 @@
       "col_plan": "Plan",
       "col_price": "Price",
       "col_remaining": "Remaining",
-      "col_status": "Status"
+      "col_status": "Status",
+      "trial_title": "Trial period in progress",
+      "trial_text": "No free activations left. | {n} free activation left, until {date}. | {n} free activations left, until {date}."
     },
     "sales": {
+      "col_share": "Centre's share",
       "status": {
         "settled": "Settled",
         "overdue": "Overdue",
@@ -1647,6 +1666,7 @@
       "access_until": "Until {date}"
     },
     "activation": {
+      "trial_free": "Free activation · trial period. You have {n} free activation(s) left, until {date}.",
       "title": "Activate access",
       "done_title": "Access activated",
       "valid_until": "Access valid until {date}",
@@ -1924,6 +1944,17 @@
       "submitted": "Being graded",
       "graded": "Graded"
     },
+    "sheet": {
+      "view": "View my score report",
+      "kicker": "Score report",
+      "written": "Written exam",
+      "pending": "Awaiting your teacher",
+      "result": "Result",
+      "passed": "Bestanden",
+      "failed": "Nicht bestanden",
+      "provisional": "Provisional",
+      "provisional_hint": "Your written production is being marked by your teacher. The total and result will be final once it is marked."
+    },
     "by": "by {name}",
     "due": "due {date}",
     "no_due": "No deadline",
@@ -2080,5 +2111,27 @@
     "approved": "Registration approved",
     "rejected": "Registration rejected",
     "reject_confirm": "Reject {name}'s registration?"
+  },
+  "error_page": {
+    "not_found_title": "Page not found",
+    "not_found_text": "This page doesn't exist or has been moved.",
+    "error_title": "Something went wrong",
+    "error_text": "Something went wrong on our side. Please try again in a moment.",
+    "home": "Back to home",
+    "my_space": "Go to my space",
+    "back": "Back"
+  },
+  "ambassador": {
+    "space": "Ambassador area",
+    "role": "Ambassador",
+    "nav": {
+      "program": "Ambassador programme"
+    },
+    "pages": {
+      "referrals": {
+        "title": "Ambassador programme",
+        "subtitle": "Your referrals and commissions"
+      }
+    }
   }
 }

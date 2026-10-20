@@ -119,6 +119,18 @@
                     FCFA
                   </span>
                 </div>
+                <p
+                  v-if="plan.ai_credits"
+                  class="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+                  :class="
+                    index === recommendedIndex
+                      ? 'bg-accent-500/15 text-accent-400'
+                      : 'bg-primary/10 text-primary'
+                  "
+                >
+                  <i class="pi pi-sparkles text-[11px]" />
+                  {{ t("pricing.ai_credits", plan.ai_credits) }}
+                </p>
               </div>
 
               <!-- Fonctionnalités -->

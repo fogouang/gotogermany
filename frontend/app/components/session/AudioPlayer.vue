@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'rounded-leaf border p-4 transition-colors',
+      'rounded-leaf border px-4 py-3 transition-colors',
       state === 'playing' || state === 'gap'
         ? 'border-primary/40 bg-primary/5'
         : 'border-line bg-card-2',
@@ -12,7 +12,7 @@
       <button
         v-if="state === 'blocked'"
         type="button"
-        class="w-10 h-10 shrink-0 rounded-full bg-primary text-white flex items-center justify-center hover:opacity-90"
+        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-white hover:opacity-90"
         :aria-label="t('session.horen.blocked_action')"
         @click="playOnce"
       >
@@ -21,60 +21,75 @@
       <div
         v-else
         :class="[
-          'w-10 h-10 shrink-0 rounded-full flex items-center justify-center',
+          'flex size-9 shrink-0 items-center justify-center rounded-full',
           state === 'playing'
             ? 'bg-primary text-white'
             : state === 'done'
               ? 'bg-emerald-500/10 text-emerald-600'
               : state === 'error'
                 ? 'bg-red-500/10 text-red-500'
-                : 'bg-card text-muted border border-line',
+                : 'border border-line bg-card text-muted',
         ]"
       >
         <i :class="['pi text-sm', stateIcon, state === 'playing' ? 'animate-pulse' : '']"></i>
       </div>
 
-      <!-- Libellé + écoutes -->
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium text-ink truncate">{{ stateLabel }}</p>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span
-            v-for="n in maxPlays"
-            :key="n"
-            :class="['w-2 h-2 rounded-full', n <= playsUsed ? 'bg-primary' : 'bg-line']"
-          />
-          <span class="text-xs text-muted ml-1 tabular-nums">
-            {{ t("session.horen.play_count", { n: Math.min(Math.max(playsUsed, 1), maxPlays), total: maxPlays }) }}
+      <!-- Statut, écoutes et progression -->
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center justify-between gap-2">
+          <p class="truncate text-sm font-medium text-ink">{{ stateLabel }}</p>
+          <span class="flex shrink-0 items-center gap-1.5">
+            <span
+              v-for="n in maxPlays"
+              :key="n"
+              :class="['size-2 rounded-full', n <= playsUsed ? 'bg-primary' : 'bg-line']"
+            />
+            <span class="ml-0.5 text-xs tabular-nums text-muted">
+              {{ t("session.horen.play_count", { n: Math.min(Math.max(playsUsed, 1), maxPlays), total: maxPlays }) }}
+            </span>
           </span>
+        </div>
+
+        <!-- Progression (non cliquable : pas de retour en arrière) -->
+        <div class="mt-2 flex items-center gap-2">
+          <span class="w-9 text-[11px] tabular-nums text-faint">{{ formatTime(currentTime) }}</span>
+          <div class="h-2.5 flex-1 overflow-hidden rounded-full bg-line/60">
+            <div
+              class="h-full rounded-full bg-primary transition-[width] duration-300"
+              :style="{ width: `${progress}%` }"
+            />
+          </div>
+          <span class="w-9 text-right text-[11px] tabular-nums text-faint">{{ formatTime(duration) }}</span>
         </div>
       </div>
 
-      <!-- Volume -->
-      <label class="flex items-center gap-2 shrink-0 text-muted">
-        <i class="pi pi-volume-down text-sm"></i>
-        <span class="sr-only">{{ t("session.horen.volume") }}</span>
-        <input
-          v-model.number="volume"
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          class="w-20 sm:w-28 accent-current text-primary cursor-pointer"
-        />
-      </label>
-    </div>
-
-    <!-- Progression (non cliquable : pas de retour en arrière) -->
-    <div class="mt-3">
-      <div class="w-full h-1.5 rounded-full bg-line/60 overflow-hidden">
+      <!-- Volume : icône + petit panneau -->
+      <div class="relative shrink-0">
+        <button
+          type="button"
+          class="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-card hover:text-ink"
+          :aria-label="t('session.horen.volume')"
+          :aria-expanded="volumeOpen"
+          @click="volumeOpen = !volumeOpen"
+        >
+          <i :class="['pi text-sm', volumeIcon]"></i>
+        </button>
         <div
-          class="h-full bg-primary rounded-full transition-[width] duration-300"
-          :style="{ width: `${progress}%` }"
-        />
-      </div>
-      <div class="flex justify-between mt-1 text-[11px] text-faint tabular-nums">
-        <span>{{ formatTime(currentTime) }}</span>
-        <span>{{ formatTime(duration) }}</span>
+          v-if="volumeOpen"
+          class="absolute right-0 top-full z-20 mt-2 flex items-center gap-2 rounded-leaf border border-line bg-card px-3 py-2 shadow-soft"
+          @mouseleave="volumeOpen = false"
+        >
+          <input
+            v-model.number="volume"
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            class="w-28 cursor-pointer accent-current text-primary"
+            :aria-label="t('session.horen.volume')"
+          />
+          <span class="w-8 text-right text-xs tabular-nums text-muted">{{ Math.round(volume * 100) }}</span>
+        </div>
       </div>
     </div>
 
@@ -123,6 +138,13 @@ let gapTimer: ReturnType<typeof setInterval> | null = null;
 
 const VOLUME_KEY = "gtg_exam_volume";
 const volume = ref(1);
+const volumeOpen = ref(false);
+
+const volumeIcon = computed(() => {
+  if (volume.value <= 0) return "pi-volume-off";
+  if (volume.value < 0.5) return "pi-volume-down";
+  return "pi-volume-up";
+});
 
 watch(volume, (v) => {
   if (audioEl.value) audioEl.value.volume = v;

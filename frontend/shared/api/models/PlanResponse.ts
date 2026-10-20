@@ -10,6 +10,7 @@ export type PlanResponse = {
     is_active: boolean;
     description?: (string | null);
     features?: (Array<string> | null);
+    ai_credits?: number;
     display_order: number;
 };
 

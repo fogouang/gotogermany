@@ -3,10 +3,7 @@
     class="relative overflow-hidden bg-canvas pt-10 pb-16 sm:pt-14 lg:pb-24"
   >
     <!-- Décor : grille discrète + halos -->
-    <div
-      class="pointer-events-none absolute inset-0 bg-grid opacity-40 mask-[radial-gradient(ellipse_at_top_left,black,transparent_65%)]"
-      aria-hidden="true"
-    />
+   
     <div
       class="pointer-events-none absolute -top-40 -left-40 size-120 rounded-full bg-accent-500/15 blur-3xl"
       aria-hidden="true"

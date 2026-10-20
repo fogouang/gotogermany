@@ -112,7 +112,7 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
         },
         {
           labelKey: "centre.nav.secretaries",
-          to: "/centre/secretaires",
+          to: "/centre/secretaire",
           icon: "pi pi-users",
         },
         {
@@ -131,9 +131,19 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           icon: "pi pi-user",
         },
         {
+          labelKey: "centre.nav.join_requests",
+          to: "/centre/inscriptions",
+          icon: "pi pi-inbox",
+        },
+        {
           labelKey: "centre.nav.progression",
           to: "/centre/progression",
           icon: "pi pi-chart-line",
+        },
+        {
+          labelKey: "centre.nav.sales",
+          to: "/centre/ventes",
+          icon: "pi pi-wallet",
         },
         {
           labelKey: "centre.nav.settings",
@@ -158,6 +168,11 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           labelKey: "centre.nav.new_student",
           to: "/centre/etudiants/nouveau",
           icon: "pi pi-user-plus",
+        },
+        {
+          labelKey: "centre.nav.join_requests",
+          to: "/centre/inscriptions",
+          icon: "pi pi-inbox",
         },
         {
           labelKey: "centre.nav.teachers",
@@ -311,6 +326,12 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
       titleKey: "sidebar.account",
       items: [
         {
+          labelKey: "ambassador.nav.program",
+          to: "/referrals",
+          icon: "pi pi-star",
+          ambassadorOnly: true,
+        },
+        {
           labelKey: "dashboard.pages.profil",
           to: "/dashboard/profil",
           icon: "pi pi-user",
@@ -372,7 +393,7 @@ export const PAGE_META: Record<string, PageMeta> = {
     titleKey: "centre.pages.branches.title",
     subtitleKey: "centre.pages.branches.subtitle",
   },
-  "/centre/secretaires": {
+  "/centre/secretaire": {
     titleKey: "centre.pages.secretaries.title",
     subtitleKey: "centre.pages.secretaries.subtitle",
   },
@@ -383,6 +404,10 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/centre/etudiants/nouveau": {
     titleKey: "centre.pages.new_student.title",
     subtitleKey: "centre.pages.new_student.subtitle",
+  },
+  "/centre/inscriptions": {
+    titleKey: "centre.pages.join_requests.title",
+    subtitleKey: "centre.pages.join_requests.subtitle",
   },
   "/centre/enseignants": {
     titleKey: "centre.pages.teachers.title",
@@ -401,6 +426,10 @@ export const PAGE_META: Record<string, PageMeta> = {
     subtitleKey: "centre.pages.progression.subtitle",
   },
 
+  "/centre/ventes": {
+    titleKey: "centre.pages.sales.title",
+    subtitleKey: "centre.pages.sales.subtitle",
+  },
   "/centre/reglages": {
     titleKey: "centre.pages.settings.title",
     subtitleKey: "centre.pages.settings.subtitle",

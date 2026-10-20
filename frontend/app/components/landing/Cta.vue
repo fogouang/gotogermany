@@ -4,19 +4,6 @@
       class="relative mx-auto max-w-6xl overflow-hidden rounded-4xl bg-zinc-950 px-6 py-12 text-white shadow-lift sm:px-12 sm:py-16"
     >
       <!-- Décor -->
-      <div
-        class="pointer-events-none absolute -top-32 -right-24 size-96 rounded-full bg-accent-500/25 blur-3xl"
-        aria-hidden="true"
-      />
-      <div
-        class="pointer-events-none absolute -bottom-40 -left-24 size-96 rounded-full bg-accent-500/10 blur-3xl"
-        aria-hidden="true"
-      />
-      <div
-        class="pointer-events-none absolute inset-0 opacity-[0.07] bg-[linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] bg-size-[48px_48px]"
-        aria-hidden="true"
-      />
-      <div class="flag-stripe absolute inset-x-0 top-0 h-1" aria-hidden="true" />
 
       <div class="relative grid items-center gap-12 lg:grid-cols-[1.2fr_1fr]">
         <!-- Texte -->
@@ -28,10 +15,14 @@
             {{ t("cta_section.title") }}
           </p>
 
-          <h2 class="font-heading text-3xl leading-tight font-bold tracking-tight sm:text-4xl lg:text-5xl">
+          <h2
+            class="font-heading text-3xl leading-tight font-bold tracking-tight sm:text-4xl lg:text-5xl"
+          >
             {{ t("cta_section.title_line1") }}
             {{ t("cta_section.title_line2") }}
-            <span class="text-accent-400">{{ t("cta_section.title_line3") }}</span>
+            <span class="text-accent-400">{{
+              t("cta_section.title_line3")
+            }}</span>
           </h2>
 
           <div class="mt-8 flex flex-wrap items-center gap-3">
@@ -96,8 +87,12 @@
                 >
                   <i class="pi pi-check text-xs" />
                 </span>
-                <span class="flex-1 text-sm font-medium text-white">{{ module }}</span>
-                <span class="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                <span class="flex-1 text-sm font-medium text-white">{{
+                  module
+                }}</span>
+                <span
+                  class="h-1.5 w-24 overflow-hidden rounded-full bg-white/10"
+                >
                   <span
                     class="block h-full rounded-full bg-linear-to-r from-accent-500 to-accent-300"
                     :style="{ width: `${78 + i * 5}%` }"
@@ -106,7 +101,9 @@
               </li>
             </ul>
 
-            <div class="mt-6 flex items-center gap-3 border-t border-white/10 pt-5">
+            <div
+              class="mt-6 flex items-center gap-3 border-t border-white/10 pt-5"
+            >
               <span
                 class="flex size-10 items-center justify-center rounded-leaf bg-accent-500 text-accent-950"
               >

@@ -18,7 +18,12 @@
           :class="tabClass('tasks')"
           @click="mobileTab = 'tasks'"
         >
-          {{ t("session.q.tab_tasks", { answered: answeredCount, total: questions.length }) }}
+          {{
+            t("session.q.tab_tasks", {
+              answered: answeredCount,
+              total: questions.length,
+            })
+          }}
         </button>
       </div>
     </div>
@@ -33,12 +38,18 @@
         ]"
       >
         <div class="p-5 sm:p-6 space-y-4">
-          <div class="rounded-leaf border border-primary/20 bg-primary/5 px-4 py-3">
-            <p class="text-sm font-medium text-ink whitespace-pre-line">{{ teil.instructions }}</p>
+          <div
+            class="rounded-leaf border border-primary/20 bg-primary/5 px-4 py-3"
+          >
+            <p class="text-sm font-medium text-ink whitespace-pre-line">
+              {{ teil.instructions }}
+            </p>
           </div>
 
           <p v-if="contextLine || docLabel" class="text-xs text-muted">
-            <span v-if="docLabel" class="font-semibold text-ink">{{ docLabel }}</span>
+            <span v-if="docLabel" class="font-semibold text-ink">{{
+              docLabel
+            }}</span>
             <span v-if="docLabel && contextLine"> · </span>
             <span v-if="contextLine">{{ contextLine }}</span>
           </p>
@@ -66,13 +77,36 @@
           <!-- zuordnung_titre : titres puis textes -->
           <template v-if="fmt === 'zuordnung_titre'">
             <div class="rounded-card border border-line bg-card-2 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+              <p
+                class="text-xs font-semibold uppercase tracking-wide text-faint mb-2"
+              >
                 {{ t("session.q.headings") }}
               </p>
               <ul class="space-y-1.5">
-                <li v-for="(titre, key) in titres" :key="key" class="flex gap-2 text-sm text-ink">
-                  <span class="font-bold text-primary w-5 shrink-0">{{ String(key) }}</span>
-                  <span>{{ titre }}</span>
+                <li
+                  v-for="(titre, key) in titres"
+                  :key="key"
+                  class="flex items-start gap-2 text-sm transition-opacity"
+                  :class="
+                    assignedTitres[String(key).toLowerCase()]
+                      ? 'text-faint opacity-60'
+                      : 'text-ink'
+                  "
+                >
+                  <span class="font-bold text-primary w-5 shrink-0">{{
+                    String(key)
+                  }}</span>
+                  <span class="flex-1">{{ titre }}</span>
+                  <span
+                    v-if="assignedTitres[String(key).toLowerCase()]"
+                    class="shrink-0 rounded-full border border-line bg-card px-1.5 text-[10px] font-semibold text-muted"
+                  >
+                    {{
+                      t("session.q.text_n", {
+                        n: assignedTitres[String(key).toLowerCase()],
+                      })
+                    }}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -81,7 +115,9 @@
               :key="`stim-${q.id}`"
               class="rounded-card border border-line p-4"
             >
-              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+              <p
+                class="text-xs font-semibold uppercase tracking-wide text-faint mb-2"
+              >
                 {{ t("session.q.text_n", { n: q.question_number }) }}
               </p>
               <div
@@ -123,11 +159,17 @@
                 v-else
                 class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0"
               >
-                <span class="font-bold text-primary">{{ String(key).toUpperCase() }}</span>
+                <span class="font-bold text-primary">{{
+                  String(key).toUpperCase()
+                }}</span>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-ink mb-1">{{ String(key).toLowerCase() }}) {{ person.name }}</p>
-                <p class="text-[15px] text-ink leading-relaxed">{{ person.text }}</p>
+                <p class="font-semibold text-ink mb-1">
+                  {{ String(key).toLowerCase() }}) {{ person.name }}
+                </p>
+                <p class="text-[15px] text-ink leading-relaxed">
+                  {{ person.text }}
+                </p>
               </div>
             </div>
           </template>
@@ -152,9 +194,13 @@
                 >
                   {{ String(key).toUpperCase() }}
                 </span>
-                <p class="font-semibold text-ink">{{ String(key).toUpperCase() }} · {{ opinion.author }}</p>
+                <p class="font-semibold text-ink">
+                  {{ String(key).toUpperCase() }} · {{ opinion.author }}
+                </p>
               </div>
-              <p class="text-[15px] text-ink leading-relaxed">{{ opinion.text }}</p>
+              <p class="text-[15px] text-ink leading-relaxed">
+                {{ opinion.text }}
+              </p>
             </div>
           </template>
 
@@ -171,16 +217,26 @@
                 alt=""
                 class="w-full h-32 object-cover rounded-leaf border border-line mb-2"
               />
-              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-1">
-                {{ t("session.q.paragraph", { n: String(key).replace(/^p/i, "") }) }}
+              <p
+                class="text-xs font-semibold uppercase tracking-wide text-faint mb-1"
+              >
+                {{
+                  t("session.q.paragraph", {
+                    n: String(key).replace(/^p/i, ""),
+                  })
+                }}
                 <span v-if="para.title"> · {{ para.title }}</span>
               </p>
-              <p class="text-[15px] text-ink leading-relaxed">{{ para.text }}</p>
+              <p class="text-[15px] text-ink leading-relaxed">
+                {{ para.text }}
+              </p>
             </div>
           </template>
 
           <!-- Annonces (matching / selektives_matching) -->
-          <template v-else-if="fmt === 'matching' || fmt === 'selektives_matching'">
+          <template
+            v-else-if="fmt === 'matching' || fmt === 'selektives_matching'"
+          >
             <p class="text-xs font-semibold uppercase tracking-wide text-faint">
               {{ t("session.q.ads") }}
             </p>
@@ -189,13 +245,23 @@
               :key="key"
               class="rounded-card border border-line p-4 flex items-start gap-3"
             >
-              <span class="font-bold text-primary w-5 shrink-0">{{ String(key).toUpperCase() }}</span>
+              <span class="font-bold text-primary w-5 shrink-0">{{
+                String(key).toUpperCase()
+              }}</span>
               <div class="flex-1 min-w-0">
-                <p v-if="anzeigeField(anzeige, 'title')" class="font-semibold text-ink text-sm mb-0.5">
+                <p
+                  v-if="anzeigeField(anzeige, 'title')"
+                  class="font-semibold text-ink text-sm mb-0.5"
+                >
                   {{ anzeigeField(anzeige, "title") }}
                 </p>
-                <p class="text-sm text-ink leading-relaxed">{{ anzeigeText(anzeige) }}</p>
-                <p v-if="anzeigeField(anzeige, 'contact')" class="text-xs text-muted italic mt-1">
+                <p class="text-sm text-ink leading-relaxed">
+                  {{ anzeigeText(anzeige) }}
+                </p>
+                <p
+                  v-if="anzeigeField(anzeige, 'contact')"
+                  class="text-xs text-muted italic mt-1"
+                >
                   {{ anzeigeField(anzeige, "contact") }}
                 </p>
               </div>
@@ -209,8 +275,12 @@
           </template>
 
           <!-- Sprachbausteine : texte à trous -->
-          <template v-else-if="fmt === 'qcm_gap_fill' || fmt === 'word_bank_gap_fill'">
-            <p v-if="cfg.situation" class="text-xs text-muted italic">{{ cfg.situation }}</p>
+          <template
+            v-else-if="fmt === 'qcm_gap_fill' || fmt === 'word_bank_gap_fill'"
+          >
+            <p v-if="cfg.situation" class="text-xs text-muted italic">
+              {{ cfg.situation }}
+            </p>
             <div
               v-if="cfg.stimulus_anzeige"
               class="rounded-leaf border border-line bg-card-2 p-3 text-sm text-ink"
@@ -222,17 +292,39 @@
               v-html="formatGapText(cfg.text_with_gaps || '')"
             />
             <div v-if="fmt === 'word_bank_gap_fill' && cfg.word_bank">
-              <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+              <p
+                class="text-xs font-semibold uppercase tracking-wide text-faint mb-2"
+              >
                 {{ t("session.q.word_bank") }}
               </p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <div
                   v-for="(word, key) in cfg.word_bank"
                   :key="key"
-                  class="text-xs rounded-leaf border border-line bg-card-2 px-3 py-2 flex gap-2 items-center"
+                  class="text-xs rounded-leaf border border-line bg-card-2 px-3 py-2 flex gap-2 items-center transition-opacity"
+                  :class="{
+                    'opacity-50': assignedTitres[String(key).toLowerCase()],
+                  }"
                 >
-                  <span class="font-bold text-primary shrink-0">{{ String(key).toUpperCase() }}</span>
-                  <span class="text-ink">{{ word }}</span>
+                  <span class="font-bold text-primary shrink-0">{{
+                    String(key).toUpperCase()
+                  }}</span>
+                  <span
+                    class="flex-1"
+                    :class="
+                      assignedTitres[String(key).toLowerCase()]
+                        ? 'text-faint line-through'
+                        : 'text-ink'
+                    "
+                  >
+                    {{ word }}
+                  </span>
+                  <span
+                    v-if="assignedTitres[String(key).toLowerCase()]"
+                    class="shrink-0 rounded-full bg-primary/10 px-1.5 text-[10px] font-bold text-primary"
+                  >
+                    {{ assignedTitres[String(key).toLowerCase()] }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -253,7 +345,9 @@
             v-if="!hasStimulus"
             class="rounded-leaf border border-primary/20 bg-primary/5 px-4 py-3"
           >
-            <p class="text-sm font-medium text-ink whitespace-pre-line">{{ teil.instructions }}</p>
+            <p class="text-sm font-medium text-ink whitespace-pre-line">
+              {{ teil.instructions }}
+            </p>
             <p v-if="contextLine || docLabel" class="text-xs text-muted mt-1">
               {{ [docLabel, contextLine].filter(Boolean).join(" · ") }}
             </p>
@@ -272,18 +366,25 @@
             v-if="beispiel"
             class="rounded-card border border-dashed border-line bg-card-2 p-4"
           >
-            <p class="text-xs font-semibold uppercase tracking-wide text-faint mb-2">
+            <p
+              class="text-xs font-semibold uppercase tracking-wide text-faint mb-2"
+            >
               {{ t("session.q.example") }} 0
             </p>
-            <p v-if="beispiel.stem" class="text-sm text-ink mb-2">{{ beispiel.stem }}</p>
-            <p v-if="beispiel.context" class="text-sm text-ink mb-2">{{ beispiel.context }}</p>
+            <p v-if="beispiel.stem" class="text-sm text-ink mb-2">
+              {{ beispiel.stem }}
+            </p>
+            <p v-if="beispiel.context" class="text-sm text-ink mb-2">
+              {{ beispiel.context }}
+            </p>
             <ul v-if="beispiel.options" class="space-y-1">
               <li
                 v-for="(txt, key) in beispiel.options"
                 :key="key"
                 :class="[
                   'text-sm',
-                  String(key).toLowerCase() === String(beispiel.answer).toLowerCase()
+                  String(key).toLowerCase() ===
+                  String(beispiel.answer).toLowerCase()
                     ? 'font-semibold text-primary'
                     : 'text-muted',
                 ]"
@@ -298,7 +399,11 @@
 
           <!-- QCM avec plusieurs textes (Goethe B1 Lesen T2) -->
           <template v-if="hasTexts">
-            <div v-for="(textBlock, ti) in cfg.texts" :key="ti" class="space-y-3">
+            <div
+              v-for="(textBlock, ti) in cfg.texts"
+              :key="ti"
+              class="space-y-3"
+            >
               <img
                 v-if="textBlock?.image"
                 :src="`${apiBase}/images/${textBlock.image}`"
@@ -306,7 +411,9 @@
                 class="w-full rounded-leaf border border-line object-contain"
               />
               <div class="rounded-card border border-line bg-card p-4">
-                <p v-if="textBlock.source" class="text-xs text-faint mb-2">{{ textBlock.source }}</p>
+                <p v-if="textBlock.source" class="text-xs text-faint mb-2">
+                  {{ textBlock.source }}
+                </p>
                 <div
                   class="text-[15px] text-ink leading-relaxed"
                   v-html="formatText(textBlock.stimulus_text)"
@@ -321,7 +428,9 @@
                 <QuestionItem
                   :question="q"
                   :answer="answers[q.id]?.user_answer"
-                  @answer="(val: Record<string, any>) => emit('answer', q.id, val)"
+                  @answer="
+                    (val: Record<string, any>) => emit('answer', q.id, val)
+                  "
                 />
               </div>
             </div>
@@ -341,7 +450,10 @@
                 :stimulus-in-side="hasStimulus"
                 :teil-anzeigen="cfg.anzeigen"
                 :teil-word-bank="cfg.word_bank"
-                @answer="(val: Record<string, any>) => emit('answer', q.id, val)"
+                :taken-titres="takenTitresFor(q)"
+                @answer="
+                  (val: Record<string, any>) => emit('answer', q.id, val)
+                "
               />
             </div>
           </template>
@@ -394,12 +506,54 @@ const hasStimulus = computed(
 );
 
 const hasTexts = computed(
-  () => fmt.value === "qcm_abc" && Array.isArray(cfg.value.texts) && cfg.value.texts.length > 0,
+  () =>
+    fmt.value === "qcm_abc" &&
+    Array.isArray(cfg.value.texts) &&
+    cfg.value.texts.length > 0,
 );
 
 const titres = computed(
   () => cfg.value.titres || props.questions[0]?.content?.titres || {},
 );
+
+// Formats où chaque proposition ne sert qu'une fois
+const UNIQUE_CHOICE_FORMATS = new Set([
+  "zuordnung_titre",
+  "word_bank_gap_fill",
+]);
+const isUniqueChoice = computed(() => UNIQUE_CHOICE_FORMATS.has(fmt.value));
+
+// Numéro affiché : texte (titres) ou lacune (banque de mots)
+const choiceNumber = (q: any) => q.content?.gap_number ?? q.question_number;
+
+// Lettre choisie par chaque question
+const chosenTitre = (q: any): string | null => {
+  const key = props.answers[q.id]?.user_answer?.answer;
+  return key ? String(key).toLowerCase() : null;
+};
+
+// Titres déjà attribués { lettre: numéro du texte }, pour la liste de gauche
+const assignedTitres = computed<Record<string, number>>(() => {
+  if (!isUniqueChoice.value) return {};
+  const out: Record<string, number> = {};
+  for (const q of props.questions) {
+    const key = chosenTitre(q);
+    if (key) out[key] = choiceNumber(q);
+  }
+  return out;
+});
+
+// Pour un texte : les lettres prises par les AUTRES textes
+const takenTitresFor = (q: any): Record<string, number> => {
+  if (!isUniqueChoice.value) return {};
+  const out: Record<string, number> = {};
+  for (const other of props.questions) {
+    if (other.id === q.id) continue;
+    const key = chosenTitre(other);
+    if (key) out[key] = choiceNumber(other);
+  }
+  return out;
+};
 
 const contextLine = computed(
   () => cfg.value.topic || cfg.value.thema || cfg.value.context || "",
@@ -411,7 +565,9 @@ const docLabel = computed(() =>
 
 const beispiel = computed(() => {
   const b = cfg.value.beispiel;
-  return b && typeof b === "object" && (b.stem || b.context || b.answer) ? b : null;
+  return b && typeof b === "object" && (b.stem || b.context || b.answer)
+    ? b
+    : null;
 });
 
 const answeredCount = computed(
@@ -425,7 +581,9 @@ const questionsForText = (textBlock: any) => {
 
 const cardClass = (q: any) => [
   "border rounded-card p-4 sm:p-5 scroll-mt-4 transition-colors",
-  props.answers[q.id] ? "border-primary/30 bg-primary/5" : "border-line bg-card",
+  props.answers[q.id]
+    ? "border-primary/30 bg-primary/5"
+    : "border-line bg-card",
 ];
 
 const tabClass = (tab: "text" | "tasks") => [
@@ -458,6 +616,8 @@ const formatGapText = (text: string) =>
 const anzeigeText = (anzeige: any): string =>
   typeof anzeige === "object" ? (anzeige?.text ?? "") : String(anzeige);
 
-const anzeigeField = (anzeige: any, field: "title" | "contact" | "image"): string =>
-  typeof anzeige === "object" ? (anzeige?.[field] ?? "") : "";
+const anzeigeField = (
+  anzeige: any,
+  field: "title" | "contact" | "image",
+): string => (typeof anzeige === "object" ? (anzeige?.[field] ?? "") : "");
 </script>

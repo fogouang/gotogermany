@@ -66,6 +66,14 @@ class Center(Base, UUIDMixin, TimestampMixin):
     partner_payment_delay_hours: Mapped[int] = mapped_column(
         Integer, default=24, nullable=False, server_default="24"
     )
+    
+    # Période d'essai : activations offertes jusqu'à une date, dans la limite d'un nombre
+    trial_ends_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    trial_activations_left: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
 
     branches: Mapped[list["Branch"]] = relationship(
         "Branch", back_populates="center", lazy="noload"

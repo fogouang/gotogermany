@@ -30,6 +30,8 @@ from app.modules.assignments.schemas import (
     StudentAssignmentResponse,
     SubmissionGradingResponse,
     SubmissionRowResponse,
+    StudentScoreSheet,
+    StudentModuleScore
 )
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.modules.exams.models import Exam, Level, Module, Subject
@@ -367,6 +369,47 @@ class AssignmentService:
 
     # ── Élève ────────────────────────────────────────────
 
+    async def _score_sheet(self, subject_id: UUID, session_id: UUID | None) -> StudentScoreSheet | None:
+        """Points par module (score_breakdown en % ramené au max du module)."""
+        from app.modules.exams.models import Module
+
+        session = await self.db.get(ExamSession, session_id) if session_id else None
+        if not session or session.status == "IN_PROGRESS" or not session.score_breakdown:
+            return None
+
+        breakdown = session.score_breakdown
+        modules = (
+            await self.db.execute(
+                select(Module)
+                .where(Module.subject_id == subject_id)
+                .order_by(Module.display_order)
+            )
+        ).scalars().all()
+
+        rows: list[StudentModuleScore] = []
+        total = total_max = 0.0
+        for m in modules:
+            if m.slug not in breakdown:  # module non passé (oral, mode module seul)
+                continue
+            pct = breakdown[m.slug]
+            max_score = float(m.max_score or 0)
+            points = None if pct is None else round(float(pct) * max_score / 100, 1)
+            rows.append(StudentModuleScore(name=m.name, points=points, max_score=max_score))
+            total_max += max_score
+            if points is not None:
+                total += points
+
+        if not rows:
+            return None
+        is_final = session.status == "COMPLETED"
+        return StudentScoreSheet(
+            modules=rows,
+            total_points=round(total, 1),
+            total_max=total_max,
+            is_final=is_final,
+            passed=session.passed if is_final else None,
+        )
+
     async def list_for_student(self, student: User) -> list[StudentAssignmentResponse]:
         if student.role != UserRole.student:
             raise ForbiddenException(detail="Espace réservé aux élèves.")
@@ -407,6 +450,11 @@ class AssignmentService:
                 ),
                 status=status,
                 final_score=sub.final_score if sub and status == "graded" else None,
+                score_sheet=(
+                    await self._score_sheet(a.subject_id, sub.exam_session_id)
+                    if sub and status in ("submitted", "graded")
+                    else None
+                ),
             ))
         return out
 

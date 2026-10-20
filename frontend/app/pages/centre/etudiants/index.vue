@@ -20,7 +20,6 @@
       </div>
     </div>
 
-
     <!-- ── Filtres rapides (cliquables) ── -->
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <button
@@ -462,9 +461,11 @@
               <span class="text-sm text-muted">{{
                 t("centre.activation.to_collect")
               }}</span>
-              <span class="text-lg font-bold text-ink">{{
-                fcfa(selectedPlan.price)
-              }}</span>
+              <span
+                class="text-lg font-bold"
+                :class="isTrial ? 'text-emerald-600' : 'text-ink'"
+                >{{ isTrial ? fcfa(0) : fcfa(selectedPlan.price) }}</span
+              >
             </div>
             <div class="mt-1 flex items-center justify-between">
               <span class="text-sm text-muted">{{
@@ -474,7 +475,20 @@
                 formatDate(estimatedExpiry)
               }}</span>
             </div>
+            <p
+              v-if="isTrial"
+              class="mt-4 flex items-start gap-2 rounded-leaf bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-700 dark:text-emerald-400"
+            >
+              <i class="pi pi-gift mt-0.5" />
+              {{
+                t("centre.activation.trial_free", {
+                  n: salesStore.mySummary?.trial_activations_left ?? 0,
+                  date: formatDate(salesStore.mySummary!.trial_ends_at!),
+                })
+              }}
+            </p>
             <label
+              v-else
               class="mt-4 flex cursor-pointer items-start gap-2 text-sm text-ink"
             >
               <Checkbox v-model="activationForm.paid" binary class="mt-0.5" />
@@ -831,11 +845,14 @@ const estimatedExpiry = computed(() => {
   return new Date(start + plan.duration_days * DAY);
 });
 
+// Essai en cours : activation offerte, rien à encaisser
+const isTrial = computed(() => !!salesStore.mySummary?.trial_active);
+
 const canActivate = computed(
   () =>
     !!activationForm.value.level_id &&
     !!activationForm.value.plan_id &&
-    activationForm.value.paid &&
+    (activationForm.value.paid || isTrial.value) &&
     !activationBlocked.value,
 );
 

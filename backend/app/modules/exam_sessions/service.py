@@ -33,11 +33,14 @@ from app.modules.exam_sessions.schemas import (
     ModuleResultResponse,
     TeilResultResponse,
     AnswerDetailResponse,
+    BlockAdvanceRequest,
+    BlockStateResponse
 )
 from app.modules.exams.models import Exam, Level, Subject, Module, Teil
 from app.modules.exams.repository import ExamRepository
 from app.modules.questions.models import Question
 from app.shared.exceptions.http import BadRequestException, ForbiddenException, NotFoundException
+from app.modules.exam_access.visibility import can_see_private, is_assignment_session
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +131,51 @@ class ExamSessionService:
             started_at=session.started_at,
             modules=modules_data,
         )
+
+    # ── Blocs chronométrés ───────────────────────────────
+
+    MAX_BLOCK_MINUTES = 180
+
+    @staticmethod
+    def _block_state(session) -> BlockStateResponse:
+        return BlockStateResponse(
+            current_block=session.current_block or 0,
+            block_deadline=session.block_deadline,
+            server_now=datetime.now(timezone.utc),
+        )
+
+    async def get_block_state(self, session_id: UUID, user_id: UUID) -> BlockStateResponse:
+        session = await self._get_session_or_403(session_id, user_id)
+        return self._block_state(session)
+
+    async def advance_block(
+        self, session_id: UUID, user_id: UUID, data: BlockAdvanceRequest
+    ) -> BlockStateResponse:
+        """Démarre un bloc. Jamais de retour en arrière, jamais de saut, et un bloc
+        déjà démarré garde son heure de fin (un rechargement ne relance pas le chrono)."""
+        from datetime import timedelta
+
+        session = await self._get_session_or_403(session_id, user_id)
+        if session.status != "IN_PROGRESS":
+            raise BadRequestException(detail="Cette session est déjà soumise.")
+
+        current = session.current_block or 0
+        idx = data.block_index
+
+        if idx < current:
+            raise BadRequestException(detail="Ce bloc est déjà terminé.")
+        if idx == current and session.block_deadline is not None:
+            return self._block_state(session)
+        if idx > current + 1 or (idx == current + 1 and session.block_deadline is None):
+            raise BadRequestException(detail="Bloc invalide.")
+
+        minutes = max(1, min(int(data.minutes), self.MAX_BLOCK_MINUTES))
+        updated = await self.repo.update(
+            session.id,
+            current_block=idx,
+            block_deadline=datetime.now(timezone.utc) + timedelta(minutes=minutes),
+        )
+        return self._block_state(updated)
 
     # ── Réponses ─────────────────────────────────────────
 
@@ -330,8 +378,9 @@ class ExamSessionService:
             duration_seconds=int((now - session.started_at).total_seconds()),
         )
 
-        # Devoir (sujet privé) : on met à jour la copie et on ne révèle rien
-        if subject.is_private:
+        # Devoir : on met à jour la copie et on ne révèle rien
+        # (un sujet privé passé en entraînement libre par un indépendant a un résultat normal)
+        if subject.is_private and await is_assignment_session(self.db, session.id):
             from app.modules.assignments.service import AssignmentService
             await AssignmentService(self.db).on_session_submitted(session)
             return self._private_result(session, exam, subject, ev["total_pass_score"])
@@ -353,7 +402,7 @@ class ExamSessionService:
         answers = await self.answer_repo.get_by_session(session_id)
         subject = await self._load_subject_full(session.subject_id)
 
-        if subject.is_private:
+        if subject.is_private and await is_assignment_session(self.db, session.id):
             raise ForbiddenException(
                 detail="Le résultat de ce devoir se consulte dans votre espace Devoirs."
             )
@@ -400,7 +449,7 @@ class ExamSessionService:
             exam = await self.exam_repo.get_by_id(s.exam_id)
             subject = await self._get_subject(s.subject_id)
             # Les devoirs ont leur propre espace : pas dans l'historique d'entraînement
-            if subject and subject.is_private:
+            if subject and subject.is_private and await is_assignment_session(self.db, s.id):
                 continue
             result.append(SessionListResponse(
                 id=s.id,
@@ -483,10 +532,15 @@ class ExamSessionService:
                 raise NotFoundException(resource="Subject", identifier=str(subject_id))
             return subject
 
+        from app.modules.users.models import User
+
+        conditions = [Level.exam_id == exam_id, Subject.is_active == True]
+        if not can_see_private(await self.db.get(User, user_id)):
+            conditions.append(Subject.is_private == False)
         result = await self.db.execute(
             select(Subject)
             .join(Level, Level.id == Subject.level_id)
-            .where(Level.exam_id == exam_id, Subject.is_active == True, Subject.is_private == False)
+            .where(*conditions)
             .order_by(Subject.subject_number)
         )
         all_subjects = list(result.scalars().all())
@@ -593,6 +647,19 @@ class ExamSessionService:
             return raw / raw_max * teil.max_score, float(teil.max_score), pending
         return raw, raw_max, pending
 
+    @staticmethod
+    def _is_choice_module(module: Module) -> bool:
+        """Module a choix (ex. TELC B2 Schriftlicher Ausdruck : Aufgabe A ou B) :
+        plusieurs Teile valant chacune, a elle seule, le max du module.
+        Meme regle que la validation de l'import."""
+        if not module.max_score or len(module.teile) < 2:
+            return False
+        mmax = float(module.max_score)
+        return all(
+            t.max_score and abs(float(t.max_score) - mmax) <= 0.01
+            for t in module.teile
+        )
+
     def _module_points(
         self, module: Module, answer_map: dict
     ) -> tuple[float, float, bool]:
@@ -600,7 +667,22 @@ class ExamSessionService:
 
         TELC / ÖSD : la somme des Teile vaut déjà le max du module.
         Goethe     : 30 items -> 100 pts (équivalent du x 3,33).
+        Module a choix : seule la tache traitee compte (la meilleure si plusieurs).
         """
+        if self._is_choice_module(module):
+            mmax = float(module.max_score)
+            best: tuple[float, bool] | None = None
+            for teil in module.teile:
+                answered = any(q.id in answer_map for q in teil.questions)
+                if not answered:
+                    continue
+                g, _t, p = self._teil_points(teil, answer_map)
+                if best is None or g > best[0]:
+                    best = (g, p)
+            if best is None:
+                return 0.0, mmax, False
+            return best[0], mmax, best[1]
+
         got = total = 0.0
         pending = False
         for teil in module.teile:
@@ -778,6 +860,13 @@ class ExamSessionService:
                 ))
                 module_points += t_points
                 module_total += t_total
+
+            # Module a choix (Aufgabe A ou B) : seule la tache traitee compte
+            if self._is_choice_module(module):
+                module_points, module_total, choice_pending = self._module_points(
+                    module, answer_map
+                )
+                module_is_corrected = not choice_pending
 
             if module_is_corrected and module_total > 0:
                 score_on_100 = round(module_points / module_total * 100, 2)

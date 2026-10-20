@@ -79,6 +79,21 @@ class AssignmentDetailResponse(AssignmentSummaryResponse):
     submissions: list[SubmissionRowResponse] = []
 
 
+class StudentModuleScore(BaseSchema):
+    name: str
+    points: float | None  # None = en attente de correction (Schreiben)
+    max_score: float
+
+
+class StudentScoreSheet(BaseSchema):
+    """Relevé de points façon certificat : modules et total, jamais les réponses."""
+    modules: list[StudentModuleScore]
+    total_points: float
+    total_max: float
+    is_final: bool
+    passed: bool | None
+
+
 class StudentAssignmentResponse(BaseSchema):
     """Vue élève : uniquement la note finale, jamais le détail."""
     id: uuid.UUID
@@ -91,6 +106,7 @@ class StudentAssignmentResponse(BaseSchema):
     is_late: bool
     status: str
     final_score: float | None
+    score_sheet: StudentScoreSheet | None = None
 
 
 class GradeAnswer(BaseSchema):

@@ -192,6 +192,7 @@
     "popular": "Le plus choisi",
     "per_day": "soit",
     "per_day_suffix": "FCFA/jour",
+    "ai_credits": "{n} crédit IA inclus | {n} crédits IA inclus",
     "features": {
       "full_access": "Accès complet à l'examen et au niveau choisis",
       "all_modules": "Lesen, Hören, Schreiben et Sprechen inclus",
@@ -537,6 +538,8 @@
       "paragraph": "Paragraphe {n}",
       "abschnitt": "Passage {n}",
       "choose_title": "Choisissez le titre",
+      "title_taken": "Ce titre est déjà choisi pour le texte {n}. Chaque titre ne sert qu'une fois.",
+      "word_taken": "Ce mot est déjà placé dans la lacune {n}. Chaque mot ne sert qu'une fois.",
       "choose_word": "Choisissez le mot",
       "choose_heading": "Choisissez le titre du paragraphe",
       "choose_sentence": "Choisissez la phrase qui convient",
@@ -683,6 +686,7 @@
   },
   "exam_detail": {
     "not_found": "Examen introuvable",
+    "done_pending": "Fait · correction en cours",
     "back": "Retour",
     "levels": "Niveaux",
     "subjects": "Sujets",
@@ -1375,12 +1379,24 @@
       "live": "Session live",
       "progression": "Progression",
       "credits_history": "Historique crédits",
-      "settings": "Réglages"
+      "settings": "Réglages",
+      "join_requests": "Inscriptions",
+      "sales": "Mes ventes"
     },
     "pages": {
+      "sales": {
+        "title": "Mes ventes",
+        "subtitle": "Ce que votre centre a gagné et ses ventes"
+      },
       "dashboard": {
         "title": "Vue d'ensemble",
-        "subtitle": "Activité et crédits IA de votre centre"
+        "subtitle": "Activité et crédits IA de votre centre",
+        "kpi_earned": "Gagné",
+        "kpi_earned_hint": "Votre part sur toutes vos ventes"
+      },
+      "join_requests": {
+        "title": "Inscriptions",
+        "subtitle": "Lien d'inscription et comptes à valider"
       },
       "branches": {
         "title": "Mes centres",
@@ -1613,9 +1629,12 @@
       "col_plan": "Formule",
       "col_price": "Prix",
       "col_remaining": "Reste dû",
-      "col_status": "Statut"
+      "col_status": "Statut",
+      "trial_title": "Période d'essai en cours",
+      "trial_text": "Plus aucune activation offerte. | Encore {n} activation offerte, jusqu'au {date}. | Encore {n} activations offertes, jusqu'au {date}."
     },
     "sales": {
+      "col_share": "Part du centre",
       "status": {
         "settled": "Réglée",
         "overdue": "En retard",
@@ -1648,6 +1667,7 @@
       "access_until": "Jusqu'au {date}"
     },
     "activation": {
+      "trial_free": "Activation offerte · période d'essai. Il vous reste {n} activation(s) gratuite(s), jusqu'au {date}.",
       "title": "Activer un accès",
       "done_title": "Accès activé",
       "valid_until": "Accès valable jusqu'au {date}",
@@ -1925,6 +1945,17 @@
       "submitted": "En correction",
       "graded": "Corrigé"
     },
+    "sheet": {
+      "view": "Voir mon relevé",
+      "kicker": "Relevé de points",
+      "written": "Épreuve écrite",
+      "pending": "En attente de l'enseignant",
+      "result": "Résultat",
+      "passed": "Bestanden",
+      "failed": "Nicht bestanden",
+      "provisional": "Provisoire",
+      "provisional_hint": "L'expression écrite est en cours de correction par ton enseignant. Le total et le résultat seront définitifs après sa correction."
+    },
     "by": "par {name}",
     "due": "à rendre le {date}",
     "no_due": "Sans échéance",
@@ -2081,5 +2112,27 @@
     "approved": "Inscription validée",
     "rejected": "Inscription refusée",
     "reject_confirm": "Refuser l'inscription de {name} ?"
+  },
+  "error_page": {
+    "not_found_title": "Page introuvable",
+    "not_found_text": "Cette page n'existe pas ou a été déplacée.",
+    "error_title": "Une erreur est survenue",
+    "error_text": "Quelque chose s'est mal passé de notre côté. Réessaie dans un instant.",
+    "home": "Retour à l'accueil",
+    "my_space": "Aller à mon espace",
+    "back": "Retour"
+  },
+  "ambassador": {
+    "space": "Espace Ambassadeur",
+    "role": "Ambassadeur",
+    "nav": {
+      "program": "Programme ambassadeur"
+    },
+    "pages": {
+      "referrals": {
+        "title": "Programme ambassadeur",
+        "subtitle": "Vos filleuls et vos commissions"
+      }
+    }
   }
 }

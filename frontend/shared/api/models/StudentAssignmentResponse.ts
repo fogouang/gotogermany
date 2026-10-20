@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { StudentScoreSheet } from './StudentScoreSheet';
 /**
  * Vue élève : uniquement la note finale, jamais le détail.
  */
@@ -16,5 +17,6 @@ export type StudentAssignmentResponse = {
     is_late: boolean;
     status: string;
     final_score: (number | null);
+    score_sheet?: (StudentScoreSheet | null);
 };
 

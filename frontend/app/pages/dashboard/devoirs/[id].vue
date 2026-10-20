@@ -35,9 +35,23 @@
           }}
         </p>
         <Button
+          :label="t('student_assignments.sheet.view')"
+          icon="pi pi-file"
+          class="mt-6 w-full"
+          @click="
+            navigateTo(
+              localePath({
+                path: '/dashboard/devoirs',
+                query: { releve: assignmentId },
+              }),
+            )
+          "
+        />
+        <Button
           :label="t('student_assignments.back')"
           icon="pi pi-arrow-left"
-          class="mt-6 w-full"
+          text
+          class="mt-2 w-full"
           @click="backToList"
         />
       </div>
@@ -68,6 +82,58 @@
       </div>
     </div>
 
+    <!-- ── Entre deux blocs ── -->
+    <div
+      v-else-if="phase === 'transition'"
+      class="flex flex-1 items-center justify-center overflow-y-auto px-4 py-10"
+    >
+      <div
+        class="w-full max-w-lg rounded-card border border-line bg-card p-6 text-center shadow-soft sm:p-8"
+      >
+        <div
+          class="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-emerald-500/10"
+        >
+          <i class="pi pi-check text-xl text-emerald-600" />
+        </div>
+        <h2 class="text-xl font-bold text-ink">
+          {{
+            t("session.player.transition_done", {
+              name: blockLabel(currentBlock),
+            })
+          }}
+        </h2>
+        <p class="mt-1 text-sm text-muted">
+          {{
+            t("session.player.answered", {
+              answered: blockAnswered,
+              total: blockQuestions.length,
+            })
+          }}
+        </p>
+
+        <div
+          v-if="nextBlock"
+          class="mt-6 rounded-leaf border border-line bg-card-2 p-4 text-left"
+        >
+          <p class="text-xs font-semibold uppercase tracking-wide text-faint">
+            {{ t("session.player.transition_next") }}
+          </p>
+          <p class="mt-1 font-semibold text-ink">{{ blockLabel(nextBlock) }}</p>
+          <p class="mt-0.5 text-sm text-muted">
+            <i class="pi pi-clock mr-1 text-xs" />
+            {{ t("session.player.intro_minutes", { n: nextBlock.minutes }) }}
+          </p>
+        </div>
+
+        <Button
+          class="mt-6 w-full"
+          :label="t('session.player.transition_start')"
+          icon="pi pi-play"
+          @click="startBlock(blockIndex + 1)"
+        />
+      </div>
+    </div>
+
     <!-- ── Lecteur ── -->
     <template v-else-if="sessionStore.sessionId && currentModule">
       <SessionHeader
@@ -76,10 +142,10 @@
         :subject-number="sessionStore.subjectNumber"
         :module-name="currentModule.name"
         :teil-label="teilLabel"
-        :step-index="currentTeilIndex"
-        :step-count="currentModule.teile?.length ?? 0"
-        :answered="sessionStore.answeredQuestions"
-        :total="sessionStore.totalQuestions"
+        :step-index="stepIndex"
+        :step-count="steps.length"
+        :answered="blockAnswered"
+        :total="blockQuestions.length"
         :time-remaining="sessionStore.timeRemaining"
         :can-font-down="fontStep > 0"
         :can-font-up="fontStep < FONT_SCALES.length - 1"
@@ -87,21 +153,21 @@
         @exit="exitDialogVisible = true"
       />
 
+      <!-- Modules : seuls ceux du bloc en cours sont accessibles -->
       <div class="shrink-0 border-b border-line bg-card">
         <div class="mx-auto flex max-w-7xl overflow-x-auto px-4">
           <button
             v-for="(mod, mi) in sessionStore.modules"
             :key="mod.id"
             type="button"
-            class="whitespace-nowrap border-b-2 px-5 py-3 text-sm font-medium transition-colors"
-            :class="
-              mi === currentModuleIndex
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted hover:text-ink'
+            :disabled="
+              moduleState(mi) === 'done' || moduleState(mi) === 'locked'
             "
+            class="whitespace-nowrap border-b-2 px-5 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed"
+            :class="tabClass(mi)"
             @click="goToModule(mi)"
           >
-            <i class="pi mr-2" :class="getModuleIcon(mod.slug)" />
+            <i class="pi mr-2" :class="tabIcon(mod.slug, mi)" />
             {{ mod.name }}
           </button>
         </div>
@@ -110,7 +176,7 @@
       <div class="min-h-0 flex-1 overflow-y-auto">
         <component
           :is="currentView"
-          :key="`${currentModuleIndex}-${currentTeilIndex}`"
+          :key="`${blockIndex}-${stepIndex}`"
           :teil="currentTeil"
           :questions="currentTeilQuestions"
           :answers="sessionStore.answers"
@@ -124,10 +190,12 @@
       <SessionFooter
         class="shrink-0"
         :can-prev="stepIndex > 0"
-        :is-last-step="stepIndex >= steps.length - 1"
-        :finish-label="t('session.submit')"
-        :answered="sessionStore.answeredQuestions"
-        :total="sessionStore.totalQuestions"
+        :is-last-step="isLastStep"
+        :finish-label="
+          isLastBlock ? t('session.submit') : t('session.player.finish_module')
+        "
+        :answered="blockAnswered"
+        :total="blockQuestions.length"
         @prev="goToStep(stepIndex - 1)"
         @next="goToStep(stepIndex + 1)"
         @finish="submitDialogVisible = true"
@@ -135,11 +203,16 @@
       />
     </template>
 
-    <!-- ══════════ Feuille de réponses ══════════ -->
+    <!-- ══════════ Feuille de réponses (bloc en cours) ══════════ -->
     <SessionAnswerSheet
       v-model:visible="sheetVisible"
       :groups="sheetGroups"
-      @go="(idx) => { goToStep(idx); sheetVisible = false; }"
+      @go="
+        (idx) => {
+          goToStep(idx);
+          sheetVisible = false;
+        }
+      "
     />
 
     <!-- ══════════ Quitter ══════════ -->
@@ -167,23 +240,37 @@
       </template>
     </Dialog>
 
-    <!-- ══════════ Rendre ══════════ -->
+    <!-- ══════════ Terminer le bloc / rendre le devoir ══════════ -->
     <Dialog
       v-model:visible="submitDialogVisible"
-      :header="t('session.submit_title')"
+      :header="
+        isLastBlock
+          ? t('session.submit_title')
+          : t('session.player.finish_module_title')
+      "
       modal
       :style="{ width: '26rem', maxWidth: '95vw' }"
     >
       <p class="mb-3 text-sm text-ink">
-        {{ t("session.player.answered", { answered: sessionStore.answeredQuestions, total: sessionStore.totalQuestions }) }}
+        {{
+          t("session.player.answered", {
+            answered: blockAnswered,
+            total: blockQuestions.length,
+          })
+        }}
       </p>
-      <Message
-        v-if="unanswered > 0"
-        severity="warn"
-        :closable="false"
-      >
-        {{ t("session.player.unanswered", { n: unanswered }, unanswered) }}
+      <Message v-if="blockUnanswered > 0" severity="warn" :closable="false">
+        {{
+          t(
+            "session.player.unanswered",
+            { n: blockUnanswered },
+            blockUnanswered,
+          )
+        }}
       </Message>
+      <p v-if="!isLastBlock" class="mt-3 text-sm text-muted">
+        {{ t("session.player.finish_module_text") }}
+      </p>
       <Message
         v-if="submitError"
         severity="error"
@@ -199,10 +286,14 @@
           @click="submitDialogVisible = false"
         />
         <Button
-          :label="t('session.submit')"
+          :label="
+            isLastBlock
+              ? t('session.submit')
+              : t('session.player.finish_module')
+          "
           severity="success"
           :loading="sessionStore.isSubmitting"
-          @click="handleSubmit"
+          @click="confirmFinish"
         />
       </template>
     </Dialog>
@@ -219,6 +310,8 @@ import SessionAnswerSheet from "~/components/session/SessionAnswerSheet.vue";
 
 definePageMeta({ layout: false });
 
+type Phase = "running" | "transition";
+type Block = { key: string; moduleIndexes: number[]; minutes: number };
 type Step = { mi: number; ti: number };
 
 const route = useRoute();
@@ -234,8 +327,9 @@ const initialized = ref(false);
 const submitted = ref(false);
 const autoGraded = ref(false);
 const submitError = ref("");
-const currentModuleIndex = ref(0);
-const currentTeilIndex = ref(0);
+const phase = ref<Phase>("running");
+const blockIndex = ref(0);
+const stepIndex = ref(0);
 const exitDialogVisible = ref(false);
 const submitDialogVisible = ref(false);
 const sheetVisible = ref(false);
@@ -244,74 +338,106 @@ const sheetVisible = ref(false);
 const slugText = (slug?: string) => (slug || "").toLowerCase();
 const isOralSlug = (slug?: string) =>
   ["sprech", "muendlich", "mündlich"].some((p) => slugText(slug).includes(p));
+const isSchreibenSlug = (slug?: string) =>
+  slugText(slug).includes("schreib") || slugText(slug).includes("schriftlich");
+const isHorenSlug = (slug?: string) =>
+  ["hor", "hoer", "hör"].some((p) => slugText(slug).includes(p));
 
-// ── Lecteur ──
+// ── Blocs chronométrés (même règle que le lecteur d'examen) ──
+// Un module à 0 min rejoint le bloc précédent
+// (TELC : Leseverstehen + Sprachbausteine = un seul bloc de 90 min).
+const blocks = computed<Block[]>(() => {
+  const out: Block[] = [];
+  sessionStore.modules.forEach((m: any, i: number) => {
+    const minutes = Number(m.time_limit_minutes) || 0;
+    const last = out[out.length - 1];
+    if (minutes === 0 && last) {
+      last.moduleIndexes.push(i);
+      return;
+    }
+    out.push({ key: String(m.id), moduleIndexes: [i], minutes: minutes || 30 });
+  });
+  return out;
+});
+
+const currentBlock = computed(() => blocks.value[blockIndex.value]);
+const nextBlock = computed(() => blocks.value[blockIndex.value + 1]);
+const isLastBlock = computed(() => blockIndex.value >= blocks.value.length - 1);
+
+const blockLabel = (block?: Block) =>
+  block
+    ? block.moduleIndexes
+        .map((mi) => sessionStore.modules[mi]?.name)
+        .filter(Boolean)
+        .join(" + ")
+    : "";
+
+const blockOfModule = (mi: number) =>
+  blocks.value.findIndex((b) => b.moduleIndexes.includes(mi));
+
+// ── Étapes (Teile) du bloc courant ──
+const steps = computed<Step[]>(() => {
+  const block = currentBlock.value;
+  if (!block) return [];
+  return block.moduleIndexes.flatMap((mi) =>
+    (sessionStore.modules[mi]?.teile ?? []).map((_: unknown, ti: number) => ({
+      mi,
+      ti,
+    })),
+  );
+});
+
+const currentStep = computed(() => steps.value[stepIndex.value]);
+const currentModuleIndex = computed(() => currentStep.value?.mi ?? 0);
 const currentModule = computed(
   () => sessionStore.modules[currentModuleIndex.value],
 );
 const currentTeil = computed(
-  () => currentModule.value?.teile?.[currentTeilIndex.value],
+  () => currentModule.value?.teile?.[currentStep.value?.ti ?? 0],
 );
+const isLastStep = computed(() => stepIndex.value >= steps.value.length - 1);
 
 const currentTeilQuestions = computed(() => {
-  if (!currentTeil.value) return [];
-  const teilId = currentTeil.value.id;
+  const teilId = currentTeil.value?.id;
+  if (!teilId) return [];
   return sessionStore.questions.filter((q) => q.teil_id === teilId);
 });
 
-const isSchreibenModule = computed(() => {
-  const slug = slugText(currentModule.value?.slug);
-  return slug.includes("schreib") || slug.includes("schriftlich");
-});
+const isSchreibenModule = computed(() =>
+  isSchreibenSlug(currentModule.value?.slug),
+);
 
 const currentView = computed(() => {
-  const slug = slugText(currentModule.value?.slug);
-  if (slug.includes("hor") || slug.includes("hoer") || slug.includes("hör"))
-    return HorenView;
-  if (slug.includes("schreib") || slug.includes("schriftlich"))
-    return SchreibenView;
+  const slug = currentModule.value?.slug;
+  if (isHorenSlug(slug)) return HorenView;
+  if (isSchreibenSlug(slug)) return SchreibenView;
   return LesenView; // Lesen, Leseverstehen, Sprachbausteine
 });
 
 const teilLabel = computed(() => {
   const total = currentModule.value?.teile?.length ?? 0;
-  const base = t("session.player.teil", { n: currentTeilIndex.value + 1, total });
+  const base = t("session.player.teil", {
+    n: (currentStep.value?.ti ?? 0) + 1,
+    total,
+  });
   const name = currentTeil.value?.config?.name;
   return name ? `${base} · ${name}` : base;
 });
 
-const unanswered = computed(
-  () => sessionStore.totalQuestions - sessionStore.answeredQuestions,
+// ── Réponses du bloc ──
+const blockQuestions = computed(() => {
+  const teilIds = new Set(
+    steps.value.map((s) => sessionStore.modules[s.mi]?.teile?.[s.ti]?.id),
+  );
+  return sessionStore.questions.filter((q) => teilIds.has(q.teil_id));
+});
+
+const blockAnswered = computed(
+  () => blockQuestions.value.filter((q) => !!sessionStore.answers[q.id]).length,
 );
-
-// ── Étapes (tous les Teile de tous les modules) ──
-const steps = computed<Step[]>(() =>
-  sessionStore.modules.flatMap((m, mi) =>
-    (m.teile ?? []).map((_: unknown, ti: number) => ({ mi, ti })),
-  ),
+const blockUnanswered = computed(
+  () => blockQuestions.value.length - blockAnswered.value,
 );
-
-const stepIndex = computed(() =>
-  steps.value.findIndex(
-    (s) => s.mi === currentModuleIndex.value && s.ti === currentTeilIndex.value,
-  ),
-);
-
-function goToStep(idx: number) {
-  const target = steps.value[idx];
-  if (!target) return;
-  if (target.mi !== currentModuleIndex.value) {
-    sessionStore.switchToModule(target.mi);
-    currentModuleIndex.value = target.mi;
-  }
-  currentTeilIndex.value = target.ti;
-}
-
-const goToModule = (index: number) => {
-  sessionStore.switchToModule(index);
-  currentModuleIndex.value = index;
-  currentTeilIndex.value = 0;
-};
 
 const sheetGroups = computed(() =>
   steps.value.map((s, idx) => {
@@ -333,14 +459,139 @@ const sheetGroups = computed(() =>
   }),
 );
 
+// ── Onglets des modules ──
+type ModuleState = "current" | "block" | "done" | "locked";
+
+function moduleState(mi: number): ModuleState {
+  if (mi === currentModuleIndex.value) return "current";
+  const bi = blockOfModule(mi);
+  if (bi === blockIndex.value) return "block";
+  return bi < blockIndex.value ? "done" : "locked";
+}
+
+const tabClass = (mi: number) => {
+  switch (moduleState(mi)) {
+    case "current":
+      return "border-primary text-primary";
+    case "block":
+      return "border-transparent text-muted hover:text-ink";
+    case "done":
+      return "border-transparent text-emerald-600 opacity-70";
+    default:
+      return "border-transparent text-faint";
+  }
+};
+
 const getModuleIcon = (slug: string) => {
   const s = slugText(slug);
   if (s.includes("sprachbaustein")) return "pi-language";
   if (s.includes("lese")) return "pi-book";
-  if (s.includes("hor") || s.includes("hoer") || s.includes("hör")) return "pi-volume-up";
-  if (s.includes("schreib") || s.includes("schriftlich")) return "pi-pencil";
+  if (isHorenSlug(s)) return "pi-volume-up";
+  if (isSchreibenSlug(s)) return "pi-pencil";
   return "pi-file";
 };
+
+const tabIcon = (slug: string, mi: number) => {
+  const state = moduleState(mi);
+  if (state === "done") return "pi-check-circle";
+  if (state === "locked") return "pi-lock";
+  return getModuleIcon(slug);
+};
+
+// ── Navigation (dans le bloc uniquement) ──
+
+// Change de module dans le store sans toucher au chrono du bloc
+function syncStoreModule(mi: number) {
+  const remaining = sessionStore.timeRemaining;
+  const deadline = sessionStore.deadline;
+  sessionStore.switchToModule(mi);
+  sessionStore.timeRemaining = remaining;
+  sessionStore.deadline = deadline;
+}
+
+function goToStep(idx: number) {
+  const target = steps.value[idx];
+  if (!target) return;
+  if (target.mi !== currentModuleIndex.value) syncStoreModule(target.mi);
+  stepIndex.value = idx;
+}
+
+function goToModule(mi: number) {
+  if (blockOfModule(mi) !== blockIndex.value) return;
+  const idx = steps.value.findIndex((s) => s.mi === mi);
+  if (idx !== -1) goToStep(idx);
+}
+
+// Heure de fin du serveur, corrigée de l'écart d'horloge du navigateur
+const serverDeadline = (s: {
+  block_deadline?: string | null;
+  server_now: string;
+}) =>
+  Date.parse(s.block_deadline as string) +
+  (Date.now() - Date.parse(s.server_now));
+
+function runBlock(bi: number, deadline: number) {
+  const block = blocks.value[bi];
+  const firstModule = block?.moduleIndexes[0];
+  if (!block || firstModule === undefined) return;
+
+  blockIndex.value = bi;
+  stepIndex.value = 0;
+  sessionStore.sharedTimer = true; // le chrono est géré par la page, bloc par bloc
+  sessionStore.switchToModule(firstModule);
+  sessionStore.deadline = deadline;
+  sessionStore.timeRemaining = Math.max(
+    0,
+    Math.round((deadline - Date.now()) / 1000),
+  );
+  phase.value = "running";
+  startTimer();
+}
+
+async function startBlock(bi: number) {
+  const block = blocks.value[bi];
+  if (!block) return;
+  // Le serveur fixe l'heure de fin et refuse tout retour en arrière
+  const state = await sessionStore.advanceBlock(bi, block.minutes);
+  runBlock(
+    bi,
+    state?.block_deadline
+      ? serverDeadline(state)
+      : Date.now() + block.minutes * 60_000,
+  );
+}
+
+// Reprise après rechargement : bloc et temps restant donnés par le serveur
+async function resumeFromServer(): Promise<boolean> {
+  const state = await sessionStore.fetchBlockState();
+  if (!state?.block_deadline || !blocks.value.length) return false;
+
+  const bi = Math.min(state.current_block, blocks.value.length - 1);
+  const deadline = serverDeadline(state);
+  if (deadline > Date.now()) {
+    runBlock(bi, deadline);
+    return true;
+  }
+
+  // Le temps du bloc s'est écoulé pendant l'absence
+  blockIndex.value = bi;
+  if (bi >= blocks.value.length - 1) {
+    handleSubmit();
+  } else {
+    phase.value = "transition";
+  }
+  return true;
+}
+
+function confirmFinish() {
+  if (isLastBlock.value) {
+    handleSubmit();
+    return;
+  }
+  submitDialogVisible.value = false;
+  stopTimer();
+  phase.value = "transition";
+}
 
 // ── Taille du texte (police racine, tout est en rem) ──
 const FONT_SCALES = [0.9, 1, 1.1, 1.25, 1.4];
@@ -370,7 +621,8 @@ function restoreFontStep() {
     const raw = localStorage.getItem(FONT_KEY);
     if (raw === null) return;
     const v = Number(raw);
-    if (Number.isInteger(v) && v >= 0 && v < FONT_SCALES.length) fontStep.value = v;
+    if (Number.isInteger(v) && v >= 0 && v < FONT_SCALES.length)
+      fontStep.value = v;
   } catch {
     /* ignore */
   }
@@ -383,9 +635,9 @@ const warned = new Set<string>();
 function warnIfLowTime() {
   const remaining = sessionStore.timeRemaining;
   if (remaining <= 0) return;
-  const moduleId = currentModule.value?.id ?? "";
+  const blockKey = currentBlock.value?.key ?? "";
   for (const seuil of WARN_AT_SECONDS) {
-    const key = `${moduleId}-${seuil}`;
+    const key = `${blockKey}-${seuil}`;
     if (remaining <= seuil && !warned.has(key)) {
       warned.add(key);
       const n = Math.ceil(remaining / 60);
@@ -407,30 +659,40 @@ const onAnswer = async (questionId: string, value: any) => {
   if (!res?.success) warnSaveFailed();
 };
 
-// ── Minuteur unique, basé sur l'heure réelle ──
+// ── Chrono du bloc, basé sur l'heure réelle ──
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-const stopTimer = () => {
+function stopTimer() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
-};
+}
 
-const startTimer = () => {
+function startTimer() {
   stopTimer();
   timerInterval = setInterval(() => {
     sessionStore.tick();
     warnIfLowTime();
-
-    if (sessionStore.timeRemaining <= 0) {
-      stopTimer();
-      notify.info(t("toast.time_up"), t("toast.time_up_detail"));
-      handleSubmit();
-    }
+    if (sessionStore.timeRemaining <= 0) onTimeUp();
   }, 1000);
-};
+}
+
+function onTimeUp() {
+  stopTimer();
+  if (isLastBlock.value) {
+    notify.info(t("toast.time_up"), t("toast.time_up_detail"));
+    handleSubmit();
+    return;
+  }
+  notify.info(
+    t("session.player.time_up_module"),
+    t("session.player.time_up_module_detail"),
+  );
+  submitDialogVisible.value = false;
+  phase.value = "transition";
+}
 
 // ── Remise (sans correction IA : c'est l'enseignant qui corrige) ──
-const handleSubmit = async () => {
+async function handleSubmit() {
   if (sessionStore.isSubmitting || submitted.value) return;
   submitError.value = "";
   stopTimer();
@@ -446,21 +708,24 @@ const handleSubmit = async () => {
   autoGraded.value = sessionStore.status === "COMPLETED";
   submitted.value = true;
   sessionStore.resetSession();
-};
+}
 
 // ── Sortie ──
 const backToList = () => navigateTo(localePath("/dashboard/devoirs"));
 
-const exitAssignment = () => {
+function exitAssignment() {
   stopTimer();
   sessionStore.resetSession();
   backToList();
-};
+}
 
 // ── Chargement ──
-const load = async () => {
+async function load() {
   initialized.value = false;
   submitted.value = false;
+  phase.value = "running";
+  blockIndex.value = 0;
+  stepIndex.value = 0;
   stopTimer();
   warned.clear();
 
@@ -468,18 +733,19 @@ const load = async () => {
 
   if (result.success) {
     // Oral : évalué en session live avec l'enseignant, pas dans le devoir
-    sessionStore.modules = sessionStore.modules.filter((m) => !isOralSlug(m.slug));
+    sessionStore.modules = sessionStore.modules.filter(
+      (m) => !isOralSlug(m.slug),
+    );
     sessionStore.questions = sessionStore.questions.filter((q) =>
-      sessionStore.modules.some((m) => m.teile?.some((tl) => tl.id === q.teil_id)),
+      sessionStore.modules.some((m) =>
+        m.teile?.some((tl) => tl.id === q.teil_id),
+      ),
     );
   }
 
-  currentModuleIndex.value = 0;
-  currentTeilIndex.value = 0;
-  if (sessionStore.modules.length) sessionStore.switchToModule(0);
   initialized.value = true;
 
-  if (result.success) {
+  if (result.success && sessionStore.modules.length) {
     const restored = Object.keys(sessionStore.answers).length;
     if (restored > 0) {
       notify.info(
@@ -487,9 +753,10 @@ const load = async () => {
         t("toast.session_resumed_detail", { n: restored }, restored),
       );
     }
-    startTimer();
+    // Devoir déjà commencé : reprise au bon bloc ; sinon premier bloc
+    if (!(await resumeFromServer())) await startBlock(0);
   }
-};
+}
 
 onMounted(() => {
   restoreFontStep();

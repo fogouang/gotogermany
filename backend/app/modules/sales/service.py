@@ -29,6 +29,7 @@ from app.modules.sales.schemas import (
     PartnerSaleResponse,
     PartnerSettingsUpdate,
     PartnerSummaryResponse,
+    PlatformRevenueResponse,
     SettlementCreate,
 )
 from app.modules.users.models import User, UserRole
@@ -66,6 +67,18 @@ class Partner:
     can_activate: bool
     unpaid_limit: int | None
     payment_delay_hours: int
+    trial_until: datetime | None = None
+    trial_left: int = 0
+
+    @property
+    def trial_active(self) -> bool:
+        """Essai en cours : centre, activations restantes et date non dépassée."""
+        return (
+            self.type == CENTER
+            and self.trial_left > 0
+            and self.trial_until is not None
+            and self.trial_until > _now()
+        )
 
     @property
     def sale_filter(self):
@@ -100,6 +113,7 @@ class SalesService:
             return Partner(
                 CENTER, center.id, center.name, center.partner_can_activate,
                 center.partner_unpaid_limit, center.partner_payment_delay_hours,
+                center.trial_ends_at, center.trial_activations_left or 0,
             )
 
         if partner_type == AMBASSADOR:
@@ -247,8 +261,18 @@ class SalesService:
             )
         return None
 
+    async def _earned(self, partner: Partner) -> int:
+        """Total gagné par le partenaire : sa part sur toutes ses ventes."""
+        result = await self.db.execute(
+            select(func.coalesce(func.sum(PartnerSale.partner_share), 0)).where(
+                partner.sale_filter
+            )
+        )
+        return int(result.scalar_one())
+
     async def summary(self, partner: Partner) -> PartnerSummaryResponse:
         owed_platform, owed_partner, overdue_amount, overdue_count = await self._sums(partner)
+        earned = await self._earned(partner)
         # new_amount=1 : bloqué si la prochaine activation, quelle qu'elle soit, serait refusée
         reason = self._block_reason(partner, owed_platform, overdue_count, 1)
         return PartnerSummaryResponse(
@@ -265,6 +289,10 @@ class SalesService:
             overdue_count=overdue_count,
             is_blocked=reason is not None,
             block_reason=reason,
+            earned_total=earned,
+            trial_active=partner.trial_active,
+            trial_ends_at=partner.trial_until,
+            trial_activations_left=partner.trial_left,
         )
 
     # ── Activation d'un compte ───────────────────────────
@@ -305,9 +333,17 @@ class SalesService:
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
 
-        rule = await self.resolve_rule(partner, plan.id)
-        partner_share = compute_partner_share(plan.price, rule.rule_type, rule.value)
-        platform_share = plan.price - partner_share
+        trial = partner.trial_active
+        if trial:
+            # Essai : activation offerte, rien à encaisser ni à reverser
+            price = partner_share = platform_share = 0
+            rule_type, rule_value = "percent", Decimal(100)
+        else:
+            rule = await self.resolve_rule(partner, plan.id)
+            price = plan.price
+            partner_share = compute_partner_share(plan.price, rule.rule_type, rule.value)
+            platform_share = plan.price - partner_share
+            rule_type, rule_value = rule.rule_type, rule.value
 
         owed_platform, _, _, overdue_count = await self._sums(partner)
         reason = self._block_reason(partner, owed_platform, overdue_count, platform_share)
@@ -323,8 +359,8 @@ class SalesService:
             level_id=level.id,
             plan_id=plan.id,
             promo_code_id=None,
-            amount_gross=plan.price,
-            amount_paid=plan.price,
+            amount_gross=price,
+            amount_paid=price,
             commission_due=0.0,
             currency="XAF",
             payment_status="COMPLETED",
@@ -346,13 +382,14 @@ class SalesService:
             user_id=partner.id if partner.type == AMBASSADOR else None,
             activated_by=actor.id,
             direction="partner_owes",
-            price=plan.price,
+            price=price,
             partner_share=partner_share,
             platform_share=platform_share,
             amount_due=platform_share,
             settled_amount=0,
-            rule_type=rule.rule_type,
-            rule_value=rule.value,
+            rule_type=rule_type,
+            rule_value=rule_value,
+            is_trial=trial,
             due_at=now + timedelta(hours=partner.payment_delay_hours),
             status="due" if platform_share > 0 else "settled",
             settled_at=None if platform_share > 0 else now,
@@ -364,7 +401,15 @@ class SalesService:
         plan_name = plan.name
         access_expires_at = now + timedelta(days=plan.duration_days)
 
-        # Crée/renouvelle l'ExamAccess et valide toute la transaction (commit)
+        # Essai : une activation offerte de moins (ligne du centre déjà verrouillée)
+        if trial:
+            from app.modules.centers.models import Center
+
+            center = await self.db.get(Center, partner.id)
+            center.trial_activations_left = max(0, (center.trial_activations_left or 0) - 1)
+
+        # Crée/renouvelle l'ExamAccess, ajoute les credits IA du plan
+        # et valide toute la transaction (commit)
         payment_service = PaymentService(self.db)
         await payment_service._grant_level_access(payment)
         await payment_service._generate_invoice(payment)
@@ -528,6 +573,7 @@ class SalesService:
             is_overdue=is_overdue,
             status=sale.status,
             created_at=sale.created_at,
+            is_trial=bool(sale.is_trial),
         )
 
     async def list_sales(self, partner: Partner, limit: int = 50, offset: int = 0) -> list[PartnerSaleResponse]:
@@ -552,6 +598,51 @@ class SalesService:
         )
         return list(result.scalars().all())
 
+    async def platform_revenue(self) -> PlatformRevenueResponse:
+        """Chiffre global : tout ce qui est encaissé, moins la part des partenaires."""
+        from app.modules.payments.models import Payment
+
+        now = _now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        in_month = Payment.completed_at >= month_start
+        is_partner = Payment.operator == "PARTNER"
+        pay = (
+            await self.db.execute(
+                select(
+                    func.coalesce(func.sum(Payment.amount_paid), 0),
+                    func.coalesce(func.sum(case((in_month, Payment.amount_paid), else_=0)), 0),
+                    func.coalesce(func.sum(case((is_partner, Payment.amount_paid), else_=0)), 0),
+                ).where(Payment.payment_status == "COMPLETED")
+            )
+        ).one()
+
+        sale_in_month = PartnerSale.created_at >= month_start
+        com = (
+            await self.db.execute(
+                select(
+                    func.coalesce(func.sum(PartnerSale.partner_share), 0),
+                    func.coalesce(
+                        func.sum(case((sale_in_month, PartnerSale.partner_share), else_=0)), 0
+                    ),
+                )
+            )
+        ).one()
+
+        gross_total, gross_month, partner_total = int(pay[0]), int(pay[1]), int(pay[2])
+        commissions_total, commissions_month = int(com[0]), int(com[1])
+
+        return PlatformRevenueResponse(
+            gross_total=gross_total,
+            commissions_total=commissions_total,
+            net_total=gross_total - commissions_total,
+            gross_month=gross_month,
+            commissions_month=commissions_month,
+            net_month=gross_month - commissions_month,
+            direct_total=gross_total - partner_total,
+            partner_total=partner_total,
+        )
+
     async def admin_overview(self) -> list[PartnerSummaryResponse]:
         from app.modules.centers.models import Center
 
@@ -561,6 +652,7 @@ class SalesService:
             out.append(await self.summary(Partner(
                 CENTER, c.id, c.name, c.partner_can_activate,
                 c.partner_unpaid_limit, c.partner_payment_delay_hours,
+                c.trial_ends_at, c.trial_activations_left or 0,
             )))
         ambassadors = (
             await self.db.execute(
@@ -596,6 +688,13 @@ class SalesService:
             obj.partner_unpaid_limit = values["unpaid_limit"]
         if values.get("payment_delay_hours") is not None:
             obj.partner_payment_delay_hours = values["payment_delay_hours"]
+
+        # Période d'essai : centres uniquement
+        if partner_type == CENTER:
+            if "trial_ends_at" in values:  # null explicite = fin de l'essai
+                obj.trial_ends_at = values["trial_ends_at"]
+            if values.get("trial_activations_left") is not None:
+                obj.trial_activations_left = values["trial_activations_left"]
 
         await self.db.commit()
         return await self.summary(await self.get_partner(partner_type, partner_id))

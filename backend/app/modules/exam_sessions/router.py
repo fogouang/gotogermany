@@ -18,6 +18,8 @@ from app.modules.exam_sessions.schemas import (
     SessionResultResponse,
     SessionStartRequest,
     SessionStartResponse,
+    BlockStateResponse,
+    BlockAdvanceRequest
 )
 from app.modules.exam_sessions.service import ExamSessionService
 from app.shared.database.session import get_db
@@ -133,6 +135,27 @@ async def submit_bulk_answers(
         user_id=current_user.id,
         data=data,
     )
+
+
+@router.get("/{session_id}/block", response_model=BlockStateResponse)
+async def get_block_state(
+    session_id: UUID,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Bloc en cours et heure de fin, pour reprendre après un rechargement."""
+    return await ExamSessionService(db).get_block_state(session_id, current_user.id)
+
+
+@router.post("/{session_id}/block", response_model=BlockStateResponse)
+async def advance_block(
+    session_id: UUID,
+    data: BlockAdvanceRequest,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Démarre le bloc suivant (ou renvoie le bloc en cours s'il a déjà démarré)."""
+    return await ExamSessionService(db).advance_block(session_id, current_user.id, data)
 
 
 @router.post("/{session_id}/submit", response_model=SessionResultResponse)
