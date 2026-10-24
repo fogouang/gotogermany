@@ -242,12 +242,24 @@ def parse_free_text(teil_data: dict) -> list[dict]:
     if teil_data.get("graph_description"):
         content["graph_description"] = teil_data["graph_description"]
 
+    # TestDaF digital : thème (Aufgabe 1), question + texte + graphique (Aufgabe 2), minimum de mots
+    for key in ("thema", "fragestellung", "stimulus_text", "grafik"):
+        if teil_data.get(key):
+            content[key] = teil_data[key]
+    if teil_data.get("word_count_min"):
+        content["word_count_min"] = teil_data["word_count_min"]
+        if "word_count_target" not in teil_data:
+            content["word_count_target"] = teil_data["word_count_min"]
+
     correct_answer = {
         "musterlösung": teil_data.get("musterlösung", "") or teil_data.get("musterloesung", ""),
         "musterloesung_thema1": teil_data.get("musterloesung_thema1", ""),
         "musterloesung_thema2": teil_data.get("musterloesung_thema2", ""),
         "scoring_criteria": teil_data.get("scoring_criteria", {}),
     }
+    # TestDaF (DUO) : pistes de correction quand il n'y a pas de Musterlösung complète
+    if teil_data.get("loesungshinweise"):
+        correct_answer["loesungshinweise"] = teil_data["loesungshinweise"]
     # ÖSD B2 : un corrigé modèle par variante
     for key in ("a", "b"):
         v = teil_data.get(f"variante_{key}") or {}
@@ -632,6 +644,154 @@ def parse_oral_semidirect(teil_data: dict) -> list[dict]:
     }]
 
 
+# ── TestDaF digital ─────────────────────────────────────────────
+# Champs communs au Teil (segments, options, tabelle, grafik, summary_sentences,
+# transcript_shown...) : gardés dans Teil.config par import_service.
+# Réponses dans n'importe quel ordre (Lesen 6/7, Hören 3/7) : chaque question
+# porte slot_group + accepted_answers dans correct_answer ; la correction doit
+# accepter toute réponse du groupe, chacune une seule fois.
+
+def _q(q: dict, question_type: str, content: dict, correct: dict, points=1) -> dict:
+    return {
+        "question_number": q["number"],
+        "question_type": question_type,
+        "content": content,
+        "correct_answer": correct,
+        "points": points,
+        "audio_file": None,
+    }
+
+
+def _slot_answer(q: dict) -> dict:
+    correct = {"answer": q["answer"]}
+    if q.get("slot_group"):
+        correct["slot_group"] = q["slot_group"]
+        correct["accepted_answers"] = q.get("accepted_answers", [])
+    return correct
+
+
+def _slot_content(q: dict, index: int) -> dict:
+    """Le nom du groupe n'est pas une solution : il sert à placer la case (colonne, rang)."""
+    content = {"slot_index": index}
+    if q.get("slot_group"):
+        content["slot_group"] = q["slot_group"]
+    return content
+
+
+def parse_textabschnitte_ordnen(teil_data: dict) -> list[dict]:
+    """Lesen 2 : remettre les textes a-e dans l'ordre, une question par position."""
+    segments = teil_data.get("segments", {})
+    return [
+        _q(q, "textabschnitte_ordnen", {"position": q["position"], "segments": segments}, {"answer": q["answer"]})
+        for q in teil_data.get("questions", [])
+    ]
+
+
+def parse_zuordnung(teil_data: dict) -> list[dict]:
+    """Lesen 4/5/6, Hören 4 : un énoncé (item) à associer à une option (lettre)."""
+    options = teil_data.get("options", {})
+    reusable = bool(teil_data.get("options_reusable", False))
+    out = []
+    for i, q in enumerate(teil_data.get("questions", []), start=1):
+        content = {"options": options, "options_reusable": reusable, **_slot_content(q, i)}
+        if q.get("item"):
+            content["item"] = q["item"]
+        out.append(_q(q, "zuordnung", content, _slot_answer(q)))
+    return out
+
+
+def parse_fehler_in_zusammenfassung(teil_data: dict) -> list[dict]:
+    """Lesen 7, Hören 3 : cliquer les phrases fausses d'un résumé (une question par phrase à trouver)."""
+    return [
+        _q(q, "fehler_in_zusammenfassung", _slot_content(q, i), _slot_answer(q))
+        for i, q in enumerate(teil_data.get("questions", []), start=1)
+    ]
+
+
+def parse_kurzantwort(teil_data: dict) -> list[dict]:
+    """Hören 1/2/5 : réponse courte écrite. Correction auto par mots-clés, puis validation enseignant."""
+    out = []
+    for q in teil_data.get("questions", []):
+        content = {"prompt": q.get("prompt", "")}
+        for key in ("person", "max_words"):
+            if q.get(key) is not None:
+                content[key] = q[key]
+        accepted = q.get("accepted_answers", [])
+        correct = {
+            "answer": accepted[0] if accepted else "",
+            "accepted_answers": accepted,
+            "keywords": q.get("keywords", []),
+            "correction": q.get("correction", "auto_puis_enseignant"),
+        }
+                # ECL : nombre d'éléments exigés ("(2)" dans la question), réponses refusées par le corrigé officiel
+        for key in ("required_parts", "rejected_answers", "hinweis_korrektur"):
+            if q.get(key) is not None:
+                correct[key] = q[key]
+                
+        out.append(_q(q, "kurzantwort", content, correct))
+    return out
+
+
+def parse_woerter_im_transkript(teil_data: dict) -> list[dict]:
+    """Hören 7 : cliquer les 4 mots du texte affiché qui diffèrent de l'audio.
+    spoken_word reste côté solution : il révèle la réponse."""
+    out = []
+    for i, q in enumerate(teil_data.get("questions", []), start=1):
+        correct = _slot_answer(q)
+        correct["spoken_word"] = q.get("spoken_word", "")
+        out.append(_q(q, "woerter_im_transkript", _slot_content(q, i), correct))
+    return out
+
+
+ORAL_TESTDAF_KEYS = (
+    "situation", "instructions", "audio_prompt", "audio_prompt_speaker",
+    "prep_seconds", "speak_seconds", "listen_seconds",
+    "stimulus_text", "stimulus_hidden_after_seconds",
+    "grafik", "grafik_seconds", "gliederung", "gliederung_title", "notizen_hinweis",
+)
+
+
+def parse_oral_testdaf(teil_data: dict) -> list[dict]:
+    """Sprechen TestDaF digital : une tâche, préparation puis enregistrement, seul face à l'écran."""
+    content = {k: teil_data[k] for k in ORAL_TESTDAF_KEYS if teil_data.get(k) is not None}
+    audio_file = (teil_data.get("audio_file") or "").replace("\\", "/")
+    return [{
+        "question_number": 1,
+        "question_type": "oral_testdaf",
+        "content": content,
+        "correct_answer": {
+            "musterlösung": teil_data.get("musterlösung") or "",
+            "loesungshinweise": teil_data.get("loesungshinweise") or "",
+            "scoring_criteria": teil_data.get("scoring_criteria", {}),
+        },
+        "points": teil_data.get("max_score", 3),
+        "audio_file": audio_file or None,
+    }]
+
+# ── ECL ─────────────────────────────────────────────────────────
+
+ORAL_ECL_KEYS = (
+    "instructions", "situation", "thema", "leitfragen", "moegliche_fragen",
+    "duration_minutes", "bewertet",
+)
+
+
+def parse_oral_ecl(teil_data: dict) -> list[dict]:
+    """Sprechen ECL (à deux) : Teil 1 Vorstellung (non noté), Teil 2 gelenktes Gespräch,
+    Teil 3 Bildmontage. Les images restent dans Teil.config["bilder"] (import d'images)."""
+    content = {k: teil_data[k] for k in ORAL_ECL_KEYS if teil_data.get(k) is not None}
+    return [{
+        "question_number": 1,
+        "question_type": "oral_ecl",
+        "content": content,
+        "correct_answer": {
+            "musterlösung": teil_data.get("musterlösung") or "",
+            "scoring_criteria": teil_data.get("scoring_criteria", {}),
+        },
+        "points": teil_data.get("max_score", 0),
+        "audio_file": None,
+    }]
+
 PARSERS = {
     "richtig_falsch":           parse_richtig_falsch,
     "ja_nein":                  parse_ja_nein,
@@ -660,4 +820,13 @@ PARSERS = {
     "bildbeschreibung":         parse_bildbeschreibung,
     "oral_meinungsaustausch":   parse_oral_meinungsaustausch,
     "oral_semidirect":          parse_oral_semidirect,
+    # TestDaF digital
+    "textabschnitte_ordnen":     parse_textabschnitte_ordnen,
+    "zuordnung":                 parse_zuordnung,
+    "fehler_in_zusammenfassung": parse_fehler_in_zusammenfassung,
+    "kurzantwort":               parse_kurzantwort,
+    "woerter_im_transkript":     parse_woerter_im_transkript,
+    "oral_testdaf":              parse_oral_testdaf,
+    # ECL
+    "oral_ecl":                  parse_oral_ecl,
 }

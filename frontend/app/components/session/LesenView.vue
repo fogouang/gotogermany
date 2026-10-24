@@ -74,6 +74,9 @@
             v-html="formatText(cfg.stimulus_text)"
           />
 
+          <!-- Grafik (TestDaF Lesen 7) -->
+          <GrafikChart v-if="cfg.grafik" :grafik="cfg.grafik" />
+
           <!-- zuordnung_titre : titres puis textes -->
           <template v-if="fmt === 'zuordnung_titre'">
             <div class="rounded-card border border-line bg-card-2 p-4">
@@ -233,6 +236,33 @@
             </div>
           </template>
 
+          <!-- textabschnitte_ordnen : les textes à remettre dans l'ordre -->
+          <template v-else-if="fmt === 'textabschnitte_ordnen'">
+            <div
+              v-for="(segment, key) in cfg.segments"
+              :key="key"
+              class="rounded-card border border-line p-4 transition-opacity"
+              :class="
+                assignedTitres[String(key).toLowerCase()] ? 'opacity-60' : ''
+              "
+            >
+              <p class="flex items-center gap-2 mb-1">
+                <span class="font-bold text-primary">{{ String(key) }}</span>
+                <span
+                  v-if="assignedTitres[String(key).toLowerCase()]"
+                  class="rounded-full border border-line bg-card px-1.5 text-[10px] font-semibold text-muted"
+                >
+                  {{
+                    t("session.q.position", {
+                      n: assignedTitres[String(key).toLowerCase()],
+                    })
+                  }}
+                </span>
+              </p>
+              <p class="text-[15px] text-ink leading-relaxed">{{ segment }}</p>
+            </div>
+          </template>
+
           <!-- Annonces (matching / selektives_matching) -->
           <template
             v-else-if="fmt === 'matching' || fmt === 'selektives_matching'"
@@ -361,7 +391,20 @@
             {{ cfg.fragestellung }}
           </div>
 
-          <!-- Exemple 0 (ÖSD) -->
+          <!-- Tableau à compléter (TestDaF Lesen 6) -->
+          <div
+            v-if="cfg.tabelle_title || cfg.begriffspaar"
+            class="rounded-leaf border border-line bg-card-2 px-4 py-3"
+          >
+            <p v-if="cfg.tabelle_title" class="text-sm font-bold text-ink">
+              {{ cfg.tabelle_title }}
+            </p>
+            <p v-if="cfg.begriffspaar" class="text-xs text-muted mt-0.5">
+              {{ cfg.begriffspaar.join(" · ") }}
+            </p>
+          </div>
+
+          <!-- Exemple 0 (ÖSD, ECL) -->
           <div
             v-if="beispiel"
             class="rounded-card border border-dashed border-line bg-card-2 p-4"
@@ -373,6 +416,9 @@
             </p>
             <p v-if="beispiel.stem" class="text-sm text-ink mb-2">
               {{ beispiel.stem }}
+            </p>
+            <p v-if="beispiel.prompt" class="text-sm text-ink mb-2">
+              {{ beispiel.prompt }}
             </p>
             <p v-if="beispiel.context" class="text-sm text-ink mb-2">
               {{ beispiel.context }}
@@ -394,6 +440,9 @@
             </ul>
             <p v-else-if="beispiel.answer" class="text-sm text-ink">
               → <strong class="text-primary">{{ beispiel.answer }}</strong>
+              <span v-if="beispiel.text" class="text-muted">
+                · {{ beispiel.text }}</span
+              >
             </p>
           </div>
 
@@ -436,6 +485,23 @@
             </div>
           </template>
 
+          <!-- Résumé à corriger (TestDaF Lesen 7) -->
+          <FehlerZusammenfassung
+            v-else-if="fmt === 'fehler_in_zusammenfassung'"
+            :teil="teil"
+            :questions="questions"
+            :answers="answers"
+            @answer="(id: string, val: any) => emit('answer', id, val)"
+          />
+          <!-- Associations (TestDaF Lesen 4/5/6, Hören 4) : options affichées une seule fois -->
+          <ZuordnungBlock
+            v-else-if="fmt === 'zuordnung'"
+            :teil="teil"
+            :questions="questions"
+            :answers="answers"
+            @answer="(id: string, val: any) => emit('answer', id, val)"
+          />
+
           <!-- Tous les autres formats -->
           <template v-else>
             <div
@@ -465,6 +531,9 @@
 
 <script setup lang="ts">
 import QuestionItem from "~/components/session/QuestionItem.vue";
+import FehlerZusammenfassung from "~/components/session/FehlerZusammenfassung.vue";
+import GrafikChart from "~/components/session/GrafikChart.vue";
+import ZuordnungBlock from "~/components/session/ZuordnungBlock.vue";
 
 const props = defineProps<{
   teil: any;
@@ -494,6 +563,7 @@ const SIDE_FORMATS = new Set([
   "lueckentext_saetze",
   "qcm_gap_fill",
   "word_bank_gap_fill",
+  "textabschnitte_ordnen",
 ]);
 
 const hasStimulus = computed(
@@ -520,11 +590,21 @@ const titres = computed(
 const UNIQUE_CHOICE_FORMATS = new Set([
   "zuordnung_titre",
   "word_bank_gap_fill",
+  "textabschnitte_ordnen",
 ]);
-const isUniqueChoice = computed(() => UNIQUE_CHOICE_FORMATS.has(fmt.value));
+// TestDaF zuordnung : options uniques sauf si options_reusable (Lesen 5)
+const isUniqueChoice = computed(
+  () =>
+    UNIQUE_CHOICE_FORMATS.has(fmt.value) ||
+    (fmt.value === "zuordnung" && cfg.value.options_reusable === false),
+);
 
-// Numéro affiché : texte (titres) ou lacune (banque de mots)
-const choiceNumber = (q: any) => q.content?.gap_number ?? q.question_number;
+// Numéro affiché : texte (titres), lacune (banque de mots) ou position (textes à ordonner)
+const choiceNumber = (q: any) =>
+  q.content?.gap_number ??
+  q.content?.position ??
+  q.content?.display_number ??
+  q.question_number;
 
 // Lettre choisie par chaque question
 const chosenTitre = (q: any): string | null => {
@@ -565,7 +645,9 @@ const docLabel = computed(() =>
 
 const beispiel = computed(() => {
   const b = cfg.value.beispiel;
-  return b && typeof b === "object" && (b.stem || b.context || b.answer)
+  return b &&
+    typeof b === "object" &&
+    (b.stem || b.prompt || b.context || b.answer)
     ? b
     : null;
 });

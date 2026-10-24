@@ -10,6 +10,8 @@ données (teil.max_score, module.max_score), pas dans le code.
 Les modules oraux sans réponse sont ignorés : ils sont évalués en session orale.
 """
 import logging
+import re
+import unicodedata
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -46,6 +48,26 @@ logger = logging.getLogger(__name__)
 
 # Modules oraux : évalués en session orale avec l'examinateur, pas dans le lecteur
 ORAL_SLUGS = {"sprechen", "muendlicher_ausdruck", "mündlicher_ausdruck"}
+
+# Formats TestDaF / ECL corrigés automatiquement, même si Question.is_auto_correctable
+# ne les connaît pas encore (kurzantwort : correction auto, l'enseignant peut ensuite ajuster)
+EXTRA_AUTO_TYPES = {
+    "textabschnitte_ordnen", "zuordnung", "fehler_in_zusammenfassung",
+    "woerter_im_transkript", "kurzantwort",
+}
+
+
+def _norm(value) -> str:
+    """Comparaison tolérante : casse, espaces, ponctuation finale, ä/ae, ß/ss."""
+    s = unicodedata.normalize("NFC", str(value or "")).strip().lower()
+    for src, dst in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        s = s.replace(src, dst)
+    s = re.sub(r"\s+", " ", s)
+    return s.strip(" .,;:!?\"'«»„“")
+
+
+def _is_auto(question: Question) -> bool:
+    return bool(question.is_auto_correctable) or question.question_type in EXTRA_AUTO_TYPES
 
 
 class ExamSessionService:
@@ -201,7 +223,7 @@ class ExamSessionService:
         is_correct = None
         score_obtained = None
 
-        if question.is_auto_correctable:
+        if _is_auto(question):
             is_correct = self._auto_correct(question, data.user_answer)
             score_obtained = float(question.points) if is_correct else 0.0
             await self.answer_repo.update(
@@ -254,6 +276,17 @@ class ExamSessionService:
     def _tdn_level(score: float | None, rules: dict) -> str | None:
         if score is None:
             return None
+        # TestDaF digital : module ramené sur 0-20 puis converti avec les bandes du JSON
+        # (0-4 unter TDN 3, 5-9 TDN 3, 10-15 TDN 4, 16-20 TDN 5)
+        details = rules.get("scoring_details") or {}
+        bands = details.get("tdn_bands")
+        if bands:
+            scale = details.get("module_scale_max") or 20
+            points = round(score / 100 * scale)
+            for band in bands:
+                if band.get("min", 0) <= points <= band.get("max", scale):
+                    return band.get("tdn")
+            return None
         thresholds = rules.get("tdn_thresholds") or {"5": 78, "4": 63, "3": 45}
         for tdn in ("5", "4", "3"):
             if score >= thresholds.get(tdn, 101):
@@ -290,8 +323,13 @@ class ExamSessionService:
         passed = None
         if not has_pending and global_score is not None and level:
             rule = rules["pass_rule"]
-            if rule == "each_module":          # Goethe / ECL : chaque module >= seuil
+            if rule == "each_module":          # Goethe : chaque module >= seuil
                 passed = all(v >= module_min for v in module_scores)
+            elif rule == "ecl":                # ECL : chaque module >= 40 % ET moyenne >= 60 %
+                average_min = rules.get("average_min", 60)
+                passed = bool(module_scores) and all(
+                    v >= module_min for v in module_scores
+                ) and (sum(module_scores) / len(module_scores)) >= average_min
             elif rule == "tdn_levels":         # TestDaF : pas de réussite globale
                 passed = None
             elif rule == "global_and_modules": # total + minimum par module
@@ -598,11 +636,55 @@ class ExamSessionService:
 
     def _auto_correct(self, question: Question, user_answer: dict) -> bool:
         try:
-            expected = question.correct_answer.get("answer", "").strip().lower()
-            given = str(user_answer.get("answer", "")).strip().lower()
-            return expected == given
+            correct = question.correct_answer or {}
+            if question.question_type == "kurzantwort":
+                return self._check_short_answer(correct, user_answer.get("answer", ""))
+            given = _norm(user_answer.get("answer", ""))
+            # Réponses dans n'importe quel ordre (TestDaF Lesen 6/7, Hören 3/7) :
+            # toute réponse du groupe est juste ; un doublon n'est compté qu'une fois
+            # au moment de la notation (_teil_points).
+            if correct.get("slot_group") and correct.get("accepted_answers"):
+                return given in {_norm(a) for a in correct["accepted_answers"]}
+            return _norm(correct.get("answer", "")) == given
         except Exception:
             return False
+
+    @staticmethod
+    def _check_short_answer(correct: dict, raw_answer) -> bool:
+        """Réponse courte (kurzantwort) : texte libre de l'élève.
+
+        - réponse refusée par le corrigé officiel (rejected_answers) -> faux
+        - réponse identique à une réponse acceptée -> juste
+        - sinon mots-clés : chaque motif doit être trouvé ; pour une question « (2) »
+          (required_parts), il faut au moins N éléments différents du motif.
+        """
+        given = _norm(raw_answer)
+        if not given:
+            return False
+        for rejected in correct.get("rejected_answers") or []:
+            if _norm(rejected) and _norm(rejected) in given:
+                return False
+        required = int(correct.get("required_parts") or 1)
+        accepted = [_norm(a) for a in correct.get("accepted_answers") or [] if a]
+        # Une seule réponse acceptée suffit, sauf si la question en demande plusieurs « (2) »
+        if required == 1 and given in accepted:
+            return True
+        keywords = [k for k in correct.get("keywords") or [] if k]
+        if not keywords:
+            return required > 1 and sum(1 for a in accepted if a in given) >= required
+        def hit(term: str) -> bool:
+            # mot très court (ex. « g » pour « Bereich G ») : mot entier seulement
+            if len(term) <= 3:
+                return re.search(rf"(?<!\w){re.escape(term)}(?!\w)", given) is not None
+            return term in given
+
+        for pattern in keywords:
+            alternatives = [_norm(a.replace("\\", "")) for a in pattern.split("|")]
+            alternatives = [a for a in alternatives if a]
+            found = {a for a in alternatives if hit(a)}
+            if len(found) < (required if len(alternatives) > 1 else 1):
+                return False
+        return True
 
     # ── Helpers privés : sélection de modules ────────────
 
@@ -634,14 +716,23 @@ class ExamSessionService:
         raw = 0.0
         raw_max = 0.0
         pending = False
-        for q in teil.questions:
+        # Réponses dans n'importe quel ordre : la même réponse donnée deux fois
+        # dans un groupe ne rapporte des points qu'une fois
+        seen_in_group: set = set()
+        for q in sorted(teil.questions, key=lambda x: x.question_number):
             raw_max += float(q.points or 0)
             a = answer_map.get(q.id)
             if not a:
                 continue
+            group = (q.correct_answer or {}).get("slot_group")
+            if group and a.is_correct:
+                key = (group, _norm((a.user_answer or {}).get("answer", "")))
+                if key in seen_in_group:
+                    continue
+                seen_in_group.add(key)
             if a.score_obtained is not None:
                 raw += float(a.score_obtained)
-            elif not q.is_auto_correctable:
+            elif not _is_auto(q):
                 pending = True
         if teil.max_score and raw_max > 0:
             return raw / raw_max * teil.max_score, float(teil.max_score), pending

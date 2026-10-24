@@ -462,6 +462,118 @@
       </div>
     </div>
 
+    <!-- kurzantwort (ECL Lesen/Hören Teil 2, TestDaF Hören 1/2/5) -->
+    <div v-else-if="type === 'kurzantwort'">
+      <p
+        v-if="c.person"
+        class="text-xs font-semibold uppercase tracking-wide text-muted mb-1"
+      >
+        {{ c.person }}
+      </p>
+      <p class="text-[15px] text-ink leading-relaxed mb-3">{{ c.prompt }}</p>
+      <input
+        type="text"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        :value="textDraft"
+        :placeholder="t('session.q.your_answer')"
+        :class="[inputClass, 'w-full']"
+        @input="onTextInput(($event.target as HTMLInputElement).value)"
+      />
+      <p v-if="c.max_words" class="text-xs text-muted mt-1.5">
+        {{ t("session.q.max_words", { n: c.max_words }) }}
+      </p>
+    </div>
+
+    <!-- textabschnitte_ordnen (TestDaF Lesen 2) : un texte par position -->
+    <div v-else-if="type === 'textabschnitte_ordnen'">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+        {{ t("session.q.position", { n: c.position }) }}
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="key in segmentKeys"
+          :key="key"
+          type="button"
+          :aria-pressed="isSel(key)"
+          :class="[
+            'relative w-10 h-10 rounded-leaf border-2 font-bold text-sm transition-colors',
+            titreClass(key),
+          ]"
+          @click="choose(key)"
+        >
+          {{ key }}
+          <span
+            v-if="!isSel(key) && takenBy(key)"
+            class="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-card-2 px-1 text-[9px] font-semibold leading-4 text-muted"
+          >
+            {{ takenBy(key) }}
+          </span>
+        </button>
+      </div>
+      <p
+        v-if="selected"
+        class="mt-3 rounded-leaf border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-ink line-clamp-3"
+      >
+        <span class="font-bold text-primary">{{ selected }})</span>
+        {{ c.segments?.[selected] }}
+      </p>
+      <p
+        v-if="selected && takenBy(selected)"
+        class="mt-2 flex items-start gap-1.5 text-xs text-amber-600"
+      >
+        <i class="pi pi-exclamation-triangle mt-0.5 text-[11px]" />
+        {{ t("session.q.segment_taken", { n: takenBy(selected) }) }}
+      </p>
+    </div>
+
+    <!-- zuordnung (TestDaF Lesen 4/5/6, Hören 4) -->
+    <div v-else-if="type === 'zuordnung'">
+      <p v-if="c.item" class="text-[15px] text-ink leading-relaxed mb-3">
+        {{ c.item }}
+      </p>
+      <div
+        :class="
+          c.options_reusable
+            ? 'grid grid-cols-1 sm:grid-cols-2 gap-2'
+            : 'space-y-2'
+        "
+      >
+        <button
+          v-for="(text, key) in c.options"
+          :key="key"
+          type="button"
+          :aria-pressed="isSel(key)"
+          :class="[
+            'relative w-full text-left px-4 py-2.5 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3',
+            c.options_reusable
+              ? optionClass(isSel(key))
+              : uniqueChoiceClass(String(key)),
+          ]"
+          @click="choose(key)"
+        >
+          <span :class="keyClass(isSel(key))">{{
+            String(key).toUpperCase()
+          }}</span>
+          <span class="pt-0.5">{{ text }}</span>
+          <span
+            v-if="!c.options_reusable && !isSel(key) && takenBy(String(key))"
+            class="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-card-2 px-1 text-[9px] font-semibold leading-4 text-muted"
+          >
+            {{ takenBy(String(key)) }}
+          </span>
+        </button>
+      </div>
+      <p
+        v-if="!c.options_reusable && selected && takenBy(selected)"
+        class="mt-2 flex items-start gap-1.5 text-xs text-amber-600"
+      >
+        <i class="pi pi-exclamation-triangle mt-0.5 text-[11px]" />
+        {{ t("session.q.option_taken", { n: takenBy(selected) }) }}
+      </p>
+    </div>
+
     <!-- Format inconnu -->
     <div
       v-else
@@ -545,7 +657,8 @@ const badge = computed(() => {
     case "zuordnung_paragraphen":
       return t("session.q.paragraph", { n: c.value.paragraph_number ?? n });
     default:
-      return String(n);
+      // ECL : numéro affiché dans le Teil (1-10), la numérotation interne reste continue
+      return String(c.value.display_number ?? n);
   }
 });
 
@@ -577,6 +690,9 @@ const speakerName = (speaker: any) =>
 // ── zuordnung_titre ───────────────────────────────────
 
 const titreKeys = computed(() => Object.keys(c.value.titres || {}));
+
+// textabschnitte_ordnen : lettres des textes a-e
+const segmentKeys = computed(() => Object.keys(c.value.segments || {}).sort());
 
 const takenBy = (key: string) =>
   props.takenTitres?.[String(key).toLowerCase()] ?? null;

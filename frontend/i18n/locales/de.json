@@ -527,7 +527,16 @@
       "tab_tasks": "Aufgaben ({answered}/{total})",
       "headings": "Überschriften",
       "word_bank": "Wortliste",
-      "ads": "Anzeigen"
+      "ads": "Anzeigen",
+      "max_words": "Maximal {n} Wörter",
+"position": "Position {n}",
+"segment_taken": "Dieser Text steht schon an Position {n}.",
+"option_taken": "Diese Antwort ist schon für Aufgabe {n} vergeben.",
+"summary": "Zusammenfassung",
+"transcript": "Text",
+"marked_count": "{n} / {max} markiert",
+"summary_after_listening": "Die Zusammenfassung erscheint nach dem Hören.",
+"slots_full": "Sie haben schon {max} Elemente markiert. Klicken Sie auf ein markiertes Element, um die Markierung zu löschen."
     },
     "player": {
       "intro_title": "Vor dem Start",

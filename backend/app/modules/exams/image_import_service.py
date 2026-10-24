@@ -119,7 +119,17 @@ class TeilImageImportService:
 
     def _set_image_in_config(self, config: dict, key: str, path: str) -> dict:
         audio_match = re.match(r'^audio(\d+)$', key)
-        if key.startswith("person_"):
+        bild_match = re.match(r'^bild(\d+)$', key)
+        if bild_match:
+            # ECL Sprechen Teil 3 (Bildmontage) : sprechen_teil3_bild1.jpg -> config["bilder"][0]
+            index = int(bild_match.group(1)) - 1
+            bilder = list(config.get("bilder") or [])
+            while len(bilder) <= index:
+                bilder.append(None)
+            bilder[index] = path
+            config["bilder"] = bilder
+
+        elif key.startswith("person_"):
             letter = key.split("_", 1)[1]
             if "persons" not in config:
                 config["persons"] = {}

@@ -556,7 +556,16 @@
       "tab_tasks": "Questions ({answered}/{total})",
       "headings": "Titres",
       "word_bank": "Banque de mots",
-      "ads": "Annonces"
+      "ads": "Annonces",
+      "max_words": "{n} mots maximum",
+      "position": "Position {n}",
+      "segment_taken": "Ce texte est déjà placé en position {n}.",
+      "option_taken": "Cette réponse est déjà donnée à la question {n}.",
+      "summary": "Résumé",
+      "transcript": "Texte",
+      "marked_count": "{n} / {max} marqués",
+      "summary_after_listening": "Le résumé s'affiche à la fin de l'écoute.",
+      "slots_full": "Vous avez déjà marqué {max} éléments. Cliquez sur un élément marqué pour retirer la marque."
     },
     "writing": {
       "tab_task": "Sujet",

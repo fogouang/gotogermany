@@ -92,6 +92,41 @@
             </div>
           </div>
 
+          <!-- Tableau à compléter (TestDaF Hören 1 et 5) -->
+          <div
+            v-if="cfg.slide || cfg.tabelle?.rows"
+            class="rounded-card border border-line bg-card-2 p-4 space-y-3"
+          >
+            <p
+              v-if="cfg.slide"
+              class="rounded-leaf border border-line bg-card px-3 py-2 text-sm font-semibold text-ink"
+            >
+              {{ cfg.slide }}
+            </p>
+            <template v-if="cfg.tabelle?.rows">
+              <p v-if="cfg.tabelle.title" class="font-bold text-ink text-sm">
+                {{ cfg.tabelle.title }}
+              </p>
+              <table class="w-full text-sm">
+                <tbody>
+                  <tr
+                    v-for="(row, ri) in cfg.tabelle.rows"
+                    :key="ri"
+                    class="border-t border-line first:border-t-0"
+                  >
+                    <td class="py-1.5 pr-3 align-top text-muted">
+                      {{ row.left }}
+                    </td>
+                    <td
+                      class="py-1.5 align-top text-ink"
+                      v-html="formatGapText(row.right || '')"
+                    />
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </div>
+
           <!-- Image de la scène -->
           <img
             v-if="sceneImage && (!isMultiAudio || !hasAudioImages)"
@@ -175,54 +210,121 @@
       <!-- ── Colonne droite : affirmations ── -->
       <section class="lg:w-1/2 lg:overflow-y-auto lg:min-h-0">
         <div class="p-5 sm:p-6 max-w-2xl mx-auto space-y-6">
+          <!-- Exemple 0 (ECL) -->
           <div
-            v-for="(track, gi) in tracks"
-            :key="`questions-${track.key}`"
-            :ref="(el) => setTrackRef(el, gi)"
-            class="scroll-mt-4 space-y-2"
+            v-if="beispiel"
+            class="rounded-card border border-dashed border-line bg-card-2 p-4"
           >
             <p
-              v-if="tracks.length > 1"
-              :class="[
-                'flex items-center gap-2 text-xs font-semibold uppercase tracking-wide',
-                gi === activeIndex ? 'text-primary' : 'text-faint',
-              ]"
+              class="text-xs font-semibold uppercase tracking-wide text-faint mb-2"
             >
-              <span
-                v-if="gi === activeIndex"
-                class="w-2 h-2 rounded-full bg-primary animate-pulse"
-              ></span>
-              {{ trackNumber(track, gi) }} · {{ trackTitle(track, gi) }}
+              {{ t("session.q.example") }} 0
             </p>
-
-            <ul
-              :class="[
-                'divide-y divide-line overflow-hidden rounded-card border transition-colors',
-                gi === activeIndex
-                  ? 'border-primary/40 shadow-soft'
-                  : 'border-line',
-              ]"
+            <p
+              v-if="beispiel.stem || beispiel.prompt"
+              class="text-sm text-ink mb-2"
             >
+              {{ beispiel.stem || beispiel.prompt }}
+            </p>
+            <ul v-if="beispiel.options" class="space-y-1">
               <li
-                v-for="q in track.questions"
-                :key="q.id"
-                :id="`question-${q.id}`"
+                v-for="(txt, key) in beispiel.options"
+                :key="key"
                 :class="[
-                  'px-4 py-3 sm:px-5 transition-colors',
-                  answers[q.id] ? 'bg-primary/5' : 'bg-card',
+                  'text-sm',
+                  String(key).toLowerCase() ===
+                  String(beispiel.answer).toLowerCase()
+                    ? 'font-semibold text-primary'
+                    : 'text-muted',
                 ]"
               >
-                <QuestionItem
-                  :question="q"
-                  :answer="answers[q.id]?.user_answer"
-                  compact
-                  @answer="
-                    (val: Record<string, any>) => emit('answer', q.id, val)
-                  "
-                />
+                {{ String(key).toUpperCase() }}) {{ txt }}
               </li>
             </ul>
+            <p v-else-if="beispiel.answer" class="text-sm text-ink">
+              → <strong class="text-primary">{{ beispiel.answer }}</strong>
+            </p>
           </div>
+
+          <!-- Résumé à corriger (TestDaF Hören 3) : affiché après l'écoute -->
+          <FehlerZusammenfassung
+            v-if="fmt === 'fehler_in_zusammenfassung'"
+            :teil="teil"
+            :questions="questions"
+            :answers="answers"
+            :hidden="summaryHidden"
+            @answer="(id: string, val: any) => emit('answer', id, val)"
+          />
+
+          <!-- Mots à marquer pendant l'écoute (TestDaF Hören 7) -->
+          <WoerterImTranskript
+            v-else-if="fmt === 'woerter_im_transkript'"
+            :text="cfg.transcript_shown || ''"
+            :questions="questions"
+            :answers="answers"
+            @answer="(id: string, val: any) => emit('answer', id, val)"
+          />
+
+                    <!-- Associations (TestDaF Lesen 4/5/6, Hören 4) : options affichées une seule fois -->
+          <ZuordnungBlock
+            v-else-if="fmt === 'zuordnung'"
+            :teil="teil"
+            :questions="questions"
+            :answers="answers"
+            @answer="(id: string, val: any) => emit('answer', id, val)"
+          />
+          
+          <!-- Tous les autres formats -->
+          <template v-else>
+            <div
+              v-for="(track, gi) in tracks"
+              :key="`questions-${track.key}`"
+              :ref="(el) => setTrackRef(el, gi)"
+              class="scroll-mt-4 space-y-2"
+            >
+              <p
+                v-if="tracks.length > 1"
+                :class="[
+                  'flex items-center gap-2 text-xs font-semibold uppercase tracking-wide',
+                  gi === activeIndex ? 'text-primary' : 'text-faint',
+                ]"
+              >
+                <span
+                  v-if="gi === activeIndex"
+                  class="w-2 h-2 rounded-full bg-primary animate-pulse"
+                ></span>
+                {{ trackNumber(track, gi) }} · {{ trackTitle(track, gi) }}
+              </p>
+
+              <ul
+                :class="[
+                  'divide-y divide-line overflow-hidden rounded-card border transition-colors',
+                  gi === activeIndex
+                    ? 'border-primary/40 shadow-soft'
+                    : 'border-line',
+                ]"
+              >
+                <li
+                  v-for="q in track.questions"
+                  :key="q.id"
+                  :id="`question-${q.id}`"
+                  :class="[
+                    'px-4 py-3 sm:px-5 transition-colors',
+                    answers[q.id] ? 'bg-primary/5' : 'bg-card',
+                  ]"
+                >
+                  <QuestionItem
+                    :question="q"
+                    :answer="answers[q.id]?.user_answer"
+                    compact
+                    @answer="
+                      (val: Record<string, any>) => emit('answer', q.id, val)
+                    "
+                  />
+                </li>
+              </ul>
+            </div>
+          </template>
         </div>
       </section>
     </div>
@@ -232,6 +334,9 @@
 <script setup lang="ts">
 import QuestionItem from "~/components/session/QuestionItem.vue";
 import AudioPlayer from "~/components/session/AudioPlayer.vue";
+import FehlerZusammenfassung from "~/components/session/FehlerZusammenfassung.vue";
+import WoerterImTranskript from "~/components/session/WoerterImTranskript.vue";
+import ZuordnungBlock from "~/components/session/ZuordnungBlock.vue";
 
 type Track = {
   key: string;
@@ -260,6 +365,17 @@ const apiBase = (config.public.apiBaseUrl as string) || "http://localhost:8001";
 
 const DEFAULT_READ_SECONDS = 30;
 const GAP_SECONDS = 5;
+
+const cfg = computed<Record<string, any>>(() => props.teil.config || {});
+const fmt = computed(() => String(props.teil.format_type || ""));
+
+// Exemple 0 (ECL) : QCM ou réponse courte
+const beispiel = computed(() => {
+  const b = cfg.value.beispiel;
+  return b && typeof b === "object" && (b.stem || b.prompt || b.answer)
+    ? b
+    : null;
+});
 
 // ── Règles de l'examen (données du sujet) ─────────────
 
@@ -438,6 +554,24 @@ function markFinished(track?: Track) {
     if (!p.finished.includes(track.key)) p.finished.push(track.key);
   });
 }
+
+// TestDaF Hören 3 : résumé masqué jusqu'à la fin de l'écoute
+const summaryHidden = computed(
+  () =>
+    !!cfg.value.summary_hidden_while_listening &&
+    !(teilProgress.value.read && tracks.value.every((tr) => isFinished(tr))),
+);
+
+// Tableau : numéros de lacune _36_ mis en évidence (texte échappé avant v-html)
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const formatGapText = (text: string) =>
+  escapeHtml(text).replace(
+    /_(\d+)_/g,
+    (_m, n) =>
+      `<span class="inline-flex items-center justify-center min-w-6 h-6 px-1 mx-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold align-middle">${n}</span>`,
+  );
 
 // ── Temps de lecture ──────────────────────────────────
 

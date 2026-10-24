@@ -100,16 +100,44 @@ DEFAULT_SCORING_MODEL = {
 
 # Règles de réussite par défaut, écrites dans Level.exam_config à l'import
 DEFAULT_PASS_RULES = {
-    "ECL": {"pass_rule": "each_module", "module_min": 60},
     # Seuils indicatifs en % (les seuils officiels varient selon la session)
     "TestDaF": {"pass_rule": "tdn_levels", "tdn_thresholds": {"5": 78, "4": 63, "3": 45}},
+        # ECL : au moins 40 % dans chaque module ET au moins 60 % de moyenne.
+    # Certificat partiel écrit (Lesen + Schreiben) ou oral (Hören + Sprechen), mêmes règles.
+    "ECL": {
+        "pass_rule": "ecl",
+        "module_min": 40,
+        "average_min": 60,
+        "teilpruefungen": {"schriftlich": ["lesen", "schreiben"], "muendlich": ["horen", "sprechen"]},
+    },
 }
 
 # Teile notés en nombre d'items, module ramené à 100 (ex. Goethe : 30 items -> 100)
 SCALED_PROVIDERS = {"Goethe"}
 
 # Somme des max_score des Teile = max_score du module, obligatoirement
-STRICT_SUM_PROVIDERS = {"TELC", "ÖSD"}
+STRICT_SUM_PROVIDERS = {"TELC", "ÖSD", "TestDaF"}
+
+# TestDaF digital : contexte d'affichage gardé dans Teil.config.
+# Exclus volontairement (ils donnent la réponse) : transcript_marked, et la
+# transcription de woerter_im_transkript (l'écart avec transcript_shown = la solution).
+TESTDAF_CONFIG_KEYS = (
+    "medium", "max_plays", "video_file", "slide",
+    "segments", "options", "options_reusable", "begriffspaar", "tabelle", "tabelle_title",
+    "grafik", "summary_title", "summary_sentences", "summary_hidden_while_listening",
+    "transcript_shown",
+    "prep_seconds", "speak_seconds", "listen_seconds", "audio_prompt", "audio_prompt_speaker",
+    "stimulus_hidden_after_seconds", "grafik_seconds", "gliederung", "gliederung_title",
+    "notizen_hinweis", "word_count_min",
+)
+
+# ECL : exemple 0 (affiché avec sa réponse, comme dans l'examen), oral, images du Teil 3
+ECL_CONFIG_KEYS = (
+    "beispiel", "leitfragen", "moegliche_fragen", "bilder", "bewertet", "duration_minutes","dauer"
+)
+
+# Formats dont la transcription ne doit pas partir chez l'apprenant
+HIDDEN_TRANSCRIPTION_FORMATS = {"woerter_im_transkript"}
 
 
 def _is_auto_format(format_type: str) -> bool:
@@ -159,6 +187,9 @@ def _validate_exam_json(data: dict, provider: str) -> tuple[list[str], list[str]
         teile_total = 0.0
         teil_maxes: list[float] = []
         seen_teile: set = set()
+        # Teile au choix marqués 'wahl_gruppe' (TELC/ÖSD B2 : Aufgabe A ou B) :
+        # chaque groupe compte une seule fois, pour son max.
+        wahl_maxes: dict = {}
 
         for t in teile:
             tn = t.get("teil_number")
@@ -177,12 +208,21 @@ def _validate_exam_json(data: dict, provider: str) -> tuple[list[str], list[str]
                 continue
 
             tmax = t.get("max_score")
+            
+            # ECL Sprechen Teil 1 (Vorstellung) : présent dans l'examen mais non noté
+            if t.get("bewertet") is False and tmax == 0:
+                continue
+            
             if not _is_number(tmax) or tmax <= 0:
                 errors.append(f"{label} : max_score manquant ou nul.")
                 tmax = None
             else:
-                teile_total += tmax
                 teil_maxes.append(float(tmax))
+                wahl = t.get("wahl_gruppe")
+                if wahl is not None:
+                    wahl_maxes[wahl] = max(wahl_maxes.get(wahl, 0.0), float(tmax))
+                else:
+                    teile_total += tmax
 
             try:
                 questions = parser(t)
@@ -202,6 +242,8 @@ def _validate_exam_json(data: dict, provider: str) -> tuple[list[str], list[str]
                     f"{label} : {len(questions)} question(s) pour un max_score de {tmax:g} "
                     f"(question manquante ?)."
                 )
+
+        teile_total += sum(wahl_maxes.values())
 
         # Module a choix (ex. TELC B2 Schriftlicher Ausdruck : Aufgabe A ou B) :
         # chaque Teil vaut a elle seule le max du module, le candidat n'en traite qu'une.
@@ -310,14 +352,20 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
             config["scenario"] = teil_data["scenario"]
         if "prompts" in teil_data:
             config["prompts"] = teil_data["prompts"]
-        config["word_count_target"] = teil_data.get("word_count_target", 80)
+        config["word_count_target"] = (
+            teil_data.get("word_count_target") or teil_data.get("word_count_min") or 80
+        )
         config["register"] = teil_data.get("register", "informell")
         config["text_type"] = teil_data.get("text_type", "")
 
     # Champs Hören
     if "audios" in teil_data:
         config["audios"] = teil_data.get("audios", [])
-    if "transcription" in teil_data and "transcription" not in config:
+    if (
+        "transcription" in teil_data
+        and "transcription" not in config
+        and format_type not in HIDDEN_TRANSCRIPTION_FORMATS
+    ):
         config["transcription"] = teil_data["transcription"]
     if "context" in teil_data and "context" not in config:
         config["context"] = teil_data["context"]
@@ -354,6 +402,11 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
         config["person1"] = teil_data.get("person1", {})
         config["person2"] = teil_data.get("person2", {})
 
+    # TestDaF digital : tableaux, graphiques, résumés, textes à ordonner, temps de l'oral
+    for key in TESTDAF_CONFIG_KEYS + ECL_CONFIG_KEYS:
+        if key in teil_data and teil_data[key] is not None and key not in config:
+            config[key] = teil_data[key]
+
     # Contexte commun à tout le Teil (nom, thème, article, Beispiel, temps de lecture...)
     for key in TEIL_DISPLAY_KEYS:
         if key in teil_data and key not in config:
@@ -361,6 +414,15 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
 
     return config or None
 
+
+def _to_minutes(value) -> int | None:
+    """Accepte 20, "20", "3-5" ou "5-8" et renvoie un entier (borne haute pour une plage)."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, (int, float)):
+        return int(value)
+    nums = re.findall(r"\d+", str(value))
+    return int(nums[-1]) if nums else None
 
 class ExamImportService:
 
@@ -480,6 +542,8 @@ class ExamImportService:
                     "scoring_model": scoring_model,
                     "pass_threshold": pass_threshold,
                     **DEFAULT_PASS_RULES.get(exam.provider, {}),
+                    # TestDaF : échelle 0-20 par module et bandes TDN fournies par le JSON
+                    **({"scoring_details": data["scoring_details"]} if data.get("scoring_details") else {}),
                 },
             )
             self.db.add(level)
@@ -551,13 +615,24 @@ class ExamImportService:
                     format_type=format_type,
                     instructions=teil_data.get("instructions"),
                     max_score=teil_data["max_score"],
-                    time_minutes=teil_data.get("time_minutes") or teil_data.get("duration_minutes"),
+                    time_minutes=_to_minutes(teil_data.get("time_minutes") or teil_data.get("duration_minutes")),
                     config=_build_teil_config(teil_data, format_type),
                 )
                 self.db.add(teil)
                 await self.db.flush()
 
                 questions_data = PARSERS[format_type](teil_data)
+
+                # ECL : numéro affiché dans l'examen (1-10 par Teil), la numérotation interne reste continue
+                display_numbers = {
+                    q.get("number"): q["display_number"]
+                    for q in teil_data.get("questions", [])
+                    if isinstance(q, dict) and q.get("display_number") is not None
+                }
+                for q in questions_data:
+                    if q["question_number"] in display_numbers:
+                        q["content"] = {**q["content"], "display_number": display_numbers[q["question_number"]]}
+
                 instances = [Question(teil_id=teil.id, **q) for q in questions_data]
                 self.db.add_all(instances)
                 total_questions += len(instances)
@@ -631,13 +706,14 @@ class ExamImportService:
         skipped = 0
         log = []
 
-        # Trouver le module Hören une seule fois
+        # Module Hören (obligatoire) et module Sprechen (TestDaF : consignes orales en audio)
         result = await self.db.execute(
             select(Module).where(
                 Module.subject_id == subject.id,
                 or_(
                     Module.slug.ilike("%horen%"),
                     Module.slug.ilike("%hören%"),
+                    Module.slug.ilike("%hoeren%"),
                     Module.slug.ilike("%hoerverstehen%"),
                     Module.slug.ilike("%hörverstehen%"),
                 ),
@@ -649,6 +725,13 @@ class ExamImportService:
                 resource="Module Hören",
                 identifier=f"Sujet {subject_number}"
             )
+        result = await self.db.execute(
+            select(Module).where(
+                Module.subject_id == subject.id,
+                or_(Module.slug.ilike("%sprechen%"), Module.slug.ilike("%muendlich%")),
+            ),
+        )
+        sprechen_module = result.scalar_one_or_none()
 
         for upload in files:
             filename = upload.filename or ""
@@ -657,22 +740,34 @@ class ExamImportService:
                 skipped += 1
                 continue
 
-            base = Path(filename).stem  # ex: horen_teil1_audio1
-            parts = base.split("_")
+            base = Path(filename).stem  # ex: horen_teil1_audio1, testdaf_duo_mt_hoeren_aufgabe3
+            parts = base.lower().split("_")
 
-            # Extraire teil_number
+            # Extraire teil_number : 'teilN' ou 'aufgabeN' (TestDaF)
             try:
-                teil_part = next(p for p in parts if p.startswith("teil"))
-                teil_number = int(teil_part.replace("teil", ""))
+                teil_part = next(p for p in parts if re.fullmatch(r"(teil|aufgabe)\d+", p))
+                teil_number = int(re.sub(r"\D", "", teil_part))
             except (StopIteration, ValueError):
-                log.append(f"⚠️ {filename} : nom non reconnu (attendu : horen_teilN_audioM.mp3), ignoré.")
+                log.append(
+                    f"⚠️ {filename} : nom non reconnu "
+                    f"(attendu : horen_teilN_audioM.mp3 ou ..._hoeren_aufgabeN.mp3), ignoré."
+                )
                 skipped += 1
                 continue
+
+            # Module visé : Sprechen si le nom le dit, sinon Hören
+            target_module = horen_module
+            if "sprechen" in parts:
+                if not sprechen_module:
+                    log.append(f"⚠️ {filename} : module Sprechen introuvable, ignoré.")
+                    skipped += 1
+                    continue
+                target_module = sprechen_module
 
             # Extraire audio_number (optionnel)
             audio_number = None
             for p in parts:
-                if p.startswith("audio"):
+                if re.fullmatch(r"audio\d+", p):
                     try:
                         audio_number = int(p.replace("audio", ""))
                     except ValueError:
@@ -682,7 +777,7 @@ class ExamImportService:
             # Trouver le Teil
             result = await self.db.execute(
                 select(Teil).where(
-                    Teil.module_id == horen_module.id,
+                    Teil.module_id == target_module.id,
                     Teil.teil_number == teil_number,
                 )
             )

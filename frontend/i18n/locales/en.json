@@ -527,7 +527,16 @@
       "tab_tasks": "Questions ({answered}/{total})",
       "headings": "Headings",
       "word_bank": "Word bank",
-      "ads": "Ads"
+      "ads": "Ads",
+      "max_words": "{n} words max.",
+      "position": "Position {n}",
+      "segment_taken": "This text is already in position {n}.",
+      "option_taken": "This answer is already used for question {n}.",
+      "summary": "Summary",
+      "transcript": "Text",
+      "marked_count": "{n} / {max} marked",
+      "summary_after_listening": "The summary appears once listening is over.",
+      "slots_full": "You have already marked {max} items. Click a marked item to unmark it."
     },
     "player": {
       "intro_title": "Before you start",

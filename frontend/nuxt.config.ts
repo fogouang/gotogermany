@@ -14,16 +14,20 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css", "primeicons/primeicons.css"],
 
   components: [{ path: "~/components", pathPrefix: false }],
+
+  // ── Site (utilisé par sitemap, robots et i18n) ─────────
+  site: {
+    url: "https://prep-telc-osd.com",
+    name: "GoToGermany",
+  },
+
   // ── SEO global ──────────────────────────────────────────
+  // lang, canonical et hreflang sont gérés par page via useLocaleHead (app.vue)
   app: {
     head: {
       charset: "utf-8",
       viewport: "width=device-width, initial-scale=1",
-      htmlAttrs: { lang: "en" },
-      link: [
-        { rel: "icon", type: "image/png", href: "/images/logo.png" },
-        { rel: "canonical", href: "https://prep-telc-osd.com" },
-      ],
+      link: [{ rel: "icon", type: "image/png", href: "/images/logo.png" }],
       meta: [
         // Barre du navigateur mobile : anthracite en clair, sombre en mode sombre
         {
@@ -66,39 +70,24 @@ export default defineNuxtConfig({
   },
 
   // ── Sitemap ─────────────────────────────────────────────
+  // Généré automatiquement à partir des pages et des langues i18n.
+  // Les routes en robots: false (routeRules) en sont exclues.
   sitemap: {
-    siteUrl: "https://prep-telc-osd.com",
-    urls: [
-      { loc: "/", changefreq: "weekly", priority: 1.0 },
-      { loc: "/fr", changefreq: "weekly", priority: 1.0 },
-      { loc: "/tarifs", changefreq: "monthly", priority: 0.9 },
-      { loc: "/fr/tarifs", changefreq: "monthly", priority: 0.9 },
-      { loc: "/about", changefreq: "monthly", priority: 0.7 },
-      { loc: "/fr/about", changefreq: "monthly", priority: 0.7 },
-      { loc: "/contact", changefreq: "monthly", priority: 0.6 },
-      { loc: "/fr/contact", changefreq: "monthly", priority: 0.6 },
-      { loc: "/faq", changefreq: "monthly", priority: 0.7 },
-      { loc: "/fr/faq", changefreq: "monthly", priority: 0.7 },
-    ],
+    autoI18n: true,
   },
 
   // ── Robots ──────────────────────────────────────────────
+  // Les espaces privés sont en noindex via routeRules (plus fiable qu'un Disallow).
   robots: {
-    rules: [
-      {
-        UserAgent: "*",
-        Allow: "/",
-        Disallow: ["/dashboard", "/admin", "/api"],
-      },
-    ],
-    sitemap: "https://prep-telc-osd.com/sitemap.xml",
+    disallow: ["/api"],
   },
 
   i18n: {
+    baseUrl: "https://prep-telc-osd.com",
     locales: [
-      { code: "en", name: "English", file: "en.json" },
-      { code: "fr", name: "Français", file: "fr.json" },
-      { code: "de", name: "Deutsch", file: "de.json" },
+      { code: "en", language: "en", name: "English", file: "en.json" },
+      { code: "fr", language: "fr", name: "Français", file: "fr.json" },
+      { code: "de", language: "de", name: "Deutsch", file: "de.json" },
     ],
     defaultLocale: "en",
     langDir: "locales/",
@@ -108,7 +97,13 @@ export default defineNuxtConfig({
       escapeHtml: false,
     },
 
-    detectBrowserLanguage: false,
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: "gtg_locale",
+      redirectOn: "root",
+      alwaysRedirect: false,
+      fallbackLocale: "en",
+    },
   },
 
   primevue: {
@@ -137,22 +132,23 @@ export default defineNuxtConfig({
     },
   },
 
+  // ── Espaces privés : rendu client + noindex + hors sitemap ──
   routeRules: {
-    "/dashboard/**": { ssr: false },
-    "/admin/**": { ssr: false },
-    "/centre/**": { ssr: false },
-    "/enseignant/**": { ssr: false },
-    "/fr/dashboard/**": { ssr: false },
-    "/fr/admin/**": { ssr: false },
-    "/fr/centre/**": { ssr: false },
-    "/fr/enseignant/**": { ssr: false },
-    "/de/dashboard/**": { ssr: false },
-    "/de/admin/**": { ssr: false },
-    "/de/centre/**": { ssr: false },
-    "/de/enseignant/**": { ssr: false },
-    "/referrals/**": { ssr: false },
-    "/fr/referrals/**": { ssr: false },
-    "/de/referrals/**": { ssr: false },
+    "/dashboard/**": { ssr: false, robots: false },
+    "/admin/**": { ssr: false, robots: false },
+    "/centre/**": { ssr: false, robots: false },
+    "/enseignant/**": { ssr: false, robots: false },
+    "/referrals/**": { ssr: false, robots: false },
+    "/fr/dashboard/**": { ssr: false, robots: false },
+    "/fr/admin/**": { ssr: false, robots: false },
+    "/fr/centre/**": { ssr: false, robots: false },
+    "/fr/enseignant/**": { ssr: false, robots: false },
+    "/fr/referrals/**": { ssr: false, robots: false },
+    "/de/dashboard/**": { ssr: false, robots: false },
+    "/de/admin/**": { ssr: false, robots: false },
+    "/de/centre/**": { ssr: false, robots: false },
+    "/de/enseignant/**": { ssr: false, robots: false },
+    "/de/referrals/**": { ssr: false, robots: false },
   },
 
   vite: {

@@ -13,7 +13,7 @@ Critères officiels (eclexam.eu, "Criteria for Assessing Writing"), 0 à 5 chacu
   Kommunikative Wirksamkeit. Kommunikative Wirksamkeit = 0 -> tâche = 0.
 
 HYPOTHÈSE (à confirmer) : chaque texte noté sur 25 (5 x 5), note Schreiben =
-moyenne des deux textes (max 25). Module réussi à 60 % = 15/25 (règle 2026).
+moyenne des deux textes (max 25). Module réussi à 40 % = 10/25 (règle 2026).
 """
 
 WORD_TARGET = {"b1": 100, "b2": 150}
@@ -97,7 +97,7 @@ Feedback auf Deutsch, kurz (max 15 Wörter pro Eintrag).
 
 BERECHNUNG : task_score = Summe der 5 Kriterien (max 25), 0 wenn kommunikative_wirksamkeit = 0.
 overall_score = (task1.task_score + task2.task_score) / 2, auf ganze Zahl gerundet (max 25).
-passed = true wenn overall_score >= 15.
+passed = true wenn overall_score >= 10.
 Antworte NUR mit dem JSON-Objekt. Beginne mit {{ und ende mit }}.
 
 # ═══════════════════════════════════════════════════════
