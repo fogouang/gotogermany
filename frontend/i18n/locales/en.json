@@ -535,11 +535,13 @@
       "summary": "Summary",
       "transcript": "Text",
       "marked_count": "{n} / {max} marked",
+      "no_heading_yet": "No heading chosen yet",
       "summary_after_listening": "The summary appears once listening is over.",
       "slots_full": "You have already marked {max} items. Click a marked item to unmark it."
     },
     "player": {
       "intro_title": "Before you start",
+      "suggested_minutes": "approx. {n} min",
       "intro_modules": "Exam schedule",
       "intro_minutes": "{n} min",
       "intro_oral": "Oral exam, taken separately with an examiner",
@@ -619,7 +621,8 @@
       "volume": "Volume",
       "speakers": "Speakers",
       "text_n": "Text {n}",
-      "questions_count": "{n} question | {n} questions"
+      "questions_count": "{n} question | {n} questions",
+      "now_playing": "Now playing"
     },
     "result": {
       "title": "Exam completed!",
@@ -686,6 +689,11 @@
     "modules": "modules",
     "module_passed": "Passed",
     "module_failed": "Failed",
+    "filter_all": "All",
+    "filter_wrong": "Mistakes",
+    "filter_right": "Correct",
+    "correct_short": "correct",
+    "no_answer_in_filter": "No answers in this filter.",
     "why_failed": "Why didn't you pass?",
     "global_score_insufficient": "Written score: {score}%, the pass mark is {threshold}%.",
     "module_score_insufficient": "{module}: {score}/100 (module pass mark: 60)",
@@ -701,6 +709,18 @@
       "block_detail": "Answer details",
       "teil": "Teil {n}",
       "no_answer": "No answer given in this part."
+    },
+    "messages": {
+      "module_passed": "Well done! You passed the {module} module with {score}.",
+      "module_failed": "You did not reach {min}% in the {module} module ({score}). Keep practising!",
+      "module_pending": "The {module} module is waiting for AI correction.",
+      "exam_passed": "Congratulations! You passed this exam.",
+      "exam_failed_weak": "Score too low. Module(s) to work on: {list}.",
+      "exam_failed": "You did not reach the required score. Keep practising!",
+      "partial_pending": "Partial result: some parts are still waiting for correction.",
+      "tdn_levels": "Estimated levels: {levels}. Official thresholds vary slightly from session to session.",
+      "assignment_graded": "Assignment submitted and graded. Your final mark is in your assignments.",
+      "assignment_submitted": "Assignment submitted. Your teacher will mark it and your grade will appear in your assignments."
     }
   },
   "exam_detail": {

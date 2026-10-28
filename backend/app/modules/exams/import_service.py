@@ -808,6 +808,15 @@ class ExamImportService:
                         q.audio_file = relative_path
                         q_updated += 1
             else:
+                # Teil découpé en plusieurs audios (Goethe Hören 1 : audio1..audio5) :
+                # un fichier global écraserait l'association question par question
+                if any((q.content or {}).get("audio_number") for q in questions):
+                    log.append(
+                        f"⚠️ {filename} : Teil {teil_number} attend des fichiers "
+                        f"..._teil{teil_number}_audioN.mp3, fichier global ignoré."
+                    )
+                    skipped += 1
+                    continue
                 # Teil avec 1 seul audio long : toutes les questions du teil
                 for q in questions:
                     q.audio_file = relative_path

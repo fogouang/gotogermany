@@ -1,6 +1,158 @@
 <template>
   <div class="lg:h-full flex flex-col">
-    <div class="flex-1 min-h-0 flex flex-col lg:flex-row">
+    <!-- ── Plusieurs textes courts (Goethe Hören 1, ÖSD…) : un bloc par texte,
+         lecteur et questions ensemble, comme sur la version officielle ── -->
+    <div v-if="perTextLayout" class="lg:h-full lg:overflow-y-auto">
+      <div class="mx-auto max-w-3xl space-y-4 p-5 sm:p-6">
+        <!-- Consigne -->
+        <div
+          class="rounded-leaf border border-primary/20 bg-primary/5 px-4 py-3"
+        >
+          <p class="text-sm font-medium text-ink whitespace-pre-line">
+            {{ teil.instructions }}
+          </p>
+          <p class="mt-1.5 text-xs text-muted">
+            <i class="pi pi-headphones text-[11px] mr-1"></i>
+            {{ t("session.horen.plays_rule", { n: maxPlays }, maxPlays) }}
+          </p>
+        </div>
+
+        <!-- Temps de lecture / fin des écoutes -->
+        <div
+          v-if="!teilProgress.read"
+          class="flex items-center gap-3 rounded-leaf border border-amber-500/30 bg-amber-500/10 px-4 py-3"
+        >
+          <i class="pi pi-eye text-amber-600"></i>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-ink">
+              {{ t("session.horen.reading_title") }}
+            </p>
+            <p class="text-xs text-muted">
+              {{ t("session.horen.reading_hint") }}
+            </p>
+          </div>
+          <span
+            class="font-mono text-2xl font-bold text-amber-600 tabular-nums"
+            >{{ readLeft }}</span
+          >
+        </div>
+        <div
+          v-else-if="activeIndex < 0"
+          class="flex items-center gap-3 rounded-leaf border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
+        >
+          <i class="pi pi-check-circle text-emerald-600"></i>
+          <p class="text-sm font-medium text-ink">
+            {{ t("session.horen.all_done") }}
+          </p>
+        </div>
+
+        <!-- Un bloc par texte -->
+        <section
+          v-for="(track, gi) in tracks"
+          :key="`text-${track.key}`"
+          :ref="(el) => setTrackRef(el, gi)"
+          :class="[
+            'scroll-mt-4 overflow-hidden rounded-card border transition-all',
+            gi === activeIndex
+              ? 'border-primary/40 bg-card shadow-soft'
+              : 'border-line bg-card',
+          ]"
+        >
+          <div
+            class="flex items-center gap-3 border-b border-line bg-card-2 px-4 py-3"
+          >
+            <span
+              :class="[
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                isFinished(track) && gi !== activeIndex
+                  ? 'bg-emerald-500/10 text-emerald-600'
+                  : gi === activeIndex
+                    ? 'bg-primary text-white'
+                    : 'bg-card border border-line text-muted',
+              ]"
+            >
+              <i
+                v-if="isFinished(track) && gi !== activeIndex"
+                class="pi pi-check text-[10px]"
+              ></i>
+              <template v-else>{{ trackNumber(track, gi) }}</template>
+            </span>
+            <p class="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+              {{ trackTitle(track, gi) }}
+            </p>
+            <span
+              v-if="gi === activeIndex"
+              class="flex items-center gap-1.5 text-xs font-semibold text-primary"
+            >
+              <span
+                class="h-2 w-2 rounded-full bg-primary animate-pulse"
+              ></span>
+              {{ t("session.horen.now_playing") }}
+            </span>
+            <span v-else class="text-xs text-faint whitespace-nowrap">
+              {{
+                t(
+                  "session.horen.questions_count",
+                  { n: track.questions.length },
+                  track.questions.length,
+                )
+              }}
+            </span>
+          </div>
+
+          <div class="space-y-3 p-4">
+            <img
+              v-if="getAudioImage(track, gi)"
+              :src="`${apiBase}/images/${getAudioImage(track, gi)}`"
+              alt=""
+              class="w-full rounded-leaf border border-line object-contain max-h-40"
+            />
+
+            <AudioPlayer
+              v-if="track.audio_file"
+              :key="`player-${track.key}`"
+              :src="audioUrl(track.audio_file)"
+              :max-plays="maxPlays"
+              :plays-used="playsOf(track)"
+              :active="gi === activeIndex"
+              :gap-seconds="GAP_SECONDS"
+              @start="markStarted(track)"
+              @done="markFinished(track)"
+            />
+            <div
+              v-else
+              class="flex items-center gap-2 text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-leaf px-4 py-3 text-sm"
+            >
+              <i class="pi pi-exclamation-triangle"></i>
+              {{ t("session.horen.audio_missing") }}
+            </div>
+
+            <ul class="divide-y divide-line rounded-leaf border border-line">
+              <li
+                v-for="q in track.questions"
+                :key="q.id"
+                :id="`question-${q.id}`"
+                :class="[
+                  'px-4 py-3 transition-colors',
+                  answers[q.id] ? 'bg-primary/5' : 'bg-card',
+                ]"
+              >
+                <QuestionItem
+                  :question="q"
+                  :answer="answers[q.id]?.user_answer"
+                  compact
+                  @answer="
+                    (val: Record<string, any>) => emit('answer', q.id, val)
+                  "
+                />
+              </li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div v-else class="flex-1 min-h-0 flex flex-col lg:flex-row">
       <!-- ── Colonne gauche : consigne + audios ── -->
       <section
         class="bg-card border-line lg:w-1/2 lg:border-r lg:overflow-y-auto lg:min-h-0"
@@ -265,7 +417,7 @@
             @answer="(id: string, val: any) => emit('answer', id, val)"
           />
 
-                    <!-- Associations (TestDaF Lesen 4/5/6, Hören 4) : options affichées une seule fois -->
+          <!-- Associations (TestDaF Lesen 4/5/6, Hören 4) : options affichées une seule fois -->
           <ZuordnungBlock
             v-else-if="fmt === 'zuordnung'"
             :teil="teil"
@@ -273,7 +425,7 @@
             :answers="answers"
             @answer="(id: string, val: any) => emit('answer', id, val)"
           />
-          
+
           <!-- Tous les autres formats -->
           <template v-else>
             <div
@@ -554,6 +706,16 @@ function markFinished(track?: Track) {
     if (!p.finished.includes(track.key)) p.finished.push(track.key);
   });
 }
+
+// Plusieurs audios courts : lecteur et questions de chaque texte dans le même bloc
+const SPECIAL_FORMATS = new Set([
+  "fehler_in_zusammenfassung",
+  "woerter_im_transkript",
+  "zuordnung",
+]);
+const perTextLayout = computed(
+  () => tracks.value.length > 1 && !SPECIAL_FORMATS.has(fmt.value),
+);
 
 // TestDaF Hören 3 : résumé masqué jusqu'à la fin de l'écoute
 const summaryHidden = computed(

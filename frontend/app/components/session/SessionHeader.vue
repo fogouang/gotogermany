@@ -19,12 +19,16 @@
         </p>
         <p class="text-xs text-muted leading-tight truncate">
           {{ moduleName }} · {{ teilLabel }}
+          <!-- Durée conseillée du Teil (Goethe : « vorgeschlagene Arbeitszeit ») -->
+          <span v-if="teilMinutes" class="text-faint">
+            · {{ t("session.player.suggested_minutes", { n: teilMinutes }) }}
+          </span>
         </p>
       </div>
 
       <!-- Progression des réponses -->
       <div class="hidden md:flex flex-col items-end gap-1 w-40 shrink-0">
-        <span class="text-[11px] text-muted">
+        <span class="text-[11px] text-muted tabular-nums">
           {{ t("session.player.answered", { answered, total }) }}
         </span>
         <div class="w-full h-1.5 rounded-full bg-card-2 overflow-hidden">
@@ -77,8 +81,46 @@
       </div>
     </div>
 
-    <!-- Teile du bloc -->
-    <div class="max-w-7xl mx-auto px-3 sm:px-4 pb-2 flex gap-1">
+    <!-- Teile du module : onglets cliquables avec leur avancement -->
+    <nav
+      v-if="steps?.length"
+      class="max-w-7xl mx-auto px-3 sm:px-4 pb-2 flex gap-1.5 overflow-x-auto"
+      :aria-label="moduleName"
+    >
+      <button
+        v-for="(step, i) in steps"
+        :key="i"
+        type="button"
+        :aria-current="i === stepIndex ? 'step' : undefined"
+        :class="[
+          'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+          i === stepIndex
+            ? 'border-primary/30 bg-primary/10 text-primary'
+            : isDone(step)
+              ? 'border-line bg-card text-ink hover:border-primary/30'
+              : 'border-line bg-card text-muted hover:border-primary/30 hover:text-ink',
+        ]"
+        @click="emit('goto', i)"
+      >
+        <i
+          v-if="isDone(step)"
+          class="pi pi-check-circle text-[11px] text-emerald-600"
+        ></i>
+        <span>{{ step.label }}</span>
+        <span
+          v-if="step.total > 0"
+          :class="[
+            'tabular-nums',
+            i === stepIndex ? 'text-primary/70' : 'text-faint',
+          ]"
+        >
+          {{ step.answered }}/{{ step.total }}
+        </span>
+      </button>
+    </nav>
+
+    <!-- Sans détail des Teile : simple barre d'étapes -->
+    <div v-else class="max-w-7xl mx-auto px-3 sm:px-4 pb-2 flex gap-1">
       <div
         v-for="i in stepCount"
         :key="i"
@@ -92,9 +134,19 @@
 </template>
 
 <script setup lang="ts">
+type HeaderStep = {
+  label: string; // « Teil 1 »
+  answered: number;
+  total: number;
+};
+
 const { t } = useI18n();
 
-const emit = defineEmits<{ exit: []; font: [delta: number] }>();
+const emit = defineEmits<{
+  exit: [];
+  font: [delta: number];
+  goto: [index: number];
+}>();
 
 const props = defineProps<{
   examName: string;
@@ -108,7 +160,12 @@ const props = defineProps<{
   timeRemaining: number;
   canFontDown: boolean;
   canFontUp: boolean;
+  // Facultatifs : onglets des Teile et durée conseillée du Teil en cours
+  steps?: HeaderStep[];
+  teilMinutes?: number | null;
 }>();
+
+const isDone = (step: HeaderStep) => step.total > 0 && step.answered >= step.total;
 
 const progress = computed(() =>
   props.total > 0 ? Math.round((props.answered / props.total) * 100) : 0,

@@ -126,6 +126,8 @@ class SessionResultResponse(BaseSchema):
     duration_seconds: int | None
     modules: list[ModuleResultResponse] = []
     result_message: str | None
+    result_message_key: str | None = None
+    result_message_params: dict | None = None
     module_passed: bool | None = None
     module_slugs: list[str] | None = None
 

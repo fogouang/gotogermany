@@ -120,6 +120,9 @@
         :can-font-up="fontStep < FONT_SCALES.length - 1"
         @font="(delta) => setFontStep(fontStep + delta)"
         @exit="exitDialogVisible = true"
+        :steps="headerSteps"
+        :teil-minutes="currentTeil?.time_minutes ?? null"
+        @goto="goToStep"
       />
 
       <div class="flex-1 overflow-y-auto min-h-0">
@@ -387,7 +390,14 @@ const teilLabel = computed(() => {
 
 // ── Réponses du bloc ──────────────────────────────────
 
-const isAnswered = (questionId: string) => !!sessionStore.answers[questionId];
+// Une marque retirée (2e clic : TestDaF Lesen 7, Hören 3 et 7) envoie une réponse vide :
+// elle ne doit pas compter comme répondue
+const isAnswered = (questionId: string) => {
+  const ua = sessionStore.answers[questionId]?.user_answer;
+  if (!ua) return false;
+  if ("answer" in ua) return String(ua.answer ?? "").trim() !== "";
+  return true;
+};
 
 const blockQuestions = computed(() => {
   const teilIds = new Set(
@@ -424,6 +434,26 @@ const sheetGroups = computed(() =>
     };
   }),
 );
+
+// Onglets du header : un par Teil du bloc, avec ses réponses
+const headerSteps = computed(() => {
+  const multiModule = (currentBlock.value?.moduleIndexes.length ?? 0) > 1;
+  return steps.value.map((s) => {
+    const mod = sessionStore.modules[s.mi];
+    const teil = mod?.teile?.[s.ti];
+    const qs = sessionStore.questions.filter(
+      (q: any) => q.teil_id === teil?.id,
+    );
+    return {
+      // TELC : Leseverstehen + Sprachbausteine dans un même bloc → on garde le nom du module
+      label: multiModule
+        ? `${mod?.name ?? ""} ${s.ti + 1}`
+        : `Teil ${s.ti + 1}`,
+      answered: qs.filter((q: any) => isAnswered(q.id)).length,
+      total: qs.length,
+    };
+  });
+});
 
 // ── Vue du module ─────────────────────────────────────
 

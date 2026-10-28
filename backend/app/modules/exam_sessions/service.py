@@ -109,7 +109,7 @@ class ExamSessionService:
             modules_data = self._build_modules_content(subject)
             answers = await self.answer_repo.get_by_session(active.id)
             existing = {
-                str(a.question_id): {"answer": a.user_answer}
+                str(a.question_id): a.user_answer
                 for a in answers
             }
             return SessionStartResponse(
@@ -389,6 +389,7 @@ class ExamSessionService:
                 if graded
                 else "Devoir rendu. Votre enseignant va le corriger : votre note apparaîtra dans vos devoirs."
             ),
+            result_message_key="assignment_graded" if graded else "assignment_submitted",
         )
 
     async def submit_session(
@@ -995,8 +996,10 @@ class ExamSessionService:
             if m.score_obtained is not None:
                 module_passed = m.score_obtained >= module_min
 
-        # Messages
+        # Messages : texte français (compatibilité) + clé et paramètres traduits par le front
         result_message = None
+        message_key: str | None = None
+        message_params: dict = {}
         if len(modules_result) == 1:
             m = modules_result[0]
             if m.score_obtained is not None:
@@ -1005,17 +1008,22 @@ class ExamSessionService:
                     if m.points_obtained is not None
                     else f"{m.score_obtained:.0f} %"
                 )
+                message_params = {"module": m.name, "score": score_txt, "min": f"{module_min:g}"}
                 if module_passed:
+                    message_key = "module_passed"
                     result_message = f"Excellent ! Vous avez réussi le module {m.name} avec {score_txt}."
                 else:
+                    message_key = "module_failed"
                     result_message = (
                         f"Vous n'avez pas atteint {module_min:g} % au module {m.name} "
                         f"({score_txt}). Continuez à pratiquer !"
                     )
             elif session.status == "PENDING_REVIEW":
+                message_key, message_params = "module_pending", {"module": m.name}
                 result_message = f"Module {m.name} en attente de correction IA."
         else:
             if session.passed is True:
+                message_key = "exam_passed"
                 result_message = "Félicitations ! Vous avez réussi cet examen."
             elif session.passed is False:
                 weak_modules = [
@@ -1023,14 +1031,19 @@ class ExamSessionService:
                     if m.score_obtained is not None and m.score_obtained < module_min
                 ]
                 if weak_modules:
+                    message_key = "exam_failed_weak"
+                    message_params = {"list": ", ".join(weak_modules)}
                     result_message = f"Score insuffisant. Module(s) à renforcer : {', '.join(weak_modules)}."
                 else:
+                    message_key = "exam_failed"
                     result_message = "Vous n'avez pas atteint le score requis. Continuez à vous entraîner !"
             elif session.status == "PENDING_REVIEW":
+                message_key = "partial_pending"
                 result_message = "Résultat partiel, certaines parties sont en attente de correction."
 
         if is_tdn and session.status == "COMPLETED":
             levels = ", ".join(f"{m.name} : {m.tdn_level}" for m in modules_result if m.tdn_level)
+            message_key, message_params = "tdn_levels", {"levels": levels}
             result_message = f"Niveaux estimés : {levels}. Les seuils officiels varient légèrement selon la session."
 
         return SessionResultResponse(
@@ -1050,5 +1063,7 @@ class ExamSessionService:
             duration_seconds=session.duration_seconds,
             modules=modules_result,
             result_message=result_message,
+            result_message_key=message_key,
+            result_message_params=message_params or None,
             module_slugs=session.module_slugs,
         )

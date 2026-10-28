@@ -74,6 +74,43 @@
             v-html="formatText(cfg.stimulus_text)"
           />
 
+          <!-- Textes avec QCM (Goethe B1 Lesen 2 et 5) : texte à gauche, questions à droite.
+               Plusieurs textes : un onglet par texte, synchronisé avec les questions. -->
+          <template v-if="currentText">
+            <div
+              v-if="cfg.texts.length > 1"
+              class="flex gap-1 p-1 rounded-leaf bg-card-2 w-fit"
+            >
+              <button
+                v-for="(tb, ti) in cfg.texts"
+                :key="ti"
+                type="button"
+                :class="[
+                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                  ti === activeText
+                    ? 'bg-card text-ink shadow-soft'
+                    : 'text-muted hover:text-ink',
+                ]"
+                @click="activeText = Number(ti)"
+              >
+                {{ t("session.q.text_n", { n: Number(ti) + 1 }) }}
+              </button>
+            </div>
+            <img
+              v-if="currentText.image"
+              :src="`${apiBase}/images/${currentText.image}`"
+              alt=""
+              class="w-full rounded-leaf border border-line object-contain"
+            />
+            <p v-if="currentText.source" class="text-xs text-faint">
+              {{ currentText.source }}
+            </p>
+            <div
+              class="text-[15px] text-ink leading-relaxed"
+              v-html="formatText(currentText.stimulus_text || '')"
+            />
+          </template>
+
           <!-- Grafik (TestDaF Lesen 7) -->
           <GrafikChart v-if="cfg.grafik" :grafik="cfg.grafik" />
 
@@ -89,20 +126,29 @@
                 <li
                   v-for="(titre, key) in titres"
                   :key="key"
-                  class="flex items-start gap-2 text-sm transition-opacity"
-                  :class="
-                    assignedTitres[String(key).toLowerCase()]
-                      ? 'text-faint opacity-60'
-                      : 'text-ink'
-                  "
+                  class="flex items-start gap-2 text-sm"
                 >
-                  <span class="font-bold text-primary w-5 shrink-0">{{
-                    String(key)
-                  }}</span>
-                  <span class="flex-1">{{ titre }}</span>
+                  <span
+                    :class="[
+                      'font-bold w-5 shrink-0',
+                      assignedTitres[String(key).toLowerCase()]
+                        ? 'text-faint'
+                        : 'text-primary',
+                    ]"
+                    >{{ String(key) }}</span
+                  >
+                  <span
+                    :class="[
+                      'flex-1 transition-colors',
+                      assignedTitres[String(key).toLowerCase()]
+                        ? 'text-faint line-through'
+                        : 'text-ink',
+                    ]"
+                    >{{ titre }}</span
+                  >
                   <span
                     v-if="assignedTitres[String(key).toLowerCase()]"
-                    class="shrink-0 rounded-full border border-line bg-card px-1.5 text-[10px] font-semibold text-muted"
+                    class="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary"
                   >
                     {{
                       t("session.q.text_n", {
@@ -123,6 +169,33 @@
               >
                 {{ t("session.q.text_n", { n: q.question_number }) }}
               </p>
+              <!-- Titre choisi, affiché sur le texte (clic : aller à la question) -->
+              <button
+                type="button"
+                :class="[
+                  'mb-3 flex w-full items-center gap-2 rounded-leaf border px-3 py-2 text-left text-sm transition-colors',
+                  chosenTitre(q)
+                    ? 'border-primary/30 bg-primary/5 text-ink hover:border-primary/50'
+                    : 'border-dashed border-line bg-card-2 text-faint hover:border-primary/40',
+                ]"
+                @click="focusQuestion(q)"
+              >
+                <i
+                  :class="[
+                    'pi pi-arrow-right shrink-0 text-[11px]',
+                    chosenTitre(q) ? 'text-primary' : '',
+                  ]"
+                ></i>
+                <template v-if="chosenTitre(q)">
+                  <span class="font-bold text-primary"
+                    >{{ chosenTitre(q) }})</span
+                  >
+                  <span class="min-w-0 truncate">{{
+                    headingText(q, chosenTitre(q) || "")
+                  }}</span>
+                </template>
+                <span v-else>{{ t("session.q.no_heading_yet") }}</span>
+              </button>
               <div
                 class="text-[15px] text-ink leading-relaxed"
                 v-html="formatText(q.content?.stimulus_text || '')"
@@ -140,8 +213,10 @@
             />
             <h3 class="font-bold text-ink">{{ cfg.article_title }}</h3>
             <div
-              class="text-[15px] text-ink leading-relaxed"
-              v-html="formatGapText(cfg.article_text || '')"
+              class="text-[15px] text-ink leading-loose"
+              v-html="renderGapText(cfg.article_text || '')"
+              @click="onGapClick"
+              @keydown.enter.prevent="onGapClick"
             />
           </template>
 
@@ -214,6 +289,34 @@
               :key="key"
               class="rounded-card border border-line p-4"
             >
+              <template v-for="q in paragraphQuestions(key)" :key="q.id">
+                <button
+                  type="button"
+                  :class="[
+                    'mb-3 flex w-full items-center gap-2 rounded-leaf border px-3 py-2 text-left text-sm transition-colors',
+                    chosenTitre(q)
+                      ? 'border-primary/30 bg-primary/5 text-ink hover:border-primary/50'
+                      : 'border-dashed border-line bg-card-2 text-faint hover:border-primary/40',
+                  ]"
+                  @click="focusQuestion(q)"
+                >
+                  <i
+                    :class="[
+                      'pi pi-arrow-right shrink-0 text-[11px]',
+                      chosenTitre(q) ? 'text-primary' : '',
+                    ]"
+                  ></i>
+                  <template v-if="chosenTitre(q)">
+                    <span class="font-bold text-primary"
+                      >{{ chosenTitre(q) }})</span
+                    >
+                    <span class="min-w-0 truncate">{{
+                      headingText(q, chosenTitre(q) || "")
+                    }}</span>
+                  </template>
+                  <span v-else>{{ t("session.q.no_heading_yet") }}</span>
+                </button>
+              </template>
               <img
                 v-if="para?.image"
                 :src="`${apiBase}/images/${para.image}`"
@@ -273,11 +376,22 @@
             <div
               v-for="(anzeige, key) in cfg.anzeigen"
               :key="key"
-              class="rounded-card border border-line p-4 flex items-start gap-3"
+              :class="[
+                'rounded-card border p-4 flex items-start gap-3 transition-colors',
+                assignedTitres[String(key).toLowerCase()]
+                  ? 'border-line bg-card-2'
+                  : 'border-line',
+              ]"
             >
               <span class="font-bold text-primary w-5 shrink-0">{{
                 String(key).toUpperCase()
               }}</span>
+              <span
+                v-if="assignedTitres[String(key).toLowerCase()]"
+                class="order-last shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary"
+              >
+                {{ assignedTitres[String(key).toLowerCase()] }}
+              </span>
               <div class="flex-1 min-w-0">
                 <p
                   v-if="anzeigeField(anzeige, 'title')"
@@ -319,7 +433,9 @@
             </div>
             <div
               class="text-[15px] text-ink leading-loose"
-              v-html="formatGapText(cfg.text_with_gaps || '')"
+              v-html="renderGapText(cfg.text_with_gaps || '')"
+              @click="onGapClick"
+              @keydown.enter.prevent="onGapClick"
             />
             <div v-if="fmt === 'word_bank_gap_fill' && cfg.word_bank">
               <p
@@ -420,6 +536,9 @@
             <p v-if="beispiel.prompt" class="text-sm text-ink mb-2">
               {{ beispiel.prompt }}
             </p>
+            <p v-if="beispiel.statement" class="text-sm text-ink mb-2">
+              {{ beispiel.statement }}
+            </p>
             <p v-if="beispiel.context" class="text-sm text-ink mb-2">
               {{ beispiel.context }}
             </p>
@@ -439,35 +558,44 @@
               </li>
             </ul>
             <p v-else-if="beispiel.answer" class="text-sm text-ink">
-              → <strong class="text-primary">{{ beispiel.answer }}</strong>
-              <span v-if="beispiel.text" class="text-muted">
-                · {{ beispiel.text }}</span
+              → <strong class="text-primary">{{ beispielAnswer }}</strong>
+              <span v-if="beispielExtra" class="text-muted">
+                · {{ beispielExtra }}</span
               >
             </p>
           </div>
 
-          <!-- QCM avec plusieurs textes (Goethe B1 Lesen T2) -->
-          <template v-if="hasTexts">
+          <!-- QCM sur plusieurs textes (Goethe B1 Lesen 2) : questions regroupées par texte -->
+          <template v-if="hasTexts && cfg.texts.length > 1">
             <div
               v-for="(textBlock, ti) in cfg.texts"
               :key="ti"
-              class="space-y-3"
+              :class="[
+                'space-y-3 rounded-card transition-colors',
+                ti === activeText ? '' : 'opacity-80',
+              ]"
+              @click="activeText = Number(ti)"
+              @focusin="activeText = Number(ti)"
             >
-              <img
-                v-if="textBlock?.image"
-                :src="`${apiBase}/images/${textBlock.image}`"
-                alt=""
-                class="w-full rounded-leaf border border-line object-contain"
-              />
-              <div class="rounded-card border border-line bg-card p-4">
-                <p v-if="textBlock.source" class="text-xs text-faint mb-2">
-                  {{ textBlock.source }}
-                </p>
-                <div
-                  class="text-[15px] text-ink leading-relaxed"
-                  v-html="formatText(textBlock.stimulus_text)"
-                />
-              </div>
+              <button
+                type="button"
+                :class="[
+                  'flex w-full items-center gap-2 text-left text-xs font-semibold uppercase tracking-wide',
+                  ti === activeText ? 'text-primary' : 'text-faint',
+                ]"
+                @click="showText(Number(ti))"
+              >
+                <span
+                  :class="[
+                    'h-2 w-2 rounded-full',
+                    ti === activeText ? 'bg-primary' : 'bg-line',
+                  ]"
+                ></span>
+                {{ t("session.q.text_n", { n: Number(ti) + 1 }) }}
+                <span v-if="textBlock.source" class="normal-case font-normal"
+                  >· {{ textBlock.source }}</span
+                >
+              </button>
               <div
                 v-for="q in questionsForText(textBlock)"
                 :id="`question-${q.id}`"
@@ -477,6 +605,7 @@
                 <QuestionItem
                   :question="q"
                   :answer="answers[q.id]?.user_answer"
+                  compact
                   @answer="
                     (val: Record<string, any>) => emit('answer', q.id, val)
                   "
@@ -493,6 +622,7 @@
             :answers="answers"
             @answer="(id: string, val: any) => emit('answer', id, val)"
           />
+
           <!-- Associations (TestDaF Lesen 4/5/6, Hören 4) : options affichées une seule fois -->
           <ZuordnungBlock
             v-else-if="fmt === 'zuordnung'"
@@ -509,6 +639,7 @@
               :id="`question-${q.id}`"
               :key="q.id"
               :class="cardClass(q)"
+              @click="markActive(q)"
             >
               <QuestionItem
                 :question="q"
@@ -568,6 +699,7 @@ const SIDE_FORMATS = new Set([
 
 const hasStimulus = computed(
   () =>
+    hasTexts.value ||
     !!cfg.value.stimulus_text ||
     !!cfg.value.stimulus_image ||
     !!cfg.value.article_text ||
@@ -582,6 +714,26 @@ const hasTexts = computed(
     cfg.value.texts.length > 0,
 );
 
+// Texte affiché à gauche (Goethe B1 Lesen 2 : celui des questions en cours)
+const activeText = ref(0);
+const currentText = computed<Record<string, any> | null>(() =>
+  hasTexts.value
+    ? (cfg.value.texts[activeText.value] ?? cfg.value.texts[0])
+    : null,
+);
+
+// Mobile : un clic sur « Text 2 » ouvre directement le texte
+function showText(ti: number) {
+  activeText.value = ti;
+  mobileTab.value = "text";
+}
+
+// Nouveau Teil : on repart du premier texte
+watch(
+  () => props.teil.id,
+  () => (activeText.value = 0),
+);
+
 const titres = computed(
   () => cfg.value.titres || props.questions[0]?.content?.titres || {},
 );
@@ -591,6 +743,9 @@ const UNIQUE_CHOICE_FORMATS = new Set([
   "zuordnung_titre",
   "word_bank_gap_fill",
   "textabschnitte_ordnen",
+  // Goethe Lesen 3 / TELC Lesen 3 : chaque annonce ne sert qu'une fois (0 / x exceptés)
+  "matching",
+  "selektives_matching",
 ]);
 // TestDaF zuordnung : options uniques sauf si options_reusable (Lesen 5)
 const isUniqueChoice = computed(
@@ -607,15 +762,31 @@ const choiceNumber = (q: any) =>
   q.question_number;
 
 // Lettre choisie par chaque question
+// « Aucune annonce » (0 au Goethe, x au TELC) peut servir plusieurs fois
+const NO_MATCH = new Set(["0", "x"]);
+
 const chosenTitre = (q: any): string | null => {
   const key = props.answers[q.id]?.user_answer?.answer;
-  return key ? String(key).toLowerCase() : null;
+  if (!key) return null;
+  const k = String(key).toLowerCase();
+  return NO_MATCH.has(k) ? null : k;
+};
+
+// Lettre de l'exemple 0 : déjà utilisée, comme sur la copie d'examen
+const exampleChoice = (): Record<string, number | string> => {
+  const a = cfg.value.beispiel?.answer;
+  return isUniqueChoice.value &&
+    a &&
+    String(a).length <= 2 &&
+    !NO_MATCH.has(String(a).toLowerCase())
+    ? { [String(a).toLowerCase()]: "0" }
+    : {};
 };
 
 // Titres déjà attribués { lettre: numéro du texte }, pour la liste de gauche
-const assignedTitres = computed<Record<string, number>>(() => {
+const assignedTitres = computed<Record<string, number | string>>(() => {
   if (!isUniqueChoice.value) return {};
-  const out: Record<string, number> = {};
+  const out: Record<string, number | string> = exampleChoice();
   for (const q of props.questions) {
     const key = chosenTitre(q);
     if (key) out[key] = choiceNumber(q);
@@ -624,9 +795,9 @@ const assignedTitres = computed<Record<string, number>>(() => {
 });
 
 // Pour un texte : les lettres prises par les AUTRES textes
-const takenTitresFor = (q: any): Record<string, number> => {
+const takenTitresFor = (q: any): Record<string, number | string> => {
   if (!isUniqueChoice.value) return {};
-  const out: Record<string, number> = {};
+  const out: Record<string, number | string> = exampleChoice();
   for (const other of props.questions) {
     if (other.id === q.id) continue;
     const key = chosenTitre(other);
@@ -647,9 +818,24 @@ const beispiel = computed(() => {
   const b = cfg.value.beispiel;
   return b &&
     typeof b === "object" &&
-    (b.stem || b.prompt || b.context || b.answer)
+    (b.stem || b.prompt || b.statement || b.context || b.answer)
     ? b
     : null;
+});
+
+// Lettre de l'exemple en majuscule, avec le mot ou l'annonce qu'elle désigne
+const beispielAnswer = computed(() => {
+  const a = String(beispiel.value?.answer ?? "");
+  return a.length <= 2 ? a.toUpperCase() : a;
+});
+
+const beispielExtra = computed(() => {
+  const b = beispiel.value;
+  if (!b) return "";
+  if (b.text) return b.text;
+  const ad = cfg.value.anzeigen?.[String(b.answer).toLowerCase()];
+  if (ad) return typeof ad === "object" ? (ad.title ?? "") : String(ad);
+  return "";
 });
 
 const answeredCount = computed(
@@ -661,11 +847,47 @@ const questionsForText = (textBlock: any) => {
   return props.questions.filter((q) => numbers.includes(q.question_number));
 };
 
+// Question mise en avant après un clic sur le titre d'un texte (colonne gauche)
+const activeId = ref<string | null>(null);
+
+function focusQuestion(q: any) {
+  activeId.value = q.id;
+  mobileTab.value = "tasks";
+  nextTick(() =>
+    document
+      .getElementById(`question-${q.id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+  );
+}
+
+// Texte du titre choisi (TELC Lesen 1 : titres ; Goethe Lesen 5 : Überschriften)
+const headingText = (q: any, key: string): string => {
+  const list =
+    cfg.value.titres ||
+    cfg.value.headings ||
+    q.content?.titres ||
+    q.content?.headings ||
+    {};
+  return list[key] ?? list[key.toLowerCase()] ?? list[key.toUpperCase()] ?? "";
+};
+
+// Goethe B2 Lesen 5 : question liée à un paragraphe (clé « p28 » ou « 28 »)
+const paragraphQuestions = (key: string | number) => {
+  const n = String(key).replace(/^p/i, "");
+  return props.questions.filter(
+    (q) => String(q.content?.paragraph_number ?? q.question_number) === n,
+  );
+};
+
 const cardClass = (q: any) => [
   "border rounded-card p-4 sm:p-5 scroll-mt-4 transition-colors",
   props.answers[q.id]
     ? "border-primary/30 bg-primary/5"
     : "border-line bg-card",
+  (isGapFormat.value && activeGap.value === gapNumberOf(q)) ||
+  activeId.value === q.id
+    ? "ring-2 ring-primary/40"
+    : "",
 ];
 
 const tabClass = (tab: "text" | "tasks") => [
@@ -685,13 +907,105 @@ const formatText = (text: string) => {
     .replace(/\n/g, "<br>");
 };
 
-// Numéros de lacune (21) ou _21_ mis en évidence
-const formatGapText = (text: string) =>
-  formatText(text).replace(
-    /\((\d+)\)|_(\d+)_/g,
-    (_m, a, b) =>
-      `<span class="inline-flex items-center justify-center min-w-6 h-6 px-1 mx-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold align-middle">${a ?? b}</span>`,
+// ── Lacunes interactives : la réponse choisie s'affiche dans le texte ──
+
+const GAP_FORMATS = new Set([
+  "qcm_gap_fill",
+  "word_bank_gap_fill",
+  "lueckentext_saetze",
+]);
+const isGapFormat = computed(() => GAP_FORMATS.has(fmt.value));
+
+const activeGap = ref<string | null>(null);
+
+const gapNumberOf = (q: any) =>
+  String(
+    q.content?.gap_number ?? q.content?.display_number ?? q.question_number,
   );
+
+const questionByGap = computed<Record<string, any>>(() => {
+  const out: Record<string, any> = {};
+  for (const q of props.questions) out[gapNumberOf(q)] = q;
+  return out;
+});
+
+// Texte de la réponse : mot de la banque, option du QCM, ou lettre de la phrase
+const answerLabel = (q: any, key: string): string => {
+  if (fmt.value === "word_bank_gap_fill") {
+    const bank = cfg.value.word_bank || {};
+    return (
+      bank[key] ?? bank[key.toUpperCase()] ?? bank[key.toLowerCase()] ?? key
+    );
+  }
+  if (fmt.value === "qcm_gap_fill") {
+    const opts = q?.content?.options || {};
+    return opts[key] ?? opts[key.toLowerCase()] ?? key;
+  }
+  return key.toUpperCase();
+};
+
+const gapLabel = (n: string): string => {
+  const q = questionByGap.value[n];
+  if (!q) {
+    // Lacune 0 : l'exemple, affiché avec sa solution
+    const b = beispiel.value;
+    return n === "0" && b?.answer ? answerLabel(null, String(b.answer)) : "";
+  }
+  const key = props.answers[q.id]?.user_answer?.answer;
+  return key ? answerLabel(q, String(key)) : "";
+};
+
+const GAP_BASE =
+  "inline-flex items-center gap-1 align-baseline mx-0.5 rounded-md border px-1.5 text-[13px] leading-6 transition-colors";
+
+const renderGapText = (text: string) =>
+  formatText(text).replace(/\((\d+)\)|_(\d+)_/g, (_m, a, b) => {
+    const n = String(a ?? b);
+    const label = gapLabel(n);
+    const isExample = !questionByGap.value[n];
+    const num = `<span class="text-xs font-bold">${n}</span>`;
+    const word = label
+      ? `<span class="font-semibold">${escapeHtml(label)}</span>`
+      : "";
+    if (isExample) {
+      return `<span class="${GAP_BASE} border-line bg-card-2 text-faint">${num}${word}</span>`;
+    }
+    const state = label
+      ? "border-primary/40 bg-primary/10 text-primary"
+      : "border-dashed border-line bg-card-2 text-muted";
+    const active = activeGap.value === n ? " ring-2 ring-primary/50" : "";
+    return `<span data-gap="${n}" role="button" tabindex="0" class="${GAP_BASE} cursor-pointer hover:border-primary/60 ${state}${active}">${num}${word}</span>`;
+  });
+
+// Clic sur une lacune du texte : la question correspondante passe au premier plan
+function onGapClick(e: Event) {
+  const el = (e.target as HTMLElement)?.closest?.(
+    "[data-gap]",
+  ) as HTMLElement | null;
+  const n = el?.dataset.gap;
+  if (!n) return;
+  const q = questionByGap.value[n];
+  if (!q) return;
+  activeGap.value = n;
+  mobileTab.value = "tasks";
+  nextTick(() =>
+    document
+      .getElementById(`question-${q.id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+  );
+}
+
+// Clic sur une question : sa lacune est mise en évidence dans le texte
+function markActive(q: any) {
+  if (!isGapFormat.value) return;
+  const n = gapNumberOf(q);
+  activeGap.value = n;
+  nextTick(() =>
+    document
+      .querySelector(`[data-gap="${n}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+  );
+}
 
 // ── Annonces (string ou {title, text, contact, image}) ──
 

@@ -495,6 +495,7 @@
     },
     "player": {
       "intro_title": "Avant de commencer",
+      "suggested_minutes": "env. {n} min",
       "intro_modules": "Déroulé de l'épreuve",
       "intro_minutes": "{n} min",
       "intro_oral": "Épreuve orale, passée séparément avec un examinateur",
@@ -565,6 +566,7 @@
       "transcript": "Texte",
       "marked_count": "{n} / {max} marqués",
       "summary_after_listening": "Le résumé s'affiche à la fin de l'écoute.",
+      "no_heading_yet": "Titre pas encore choisi",
       "slots_full": "Vous avez déjà marqué {max} éléments. Cliquez sur un élément marqué pour retirer la marque."
     },
     "writing": {
@@ -609,7 +611,8 @@
       "volume": "Volume",
       "speakers": "Intervenants",
       "text_n": "Texte {n}",
-      "questions_count": "{n} question | {n} questions"
+      "questions_count": "{n} question | {n} questions",
+      "now_playing": "En cours"
     },
     "result": {
       "title": "Examen terminé !",
@@ -676,6 +679,11 @@
     "modules": "modules",
     "module_passed": "Réussi",
     "module_failed": "Échoué",
+    "filter_all": "Toutes",
+    "filter_wrong": "Erreurs",
+    "filter_right": "Correctes",
+    "correct_short": "justes",
+    "no_answer_in_filter": "Aucune réponse dans ce filtre.",
     "why_failed": "Pourquoi avez-vous échoué ?",
     "global_score_insufficient": "Score de l'écrit : {score} %, le seuil est de {threshold} %.",
     "module_score_insufficient": "{module} : {score}/100 (seuil module : 60)",
@@ -691,6 +699,18 @@
       "block_detail": "Détail des réponses",
       "teil": "Teil {n}",
       "no_answer": "Aucune réponse donnée dans cette partie."
+    },
+    "messages": {
+      "module_passed": "Excellent ! Vous avez réussi le module {module} avec {score}.",
+      "module_failed": "Vous n'avez pas atteint {min} % au module {module} ({score}). Continuez à pratiquer !",
+      "module_pending": "Module {module} en attente de correction IA.",
+      "exam_passed": "Félicitations ! Vous avez réussi cet examen.",
+      "exam_failed_weak": "Score insuffisant. Module(s) à renforcer : {list}.",
+      "exam_failed": "Vous n'avez pas atteint le score requis. Continuez à vous entraîner !",
+      "partial_pending": "Résultat partiel, certaines parties sont en attente de correction.",
+      "tdn_levels": "Niveaux estimés : {levels}. Les seuils officiels varient légèrement selon la session.",
+      "assignment_graded": "Devoir rendu et noté. Retrouvez votre note finale dans vos devoirs.",
+      "assignment_submitted": "Devoir rendu. Votre enseignant va le corriger : votre note apparaîtra dans vos devoirs."
     }
   },
   "exam_detail": {

@@ -19,6 +19,8 @@ export type SessionResultResponse = {
     duration_seconds: (number | null);
     modules?: Array<ModuleResultResponse>;
     result_message: (string | null);
+    result_message_key?: (string | null);
+    result_message_params?: (Record<string, any> | null);
     module_passed?: (boolean | null);
     module_slugs?: (Array<string> | null);
 };

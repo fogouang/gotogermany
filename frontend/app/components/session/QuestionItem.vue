@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- Numéro -->
-    <div class="flex items-center gap-2 mb-3">
+    <!-- Numéro (Richtig/Falsch : intégré à la ligne compacte) -->
+    <div v-if="!isBinary" class="flex items-center gap-2 mb-3">
       <span
         class="inline-flex items-center h-7 min-w-7 px-2.5 justify-center rounded-full bg-card-2 border border-line text-xs font-bold text-ink tabular-nums"
       >
@@ -15,46 +15,77 @@
       </span>
     </div>
 
-    <!-- richtig_falsch / ja_nein -->
-    <div v-if="type === 'richtig_falsch' || type === 'ja_nein'">
-      <div v-if="type === 'ja_nein' && c.text" class="mb-4">
+    <!-- richtig_falsch / ja_nein : une ligne compacte, comme sur le Antwortbogen -->
+    <div v-if="isBinary">
+      <!-- Goethe B1 Lesen 4 : avis d'une personne au-dessus de la ligne -->
+      <div v-if="type === 'ja_nein' && c.text && c.statement" class="mb-3">
         <p v-if="c.author" class="text-sm font-semibold text-ink mb-1">
           {{ c.author }}
         </p>
         <p class="text-[15px] text-ink leading-relaxed">{{ c.text }}</p>
       </div>
-      <p v-else class="text-[15px] text-ink leading-relaxed mb-4">
-        {{ c.statement || c.text }}
-      </p>
 
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          v-for="opt in binaryOptions"
-          :key="opt.value"
-          type="button"
-          :class="[
-            'py-3 px-4 rounded-leaf border-2 text-sm font-semibold transition-colors',
-            optionClass(isSel(opt.value)),
-          ]"
-          @click="choose(opt.value)"
+      <!-- Numéro · R F · énoncé, comme la grille R/F du TELC -->
+      <div class="flex items-start gap-3">
+        <span
+          class="inline-flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full border border-line bg-card-2 px-2 text-xs font-bold tabular-nums text-ink mt-0.5"
         >
-          {{ opt.label }}
-        </button>
+          {{ badge }}
+        </span>
+
+        <div class="flex shrink-0 gap-1.5">
+          <button
+            v-for="opt in binaryOptions"
+            :key="opt.value"
+            type="button"
+            :title="opt.label"
+            :aria-label="opt.label"
+            :aria-pressed="isSel(opt.value)"
+            :class="[
+              'h-8 w-8 rounded-full border-2 text-xs font-bold transition-colors',
+              isSel(opt.value)
+                ? 'border-primary bg-primary text-white'
+                : 'border-line bg-card text-muted hover:border-primary/50 hover:text-ink',
+            ]"
+            @click="choose(opt.value)"
+          >
+            {{ opt.short }}
+          </button>
+        </div>
+
+        <div class="min-w-0 flex-1 pt-1">
+          <p
+            v-if="type === 'ja_nein' && c.author && !c.statement"
+            class="text-sm font-semibold text-ink mb-0.5"
+          >
+            {{ c.author }}
+          </p>
+          <p class="text-[15px] text-ink leading-relaxed">
+            {{ c.statement || c.text }}
+          </p>
+        </div>
       </div>
     </div>
 
     <!-- qcm_abc -->
     <div v-else-if="type === 'qcm_abc'">
-      <p class="text-[15px] text-ink leading-relaxed mb-4">
+      <p
+        :class="[
+          'text-[15px] text-ink leading-relaxed',
+          compact ? 'mb-2.5' : 'mb-4',
+        ]"
+      >
         {{ c.stem || c.question }}
       </p>
-      <div class="space-y-2">
+      <div :class="compact ? 'space-y-1.5' : 'space-y-2'">
         <button
           v-for="(text, key) in c.options"
           :key="key"
           type="button"
+          :aria-pressed="isSel(key)"
           :class="[
-            'w-full text-left px-4 py-3 rounded-leaf border-2 text-sm transition-colors flex items-start gap-3',
+            'w-full text-left rounded-leaf border-2 text-sm transition-colors flex items-start gap-3',
+            compact ? 'px-3 py-2' : 'px-4 py-3',
             optionClass(isSel(key)),
           ]"
           @click="choose(key)"
@@ -75,17 +106,25 @@
           v-for="key in adKeys"
           :key="key"
           type="button"
+          :aria-pressed="isSel(key)"
+          :title="key === noMatchKey ? undefined : adTitle(key)"
           :class="[
-            'w-10 h-10 rounded-leaf border-2 font-bold text-sm transition-colors',
-            isSel(key)
-              ? 'border-primary bg-primary text-white'
-              : key === noMatchKey
-                ? 'border-dashed border-line text-muted hover:border-primary/40'
-                : 'border-line bg-card text-ink hover:border-primary/40',
+            'relative w-10 h-10 rounded-leaf border-2 font-bold text-sm transition-colors',
+            key === noMatchKey
+              ? isSel(key)
+                ? 'border-primary bg-primary text-white'
+                : 'border-dashed border-line text-muted hover:border-primary/40'
+              : titreClass(key),
           ]"
           @click="choose(key)"
         >
           {{ key === noMatchKey ? key : key.toUpperCase() }}
+          <span
+            v-if="key !== noMatchKey && !isSel(key) && takenBy(key)"
+            class="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-card-2 px-1 text-[9px] font-semibold leading-4 text-muted"
+          >
+            {{ takenBy(key) }}
+          </span>
         </button>
       </div>
       <p class="text-xs text-muted mt-2">
@@ -99,24 +138,37 @@
 
     <!-- zuordnung_speaker -->
     <div v-else-if="type === 'zuordnung_speaker'">
-      <p class="text-[15px] text-ink leading-relaxed mb-4">{{ c.statement }}</p>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <p class="text-[15px] text-ink leading-relaxed mb-3">{{ c.statement }}</p>
+      <!-- Une rangée de personnes, comme au Goethe (Moderator · Frau Gerster · Frau Lücke) -->
+      <div class="flex flex-wrap gap-2">
         <button
-          v-for="(name, key) in c.speakers"
+          v-for="(speaker, key) in c.speakers"
           :key="key"
           type="button"
+          :aria-pressed="isSel(key)"
           :class="[
-            'py-3 px-2 rounded-leaf border-2 text-center transition-colors',
-            optionClass(isSel(key)),
+            'inline-flex items-center gap-2 rounded-full border-2 py-1 pl-1 pr-3 text-sm font-medium transition-colors',
+            isSel(key)
+              ? 'border-primary bg-primary text-white'
+              : 'border-line bg-card text-ink hover:border-primary/40',
           ]"
           @click="choose(key)"
         >
-          <span class="block font-bold text-base">{{
-            String(key).toUpperCase()
-          }}</span>
-          <span class="block text-xs text-muted mt-0.5 leading-tight">{{
-            speakerName(name)
-          }}</span>
+          <img
+            v-if="speakerImage(speaker)"
+            :src="`${apiBase}/images/${speakerImage(speaker)}`"
+            :alt="speakerName(speaker)"
+            class="h-7 w-7 rounded-full object-cover"
+          />
+          <span
+            v-else
+            :class="[
+              'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
+              isSel(key) ? 'bg-white/20 text-white' : 'bg-card-2 text-muted',
+            ]"
+            >{{ String(key).toUpperCase() }}</span
+          >
+          {{ speakerName(speaker) || String(key).toUpperCase() }}
         </button>
       </div>
     </div>
@@ -129,7 +181,10 @@
       >
         {{ c.stimulus_text }}
       </div>
-      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+      <p
+        v-if="!stimulusInSide"
+        class="text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+      >
         {{ t("session.q.choose_title") }}
       </p>
 
@@ -209,12 +264,47 @@
         class="rounded-leaf border border-line bg-card-2 p-4 mb-4 text-sm text-ink leading-loose"
         v-html="highlightGap(c.text_with_gaps, c.gap_number)"
       />
-      <p class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+      <p
+        v-if="!stimulusInSide"
+        class="text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+      >
         {{ t("session.q.choose_word") }}
       </p>
 
+      <!-- Banque déjà affichée à gauche : une rangée compacte de lettres -->
+      <template v-if="stimulusInSide">
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="(word, key) in wordBank"
+            :key="key"
+            type="button"
+            :title="word"
+            :aria-pressed="isSel(key)"
+            :class="[
+              'relative h-9 w-9 rounded-leaf border-2 text-sm font-bold transition-colors',
+              titreClass(String(key)),
+            ]"
+            @click="choose(key)"
+          >
+            {{ String(key).toUpperCase() }}
+            <span
+              v-if="!isSel(key) && takenBy(String(key))"
+              class="absolute -right-1.5 -top-1.5 rounded-full border border-line bg-card-2 px-1 text-[9px] font-semibold leading-4 text-muted"
+            >
+              {{ takenBy(String(key)) }}
+            </span>
+          </button>
+        </div>
+        <p v-if="selected" class="mt-2 text-sm text-ink">
+          <span class="font-bold text-primary"
+            >{{ selected.toUpperCase() }})</span
+          >
+          {{ wordBank[selected] ?? wordBank[selected.toUpperCase()] }}
+        </p>
+      </template>
+
       <!-- Banque de mots : chaque mot ne sert qu'une fois -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <button
           v-for="(word, key) in wordBank"
           :key="key"
@@ -594,11 +684,12 @@ const props = withDefaults(
     teilAnzeigen?: Record<string, any>;
     teilWordBank?: Record<string, string>;
     stimulusInSide?: boolean; // le support est déjà affiché dans la colonne de gauche
+    compact?: boolean; // Hören : liste serrée sous le lecteur
     // Choix uniques (zuordnung_titre, word_bank_gap_fill) : lettres prises par les AUTRES
     // questions du Teil { lettre: numéro du texte ou de la lacune }
     takenTitres?: Record<string, number | string>;
   }>(),
-  { stimulusInSide: false, takenTitres: () => ({}) },
+  { stimulusInSide: false, compact: false, takenTitres: () => ({}) },
 );
 
 const emit = defineEmits<{ answer: [value: any] }>();
@@ -607,6 +698,10 @@ const { t } = useI18n();
 
 const type = computed(() => String(props.question.question_type || ""));
 const c = computed<Record<string, any>>(() => props.question.content || {});
+
+const isBinary = computed(
+  () => type.value === "richtig_falsch" || type.value === "ja_nein",
+);
 
 // ── Sélection ─────────────────────────────────────────
 
@@ -666,12 +761,12 @@ const badge = computed(() => {
 const binaryOptions = computed(() =>
   type.value === "ja_nein"
     ? [
-        { value: "ja", label: "Ja" },
-        { value: "nein", label: "Nein" },
+        { value: "ja", label: "Ja", short: "J" },
+        { value: "nein", label: "Nein", short: "N" },
       ]
     : [
-        { value: "richtig", label: "Richtig" },
-        { value: "falsch", label: "Falsch" },
+        { value: "richtig", label: "Richtig", short: "R" },
+        { value: "falsch", label: "Falsch", short: "F" },
       ],
 );
 
@@ -684,8 +779,20 @@ const adKeys = computed(() => {
 
 const wordBank = computed(() => props.teilWordBank || c.value.word_bank || {});
 
+// Titre de l'annonce au survol de sa lettre
+const adTitle = (key: string) => {
+  const ad = (props.teilAnzeigen || c.value.anzeigen || {})[key];
+  return typeof ad === "object" ? (ad?.title ?? "") : String(ad ?? "");
+};
+
 const speakerName = (speaker: any) =>
   typeof speaker === "object" ? (speaker?.name ?? "") : String(speaker);
+
+const speakerImage = (speaker: any): string =>
+  typeof speaker === "object" ? (speaker?.image ?? "") : "";
+
+const apiBase =
+  (useRuntimeConfig().public.apiBaseUrl as string) || "http://localhost:8001";
 
 // ── zuordnung_titre ───────────────────────────────────
 

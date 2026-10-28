@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5 pb-10">
+  <div class="pb-10">
     <!-- Chargement -->
     <div v-if="loading" class="flex justify-center py-16">
       <ProgressSpinner style="width: 48px; height: 48px" strokeWidth="3" />
@@ -26,42 +26,49 @@
 
     <template v-else>
       <!-- ── En-tête du résultat ── -->
-      <div
-        class="bg-card border border-line rounded-card shadow-soft overflow-hidden"
+      <section
+        class="relative overflow-hidden rounded-card border border-line bg-card shadow-soft"
       >
-        <div :class="['h-1.5', status.bar]"></div>
-        <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-6">
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-xs font-semibold uppercase tracking-wider text-muted mb-2"
-            >
-              {{ result.exam_name }} · {{ t("result.subject") }}
-              {{ result.subject_number }}
+        <div :class="['absolute inset-x-0 top-0 h-1', status.bar]"></div>
+
+        <div
+          class="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+        >
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span
+                class="text-xs font-semibold uppercase tracking-wider text-muted"
+              >
+                {{ result.exam_name }} · {{ t("result.subject") }}
+                {{ result.subject_number }}
+              </span>
               <span
                 v-if="isSingleModule && displayedModules[0]"
-                class="ml-1 normal-case tracking-normal bg-card-2 border border-line px-2 py-0.5 rounded-full"
+                class="text-xs font-medium text-ink bg-card-2 border border-line px-2 py-0.5 rounded-full"
               >
                 {{ displayedModules.map((m) => m.name).join(" + ") }}
               </span>
-            </p>
+            </div>
 
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-3">
               <div
                 :class="[
-                  'w-10 h-10 rounded-leaf flex items-center justify-center shrink-0',
+                  'w-12 h-12 rounded-leaf flex items-center justify-center shrink-0',
                   status.chip,
                 ]"
               >
-                <i :class="['pi text-lg', status.icon]"></i>
+                <i :class="['pi text-xl', status.icon]"></i>
               </div>
-              <h1 class="text-2xl font-bold text-ink">{{ status.title }}</h1>
+              <h1 class="text-2xl sm:text-3xl font-bold text-ink">
+                {{ status.title }}
+              </h1>
             </div>
 
             <p
-              v-if="result.result_message"
-              class="text-sm text-muted leading-relaxed max-w-lg"
+              v-if="resultMessage"
+              class="mt-3 text-sm text-muted leading-relaxed max-w-xl"
             >
-              {{ result.result_message }}
+              {{ resultMessage }}
             </p>
 
             <div class="flex flex-wrap gap-2 mt-4">
@@ -83,13 +90,22 @@
                     : t("result.module")
                 }}
               </span>
+              <span
+                v-if="answerCounts.total"
+                class="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full tabular-nums"
+              >
+                <i class="pi pi-check text-[11px]"></i>
+                {{ answerCounts.right }} / {{ answerCounts.total }}
+              </span>
             </div>
           </div>
 
           <!-- Score -->
-          <div class="flex sm:flex-col items-center gap-4 sm:gap-1 shrink-0">
-            <div class="relative w-24 h-24">
-              <svg class="w-24 h-24 -rotate-90" viewBox="0 0 80 80">
+          <div
+            class="flex items-center gap-5 rounded-card border border-line bg-card-2 p-4 lg:flex-col lg:gap-2 lg:px-8"
+          >
+            <div class="relative w-28 h-28 shrink-0">
+              <svg class="w-28 h-28 -rotate-90" viewBox="0 0 80 80">
                 <circle
                   cx="40"
                   cy="40"
@@ -115,19 +131,19 @@
                 class="absolute inset-0 flex flex-col items-center justify-center"
               >
                 <span
-                  class="text-2xl font-extrabold text-ink leading-none tabular-nums"
+                  class="text-3xl font-extrabold text-ink leading-none tabular-nums"
                 >
                   {{
                     totals.percent != null ? Math.round(totals.percent) : "-"
                   }}
                 </span>
-                <span class="text-[11px] text-muted">%</span>
+                <span class="text-xs text-muted">%</span>
               </div>
             </div>
-            <div class="text-left sm:text-center">
+            <div class="lg:text-center">
               <p
                 v-if="totals.complete"
-                class="text-sm font-semibold text-ink tabular-nums"
+                class="text-base font-bold text-ink tabular-nums"
               >
                 {{
                   t("result.official.points", {
@@ -147,116 +163,312 @@
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- ── Résultat par module ── -->
-      <div class="bg-card border border-line rounded-card overflow-hidden">
-        <div
-          class="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between gap-3"
-        >
-          <h2 class="font-semibold text-ink">
-            {{
-              isSingleModule
-                ? t("result.module_result")
-                : t("result.official.written_part")
-            }}
-          </h2>
-          <span
-            v-if="!isSingleModule && totals.complete"
-            class="text-sm font-semibold text-ink tabular-nums"
-          >
-            {{
-              t("result.official.points", {
-                got: fmtPts(totals.got),
-                max: fmtPts(totals.max),
-              })
-            }}
-          </span>
-        </div>
-
-        <div class="divide-y divide-line">
+      <div
+        class="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
+      >
+        <!-- ── Colonne principale : détail des réponses ── -->
+        <div class="min-w-0 space-y-5 order-2 lg:order-1">
+          <!-- Filtre -->
           <div
-            v-for="group in groups"
-            :key="group.key"
-            class="px-5 sm:px-6 py-4"
+            v-if="answerCounts.total"
+            class="flex flex-wrap items-center justify-between gap-3"
           >
-            <div class="flex items-center gap-4">
-              <div
-                class="w-11 h-11 rounded-leaf bg-primary/10 flex items-center justify-center shrink-0"
+            <h2 class="font-semibold text-ink">
+              {{ t("result.official.block_detail") }}
+            </h2>
+            <div
+              class="inline-flex gap-1 p-1 rounded-leaf bg-card border border-line"
+              role="tablist"
+            >
+              <button
+                v-for="f in answerFilters"
+                :key="f.value"
+                type="button"
+                role="tab"
+                :aria-selected="answerFilter === f.value"
+                :class="[
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors tabular-nums',
+                  answerFilter === f.value
+                    ? 'bg-primary text-white'
+                    : 'text-muted hover:text-ink hover:bg-card-2',
+                ]"
+                @click="answerFilter = f.value"
               >
-                <i
-                  :class="[
-                    'pi text-primary',
-                    moduleIcon(group.modules[0]?.slug),
-                  ]"
-                ></i>
-              </div>
+                {{ f.label }} · {{ f.count }}
+              </button>
+            </div>
+          </div>
 
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between gap-3 mb-1.5">
-                  <p class="font-semibold text-ink text-sm truncate">
-                    {{ group.label }}
-                  </p>
-                  <span
-                    v-if="groupPoints(group) != null"
-                    class="text-sm font-bold text-ink tabular-nums shrink-0"
-                  >
-                    {{
-                      t("result.official.points", {
-                        got: fmtPts(groupPoints(group)!),
-                        max: fmtPts(groupMax(group)),
-                      })
-                    }}
-                  </span>
-                </div>
-
-                <!-- Barre -->
+          <div
+            v-for="module in detailModules"
+            :key="`detail-${module.slug}`"
+            class="bg-card border border-line rounded-card overflow-hidden"
+          >
+            <button
+              type="button"
+              class="w-full flex items-center justify-between gap-3 px-5 sm:px-6 py-4 hover:bg-card-2 transition-colors"
+              @click="toggleModule(module.slug)"
+            >
+              <div class="flex items-center gap-3 min-w-0">
                 <div
-                  v-if="groupPoints(group) != null"
-                  class="flex items-center gap-2"
+                  class="w-9 h-9 rounded-leaf bg-primary/10 flex items-center justify-center shrink-0"
                 >
-                  <div
-                    class="flex-1 h-2 rounded-full bg-card-2 overflow-hidden"
-                  >
+                  <i
+                    :class="['pi text-sm text-primary', moduleIcon(module.slug)]"
+                  ></i>
+                </div>
+                <div class="min-w-0 text-left">
+                  <p class="font-semibold text-ink text-sm truncate">
+                    {{ module.name }}
+                  </p>
+                  <p class="text-xs text-muted tabular-nums">
+                    {{ moduleStats(module).right }} /
+                    {{ moduleStats(module).total }}
+                    {{ t("result.correct_short") }}
+                  </p>
+                </div>
+              </div>
+              <i
+                :class="[
+                  'pi text-muted text-sm',
+                  expandedModules.has(module.slug)
+                    ? 'pi-chevron-up'
+                    : 'pi-chevron-down',
+                ]"
+              ></i>
+            </button>
+
+            <div
+              v-if="expandedModules.has(module.slug)"
+              class="border-t border-line divide-y divide-line"
+            >
+              <div v-for="teil in module.teile" :key="teil.teil_number">
+                <!-- En-tête du Teil -->
+                <div class="px-5 sm:px-6 pt-4 pb-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <p
+                      class="text-xs font-bold uppercase tracking-wide text-ink"
+                    >
+                      {{ t("result.official.teil", { n: teil.teil_number }) }}
+                      <span class="ml-2 font-medium normal-case text-muted">
+                        {{ teilStats(teil).right }}/{{ teilStats(teil).total }}
+                        {{ t("result.correct_short") }}
+                      </span>
+                    </p>
+                    <span class="text-sm font-bold text-ink tabular-nums">
+                      {{
+                        t("result.official.points", {
+                          got: fmtPts(teil.score_obtained ?? 0),
+                          max: fmtPts(teil.max_score),
+                        })
+                      }}
+                    </span>
+                  </div>
+                  <div class="mt-2 h-1.5 rounded-full bg-card-2 overflow-hidden">
                     <div
                       :class="[
                         'h-full rounded-full transition-all duration-500',
-                        barColor(groupPercent(group)),
+                        barColor(teilPercent(teil)),
                       ]"
-                      :style="{
-                        width: `${Math.min(groupPercent(group) ?? 0, 100)}%`,
-                      }"
+                      :style="{ width: `${teilPercent(teil)}%` }"
                     />
                   </div>
-                  <span class="text-xs text-muted w-10 text-right tabular-nums">
-                    {{ Math.round(groupPercent(group) ?? 0) }} %
-                  </span>
                 </div>
 
-                <!-- Correction en attente -->
+                <!-- Réponses : une tuile par question, comme un Antwortbogen corrigé -->
                 <div
-                  v-else
-                  class="flex items-center gap-1.5 text-amber-600 text-xs"
+                  v-if="filteredAnswers(teil).length"
+                  class="grid gap-2 px-5 sm:px-6 pb-5 sm:grid-cols-2 2xl:grid-cols-3"
                 >
-                  <i class="pi pi-clock text-xs"></i>
-                  <span>
-                    {{
-                      group.modules.some(isSchreiben)
-                        ? t("result.official.correction_pending")
-                        : t("result.waiting_correction")
-                    }}
-                  </span>
+                  <div
+                    v-for="answer in filteredAnswers(teil)"
+                    :key="answer.question_id"
+                    :class="[
+                      'flex items-start gap-3 rounded-leaf border px-3 py-2.5',
+                      answer.is_correct === true
+                        ? 'border-emerald-500/30 bg-emerald-500/5'
+                        : answer.is_correct === false
+                          ? 'border-red-500/25 bg-red-500/5'
+                          : 'border-line bg-card-2',
+                    ]"
+                  >
+                    <span
+                      :class="[
+                        'inline-flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums',
+                        answer.is_correct === true
+                          ? 'bg-emerald-500 text-white'
+                          : answer.is_correct === false
+                            ? 'bg-red-500 text-white'
+                            : 'bg-card border border-line text-muted',
+                      ]"
+                    >
+                      {{ answer.question_number }}
+                    </span>
+
+                    <div class="min-w-0 flex-1 text-sm">
+                      <p
+                        class="line-clamp-2 text-ink"
+                        :title="showAnswer(answer.user_answer)"
+                      >
+                        <span class="text-xs text-muted"
+                          >{{ t("result.your_answer") }} :
+                        </span>
+                        <strong>{{ showAnswer(answer.user_answer) || "-" }}</strong>
+                      </p>
+                      <p
+                        v-if="answer.correct_answer && answer.is_correct === false"
+                        class="line-clamp-2 text-xs text-emerald-700 dark:text-emerald-400 mt-0.5"
+                        :title="showAnswer(answer.correct_answer)"
+                      >
+                        {{ t("result.correct_answer") }} :
+                        <strong>{{ showAnswer(answer.correct_answer) }}</strong>
+                      </p>
+                      <p
+                        v-if="answer.feedback"
+                        class="text-xs text-faint mt-1 line-clamp-3"
+                      >
+                        {{ answer.feedback }}
+                      </p>
+                    </div>
+
+                    <i
+                      :class="[
+                        'pi text-xs mt-1.5 shrink-0',
+                        answer.is_correct === true
+                          ? 'pi-check text-emerald-600'
+                          : answer.is_correct === false
+                            ? 'pi-times text-red-500'
+                            : 'pi-clock text-faint',
+                      ]"
+                    ></i>
+                  </div>
+                </div>
+                <p
+                  v-else-if="teil.answers?.length"
+                  class="px-5 sm:px-6 pb-4 text-xs text-faint"
+                >
+                  {{ t("result.no_answer_in_filter") }}
+                </p>
+                <p v-else class="px-5 sm:px-6 pb-4 text-xs text-faint">
+                  {{ t("result.official.no_answer") }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Colonne latérale : résumé, toujours visible sur grand écran ── -->
+        <aside class="space-y-5 order-1 lg:order-2 lg:sticky lg:top-5">
+          <!-- Résultat par module -->
+          <div class="bg-card border border-line rounded-card overflow-hidden">
+            <div
+              class="px-5 py-4 border-b border-line flex items-center justify-between gap-3"
+            >
+              <h2 class="font-semibold text-ink text-sm">
+                {{
+                  isSingleModule
+                    ? t("result.module_result")
+                    : t("result.official.written_part")
+                }}
+              </h2>
+              <span
+                v-if="!isSingleModule && totals.complete"
+                class="text-sm font-bold text-ink tabular-nums"
+              >
+                {{
+                  t("result.official.points", {
+                    got: fmtPts(totals.got),
+                    max: fmtPts(totals.max),
+                  })
+                }}
+              </span>
+            </div>
+
+            <div class="divide-y divide-line">
+              <div v-for="group in groups" :key="group.key" class="px-5 py-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-leaf bg-primary/10 flex items-center justify-center shrink-0"
+                  >
+                    <i
+                      :class="[
+                        'pi text-primary',
+                        moduleIcon(group.modules[0]?.slug),
+                      ]"
+                    ></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="font-semibold text-ink text-sm truncate">
+                        {{ group.label }}
+                      </p>
+                      <span
+                        v-if="groupPoints(group) != null"
+                        class="text-sm font-bold text-ink tabular-nums shrink-0"
+                      >
+                        {{
+                          t("result.official.points", {
+                            got: fmtPts(groupPoints(group)!),
+                            max: fmtPts(groupMax(group)),
+                          })
+                        }}
+                      </span>
+                    </div>
+
+                    <div
+                      v-if="groupPoints(group) != null"
+                      class="mt-1.5 flex items-center gap-2"
+                    >
+                      <div
+                        class="flex-1 h-2 rounded-full bg-card-2 overflow-hidden"
+                      >
+                        <div
+                          :class="[
+                            'h-full rounded-full transition-all duration-500',
+                            barColor(groupPercent(group)),
+                          ]"
+                          :style="{
+                            width: `${Math.min(groupPercent(group) ?? 0, 100)}%`,
+                          }"
+                        />
+                      </div>
+                      <span
+                        class="text-xs text-muted w-10 text-right tabular-nums"
+                      >
+                        {{ Math.round(groupPercent(group) ?? 0) }} %
+                      </span>
+                    </div>
+
+                    <div
+                      v-else
+                      class="mt-1 flex items-center gap-1.5 text-amber-600 text-xs"
+                    >
+                      <i class="pi pi-clock text-xs"></i>
+                      <span>
+                        {{
+                          group.modules.some(isSchreiben)
+                            ? t("result.official.correction_pending")
+                            : t("result.waiting_correction")
+                        }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Détail du bloc (ex. Leseverstehen + Sprachbausteine) -->
-                <div v-if="group.modules.length > 1" class="mt-2 space-y-0.5">
+                <div
+                  v-if="group.modules.length > 1"
+                  class="mt-3 ml-13 space-y-1 rounded-leaf bg-card-2 px-3 py-2"
+                >
                   <p
                     v-for="m in group.modules"
                     :key="m.slug"
-                    class="flex justify-between text-xs text-muted"
+                    class="flex justify-between gap-2 text-xs"
                   >
-                    <span>{{ m.name }}</span>
-                    <span class="tabular-nums">
+                    <span class="text-muted">{{ m.name }}</span>
+                    <span class="font-semibold text-ink tabular-nums">
                       {{
                         modulePoints(m) != null
                           ? t("result.official.points", {
@@ -268,238 +480,102 @@
                     </span>
                   </p>
                 </div>
+
+                <Button
+                  v-if="group.modules.some(isSchreiben) && correctionStore.current"
+                  :label="t('result.see_correction')"
+                  icon="pi pi-eye"
+                  size="small"
+                  outlined
+                  severity="secondary"
+                  class="w-full mt-3"
+                  @click="goToCorrection"
+                />
               </div>
 
-              <Button
-                v-if="
-                  group.modules.some(isSchreiben) && correctionStore.current
-                "
-                :label="t('result.see_correction')"
-                icon="pi pi-eye"
-                size="small"
-                outlined
-                severity="secondary"
-                class="shrink-0 hidden! sm:inline-flex!"
-                @click="goToCorrection"
-              />
-            </div>
-            <Button
-              v-if="group.modules.some(isSchreiben) && correctionStore.current"
-              :label="t('result.see_correction')"
-              icon="pi pi-eye"
-              size="small"
-              outlined
-              severity="secondary"
-              class="w-full mt-3 sm:hidden!"
-              @click="goToCorrection"
-            />
-          </div>
-
-          <!-- Oral -->
-          <div
-            v-if="!isSingleModule"
-            class="px-5 sm:px-6 py-4 flex items-center gap-4"
-          >
-            <div
-              class="w-11 h-11 rounded-leaf bg-card-2 border border-line flex items-center justify-center shrink-0"
-            >
-              <i class="pi pi-microphone text-muted"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="font-semibold text-ink text-sm">
-                {{ t("result.official.oral_title") }}
-              </p>
-              <p class="text-xs text-muted">
-                {{ t("result.official.oral_text") }}
-              </p>
-            </div>
-            <NuxtLink
-              :to="localePath(`/dashboard/sprechen/${result.subject_id}`)"
-              class="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
-            >
-              {{ t("result.official.oral_link") }}
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Pourquoi non réussi ── -->
-      <div
-        v-if="!isSingleModule && result.passed === false"
-        class="flex items-start gap-3 rounded-card border border-amber-500/30 bg-amber-500/5 px-5 py-4"
-      >
-        <i class="pi pi-info-circle text-amber-600 mt-0.5 shrink-0"></i>
-        <div class="text-sm text-ink">
-          <p class="font-semibold mb-1">{{ t("result.why_failed") }}</p>
-          <p
-            v-if="totals.percent != null && totals.percent < passPct"
-            class="text-xs text-muted"
-          >
-            {{
-              t("result.global_score_insufficient", {
-                score: Math.round(totals.percent),
-                threshold: passPct,
-              })
-            }}
-          </p>
-          <p v-if="weakModules.length" class="text-xs text-muted mt-1">
-            {{
-              t("result.official.weak_modules", {
-                list: weakModules.join(", "),
-              })
-            }}
-          </p>
-        </div>
-      </div>
-
-      <!-- ── Détail des réponses ── -->
-      <div
-        v-for="module in detailModules"
-        :key="`detail-${module.slug}`"
-        class="bg-card border border-line rounded-card overflow-hidden"
-      >
-        <button
-          type="button"
-          class="w-full flex items-center justify-between px-5 sm:px-6 py-4 hover:bg-card-2 transition-colors"
-          @click="toggleModule(module.slug)"
-        >
-          <div class="flex items-center gap-3 min-w-0">
-            <div
-              class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"
-            >
-              <i
-                :class="['pi text-sm text-primary', moduleIcon(module.slug)]"
-              ></i>
-            </div>
-            <h2 class="font-semibold text-ink text-sm truncate">
-              {{ t("result.official.block_detail") }} · {{ module.name }}
-            </h2>
-          </div>
-          <i
-            :class="[
-              'pi text-muted text-sm',
-              expandedModules.has(module.slug)
-                ? 'pi-chevron-up'
-                : 'pi-chevron-down',
-            ]"
-          ></i>
-        </button>
-
-        <div
-          v-if="expandedModules.has(module.slug)"
-          class="border-t border-line"
-        >
-          <div
-            v-for="teil in module.teile"
-            :key="teil.teil_number"
-            class="border-b border-line last:border-0"
-          >
-            <div
-              class="px-5 sm:px-6 py-2.5 bg-card-2 flex items-center justify-between"
-            >
-              <p
-                class="text-xs font-semibold text-muted uppercase tracking-wide"
-              >
-                {{ t("result.official.teil", { n: teil.teil_number }) }}
-              </p>
-              <span class="text-xs font-semibold text-ink tabular-nums">
-                {{
-                  t("result.official.points", {
-                    got: fmtPts(teil.score_obtained ?? 0),
-                    max: fmtPts(teil.max_score),
-                  })
-                }}
-              </span>
-            </div>
-
-            <div v-if="teil.answers?.length" class="divide-y divide-line">
-              <div
-                v-for="answer in teil.answers ?? []"
-                :key="answer.question_id"
-                class="px-5 sm:px-6 py-3 flex items-start gap-3"
-              >
-                <span
-                  :class="[
-                    'w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                    answer.is_correct === true
-                      ? 'bg-emerald-500/10 text-emerald-600'
-                      : answer.is_correct === false
-                        ? 'bg-red-500/10 text-red-500'
-                        : 'bg-card-2 text-faint',
-                  ]"
+              <!-- Oral -->
+              <div v-if="!isSingleModule" class="px-5 py-4 flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-leaf bg-card-2 border border-line flex items-center justify-center shrink-0"
                 >
-                  <i
-                    :class="[
-                      'pi text-[10px]',
-                      answer.is_correct === true
-                        ? 'pi-check'
-                        : answer.is_correct === false
-                          ? 'pi-times'
-                          : 'pi-minus',
-                    ]"
-                  ></i>
-                </span>
-                <div class="flex-1 min-w-0 text-sm">
-                  <div class="flex flex-wrap gap-x-4 gap-y-1">
-                    <span class="text-muted">
-                      <span class="font-semibold text-ink tabular-nums mr-1"
-                        >{{ answer.question_number }}.</span
-                      >
-                      {{ t("result.your_answer") }} :
-                      <strong class="text-ink">{{
-                        formatAnswer(answer.user_answer)
-                      }}</strong>
-                    </span>
-                    <span
-                      v-if="
-                        answer.correct_answer && answer.is_correct === false
-                      "
-                      class="text-emerald-600"
-                    >
-                      {{ t("result.correct_answer") }} :
-                      <strong>{{ formatAnswer(answer.correct_answer) }}</strong>
-                    </span>
-                  </div>
-                  <p v-if="answer.feedback" class="text-xs text-faint mt-1">
-                    {{ answer.feedback }}
+                  <i class="pi pi-microphone text-muted"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-ink text-sm">
+                    {{ t("result.official.oral_title") }}
                   </p>
+                  <p class="text-xs text-muted">
+                    {{ t("result.official.oral_text") }}
+                  </p>
+                  <NuxtLink
+                    :to="localePath(`/dashboard/sprechen/${result.subject_id}`)"
+                    class="mt-1 inline-block text-xs font-semibold text-primary hover:underline"
+                  >
+                    {{ t("result.official.oral_link") }}
+                  </NuxtLink>
                 </div>
               </div>
             </div>
-            <p v-else class="px-5 sm:px-6 py-3 text-xs text-faint">
-              {{ t("result.official.no_answer") }}
-            </p>
           </div>
-        </div>
-      </div>
 
-      <!-- ── Actions ── -->
-      <div class="flex flex-col sm:flex-row gap-3">
-        <Button
-          :label="t('result.back_to_exams')"
-          icon="pi pi-arrow-left"
-          outlined
-          severity="secondary"
-          class="flex-1"
-          @click="navigateTo(localePath('/dashboard/examens'))"
-        />
-        <Button
-          :label="t('result.another_module')"
-          icon="pi pi-list"
-          outlined
-          class="flex-1"
-          @click="
-            navigateTo(
-              localePath(`/dashboard/examens/${slug}/${result.subject_id}`),
-            )
-          "
-        />
-        <Button
-          :label="t('result.my_results')"
-          icon="pi pi-trophy"
-          class="flex-1"
-          @click="navigateTo(localePath('/dashboard/resultats'))"
-        />
+          <!-- Pourquoi non réussi -->
+          <div
+            v-if="result.passed === false && (weakModules.length || (totals.percent != null && totals.percent < passPct))"
+            class="flex items-start gap-3 rounded-card border border-amber-500/30 bg-amber-500/5 px-5 py-4"
+          >
+            <i class="pi pi-info-circle text-amber-600 mt-0.5 shrink-0"></i>
+            <div class="text-sm text-ink">
+              <p class="font-semibold mb-1">{{ t("result.why_failed") }}</p>
+              <p
+                v-if="totals.percent != null && totals.percent < passPct"
+                class="text-xs text-muted"
+              >
+                {{
+                  t("result.global_score_insufficient", {
+                    score: Math.round(totals.percent),
+                    threshold: passPct,
+                  })
+                }}
+              </p>
+              <p v-if="weakModules.length" class="text-xs text-muted mt-1">
+                {{
+                  t("result.official.weak_modules", {
+                    list: weakModules.join(", "),
+                  })
+                }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="grid gap-2">
+            <Button
+              :label="t('result.my_results')"
+              icon="pi pi-trophy"
+              class="w-full"
+              @click="navigateTo(localePath('/dashboard/resultats'))"
+            />
+            <Button
+              :label="t('result.another_module')"
+              icon="pi pi-list"
+              outlined
+              class="w-full"
+              @click="
+                navigateTo(
+                  localePath(`/dashboard/examens/${slug}/${result.subject_id}`),
+                )
+              "
+            />
+            <Button
+              :label="t('result.back_to_exams')"
+              icon="pi pi-arrow-left"
+              text
+              severity="secondary"
+              class="w-full"
+              @click="navigateTo(localePath('/dashboard/examens'))"
+            />
+          </div>
+        </aside>
       </div>
     </template>
   </div>
@@ -523,6 +599,16 @@ const slug = route.params.slug as string;
 const loading = ref(true);
 const result = ref<SessionResultResponse | null>(null);
 const expandedModules = ref<Set<string>>(new Set());
+
+// Message traduit à partir de la clé du backend ; à défaut, le texte reçu
+const resultMessage = computed(() => {
+  const r: any = result.value;
+  if (!r) return "";
+  if (r.result_message_key) {
+    return t(`result.messages.${r.result_message_key}`, r.result_message_params ?? {});
+  }
+  return r.result_message ?? "";
+});
 
 // ── Helpers de slug ───────────────────────────────────
 
@@ -699,6 +785,74 @@ const status = computed(() => {
 const detailModules = computed(() =>
   displayedModules.value.filter((m) => !isSchreiben(m)),
 );
+
+// ── Détail des réponses : filtre, compteurs, affichage ─────────────
+
+type AnswerFilter = "all" | "wrong" | "right";
+const answerFilter = ref<AnswerFilter>("all");
+
+// Réponse lisible quelle que soit sa forme :
+// "b", { answer: "b" }, { answer: { answer: "b" } } (reprise de session),
+// { answer: "Wort", index: 12 } (TestDaF Hören 7), { answers: { col: [...] } } (ÖSD)
+const showAnswer = (value: any): string => {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map(showAnswer).filter(Boolean).join(", ");
+  if (typeof value === "object") {
+    if ("answer" in value) return showAnswer(value.answer);
+    if ("answers" in value) return showAnswer(Object.values(value.answers ?? {}));
+    if ("text" in value) return showAnswer(value.text);
+    return Object.values(value).map(showAnswer).filter(Boolean).join(", ");
+  }
+  const s = String(value).trim();
+  return s.length <= 2 ? s.toUpperCase() : s;
+};
+
+const teilStats = (teil: any) => {
+  const answers: any[] = teil.answers ?? [];
+  return {
+    right: answers.filter((a) => a.is_correct === true).length,
+    total: answers.length,
+  };
+};
+
+const teilPercent = (teil: any) =>
+  teil.max_score
+    ? Math.min(100, Math.round(((teil.score_obtained ?? 0) / teil.max_score) * 100))
+    : 0;
+
+const moduleStats = (module: any) =>
+  (module.teile ?? []).reduce(
+    (acc: { right: number; total: number }, teil: any) => {
+      const s = teilStats(teil);
+      return { right: acc.right + s.right, total: acc.total + s.total };
+    },
+    { right: 0, total: 0 },
+  );
+
+const allAnswers = computed<any[]>(() =>
+  (detailModules.value ?? []).flatMap((m: any) =>
+    (m.teile ?? []).flatMap((teil: any) => teil.answers ?? []),
+  ),
+);
+
+const answerCounts = computed(() => ({
+  total: allAnswers.value.length,
+  right: allAnswers.value.filter((a) => a.is_correct === true).length,
+  wrong: allAnswers.value.filter((a) => a.is_correct === false).length,
+}));
+
+const answerFilters = computed(() => [
+  { value: "all" as const, label: t("result.filter_all"), count: answerCounts.value.total },
+  { value: "wrong" as const, label: t("result.filter_wrong"), count: answerCounts.value.wrong },
+  { value: "right" as const, label: t("result.filter_right"), count: answerCounts.value.right },
+]);
+
+const filteredAnswers = (teil: any): any[] => {
+  const answers: any[] = teil.answers ?? [];
+  if (answerFilter.value === "wrong") return answers.filter((a) => a.is_correct === false);
+  if (answerFilter.value === "right") return answers.filter((a) => a.is_correct === true);
+  return answers;
+};
 
 const toggleModule = (s: string) => {
   const next = new Set(expandedModules.value);

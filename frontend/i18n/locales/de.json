@@ -529,18 +529,20 @@
       "word_bank": "Wortliste",
       "ads": "Anzeigen",
       "max_words": "Maximal {n} Wörter",
-"position": "Position {n}",
-"segment_taken": "Dieser Text steht schon an Position {n}.",
-"option_taken": "Diese Antwort ist schon für Aufgabe {n} vergeben.",
-"summary": "Zusammenfassung",
-"transcript": "Text",
-"marked_count": "{n} / {max} markiert",
-"summary_after_listening": "Die Zusammenfassung erscheint nach dem Hören.",
-"slots_full": "Sie haben schon {max} Elemente markiert. Klicken Sie auf ein markiertes Element, um die Markierung zu löschen."
+      "position": "Position {n}",
+      "segment_taken": "Dieser Text steht schon an Position {n}.",
+      "option_taken": "Diese Antwort ist schon für Aufgabe {n} vergeben.",
+      "summary": "Zusammenfassung",
+      "transcript": "Text",
+      "marked_count": "{n} / {max} markiert",
+      "no_heading_yet": "Noch keine Überschrift gewählt",
+      "summary_after_listening": "Die Zusammenfassung erscheint nach dem Hören.",
+      "slots_full": "Sie haben schon {max} Elemente markiert. Klicken Sie auf ein markiertes Element, um die Markierung zu löschen."
     },
     "player": {
       "intro_title": "Vor dem Start",
       "intro_modules": "Ablauf der Prüfung",
+      "suggested_minutes": "ca. {n} Min.",
       "intro_minutes": "{n} Min.",
       "intro_oral": "Mündliche Prüfung, separat mit Prüfer/in",
       "intro_oral_link": "Aufgabe ansehen",
@@ -619,7 +621,8 @@
       "volume": "Lautstärke",
       "speakers": "Sprecher/innen",
       "text_n": "Text {n}",
-      "questions_count": "{n} Aufgabe | {n} Aufgaben"
+      "questions_count": "{n} Aufgabe | {n} Aufgaben",
+      "now_playing": "Läuft"
     },
     "result": {
       "title": "Prüfung abgeschlossen!",
@@ -686,6 +689,11 @@
     "modules": "Module",
     "module_passed": "Bestanden",
     "module_failed": "Nicht bestanden",
+    "filter_all": "Alle",
+    "filter_wrong": "Fehler",
+    "filter_right": "Richtig",
+    "correct_short": "richtig",
+    "no_answer_in_filter": "Keine Antworten in diesem Filter.",
     "why_failed": "Warum hat es nicht gereicht?",
     "global_score_insufficient": "Ergebnis schriftlich: {score} %, die Bestehensgrenze liegt bei {threshold} %.",
     "module_score_insufficient": "{module}: {score}/100 (Grenze pro Modul: 60)",
@@ -701,6 +709,18 @@
       "block_detail": "Antworten im Detail",
       "teil": "Teil {n}",
       "no_answer": "In diesem Teil wurde keine Antwort gegeben."
+    },
+    "messages": {
+      "module_passed": "Sehr gut! Sie haben das Modul {module} mit {score} bestanden.",
+      "module_failed": "Sie haben im Modul {module} die {min} % nicht erreicht ({score}). Üben Sie weiter!",
+      "module_pending": "Das Modul {module} wartet auf die KI-Korrektur.",
+      "exam_passed": "Herzlichen Glückwunsch! Sie haben diese Prüfung bestanden.",
+      "exam_failed_weak": "Punktzahl nicht ausreichend. Diese Module sollten Sie üben: {list}.",
+      "exam_failed": "Sie haben die erforderliche Punktzahl nicht erreicht. Üben Sie weiter!",
+      "partial_pending": "Teilergebnis: Einige Teile warten noch auf die Korrektur.",
+      "tdn_levels": "Geschätzte Niveaus: {levels}. Die offiziellen Grenzen variieren je nach Prüfungstermin leicht.",
+      "assignment_graded": "Hausaufgabe abgegeben und bewertet. Ihre Note finden Sie bei Ihren Hausaufgaben.",
+      "assignment_submitted": "Hausaufgabe abgegeben. Ihre Lehrkraft korrigiert sie, die Note erscheint dann bei Ihren Hausaufgaben."
     }
   },
   "exam_detail": {
