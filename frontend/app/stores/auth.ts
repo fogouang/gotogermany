@@ -33,14 +33,20 @@ export const useAuthStore = defineStore("auth", {
       state.user && "center_id" in state.user ? state.user.center_id : null,
     branchId: (state) =>
       state.user && "branch_id" in state.user ? state.user.branch_id : null,
-      /** Inscription via le lien d'un centre, en attente de validation */
+    /** Inscription via le lien d'un centre, en attente de validation */
     pendingBranchId: (state) =>
       state.user && "requested_branch_id" in state.user
         ? ((state.user as any).requested_branch_id ?? null)
         : null,
+    /** Niveau Start Deutsch préparé (A1 ou A2), posé par le centre */
     targetLevelId: (state) =>
       state.user && "target_level_id" in state.user
         ? state.user.target_level_id
+        : null,
+    /** Niveau Start Deutsch préparé (A1 ou A2), posé par le centre */
+    targetSdLevel: (state) =>
+      state.user && "target_sd_level" in state.user
+        ? ((state.user.target_sd_level as "A1" | "A2" | null) ?? null)
         : null,
     isVerified: (state) => state.user?.is_verified || false,
     userName: (state) => state.user?.full_name || "",
@@ -114,7 +120,7 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-       async register(payload: {
+    async register(payload: {
       fullName: string;
       phone: string;
       password: string;

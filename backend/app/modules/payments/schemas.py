@@ -9,7 +9,7 @@ Flow complet :
 """
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 from pydantic import Field,model_validator
 from app.shared.schemas.base import BaseSchema
 
@@ -19,12 +19,19 @@ from app.shared.schemas.base import BaseSchema
 # ─────────────────────────────────────────────
 
 class PaymentInitiateRequest(BaseSchema):
-    """L'étudiant initie un paiement pour un exam."""
-    level_id: uuid.UUID
-    plan_id: uuid.UUID          # ← ajouter
+    """L'étudiant paie l'accès à un niveau d'examen (level_id) ou à Start Deutsch (sd_level)."""
+    level_id: uuid.UUID | None = None
+    sd_level: Literal["A1", "A2"] | None = None
+    plan_id: uuid.UUID
     promo_code: str | None = None
     operator: str = Field(max_length=30)
     phone_number: str = Field(max_length=20)
+
+    @model_validator(mode="after")
+    def one_level(self):
+        if (self.level_id is None) == (self.sd_level is None):
+            raise ValueError("Indiquez un niveau d'examen ou un niveau Start Deutsch (A1, A2).")
+        return self
 
 # Supprimer WebhookPayload, remplacer par :
 class PawapayCallbackPayload(BaseSchema):
@@ -67,8 +74,9 @@ class PaymentStatusResponse(BaseSchema):
 class PaymentResponse(BaseSchema):
     """Response complète d'un paiement — historique."""
     id: uuid.UUID
-    level_id: uuid.UUID
-    plan_id: uuid.UUID          # ← ajouter aussi
+    level_id: uuid.UUID | None
+    sd_level: str | None = None
+    plan_id: uuid.UUID | None
     promo_code_id: uuid.UUID | None
     amount_gross: int
     amount_paid: int
@@ -104,8 +112,10 @@ class PaymentSummaryResponse(BaseSchema):
 class ManualPaymentRequest(BaseSchema):
     """Admin valide manuellement un accès exam (MyCoolPay indisponible, virement, cash)."""
     user_id: uuid.UUID
-    level_id: uuid.UUID
-    plan_id: uuid.UUID
+    # Niveau d'examen OU niveau Start Deutsch ("A1", "A2")
+    level_id: uuid.UUID | None = None
+    sd_level: Literal["A1", "A2"] | None = None
+    plan_id: uuid.UUID | None = None
     # Pass journalier : nombre de jours au prix "daily_pass_price"
     days: int | None = Field(default=None, ge=1, le=60)
     note: str | None = Field(
@@ -118,6 +128,8 @@ class ManualPaymentRequest(BaseSchema):
     def plan_or_days(self):
         if (self.plan_id is None) == (self.days is None):
             raise ValueError("Indiquez soit une formule (plan_id), soit un nombre de jours (days).")
+        if (self.level_id is None) == (self.sd_level is None):
+            raise ValueError("Indiquez un niveau d'examen ou un niveau Start Deutsch (A1, A2).")
         return self
 
 class ManualPaymentResponse(BaseSchema):
@@ -125,7 +137,8 @@ class ManualPaymentResponse(BaseSchema):
     payment_id: uuid.UUID
     transaction_reference: str
     user_id: uuid.UUID
-    level_id: uuid.UUID
+    level_id: uuid.UUID | None
+    sd_level: str | None = None
     amount_paid: int
-    expires_at: datetime
+    expires_at: datetime | None
     note: str | None

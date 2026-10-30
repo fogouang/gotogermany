@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Vérification rapide d'accès à un level.
+ * Vérification rapide d'accès à un niveau.
  * Retourné par GET /exam-access/check/{level_id}.
  */
 export type AccessCheckResponse = {

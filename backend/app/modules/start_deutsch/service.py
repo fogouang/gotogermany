@@ -4,7 +4,10 @@ app/modules/start_deutsch/service.py
 from datetime import datetime, timezone
 from uuid import UUID
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.modules.start_deutsch.access import is_sd_assignment_session, require_sd_subject_access
 
 from app.modules.start_deutsch.models import (
     FormatType,
@@ -26,14 +29,16 @@ from app.modules.start_deutsch.schemas import (
     StartDeutschAnswerSubmit,
     StartDeutschSchreibenCorrectionRequest,
     StartDeutschSessionSubmitRequest,
+    StartDeutschSubjectSummary,
+    StartDeutschSubjectUpdate,
 )
+from app.modules.users.models import User
 from app.modules.start_deutsch.prompts.a1_prompt import get_start_deutsch_a1_prompt
 from app.modules.start_deutsch.prompts.a2_prompt import get_start_deutsch_a2_prompt
-from app.shared.exceptions.http import BadRequestException, NotFoundException
+from app.shared.exceptions.http import BadRequestException, ForbiddenException, NotFoundException
 
-# Formats qui ne peuvent jamais être corrigés automatiquement — nécessitent
-# soit la grille Schreiben IA (free_text), soit une future logique Sprechen
-# (agent IA ou live_session, pas encore branchés en V1 de ce module)
+# Formats sans correction automatique : free_text passe par la correction IA,
+# les formats sprechen_* n'ont pas encore de correction
 NON_AUTO_CORRECTABLE_FORMATS = {
     FormatType.FREE_TEXT,
     FormatType.SPRECHEN_GROUP_INTRO,
@@ -51,30 +56,60 @@ class StartDeutschCatalogService:
         self.db = db
         self.subject_repo = SubjectRepository(db)
 
-    async def list_subjects(self, level: str | None = None) -> list[StartDeutschSubject]:
-        return await self.subject_repo.list_active(level)
+    async def list_subjects(self, user: User, level: str | None = None) -> list[StartDeutschSubjectSummary]:
+        """Catalogue : sans les sujets privés pour l'élève de centre, avec le
+        cadenas sur les sujets que l'utilisateur n'a pas encore payés."""
+        from app.modules.exam_access.service import ExamAccessService
+        from app.modules.exam_access.visibility import can_see_private
 
-    async def get_subject_detail(self, subject_id: UUID) -> StartDeutschSubject:
+        subjects = await self.subject_repo.list_active(level)
+        if not can_see_private(user):
+            subjects = [s for s in subjects if not s.is_private]
+
+        locked = await ExamAccessService(self.db).locked_sd_subject_ids(user, subjects)
+        return [
+            StartDeutschSubjectSummary.model_validate(s).model_copy(update={"is_locked": s.id in locked})
+            for s in subjects
+        ]
+
+    async def get_subject_detail(self, user: User, subject_id: UUID) -> StartDeutschSubject:
         subject = await self.subject_repo.get_full_tree(subject_id)
         if not subject:
             raise NotFoundException(detail="Sujet Start Deutsch introuvable.")
+        await require_sd_subject_access(self.db, user, subject)
         return subject
 
     # ── Admin ────────────────────────────────────────────────────
 
     async def list_all_admin(self, level: str | None = None) -> list[StartDeutschSubject]:
-        """Vue admin — tous les sujets, actifs ou non (contrairement à
-        list_subjects qui filtre is_active pour la vue étudiant)."""
+        """Admin : tous les sujets, actifs ou non."""
         return await self.subject_repo.list_all(level)
 
-    async def delete_subject(self, subject_id: UUID) -> None:
-        """
-        Supprime un sujet et tout ce qui en dépend (modules/teile/questions,
-        sessions/réponses/corrections liées) — cascade déjà posée au niveau
-        DB (ondelete="CASCADE" sur toutes les FK descendantes), donc un
-        simple DELETE sur le Subject suffit.
-        """
+    async def update_subject(self, subject_id: UUID, data: StartDeutschSubjectUpdate) -> StartDeutschSubject:
         subject = await self.subject_repo.get_by_id_or_404(subject_id)
+        update_data = data.model_dump(exclude_unset=True, exclude_none=True)
+        for key, value in update_data.items():
+            setattr(subject, key, value)
+        await self.db.commit()
+        await self.db.refresh(subject)
+        return subject
+
+    async def delete_subject(self, subject_id: UUID) -> None:
+        """Supprime le sujet ; la cascade en base retire modules, Teile,
+        questions, sessions, réponses et corrections. Refusé si un devoir
+        l'utilise."""
+        from app.modules.assignments.models import Assignment
+
+        await self.subject_repo.get_by_id_or_404(subject_id)
+        used = (
+            await self.db.execute(
+                select(func.count(Assignment.id)).where(Assignment.sd_subject_id == subject_id)
+            )
+        ).scalar() or 0
+        if used:
+            raise BadRequestException(
+                detail=f"{used} devoir(s) utilisent ce sujet. Désactive-le plutôt que de le supprimer."
+            )
         await self.subject_repo.delete(subject_id)
         await self.db.commit()
 
@@ -92,11 +127,12 @@ class StartDeutschSessionService:
 
     # ── Démarrage ────────────────────────────────────────────────
 
-    async def start_session(self, user_id: UUID, subject_id: UUID) -> StartDeutschSession:
+    async def start_session(self, user: User, subject_id: UUID) -> StartDeutschSession:
         subject = await self.subject_repo.get_by_id_or_404(subject_id)
         if not subject.is_active:
             raise BadRequestException(detail="Ce sujet n'est plus disponible.")
-        return await self.session_repo.create(user_id=user_id, subject_id=subject_id)
+        await require_sd_subject_access(self.db, user, subject)
+        return await self.session_repo.create(user_id=user.id, subject_id=subject_id)
 
     # ── Soumission ───────────────────────────────────────────────
 
@@ -127,8 +163,7 @@ class StartDeutschSessionService:
             total_max_score += question.points
 
             if format_type in NON_AUTO_CORRECTABLE_FORMATS:
-                # Pas de scoring auto — reste à 0 en attendant la correction
-                # IA (Schreiben) ou une future logique Sprechen dédiée
+                # Reste à 0 en attendant la correction (IA pour le Schreiben)
                 has_pending_manual = True
                 is_correct, score_obtained = None, 0.0
             else:
@@ -153,23 +188,25 @@ class StartDeutschSessionService:
             session.passed = None
         else:
             session.status = SessionStatus.COMPLETED
-            # Seuil 60% — cf. barème officiel A2 (100 pts, 60 pts minimum) ;
-            # à ajuster si le seuil A1 diverge une fois son barème global confirmé
+            # Seuil de 60 %, barème officiel (60 points sur 100)
             session.passed = total_max_score > 0 and (total_score / total_max_score) >= 0.6
 
         await self.db.commit()
         await self.db.refresh(session)
+
+        # Devoir : la copie passe en « rendu », ou en « corrigé » s'il n'y a pas de Schreiben
+        if await is_sd_assignment_session(self.db, session.id):
+            from app.modules.assignments.service import AssignmentService
+
+            await AssignmentService(self.db).on_sd_session_submitted(session)
+            await self.db.refresh(session)
         return session
 
     def _score_answer(
         self, question: StartDeutschQuestion, answer: StartDeutschAnswerSubmit
     ) -> tuple[bool, float]:
-        """
-        Scoring pour les format_type auto-correctables. Le format de
-        correct_answer/user_answer est volontairement homogène sur ces
-        types : {"answer": "<valeur>"}, sauf form_fill qui a un champ par
-        numéro.
-        """
+        """Correction automatique. Réponses au format {"answer": "<valeur>"},
+        sauf form_fill qui a un champ par numéro."""
         format_type = question.teil.format_type if question.teil else None
         correct = question.correct_answer or {}
 
@@ -187,11 +224,10 @@ class StartDeutschSessionService:
         """
         correct = {"1": "Berger", "2": "22", ...}
         user_answer = {"1": "berger", "2": "22", ...}
-        Score proportionnel au nombre de champs corrects (comparaison
-        insensible à la casse/espaces — pas de tolérance orthographique
-        fine ici, à affiner si besoin plus tard).
+        Score proportionnel aux champs justes, sans tenir compte de la casse
+        ni des espaces.
         """
-        fields = correct.get("fields", correct)  # tolère les deux formes
+        fields = correct.get("fields", correct)  # accepte les deux formes
         if not fields:
             return False, 0.0
 
@@ -213,7 +249,21 @@ class StartDeutschSessionService:
             raise NotFoundException(detail="Session introuvable.")
         if session.user_id != user_id:
             raise BadRequestException(detail="Cette session ne vous appartient pas.")
+        if await is_sd_assignment_session(self.db, session.id):
+            raise ForbiddenException(
+                detail="Le résultat de ce devoir se consulte dans votre espace Devoirs."
+            )
+        return await self.build_result(session)
 
+    async def get_result_for_staff(self, session_id: UUID) -> dict:
+        """Résultat complet d'une copie de devoir, pour l'enseignant (sans le Sprechen)."""
+        session = await self.session_repo.get_with_answers(session_id, fresh=True)
+        if not session:
+            raise NotFoundException(detail="Session introuvable.")
+        return await self.build_result(session, skip_sprechen=True)
+
+    async def build_result(self, session: StartDeutschSession, skip_sprechen: bool = False) -> dict:
+        """Score par module et par Teil. skip_sprechen : devoirs, où l'oral n'est pas évalué."""
         subject = await self.subject_repo.get_full_tree(session.subject_id)
         if not subject:
             raise NotFoundException(detail="Sujet introuvable.")
@@ -225,17 +275,19 @@ class StartDeutschSessionService:
         total_score = 0.0
         total_max_score = 0.0
 
-        for module in subject.modules:
+        for module in sorted(subject.modules, key=lambda m: m.order):
+            if skip_sprechen and module.slug == "sprechen":
+                continue
             teil_results = []
             module_score = 0.0
             module_corrected = True
 
-            for teil in module.teile:
+            for teil in sorted(module.teile, key=lambda t: t.teil_number):
                 answer_results = []
                 teil_score = 0.0
                 teil_corrected = True
 
-                for question in teil.questions:
+                for question in sorted(teil.questions, key=lambda q: q.question_number):
                     answer = answers_by_question.get(question.id)
 
                     if teil.format_type == FormatType.FREE_TEXT:
@@ -245,7 +297,7 @@ class StartDeutschSessionService:
                         if not correction:
                             teil_corrected = False
                     elif teil.format_type in NON_AUTO_CORRECTABLE_FORMATS:
-                        # Sprechen — pas encore de mécanisme de correction (V1)
+                        # Sprechen : pas encore de correction
                         score_obtained = 0.0
                         is_correct = None
                         teil_corrected = False
@@ -293,9 +345,8 @@ class StartDeutschSessionService:
                 }
             )
 
-        # Score recalculé à la volée plutôt que de faire confiance à
-        # session.score (figé au moment du submit, donc obsolète dès qu'une
-        # correction Schreiben arrive après coup)
+        # Recalculé ici : session.score date de la soumission et ignore les
+        # corrections Schreiben arrivées ensuite
         total_pass_score = round(total_max_score * 0.6, 2)
         all_corrected = all(m["is_corrected"] for m in module_results)
         passed = (total_score / total_max_score) >= 0.6 if all_corrected and total_max_score > 0 else None
@@ -314,18 +365,52 @@ class StartDeutschSessionService:
             "modules": module_results,
         }
 
-    async def list_user_sessions(self, user_id: UUID, skip: int = 0, limit: int = 20):
-        return await self.session_repo.list_by_user(user_id, skip, limit)
+    async def list_user_sessions(self, user_id: UUID, skip: int = 0, limit: int = 20) -> list[dict]:
+        """Historique d'entraînement (les devoirs ont leur propre espace).
+        Statut et score recalculés comme sur la page de résultat : le Sprechen,
+        non noté, ne laisse pas une tentative « en attente » pour toujours."""
+        sessions = await self.session_repo.list_by_user(user_id, skip, limit)
+        subjects: dict[UUID, StartDeutschSubject] = {}
+        out: list[dict] = []
+
+        for s in sessions:
+            if await is_sd_assignment_session(self.db, s.id):
+                continue
+            subject = subjects.get(s.subject_id) or await self.subject_repo.get_by_id(s.subject_id)
+            if subject:
+                subjects[s.subject_id] = subject
+
+            item = {
+                "id": s.id,
+                "subject_id": s.subject_id,
+                "subject_title": subject.title if subject else "",
+                "subject_number": subject.subject_number if subject else 0,
+                "level": subject.level if subject else "",
+                "status": s.status,
+                "score": s.score,
+                "score_percent": None,
+                "passed": s.passed,
+                "started_at": s.started_at,
+                "submitted_at": s.submitted_at,
+            }
+
+            if s.status != SessionStatus.IN_PROGRESS:
+                full = await self.session_repo.get_with_answers(s.id)
+                result = await self.build_result(full, skip_sprechen=True)
+                total_max = sum(float(m["max_score"]) for m in result["modules"])
+                all_corrected = bool(result["modules"]) and all(m["is_corrected"] for m in result["modules"])
+                item["score"] = float(result["score"])
+                item["status"] = SessionStatus.COMPLETED if all_corrected else SessionStatus.PENDING_REVIEW
+                item["passed"] = result["passed"] if all_corrected else None
+                if all_corrected and total_max:
+                    item["score_percent"] = round(float(result["score"]) * 100 / total_max, 1)
+            out.append(item)
+        return out
 
 
 class StartDeutschSchreibenCorrectionService:
-    """
-    Correction IA d'une production Schreiben, sur la grille officielle A-E
-    (Aufgabenerfüllung + Sprache). Réutilise le même principe que la
-    correction Schreiben B1/B2 existante (Claude en primaire, Gemini en
-    fallback) — le point d'intégration exact dépend de comment ce service
-    est exposé chez vous (à brancher).
-    """
+    """Correction IA d'une production Schreiben sur la grille officielle A à E
+    (Aufgabenerfüllung, Sprache)."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -339,6 +424,9 @@ class StartDeutschSchreibenCorrectionService:
         session = await self.session_repo.get_by_id_or_404(session_id)
         if session.user_id != user_id:
             raise BadRequestException(detail="Cette session ne vous appartient pas.")
+        # Les devoirs sont corrigés par l'enseignant, jamais par l'IA
+        if await is_sd_assignment_session(self.db, session.id):
+            raise BadRequestException(detail="Ce devoir est corrigé par votre enseignant.")
 
         teil = await self.teil_repo.get_with_module_and_subject(data.teil_id)
         if not teil:
@@ -346,9 +434,6 @@ class StartDeutschSchreibenCorrectionService:
         if teil.format_type != FormatType.FREE_TEXT:
             raise BadRequestException(detail="Ce Teil n'attend pas de correction Schreiben.")
 
-        # TODO: appeler le service de correction IA existant (Claude
-        # primaire / Gemini fallback) avec le barème A-E officiel A1/A2
-        # (Aufgabenerfüllung + Sprache) plutôt que le barème B1/B2 actuel.
         criteria_scores = await self._call_ai_correction(teil, data.submitted_text)
 
         overall_score = sum(c["points"] for c in criteria_scores.values())
@@ -367,13 +452,8 @@ class StartDeutschSchreibenCorrectionService:
         return correction
 
     async def _call_ai_correction(self, teil: StartDeutschTeil, text: str) -> dict:
-        """
-        Appelle Claude (primaire) avec fallback Gemini — même provider
-        infra que le module corrections existant, mais prompt et parsing
-        dédiés au barème A1/A2 (pas de dépendance vers CorrectionService,
-        volontairement, cf. décision de ne pas coupler start_deutsch aux
-        autres modules).
-        """
+        """Claude ou Gemini selon AI_PROVIDER, avec un prompt et une lecture
+        propres au barème A1 et A2 (indépendant du module corrections)."""
         from app.config import get_settings
         from app.modules.corrections.ai_providers.claude import ClaudeProvider
         from app.modules.corrections.ai_providers.gemini import GeminiProvider
@@ -429,14 +509,14 @@ class StartDeutschSchreibenCorrectionService:
         }
 
     def _build_a2_criteria_scores(self, ai_result: dict, teil_max_score: int) -> dict:
-        # Deux axes à poids égal — chacun vaut la moitié du max_score du Teil
+        # Deux critères de même poids : chacun vaut la moitié du Teil
         axis_max = teil_max_score / 2
         grade_to_ratio = {"A": 1.0, "B": 0.8, "C": 0.6, "D": 0.4, "E": 0.0}
 
         aufgabenerfuellung_grade = ai_result.get("aufgabenerfuellung_grade", "E")
         sprache_grade = ai_result.get("sprache_grade", "E")
 
-        # Règle officielle : E sur Aufgabenerfüllung → toute l'épreuve à 0
+        # Règle officielle : E en Aufgabenerfüllung met toute la tâche à 0
         if aufgabenerfuellung_grade == "E":
             sprache_grade = "E"
 
@@ -457,7 +537,7 @@ class StartDeutschSchreibenCorrectionService:
 
     @staticmethod
     def _points_to_grade(points: float, max_points: float) -> str:
-        """Convertit un score numérique A1 en équivalent A-E, pour un affichage cohérent avec le A2."""
+        """Note A1 convertie en lettre A à E, pour un affichage comme en A2."""
         if max_points <= 0:
             return "E"
         ratio = points / max_points

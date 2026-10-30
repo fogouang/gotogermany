@@ -34,6 +34,14 @@
         >
           Inactifs · {{ inactiveCount }}
         </button>
+        <button
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+          :class="onlyPrivate ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+          @click="onlyPrivate = !onlyPrivate"
+        >
+          <i class="pi pi-lock mr-1 text-[10px]" />Privés · {{ privateCount }}
+        </button>
       </div>
 
       <div class="flex flex-col gap-2 sm:flex-row">
@@ -104,6 +112,13 @@
                 >
                   {{ subject.is_active ? "Actif" : "Inactif" }}
                 </span>
+                <span
+                  v-if="subject.is_private"
+                  class="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-600"
+                  v-tooltip.top="'Réservé aux devoirs des enseignants'"
+                >
+                  <i class="pi pi-lock text-[9px]" /> Privé
+                </span>
               </div>
               <p class="mt-0.5 truncate text-xs text-faint">
                 Sujet n°{{ subject.subject_number }}
@@ -113,6 +128,17 @@
             </div>
 
             <div class="flex shrink-0 items-center gap-1">
+              <Button
+                :icon="subject.is_private ? 'pi pi-lock-open' : 'pi pi-lock'"
+                text
+                rounded
+                size="small"
+                severity="secondary"
+                :loading="togglingId === subject.id"
+                v-tooltip.top="subject.is_private ? 'Rendre public' : 'Rendre privé (devoirs)'"
+                :aria-label="subject.is_private ? 'Rendre public' : 'Rendre privé'"
+                @click="togglePrivate(subject)"
+              />
               <Button
                 icon="pi pi-images"
                 label="Audio et images"
@@ -189,6 +215,7 @@ interface AdminSubject {
   title: string;
   description: string | null;
   is_active: boolean;
+  is_private: boolean;
 }
 
 const subjects = ref<AdminSubject[]>([]);
@@ -208,6 +235,7 @@ async function fetchSubjects() {
 // ── Tuiles ──
 const countLevel = (lvl: string) => subjects.value.filter((s) => s.level === lvl).length;
 const inactiveCount = computed(() => subjects.value.filter((s) => !s.is_active).length);
+const privateCount = computed(() => subjects.value.filter((s) => s.is_private).length);
 
 const tiles = computed(() => [
   { label: "Sujets", value: subjects.value.length, icon: "pi pi-book", iconClass: "bg-primary/10 text-primary" },
@@ -224,6 +252,7 @@ const tiles = computed(() => [
 // ── Filtres ──
 const filterLevel = ref<"A1" | "A2" | "">("");
 const onlyInactive = ref(false);
+const onlyPrivate = ref(false);
 const search = ref("");
 
 const levelOptions = computed(() => [
@@ -237,6 +266,7 @@ const filteredSubjects = computed(() => {
   return subjects.value
     .filter((s) => !filterLevel.value || s.level === filterLevel.value)
     .filter((s) => !onlyInactive.value || !s.is_active)
+    .filter((s) => !onlyPrivate.value || s.is_private)
     .filter((s) => !q || `${s.title} ${s.subject_number} ${s.description ?? ""}`.toLowerCase().includes(q))
     .sort((a, b) => a.level.localeCompare(b.level) || a.subject_number - b.subject_number);
 });
@@ -251,6 +281,28 @@ const groups = computed(() => {
 });
 
 const goToMedia = (subject: AdminSubject) => navigateTo(`/admin/start-deutsch/import?subjectId=${subject.id}`);
+
+// ── Privé / public ──
+const togglingId = ref<string | null>(null);
+
+const togglePrivate = async (subject: AdminSubject) => {
+  togglingId.value = subject.id;
+  const result = await store.adminUpdateSubject(subject.id, { is_private: !subject.is_private });
+  if (result.success) {
+    subject.is_private = !subject.is_private;
+    toast.add({
+      severity: "success",
+      summary: subject.is_private ? "Sujet privé" : "Sujet public",
+      detail: subject.is_private
+        ? "Retiré du catalogue élève, disponible dans la banque des devoirs."
+        : "Visible dans le catalogue élève.",
+      life: 3000,
+    });
+  } else {
+    toast.add({ severity: "error", summary: result.error || "Erreur", life: 4000 });
+  }
+  togglingId.value = null;
+};
 
 // ── Suppression ──
 const deleteDialog = ref(false);

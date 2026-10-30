@@ -67,6 +67,25 @@ class TrainingSessionRepository(BaseRepository[TrainingSession]):
         return list(result.scalars().all())
 
 
+    async def find_current_for_student(self, student_id: UUID) -> TrainingSession | None:
+        """Classe où l'élève est actif ; la plus récente s'il en a plusieurs."""
+        result = await self.db.execute(
+            select(TrainingSession)
+            .join(
+                TrainingSessionStudent,
+                TrainingSessionStudent.training_session_id == TrainingSession.id,
+            )
+            .options(selectinload(TrainingSession.level).selectinload(Level.exam))
+            .where(
+                TrainingSessionStudent.student_id == student_id,
+                TrainingSessionStudent.ended_at.is_(None),
+            )
+            .order_by(TrainingSessionStudent.enrolled_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+
 class TrainingSessionTeacherRepository(BaseRepository[TrainingSessionTeacher]):
     def __init__(self, db: AsyncSession):
         super().__init__(TrainingSessionTeacher, db)

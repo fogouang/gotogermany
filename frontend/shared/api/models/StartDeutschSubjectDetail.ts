@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { StartDeutschModulePublic } from './StartDeutschModulePublic';
 /**
- * Version complète avec l'arbre Module → Teil → Question, pour démarrer une session.
+ * Avec l'arbre Module > Teil > Question, pour démarrer une session.
  */
 export type StartDeutschSubjectDetail = {
     id: string;
@@ -13,6 +13,8 @@ export type StartDeutschSubjectDetail = {
     title: string;
     description: (string | null);
     is_active: boolean;
+    is_private?: boolean;
+    is_locked?: boolean;
     modules?: Array<StartDeutschModulePublic>;
 };
 

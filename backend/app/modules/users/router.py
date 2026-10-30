@@ -143,7 +143,12 @@ async def approve_join_request(
     staff: CurrentCenterStaff,
     db: AsyncSession = Depends(get_db),
 ):
-    return await UserService(db).approve_join_request(student_id, data.target_level_id, staff)
+    return await UserService(db).approve_join_request(
+        student_id,
+        staff,
+        target_level_id=data.target_level_id,
+        target_sd_level=data.target_sd_level,
+    )
 
 
 @router.post("/join-requests/{student_id}/reject", response_model=SuccessResponse)

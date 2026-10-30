@@ -32,7 +32,7 @@ class SubjectRepository(BaseRepository[StartDeutschSubject]):
         return list(result.scalars().all())
 
     async def list_all(self, level: str | None = None) -> list[StartDeutschSubject]:
-        """Vue admin — tous les sujets (actifs ou non), triés par niveau puis numéro."""
+        """Admin : tous les sujets, actifs ou non, triés par niveau puis numéro."""
         stmt = select(StartDeutschSubject)
         if level:
             stmt = stmt.where(StartDeutschSubject.level == level)
@@ -42,11 +42,7 @@ class SubjectRepository(BaseRepository[StartDeutschSubject]):
         return list(result.scalars().all())
 
     async def get_full_tree(self, subject_id: UUID) -> StartDeutschSubject | None:
-        """
-        Charge Subject → Module → Teil → Question en une seule requête
-        (eager loading explicite — cf. le crash de lazy-load async déjà
-        rencontré ailleurs dans le projet sur ce même genre de relation).
-        """
+        """Sujet > Module > Teil > Question chargés d'un coup (pas de lazy load en async)."""
         stmt = (
             select(StartDeutschSubject)
             .where(StartDeutschSubject.id == subject_id)
@@ -75,11 +71,7 @@ class TeilRepository(BaseRepository[StartDeutschTeil]):
         return result.scalar_one_or_none()
 
     async def get_with_module_and_subject(self, teil_id: UUID) -> StartDeutschTeil | None:
-        """
-        Charge Teil → Module → Subject + questions en une requête — nécessaire
-        pour la correction IA, qui a besoin de connaître le niveau (A1/A2) du
-        Subject parent sans déclencher de lazy-load async (lazy="noload" partout).
-        """
+        """Teil, questions, module et sujet : la correction IA a besoin du niveau (A1, A2)."""
         stmt = (
             select(StartDeutschTeil)
             .where(StartDeutschTeil.id == teil_id)
@@ -114,7 +106,7 @@ class QuestionRepository(BaseRepository[StartDeutschQuestion]):
         return list(result.scalars().all())
 
     async def bulk_create(self, questions: list[dict]) -> list[StartDeutschQuestion]:
-        """Insert en masse — pour le script d'import de contenu."""
+        """Insertion en masse, pour les scripts d'import."""
         instances = [StartDeutschQuestion(**q) for q in questions]
         self.db.add_all(instances)
         await self.db.commit()
@@ -147,7 +139,9 @@ class SessionRepository(BaseRepository[StartDeutschSession]):
         )
         return list(result.scalars().all())
 
-    async def get_with_answers(self, session_id: UUID) -> StartDeutschSession | None:
+    async def get_with_answers(self, session_id: UUID, fresh: bool = False) -> StartDeutschSession | None:
+        """fresh : relit réponses et corrections même si la session est déjà chargée
+        dans la transaction (recalcul juste après une soumission ou une note)."""
         stmt = (
             select(StartDeutschSession)
             .where(StartDeutschSession.id == session_id)
@@ -156,6 +150,8 @@ class SessionRepository(BaseRepository[StartDeutschSession]):
                 selectinload(StartDeutschSession.schreiben_corrections),
             )
         )
+        if fresh:
+            stmt = stmt.execution_options(populate_existing=True)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -166,11 +162,8 @@ class AnswerRepository(BaseRepository[StartDeutschAnswer]):
         super().__init__(StartDeutschAnswer, db)
 
     async def bulk_upsert(self, session_id: UUID, answers: list[dict]) -> list[StartDeutschAnswer]:
-        """
-        Remplace les réponses existantes de la session par les nouvelles
-        (une session ne se soumet qu'une fois, mais on reste tolérant à un
-        double submit réseau).
-        """
+        """Remplace les réponses de la session. Une session ne se soumet qu'une
+        fois, mais un double envoi réseau reste sans effet."""
         await self.db.execute(
             delete(StartDeutschAnswer).where(StartDeutschAnswer.session_id == session_id)
         )

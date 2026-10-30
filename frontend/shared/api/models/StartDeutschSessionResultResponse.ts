@@ -4,9 +4,7 @@
 /* eslint-disable */
 import type { StartDeutschModuleResult } from './StartDeutschModuleResult';
 /**
- * Résultat complet d'une session — pensé pour alimenter une page de résultat
- * du même esprit que celle déjà en place pour B1/B2 (score par Teil/module,
- * seuil de réussite, réponses détaillées).
+ * Résultat d'une session : score par module et par Teil, seuil, réponses.
  */
 export type StartDeutschSessionResultResponse = {
     session_id: string;

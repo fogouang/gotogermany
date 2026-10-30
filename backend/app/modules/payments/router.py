@@ -2,21 +2,26 @@
 app/modules/payments/router.py
 
 Endpoints :
-  POST /payments/initiate              → initier un paiement
-  GET  /payments/status/{ref}          → polling statut (frontend)
-  GET  /payments/me                    → historique paiements user
-  GET  /payments/{payment_id}          → détail d'un paiement
-  POST /payments/webhook/{secret}      → callback My-CoolPay
-  GET  /payments/admin/summary         → stats admin
+  POST /payments                              → initier un paiement (Kratos Mobile Money)
+  GET  /payments/status/{ref}                 → polling statut (frontend)
+  GET  /payments/me                           → historique paiements user
+  GET  /payments/{payment_id}                 → détail d'un paiement
+  POST /payments/kratos/webhook/{secret}      → webhook Kratos Pay (signé HMAC)
+  POST /payments/callback/{secret}            → callback pawaPay (anciens paiements + relais Lumina)
+  GET  /payments/admin/summary                → stats admin
 """
+import json
 import logging
 from uuid import UUID
 
 from fastapi import Depends, Request
+from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.modules.auth.dependencies import CurrentAdmin, CurrentUser
+from app.modules.payments.kratos import KratosClient
 from app.modules.payments.schemas import (
     ManualPaymentRequest,
     ManualPaymentResponse,
@@ -30,7 +35,6 @@ from app.modules.payments.schemas import (
 )
 from app.modules.payments.service import PaymentService
 from app.shared.database.session import get_db
-from app.shared.schemas.responses import SuccessResponse
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -44,15 +48,15 @@ async def initiate_payment(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Initie un paiement mobile money pour l'accès à un exam.
+    Initie un paiement Mobile Money (Kratos Pay) pour l'accès à un niveau.
 
-    - `exam_id` : l'exam que l'étudiant veut débloquer
+    - `level_id` ou `sd_level` : le niveau à débloquer
     - `plan_id` : durée choisie (7j, 1 mois, 3 mois…)
     - `operator` : "MTN" | "ORANGE"
     - `phone_number` : numéro mobile money
     - `promo_code` : code partenaire optionnel
 
-    Retourne un code USSD à composer sur le téléphone.
+    L'élève confirme ensuite sur son téléphone.
     """
     result = await PaymentService(db).initiate_payment(data, current_user)
     return PaymentInitiateResponse(**result)
@@ -94,10 +98,50 @@ async def get_payment(
     return PaymentResponse.model_validate(payment)
 
 
-# ── Webhook My-CoolPay ────────────────────────────────────
+# ── Webhooks ──────────────────────────────────────────────
 
 # URL obfusquée — ne pas documenter publiquement
 _WEBHOOK_SECRET = "jkdKo0Lp8lsdfjk4j0HJhskfak93d"
+
+
+@router.post(f"/kratos/webhook/{_WEBHOOK_SECRET}", include_in_schema=False)
+async def kratos_webhook(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Webhook Kratos Pay. On garde le corps brut : la signature HMAC porte dessus.
+    Tout est journalisé en entier tant que le format n'est pas confirmé.
+    """
+    raw_body = await request.body()
+    signature = request.headers.get("x-mok-signature")
+    logger.info(
+        f"Webhook Kratos reçu — headers={dict(request.headers)} body={raw_body.decode('utf-8', 'replace')}"
+    )
+
+    if not KratosClient.verify_signature(raw_body, signature):
+        if get_settings().KRATOS_WEBHOOK_STRICT:
+            logger.warning("Webhook Kratos rejeté : signature absente ou invalide")
+            # Pas de 200 sur une erreur de vérification (recommandation Kratos)
+            return JSONResponse(status_code=401, content={"status": "invalid_signature"})
+        logger.warning("Webhook Kratos : signature non vérifiée, traité quand même (KRATOS_WEBHOOK_STRICT=false)")
+
+    try:
+        payload = json.loads(raw_body or b"{}")
+    except ValueError:
+        logger.error("Webhook Kratos : corps JSON illisible")
+        return JSONResponse(status_code=400, content={"status": "invalid_body"})
+
+    try:
+        found = await PaymentService(db).handle_kratos_webhook(payload)
+    except Exception as e:
+        logger.exception(f"Webhook Kratos : erreur de traitement : {e}")
+        # 500 : Kratos pourra renvoyer l'événement
+        return JSONResponse(status_code=500, content={"status": "error"})
+
+    # Référence inconnue : 200 quand même, inutile que Kratos renvoie en boucle
+    return {"status": "OK" if found else "ignored"}
+
 
 def _metadata_app(body: dict) -> str | None:
     """Lit metadata.app, que pawaPay le renvoie en objet ou en liste d'objets."""
@@ -110,12 +154,13 @@ def _metadata_app(body: dict) -> str | None:
                 return item["app"]
     return None
 
-# Remplacer tout le bloc webhook par :
+
 @router.post(f"/callback/{_WEBHOOK_SECRET}", include_in_schema=False)
 async def payment_callback(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
+    """Callback pawaPay : paiements lancés avant la bascule, et relais vers Lumina."""
     body = await request.json()
     app_tag = _metadata_app(body)
 
@@ -152,7 +197,6 @@ async def get_summary(
     return PaymentSummaryResponse(**summary)
 
 
-
 @router.post(
     "/admin/manual",
     response_model=ManualPaymentResponse,
@@ -165,10 +209,10 @@ async def create_manual_payment(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Crée un paiement validé manuellement sans passer par My-CoolPay.
+    Crée un paiement validé manuellement sans passer par l'opérateur de paiement.
 
     Cas d'usage :
-    - My-CoolPay indisponible
+    - Kratos indisponible
     - Paiement par virement bancaire
     - Paiement cash en présentiel
     - Accès offert / correction admin

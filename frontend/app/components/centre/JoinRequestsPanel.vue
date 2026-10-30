@@ -179,15 +179,17 @@ async function load() {
   }
 }
 
-// Niveaux du catalogue (le niveau préparé par l'élève)
-const levelOptions = computed(() =>
-  examsStore.catalog.flatMap((exam) =>
+// Niveaux du catalogue (le niveau préparé par l'élève), plus Start Deutsch A1/A2
+const levelOptions = computed(() => [
+  ...examsStore.catalog.flatMap((exam) =>
     (exam.levels ?? []).map((level) => ({
       label: `${exam.name} · ${level.cefr_code}`,
       value: level.id,
     })),
   ),
-);
+  { label: "Start Deutsch · A1", value: "sd:A1" },
+  { label: "Start Deutsch · A2", value: "sd:A2" },
+]);
 
 // ── Validation ──
 const approveVisible = ref(false);
@@ -210,7 +212,9 @@ async function approve() {
       {
         method: "POST",
         headers: headers(),
-        body: { target_level_id: levelId.value },
+        body: levelId.value.startsWith("sd:")
+          ? { target_sd_level: levelId.value.slice(3) }
+          : { target_level_id: levelId.value },
       },
     );
     requests.value = requests.value.filter((r) => r.id !== selected.value?.id);

@@ -9,9 +9,10 @@ export type ManualPaymentResponse = {
     payment_id: string;
     transaction_reference: string;
     user_id: string;
-    level_id: string;
+    level_id: (string | null);
+    sd_level?: (string | null);
     amount_paid: number;
-    expires_at: string;
+    expires_at: (string | null);
     note: (string | null);
 };
 

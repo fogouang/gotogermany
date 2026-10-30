@@ -56,9 +56,18 @@ class CommissionRuleResponse(BaseSchema):
 # ── Activation ───────────────────────────────────────────
 
 class ActivationRequest(BaseSchema):
+    """Niveau activé : un niveau d'examen (level_id) ou Start Deutsch (sd_level).
+    Sans l'un ni l'autre, on prend le niveau déjà fixé sur le compte de l'élève."""
     student_id: uuid.UUID
-    level_id: uuid.UUID
+    level_id: uuid.UUID | None = None
+    sd_level: Literal["A1", "A2"] | None = None
     plan_id: uuid.UUID
+
+    @model_validator(mode="after")
+    def not_both(self):
+        if self.level_id is not None and self.sd_level is not None:
+            raise ValueError("Indiquez un niveau d'examen ou un niveau Start Deutsch, pas les deux.")
+        return self
 
 
 class PartnerSaleResponse(BaseSchema):

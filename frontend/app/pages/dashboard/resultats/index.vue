@@ -1,3 +1,4 @@
+<!-- pages/dashboard/resultats/index.vue -->
 <template>
   <div class="space-y-6 pb-10">
     <!-- En-tête -->
@@ -104,7 +105,8 @@
               <div class="min-w-0">
                 <p class="font-semibold text-ink truncate">
                   {{ session.exam_name }}
-                  <span class="font-normal text-muted"
+                  <!-- Le titre Start Deutsch contient déjà le numéro du sujet -->
+                  <span v-if="!isStartDeutsch(session)" class="font-normal text-muted"
                     >·
                     {{
                       t("my_results.subject_n", { n: session.subject_number })
@@ -192,13 +194,17 @@
 </template>
 
 <script setup lang="ts">
-import type { SessionListResponse } from "#shared/api";
+import type {
+  SessionListResponse,
+  StartDeutschSessionListItem,
+} from "#shared/api";
 
 definePageMeta({ layout: "dashboard" });
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
 const sessionStore = useSessionStore();
+const startDeutschStore = useStartDeutschSessionStore();
 
 const LIMIT = 20;
 
@@ -209,6 +215,40 @@ const filterStatus = ref("");
 const filterSort = ref("desc");
 const skip = ref(0);
 const hasMore = ref(false);
+
+// ── Tentatives Start Deutsch (A1, A2), dans la même liste ──
+// Mises au format des sessions d'examen ; ids gardés pour savoir où ouvrir.
+const startDeutschIds = new Set<string>();
+
+const isStartDeutsch = (s: SessionListResponse) => startDeutschIds.has(s.id);
+
+function fromStartDeutsch(s: StartDeutschSessionListItem): SessionListResponse {
+  startDeutschIds.add(s.id);
+  const duration =
+    s.submitted_at && s.started_at
+      ? Math.round(
+          (new Date(s.submitted_at).getTime() - new Date(s.started_at).getTime()) / 1000,
+        )
+      : null;
+  return {
+    id: s.id,
+    exam_id: "",
+    exam_name: s.subject_title || `Start Deutsch ${s.level}`,
+    exam_slug: "",
+    subject_id: s.subject_id,
+    subject_number: s.subject_number,
+    status: s.status,
+    score: s.score_percent ?? null,
+    passed: s.passed,
+    started_at: s.started_at,
+    duration_seconds: duration,
+  } as SessionListResponse;
+}
+
+async function loadStartDeutsch(): Promise<SessionListResponse[]> {
+  const res = await startDeutschStore.getMySessions(0, 100);
+  return res.success ? res.data.map(fromStartDeutsch) : [];
+}
 
 // ── Filtres ───────────────────────────────────────────
 
@@ -361,6 +401,20 @@ const formatDuration = (seconds: number) => {
 // ── Navigation ────────────────────────────────────────
 
 function openSession(s: SessionListResponse) {
+  if (isStartDeutsch(s)) {
+    // Une tentative interrompue ne se reprend pas : les réponses restent dans le navigateur
+    navigateTo(
+      localePath(
+        s.status === "IN_PROGRESS"
+          ? `/dashboard/start-deutsch/${s.subject_id}/session`
+          : {
+              path: `/dashboard/start-deutsch/${s.subject_id}/result`,
+              query: { sessionId: s.id },
+            },
+      ),
+    );
+    return;
+  }
   if (s.status === "IN_PROGRESS") {
     navigateTo(
       localePath({
@@ -388,12 +442,14 @@ function openSession(s: SessionListResponse) {
 
 async function loadSessions() {
   loading.value = true;
-  const res = await sessionStore.getMySessions(0, LIMIT);
-  if (res.success && res.data) {
-    sessions.value = res.data;
-    hasMore.value = res.data.length === LIMIT;
-    skip.value = LIMIT;
-  }
+  const [res, startDeutsch] = await Promise.all([
+    sessionStore.getMySessions(0, LIMIT),
+    loadStartDeutsch(),
+  ]);
+  const exams = res.success && res.data ? res.data : [];
+  sessions.value = [...exams, ...startDeutsch];
+  hasMore.value = exams.length === LIMIT;
+  skip.value = LIMIT;
   loading.value = false;
 }
 

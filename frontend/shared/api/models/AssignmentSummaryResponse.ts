@@ -5,6 +5,7 @@
 import type { AssignmentTargetResponse } from './AssignmentTargetResponse';
 export type AssignmentSummaryResponse = {
     id: string;
+    kind?: AssignmentSummaryResponse.kind;
     title: string;
     instructions: (string | null);
     subject_id: string;
@@ -19,4 +20,10 @@ export type AssignmentSummaryResponse = {
     submitted_count?: number;
     graded_count?: number;
 };
+export namespace AssignmentSummaryResponse {
+    export enum kind {
+        EXAM = 'exam',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

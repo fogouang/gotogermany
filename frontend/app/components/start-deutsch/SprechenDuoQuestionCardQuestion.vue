@@ -1,18 +1,17 @@
 <!-- components/start-deutsch/SprechenDuoQuestionCardQuestion.vue -->
 <!--
-  A2 Sprechen Teil 1 — cartes-questions "Fragen zur Person" (Geburtstag?
-  / Wohnort? / Beruf? / Hobby?). En binôme : chaque candidat pose 4
-  questions à l'autre avec ses cartes, puis inverse. Purement
-  présentationnel — pas de correction en V1.
+  A2 Sprechen Teil 1, "Fragen zur Person" : cartes Geburtstag? / Wohnort? /
+  Beruf? / Hobby?. En binôme, chacun pose ses questions à l'autre.
+  Affichage seulement, pas de correction.
   content = { cards: string[] }
 -->
 <template>
   <div class="rounded-card border border-line bg-card p-4 shadow-soft">
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div
         v-for="(card, i) in question.content.cards"
         :key="i"
-        class="flex aspect-4/3 flex-col items-center justify-center gap-1.5 rounded-leaf border border-line bg-card-2 p-3 text-center"
+        class="flex min-h-28 flex-col items-center justify-center gap-1.5 rounded-leaf border border-line bg-card-2 p-4 text-center"
       >
         <span class="text-xs font-semibold uppercase tracking-wide text-faint">
           {{ t("start_deutsch.sprechen.person_questions_label") }}

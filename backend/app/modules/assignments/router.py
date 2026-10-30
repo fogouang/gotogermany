@@ -20,6 +20,7 @@ from app.modules.assignments.schemas import (
 from app.modules.assignments.service import AssignmentService
 from app.modules.auth.dependencies import CurrentTeacher, CurrentUser
 from app.modules.exam_sessions.schemas import SessionStartResponse
+from app.modules.start_deutsch.schemas import StartDeutschSessionResponse
 from app.shared.database.session import get_db
 from app.shared.schemas.responses import SuccessResponse
 
@@ -72,6 +73,14 @@ async def start_assignment(
 ):
     """Démarre (ou reprend) le devoir : renvoie le contenu du sujet pour le lecteur d'examen."""
     return await AssignmentService(db).start(current_user, assignment_id)
+
+
+@router.post("/{assignment_id}/start-deutsch/start", response_model=StartDeutschSessionResponse)
+async def start_start_deutsch_assignment(
+    assignment_id: UUID, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
+    """Devoir Start Deutsch : démarre (ou reprend) la session du lecteur A1/A2."""
+    return await AssignmentService(db).start_start_deutsch(current_user, assignment_id)
 
 
 # ── Enseignant : suivi et correction ─────────────────────

@@ -17,16 +17,18 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
-    MYCOOLPAY_PUBLIC_KEY: str = ""
-    MYCOOLPAY_PRIVATE_KEY: str = ""
-    MYCOOLPAY_BASE_URL: str = "https://my-coolpay.com/api"
-    MYCOOLPAY_CALLBACK_URL: str = ""
+   
     APP_ENV: str = "development"
     DEBUG: bool = True
     ALLOWED_ORIGINS: str = "http://localhost:3000"
     FRONTEND_BASE_URL: str = "http://localhost:3000"
     PAWAPAY_API_TOKEN: str
     PAWAPAY_SANDBOX: bool = True
+    
+    KRATOS_PUBLIC_KEY: str = ""
+    KRATOS_BASE_URL: str = "https://api.kratospay.com"
+    KRATOS_ENV: str = "live"
+    KRATOS_WEBHOOK_STRICT: bool = True
     
     # AI Correction Configuration
     AI_PROVIDER: str = "gemini"  # Options: "grok", "gemini", "claude"

@@ -126,29 +126,20 @@
                 <li
                   v-for="(titre, key) in titres"
                   :key="key"
-                  class="flex items-start gap-2 text-sm"
+                  class="flex items-start gap-2 text-sm transition-opacity"
+                  :class="
+                    assignedTitres[String(key).toLowerCase()]
+                      ? 'text-faint opacity-60'
+                      : 'text-ink'
+                  "
                 >
-                  <span
-                    :class="[
-                      'font-bold w-5 shrink-0',
-                      assignedTitres[String(key).toLowerCase()]
-                        ? 'text-faint'
-                        : 'text-primary',
-                    ]"
-                    >{{ String(key) }}</span
-                  >
-                  <span
-                    :class="[
-                      'flex-1 transition-colors',
-                      assignedTitres[String(key).toLowerCase()]
-                        ? 'text-faint line-through'
-                        : 'text-ink',
-                    ]"
-                    >{{ titre }}</span
-                  >
+                  <span class="font-bold text-primary w-5 shrink-0">{{
+                    String(key)
+                  }}</span>
+                  <span class="flex-1">{{ titre }}</span>
                   <span
                     v-if="assignedTitres[String(key).toLowerCase()]"
-                    class="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary"
+                    class="shrink-0 rounded-full border border-line bg-card px-1.5 text-[10px] font-semibold text-muted"
                   >
                     {{
                       t("session.q.text_n", {
@@ -187,15 +178,14 @@
                   ]"
                 ></i>
                 <template v-if="chosenTitre(q)">
-                  <span class="font-bold text-primary"
-                    >{{ chosenTitre(q) }})</span
-                  >
+                  <span class="font-bold text-primary">{{ chosenTitre(q) }})</span>
                   <span class="min-w-0 truncate">{{
                     headingText(q, chosenTitre(q) || "")
                   }}</span>
                 </template>
                 <span v-else>{{ t("session.q.no_heading_yet") }}</span>
               </button>
+
               <div
                 class="text-[15px] text-ink leading-relaxed"
                 v-html="formatText(q.content?.stimulus_text || '')"
@@ -290,6 +280,7 @@
               class="rounded-card border border-line p-4"
             >
               <template v-for="q in paragraphQuestions(key)" :key="q.id">
+                <!-- Titre choisi, affiché sur le texte (clic : aller à la question) -->
                 <button
                   type="button"
                   :class="[
@@ -307,9 +298,7 @@
                     ]"
                   ></i>
                   <template v-if="chosenTitre(q)">
-                    <span class="font-bold text-primary"
-                      >{{ chosenTitre(q) }})</span
-                    >
+                    <span class="font-bold text-primary">{{ chosenTitre(q) }})</span>
                     <span class="min-w-0 truncate">{{
                       headingText(q, chosenTitre(q) || "")
                     }}</span>
@@ -377,10 +366,8 @@
               v-for="(anzeige, key) in cfg.anzeigen"
               :key="key"
               :class="[
-                'rounded-card border p-4 flex items-start gap-3 transition-colors',
-                assignedTitres[String(key).toLowerCase()]
-                  ? 'border-line bg-card-2'
-                  : 'border-line',
+                'rounded-card border border-line p-4 flex items-start gap-3 transition-opacity',
+                assignedTitres[String(key).toLowerCase()] ? 'opacity-55' : '',
               ]"
             >
               <span class="font-bold text-primary w-5 shrink-0">{{
@@ -388,7 +375,7 @@
               }}</span>
               <span
                 v-if="assignedTitres[String(key).toLowerCase()]"
-                class="order-last shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary"
+                class="order-last shrink-0 rounded-full bg-primary/10 px-1.5 text-[10px] font-bold text-primary"
               >
                 {{ assignedTitres[String(key).toLowerCase()] }}
               </span>
@@ -591,7 +578,7 @@
                     ti === activeText ? 'bg-primary' : 'bg-line',
                   ]"
                 ></span>
-                {{ t("session.q.text_n", { n: Number(ti) + 1 }) }}
+                {{ t("session.q.text_n", { n: Number(ti ) + 1 }) }}
                 <span v-if="textBlock.source" class="normal-case font-normal"
                   >· {{ textBlock.source }}</span
                 >
@@ -604,6 +591,7 @@
               >
                 <QuestionItem
                   :question="q"
+                  :teil-config="cfg"
                   :answer="answers[q.id]?.user_answer"
                   compact
                   @answer="
@@ -643,6 +631,7 @@
             >
               <QuestionItem
                 :question="q"
+                :teil-config="cfg"
                 :answer="answers[q.id]?.user_answer"
                 :stimulus-in-side="hasStimulus"
                 :teil-anzeigen="cfg.anzeigen"
@@ -717,9 +706,7 @@ const hasTexts = computed(
 // Texte affiché à gauche (Goethe B1 Lesen 2 : celui des questions en cours)
 const activeText = ref(0);
 const currentText = computed<Record<string, any> | null>(() =>
-  hasTexts.value
-    ? (cfg.value.texts[activeText.value] ?? cfg.value.texts[0])
-    : null,
+  hasTexts.value ? (cfg.value.texts[activeText.value] ?? cfg.value.texts[0]) : null,
 );
 
 // Mobile : un clic sur « Text 2 » ouvre directement le texte
@@ -919,9 +906,7 @@ const isGapFormat = computed(() => GAP_FORMATS.has(fmt.value));
 const activeGap = ref<string | null>(null);
 
 const gapNumberOf = (q: any) =>
-  String(
-    q.content?.gap_number ?? q.content?.display_number ?? q.question_number,
-  );
+  String(q.content?.gap_number ?? q.content?.display_number ?? q.question_number);
 
 const questionByGap = computed<Record<string, any>>(() => {
   const out: Record<string, any> = {};
@@ -933,9 +918,7 @@ const questionByGap = computed<Record<string, any>>(() => {
 const answerLabel = (q: any, key: string): string => {
   if (fmt.value === "word_bank_gap_fill") {
     const bank = cfg.value.word_bank || {};
-    return (
-      bank[key] ?? bank[key.toUpperCase()] ?? bank[key.toLowerCase()] ?? key
-    );
+    return bank[key] ?? bank[key.toUpperCase()] ?? bank[key.toLowerCase()] ?? key;
   }
   if (fmt.value === "qcm_gap_fill") {
     const opts = q?.content?.options || {};
@@ -979,9 +962,9 @@ const renderGapText = (text: string) =>
 
 // Clic sur une lacune du texte : la question correspondante passe au premier plan
 function onGapClick(e: Event) {
-  const el = (e.target as HTMLElement)?.closest?.(
-    "[data-gap]",
-  ) as HTMLElement | null;
+  const el = (e.target as HTMLElement)?.closest?.("[data-gap]") as
+    | HTMLElement
+    | null;
   const n = el?.dataset.gap;
   if (!n) return;
   const q = questionByGap.value[n];

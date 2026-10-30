@@ -1,7 +1,7 @@
 <!-- components/start-deutsch/FormFillQuestion.vue -->
 <!--
   content = { prompt_text: string, fields: [{ number, label }, ...] }
-  user_answer = { "1": "...", "2": "...", ... } — clé = field.number en string
+  user_answer = { "1": "...", "2": "...", ... }, clé = numéro du champ
 -->
 <template>
   <div class="rounded-card border border-line bg-card p-4 shadow-soft">

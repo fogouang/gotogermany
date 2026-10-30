@@ -1,12 +1,10 @@
 """
 app/modules/start_deutsch/import_parsers.py
 
-Parsers JSON → dicts de questions, un par format_type. Même principe que
-app/modules/exams/import_parsers.py, adapté aux 15 format_type Start Deutsch.
+Parsers JSON vers questions, un par format_type Start Deutsch.
 
-Convention générale : chaque teil_data a une clé "questions" (liste
-d'items numérotés), sauf form_fill/free_text/sprechen_* qui représentent
-une tâche unique (question_number=1).
+Chaque Teil porte une liste "questions" numérotée, sauf form_fill, free_text
+et les formats sprechen_*, qui forment une tâche unique (question_number = 1).
 """
 
 
@@ -21,7 +19,7 @@ def parse_mc_text(teil_data: dict) -> list[dict]:
 
 
 def parse_mc_image(teil_data: dict) -> list[dict]:
-    """Options = images (label + image_file), pas de texte."""
+    """Options en images : label + image_file."""
     return [{
         "question_number": q["number"],
         "content": {"question": q.get("question", ""), "options": q["options"]},
@@ -33,12 +31,12 @@ def parse_mc_image(teil_data: dict) -> list[dict]:
 
 def parse_true_false(teil_data: dict) -> list[dict]:
     """
-    Deux formes possibles selon le Teil :
-    - texte partagé (Lesen Teil1, Hören Teil2) : teil_data["text"] au niveau
-      du Teil (capturé à part par build_teil_shared_content), question =
-      juste {"statement": ...}
-    - textes indépendants (Lesen Teil3 "Hinweisschilder", multi_text=True) :
-      chaque question porte SON PROPRE {"context": ..., "text": ..., "statement": ...}
+    Deux cas :
+    - texte commun au Teil (Lesen Teil 1, Hören Teil 2) : il est rangé dans
+      shared_content par build_teil_shared_content, la question ne garde que
+      l'énoncé ;
+    - un texte par question (Lesen Teil 3, panneaux) : chaque question porte
+      son context, son text et son statement.
     """
     questions = []
     for q in teil_data.get("questions", []):
@@ -78,19 +76,18 @@ def parse_matching_2options(teil_data: dict) -> list[dict]:
 
 
 def parse_matching_with_distractor(teil_data: dict) -> list[dict]:
-    """Le pool d'annonces (ads) est partagé au niveau du Teil (shared_content),
-    pas répété par question — cf. _build_teil_shared_content."""
+    """Les annonces sont communes au Teil (shared_content.ads)."""
     return [{
         "question_number": p["number"],
         "content": {"profile": p["profile"]},
-        "correct_answer": {"answer": p["answer"]},  # lettre, ou "X" si pas de solution
+        "correct_answer": {"answer": p["answer"]},  # lettre, ou "X" sans solution
         "points": 1,
         "image_file": None,
     } for p in teil_data.get("profiles", [])]
 
 
 def parse_image_day_matching(teil_data: dict) -> list[dict]:
-    """Le pool d'images est partagé au niveau du Teil (shared_content)."""
+    """Les images sont communes au Teil (shared_content.images)."""
     return [{
         "question_number": d["number"],
         "content": {"day": d["day"]},
@@ -101,8 +98,8 @@ def parse_image_day_matching(teil_data: dict) -> list[dict]:
 
 
 def parse_form_fill(teil_data: dict) -> list[dict]:
-    """Une seule question représentant tout le formulaire.
-    teil_data['fields'] = [{"number": 1, "label": "Alter", "correct_value": "22"}, ...]
+    """Une question pour tout le formulaire.
+    fields = [{"number": 1, "label": "Alter", "correct_value": "22"}, ...]
     """
     fields = teil_data.get("fields", [])
     return [{
@@ -118,8 +115,8 @@ def parse_form_fill(teil_data: dict) -> list[dict]:
 
 
 def parse_free_text(teil_data: dict) -> list[dict]:
-    """Une seule question — pas de correct_answer, corrigée via l'IA
-    (StartDeutschSchreibenCorrection), pas via ce mécanisme."""
+    """Pas de correct_answer : la production est corrigée par l'IA
+    (StartDeutschSchreibenCorrection)."""
     return [{
         "question_number": 1,
         "content": {
@@ -134,12 +131,12 @@ def parse_free_text(teil_data: dict) -> list[dict]:
     }]
 
 
-# ── Sprechen — structure minimale (V1 : pas encore de correction/agent) ────
+# ── Sprechen : affichage seulement, pas encore de correction ─────────
 
 def parse_sprechen_group_intro(teil_data: dict) -> list[dict]:
     return [{
         "question_number": 1,
-        "content": {"prompts": teil_data.get("prompts", [])},  # ex: ["Name?","Alter?",...]
+        "content": {"prompts": teil_data.get("prompts", [])},  # ["Name?", "Alter?", ...]
         "correct_answer": None,
         "points": teil_data.get("max_score", 0),
         "image_file": None,
@@ -169,7 +166,7 @@ def parse_sprechen_group_image_card(teil_data: dict) -> list[dict]:
 def parse_sprechen_duo_question_card(teil_data: dict) -> list[dict]:
     return [{
         "question_number": 1,
-        "content": {"cards": teil_data.get("cards", [])},  # ex: ["Geburtstag?","Wohnort?",...]
+        "content": {"cards": teil_data.get("cards", [])},  # ["Geburtstag?", "Wohnort?", ...]
         "correct_answer": None,
         "points": teil_data.get("max_score", 0),
         "image_file": None,
@@ -223,26 +220,13 @@ PARSERS = {
 
 
 def build_teil_shared_content(teil_data: dict, format_type: str) -> dict | None:
-    """Pool d'options / texte partagé par tout le Teil.
-
-    ⚠️ Corrige un bug réel : teil_data["text"] (la lettre/l'annonce que
-    TOUTES les questions true_false/ja_nein du Teil partagent) était
-    silencieusement ignoré — seuls matching_with_distractor/
-    image_day_matching étaient gérés ici, donc le texte source
-    n'atteignait jamais la DB (ni donc le frontend).
-    """
+    """Contenu commun à toutes les questions du Teil : annonces, images ou texte."""
     if format_type == "matching_with_distractor":
         return {"ads": teil_data.get("ads", [])}
     if format_type == "image_day_matching":
         return {"images": teil_data.get("images", [])}
-    if format_type in ("true_false", "ja_nein"):
-        text = teil_data.get("text", "")
-        return {"text": text} if text else None
-    if format_type == "mc_text":
-        # mc_text sert pour Hören (5 messages indépendants, pas de texte
-        # partagé — teil_data["text"] absent) ET pour Lesen A2 (1 article/
-        # email partagé, shared_text=True côté structure). On ne capture
-        # que si un texte partagé existe réellement.
+    if format_type in ("true_false", "ja_nein", "mc_text"):
+        # mc_text : texte présent en Lesen A2 (article, e-mail), absent en Hören
         text = teil_data.get("text", "")
         return {"text": text} if text else None
     return None

@@ -8,22 +8,28 @@ from typing import Any, Literal
 from pydantic import Field, model_validator
 
 from app.modules.exam_sessions.schemas import SessionResultResponse
+from app.modules.start_deutsch.schemas import StartDeutschSessionResultResponse
 from app.shared.schemas.base import BaseSchema
+
+# "exam" : sujet B1/B2 (moteur d'examen) ; "start_deutsch" : sujet A1/A2
+AssignmentKind = Literal["exam", "start_deutsch"]
 
 
 class BankSubjectResponse(BaseSchema):
+    kind: AssignmentKind = "exam"
     subject_id: uuid.UUID
     subject_name: str
     subject_number: int
-    exam_id: uuid.UUID
+    exam_id: uuid.UUID | None = None   # absent pour Start Deutsch
     exam_name: str
     provider: str
-    level_id: uuid.UUID
+    level_id: uuid.UUID | None = None  # absent pour Start Deutsch
     cefr_code: str
     modules: list[str] = []
 
 
 class AssignmentCreate(BaseSchema):
+    kind: AssignmentKind = "exam"
     subject_id: uuid.UUID
     title: str = Field(min_length=2, max_length=150)
     instructions: str | None = Field(default=None, max_length=2000)
@@ -46,6 +52,7 @@ class AssignmentTargetResponse(BaseSchema):
 
 class AssignmentSummaryResponse(BaseSchema):
     id: uuid.UUID
+    kind: AssignmentKind = "exam"
     title: str
     instructions: str | None
     subject_id: uuid.UUID
@@ -66,6 +73,7 @@ class SubmissionRowResponse(BaseSchema):
     student_name: str
     status: str                      # pending | in_progress | submitted | graded
     exam_session_id: uuid.UUID | None
+    sd_session_id: uuid.UUID | None = None
     started_at: datetime | None
     submitted_at: datetime | None
     graded_at: datetime | None
@@ -97,6 +105,7 @@ class StudentScoreSheet(BaseSchema):
 class StudentAssignmentResponse(BaseSchema):
     """Vue élève : uniquement la note finale, jamais le détail."""
     id: uuid.UUID
+    kind: AssignmentKind = "exam"
     title: str
     instructions: str | None
     exam_name: str
@@ -127,3 +136,5 @@ class SubmissionGradingResponse(BaseSchema):
     teacher_comment: str | None
     # Résultat complet (réponses, textes, audios, corrigés) : vue enseignant uniquement
     result: SessionResultResponse | None
+    # Même chose pour un devoir Start Deutsch
+    sd_result: StartDeutschSessionResultResponse | None = None

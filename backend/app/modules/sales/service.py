@@ -326,9 +326,18 @@ class SalesService:
             raise NotFoundException(resource="Élève", identifier=str(data.student_id))
         await self._assert_student_in_scope(actor, partner, student)
 
-        level = await self.db.get(Level, data.level_id)
-        if not level:
-            raise NotFoundException(resource="Level", identifier=str(data.level_id))
+        # Niveau activé : celui demandé, sinon celui du compte de l'élève
+        level_id = data.level_id
+        sd_level = data.sd_level
+        if level_id is None and sd_level is None:
+            level_id = student.target_level_id
+            sd_level = student.target_sd_level if level_id is None else None
+        if level_id is None and sd_level is None:
+            raise BadRequestException(
+                detail="Choisissez le niveau à activer (examen ou Start Deutsch A1/A2)."
+            )
+        if level_id is not None and not await self.db.get(Level, level_id):
+            raise NotFoundException(resource="Level", identifier=str(level_id))
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
@@ -356,7 +365,8 @@ class SalesService:
 
         payment = Payment(
             user_id=student.id,
-            level_id=level.id,
+            level_id=level_id,
+            sd_level=sd_level,
             plan_id=plan.id,
             promo_code_id=None,
             amount_gross=price,
@@ -377,7 +387,7 @@ class SalesService:
             payment_id=payment.id,
             student_id=student.id,
             plan_id=plan.id,
-            level_id=level.id,
+            level_id=level_id,  # vide pour Start Deutsch (le niveau est sur le paiement)
             center_id=partner.id if partner.type == CENTER else None,
             user_id=partner.id if partner.type == AMBASSADOR else None,
             activated_by=actor.id,

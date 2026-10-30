@@ -1287,9 +1287,9 @@
     }
   },
   "start_deutsch": {
-    "title": "Start Deutsch — A1 & A2",
+    "title": "Start Deutsch - A1 & A2",
     "subtitle": "Entraîne-toi et familiarise-toi avec la plateforme avant tes vrais tests B1/B2.",
-    "info_banner": "Ces modules sont un entraînement de familiarisation, pas un vrai examen certifiant — profites-en pour découvrir la plateforme sans pression.",
+    "info_banner": "Ces modules sont un entraînement de familiarisation, pas un vrai examen certifiant  profites-en pour découvrir la plateforme sans pression.",
     "empty": "Aucun sujet disponible pour le moment.",
     "all_levels": "Tous niveaux",
     "session": {
@@ -1304,7 +1304,7 @@
       "score_of": "{score} points obtenus",
       "by_module": "Résultat par module",
       "pending": "En attente",
-      "detail": "Détail",
+      "detail": "Détail des réponses",
       "your_answer": "Votre réponse",
       "correct_answer": "Réponse attendue",
       "pending_review": "En cours de correction",
@@ -1315,7 +1315,21 @@
       "pending_note": "{modules} en cours de correction : ton score sera mis à jour.",
       "points_of": "{score} / {max} pts",
       "oral_not_scored": "Oral : entraîne-toi à voix haute, non noté ici",
-      "refresh": "Actualiser"
+      "refresh": "Actualiser",
+      "threshold": "Seuil de réussite : {pct} %",
+      "modules_corrected": "{done} / {total} modules corrigés"
+    },
+    "catalog": {
+      "not_attempted": "Nouveau",
+      "in_progress": "En cours",
+      "pending": "En correction",
+      "last_score": "Dernier score : {score} %",
+      "attempts": "{n} tentative | {n} tentatives",
+      "never": "Jamais tenté",
+      "description_a1": "Entraînement de familiarisation A1 · Start Deutsch 1 (Goethe-Institut, telc)",
+      "description_a2": "Entraînement de familiarisation A2 · Goethe-Zertifikat A2 (version adulte, à partir de 16 ans)",
+      "locked":"Verrouillé",
+      "unlock":"Débloquer ce niveau"
     },
     "free_text": {
       "word_count": "{count} mots",
@@ -1337,7 +1351,8 @@
     },
     "question_ui": {
       "none_solution": "Aucune annonce ne convient",
-      "unsupported_format": "Ce type de question ({format}) arrive dans une prochaine mise à jour."
+      "unsupported_format": "Ce type de question ({format}) arrive dans une prochaine mise à jour.",
+      "zoom": "Agrandir l’image {label}"
     }
   },
   "admin": {

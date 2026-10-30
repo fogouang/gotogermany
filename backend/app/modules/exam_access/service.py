@@ -6,6 +6,7 @@ Logique d'accès :
     Jamais pour un élève de centre en dehors d'un devoir.
   - Élève indépendant : sujets 1 à 3 libres, puis ExamAccess actif sur le niveau.
   - Élève de centre : ExamAccess actif ET classe active, sans aperçu gratuit.
+  - Start Deutsch (A1, A2) : mêmes règles, avec un accès sur sd_level au lieu de level_id.
 """
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
@@ -122,6 +123,82 @@ class ExamAccessService:
                 detail="Votre centre doit vous affecter à une classe pour accéder aux sujets."
             )
         raise ForbiddenException(detail="Accès requis : veuillez souscrire à ce niveau.")
+
+    # ── Start Deutsch (A1, A2) ───────────────────────────
+
+    async def check_sd_subject_access(self, user: User | None, subject) -> bool:
+        """
+        Mêmes règles que les sujets d'examen, sur le niveau Start Deutsch du sujet :
+        - indépendant : sujets 1 à 3 libres, puis accès A1 ou A2 actif ;
+        - élève de centre : accès A1 ou A2 actif ET classe en cours, sans aperçu.
+        Les sujets privés (devoirs) sont traités avant, dans start_deutsch.access.
+        """
+        from app.modules.settings.service import AppSettingsService
+
+        if user is None:
+            return False
+        if user.is_admin or await AppSettingsService(self.db).is_free_access_mode():
+            return True
+
+        if self._is_center_student(user):
+            if not await self.repo.user_has_sd_access(user.id, subject.level):
+                return False
+            return await self._has_active_class(user.id)
+
+        if subject.subject_number <= 3:
+            return True
+        return await self.repo.user_has_sd_access(user.id, subject.level)
+
+    async def require_sd_subject_access(self, user: User, subject) -> None:
+        if await self.check_sd_subject_access(user, subject):
+            return
+        if self._is_center_student(user) and await self.repo.user_has_sd_access(
+            user.id, subject.level
+        ):
+            raise ForbiddenException(
+                detail="Votre centre doit vous affecter à une classe pour accéder aux sujets."
+            )
+        raise ForbiddenException(detail="Accès requis : veuillez souscrire à ce niveau.")
+
+    async def locked_sd_subject_ids(self, user: User, subjects: list) -> set:
+        """Sujets Start Deutsch fermés pour cet utilisateur (cadenas du catalogue)."""
+        locked = set()
+        for subject in subjects:
+            if not await self.check_sd_subject_access(user, subject):
+                locked.add(subject.id)
+        return locked
+
+    async def grant_admin_sd_access(
+        self, user_id: UUID, sd_level: str, days: int | None = None
+    ) -> ExamAccess:
+        """Comme grant_admin_access, pour un niveau Start Deutsch."""
+        now = datetime.now(timezone.utc)
+        existing = await self.repo.find_by_user_and_sd_level(user_id, sd_level)
+
+        if days is None:
+            expires_at = None
+        else:
+            if existing and existing.expires_at is None:
+                return existing
+            start = (
+                existing.expires_at
+                if existing and existing.expires_at and existing.expires_at > now
+                else now
+            )
+            expires_at = start + timedelta(days=days)
+
+        if existing:
+            return await self.repo.update(
+                existing.id, access_type="admin", expires_at=expires_at, granted_at=now
+            )
+        return await self.repo.create(
+            user_id=user_id,
+            sd_level=sd_level,
+            access_type="admin",
+            payment_id=None,
+            expires_at=expires_at,
+            granted_at=now,
+        )
 
     async def check_level_access(
         self, user_id: UUID, level_id: UUID
@@ -242,18 +319,28 @@ class ExamAccessService:
             ExamAccessWithLevelResponse(
                 id=access.id,
                 level_id=access.level_id,
+                sd_level=access.sd_level,
                 access_type=access.access_type,
                 granted_at=access.granted_at,
                 expires_at=access.expires_at,
                 is_active=access.is_active,
-                cefr_code=access.level.cefr_code if access.level else "",
+                cefr_code=(
+                    access.sd_level
+                    or (access.level.cefr_code if access.level else "")
+                ),
                 exam_name=(
-                    access.level.exam.name if access.level and access.level.exam else ""
+                    f"Start Deutsch {access.sd_level}"
+                    if access.sd_level
+                    else (access.level.exam.name if access.level and access.level.exam else "")
                 ),
                 exam_provider=(
-                    access.level.exam.provider
-                    if access.level and access.level.exam
-                    else ""
+                    "start_deutsch"
+                    if access.sd_level
+                    else (
+                        access.level.exam.provider
+                        if access.level and access.level.exam
+                        else ""
+                    )
                 ),
             )
             for access in accesses

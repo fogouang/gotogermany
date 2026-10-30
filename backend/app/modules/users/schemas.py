@@ -5,7 +5,7 @@ from app.shared.utils.phone import normalize_phone
 import uuid
 from datetime import datetime
 from typing import Literal
-from pydantic import EmailStr, Field, field_validator
+from pydantic import EmailStr, Field, field_validator, model_validator
 from app.shared.schemas.base import BaseSchema
 from app.modules.users.models import UserRole
 
@@ -162,6 +162,8 @@ class UserMeResponse(UserResponse):
     center_id: uuid.UUID | None
     branch_id: uuid.UUID | None
     target_level_id: uuid.UUID | None
+    # Niveau Start Deutsch ("A1", "A2") d'un élève de centre en parcours A1/A2
+    target_sd_level: str | None = None
     access_expires_at: datetime | None
     # Inscription via le lien d'un centre, en attente de validation
     requested_branch_id: uuid.UUID | None = None
@@ -175,6 +177,8 @@ class StudentResponse(BaseSchema):
     is_active: bool
     branch_id: uuid.UUID | None
     target_level_id: uuid.UUID | None
+    target_sd_level: str | None = None
+    learning_track: str | None = None
     first_login_at: datetime | None
     access_expires_at: datetime | None
     created_at: datetime
@@ -289,4 +293,12 @@ class JoinRequestResponse(BaseSchema):
 
 
 class JoinRequestApproveRequest(BaseSchema):
-    target_level_id: uuid.UUID
+    """Niveau attribué à la validation : un niveau d'examen, ou Start Deutsch A1 / A2."""
+    target_level_id: uuid.UUID | None = None
+    target_sd_level: Literal["A1", "A2"] | None = None
+
+    @model_validator(mode="after")
+    def one_level(self):
+        if (self.target_level_id is None) == (self.target_sd_level is None):
+            raise ValueError("Choisissez un niveau d'examen ou un niveau Start Deutsch (A1, A2).")
+        return self

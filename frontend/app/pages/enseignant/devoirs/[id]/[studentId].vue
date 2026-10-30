@@ -79,7 +79,7 @@
 
         <!-- Fichiers -->
         <div
-          v-if="result"
+          v-if="hasResult"
           class="mt-5 flex flex-wrap gap-2 border-t border-line pt-5"
         >
           <Button
@@ -124,7 +124,7 @@
 
       <!-- ── Copie non rendue ── -->
       <div
-        v-if="!result"
+        v-if="!hasResult"
         class="rounded-card border border-line bg-card p-6 text-center text-sm text-muted shadow-soft"
       >
         {{ t("teacher.assignments.grading.not_submitted") }}
@@ -142,28 +142,21 @@
           <ul class="divide-y divide-line">
             <li
               v-for="m in autoModules"
-              :key="m.slug"
+              :key="m.key"
               class="flex flex-wrap items-center justify-between gap-2 py-2.5"
             >
               <span class="text-sm font-medium text-ink">{{ m.name }}</span>
               <span class="text-sm text-muted">
                 {{
                   t("teacher.assignments.grading.auto_correct", {
-                    correct: m.questions_correct,
-                    total: m.questions_total,
+                    correct: m.correct,
+                    total: m.total,
                   })
                 }}
-                <template
-                  v-if="
-                    m.points_obtained !== null &&
-                    m.points_obtained !== undefined
-                  "
-                >
+                <template v-if="m.points !== null">
                   ·
                   <span class="font-semibold text-ink"
-                    >{{ formatPoints(m.points_obtained) }}/{{
-                      m.max_score
-                    }}</span
+                    >{{ formatPoints(m.points) }}/{{ m.max }}</span
                   >
                 </template>
               </span>
@@ -186,7 +179,7 @@
 
           <article
             v-for="item in items"
-            :key="item.answer.question_id"
+            :key="item.questionId"
             class="rounded-card border border-line bg-card p-5 shadow-soft sm:p-6"
           >
             <header
@@ -200,30 +193,30 @@
               >
                 {{
                   t("teacher.assignments.grading.words", {
-                    n: wordCount(item.answer),
+                    n: wordCount(item.text),
                   })
                 }}
               </span>
             </header>
 
             <div
-              v-if="item.answer.instruction || item.answer.prompts?.length"
+              v-if="item.instruction || item.prompts.length"
               class="mb-3 rounded-leaf border border-line px-4 py-3"
             >
               <p class="mb-1 text-xs font-semibold text-muted">
                 {{ t("teacher.assignments.grading.task") }}
               </p>
               <p
-                v-if="item.answer.instruction"
+                v-if="item.instruction"
                 class="whitespace-pre-wrap text-sm text-ink"
               >
-                {{ item.answer.instruction }}
+                {{ item.instruction }}
               </p>
               <ul
-                v-if="item.answer.prompts?.length"
+                v-if="item.prompts.length"
                 class="mt-2 list-disc space-y-0.5 pl-5 text-sm text-ink"
               >
-                <li v-for="(p, i) in item.answer.prompts" :key="i">{{ p }}</li>
+                <li v-for="(p, i) in item.prompts" :key="i">{{ p }}</li>
               </ul>
             </div>
 
@@ -232,12 +225,9 @@
             </p>
             <div
               class="whitespace-pre-wrap rounded-leaf bg-card-2 px-4 py-3 text-sm leading-relaxed text-ink"
-              :class="{ 'italic text-muted': !answerText(item.answer) }"
+              :class="{ 'italic text-muted': !item.text }"
             >
-              {{
-                answerText(item.answer) ||
-                t("teacher.assignments.grading.empty_answer")
-              }}
+              {{ item.text || t("teacher.assignments.grading.empty_answer") }}
             </div>
 
             <div class="mt-4 grid gap-4 sm:grid-cols-[auto_1fr]">
@@ -247,9 +237,9 @@
                 </label>
                 <div class="flex items-center gap-2">
                   <InputNumber
-                    v-model="scores[item.answer.question_id]"
+                    v-model="scores[item.questionId]"
                     :min="0"
-                    :max="item.answer.points_possible"
+                    :max="item.pointsPossible"
                     :min-fraction-digits="0"
                     :max-fraction-digits="1"
                     :step="0.5"
@@ -257,7 +247,7 @@
                     input-class="w-20 text-center"
                   />
                   <span class="text-sm text-muted"
-                    >/ {{ formatPoints(item.answer.points_possible) }}</span
+                    >/ {{ formatPoints(item.pointsPossible) }}</span
                   >
                 </div>
               </div>
@@ -266,7 +256,7 @@
                   {{ t("teacher.assignments.grading.comment") }}
                 </label>
                 <Textarea
-                  v-model="comments[item.answer.question_id]"
+                  v-model="comments[item.questionId]"
                   rows="2"
                   auto-resize
                   class="w-full"
@@ -343,7 +333,10 @@ const data = ref<SubmissionGradingResponse | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const row = computed(() => data.value?.submission ?? null);
+// Devoir B : result. Devoir Start Deutsch : sd_result.
 const result = computed(() => data.value?.result ?? null);
+const sdResult = computed(() => data.value?.sd_result ?? null);
+const hasResult = computed(() => !!result.value || !!sdResult.value);
 
 // ── Utilitaires ──
 function initials(name: string) {
@@ -404,48 +397,39 @@ const stateBadge = computed(() => {
 // Sprechen exclu des devoirs : seules les productions écrites sont notées par l'enseignant
 const TEACHER_GRADED = new Set(["free_text"]);
 
+const SD_MODULE_NAMES: Record<string, string> = {
+  hoeren: "Hören",
+  lesen: "Lesen",
+  schreiben: "Schreiben",
+  sprechen: "Sprechen",
+};
+
+/** Production à noter, même forme pour un devoir B et un devoir Start Deutsch */
 interface GradeItem {
-  answer: AnswerDetailResponse;
+  questionId: string;
   moduleName: string;
   teilNumber: number;
+  text: string;
+  instruction: string | null;
+  prompts: string[];
+  pointsPossible: number;
+  /** Note déjà posée par l'enseignant, sinon null */
+  teacherScore: number | null;
+  teacherComment: string;
 }
 
-const items = computed<GradeItem[]>(() => {
-  const out: GradeItem[] = [];
-  for (const m of result.value?.modules ?? []) {
-    for (const teil of m.teile ?? []) {
-      for (const answer of teil.answers ?? []) {
-        if (TEACHER_GRADED.has(answer.question_type)) {
-          out.push({
-            answer,
-            moduleName: m.name,
-            teilNumber: teil.teil_number,
-          });
-        }
-      }
-    }
-  }
-  return out;
-});
+interface AutoModule {
+  key: string;
+  name: string;
+  correct: number;
+  total: number;
+  points: number | null;
+  max: number;
+}
 
-const autoModules = computed(() =>
-  (result.value?.modules ?? []).filter((m) => {
-    const answers = (m.teile ?? []).flatMap((teil) => teil.answers ?? []);
-    return (
-      answers.length > 0 &&
-      !answers.some((a) => TEACHER_GRADED.has(a.question_type))
-    );
-  }),
-);
-
-function answerText(answer: AnswerDetailResponse): string {
-  const text = (answer.user_answer as Record<string, unknown> | null)?.text;
+function textOf(userAnswer: unknown): string {
+  const text = (userAnswer as Record<string, unknown> | null)?.text;
   return typeof text === "string" ? text.trim() : "";
-}
-
-function wordCount(answer: AnswerDetailResponse): number {
-  const text = answerText(answer);
-  return text ? text.split(/\s+/).length : 0;
 }
 
 function teacherFeedback(
@@ -457,6 +441,102 @@ function teacherFeedback(
     : null;
 }
 
+const items = computed<GradeItem[]>(() => {
+  const out: GradeItem[] = [];
+
+  // Start Deutsch : un Teil free_text = une production, notée sur le max du Teil
+  if (sdResult.value) {
+    for (const m of sdResult.value.modules ?? []) {
+      for (const teil of m.teile ?? []) {
+        if (!TEACHER_GRADED.has(teil.format_type)) continue;
+        for (const answer of teil.answers ?? []) {
+          out.push({
+            questionId: answer.question_id,
+            moduleName: SD_MODULE_NAMES[m.slug] ?? m.slug,
+            teilNumber: teil.teil_number,
+            text: textOf(answer.user_answer),
+            instruction: null,
+            prompts: [],
+            pointsPossible: teil.max_score,
+            // is_correct n'est rempli qu'une fois la correction enregistrée
+            teacherScore:
+              answer.is_correct !== null ? answer.score_obtained : null,
+            teacherComment: "",
+          });
+        }
+      }
+    }
+    return out;
+  }
+
+  for (const m of result.value?.modules ?? []) {
+    for (const teil of m.teile ?? []) {
+      for (const answer of teil.answers ?? []) {
+        if (!TEACHER_GRADED.has(answer.question_type)) continue;
+        const fromTeacher = teacherFeedback(answer);
+        out.push({
+          questionId: answer.question_id,
+          moduleName: m.name,
+          teilNumber: teil.teil_number,
+          text: textOf(answer.user_answer),
+          instruction: answer.instruction ?? null,
+          prompts: answer.prompts ?? [],
+          pointsPossible: answer.points_possible,
+          teacherScore: fromTeacher ? (answer.score_obtained ?? null) : null,
+          teacherComment: fromTeacher?.comment ?? "",
+        });
+      }
+    }
+  }
+  return out;
+});
+
+const autoModules = computed<AutoModule[]>(() => {
+  if (sdResult.value) {
+    return (sdResult.value.modules ?? [])
+      .filter(
+        (m) =>
+          m.slug !== "sprechen" &&
+          (m.teile ?? []).length > 0 &&
+          !(m.teile ?? []).some((teil) =>
+            TEACHER_GRADED.has(teil.format_type),
+          ),
+      )
+      .map((m) => {
+        const answers = (m.teile ?? []).flatMap((teil) => teil.answers ?? []);
+        return {
+          key: m.slug,
+          name: SD_MODULE_NAMES[m.slug] ?? m.slug,
+          correct: answers.filter((a) => a.is_correct === true).length,
+          total: answers.length,
+          points: m.score_obtained,
+          max: m.max_score,
+        };
+      });
+  }
+
+  return (result.value?.modules ?? [])
+    .filter((m) => {
+      const answers = (m.teile ?? []).flatMap((teil) => teil.answers ?? []);
+      return (
+        answers.length > 0 &&
+        !answers.some((a) => TEACHER_GRADED.has(a.question_type))
+      );
+    })
+    .map((m) => ({
+      key: m.slug,
+      name: m.name,
+      correct: m.questions_correct ?? 0,
+      total: m.questions_total ?? 0,
+      points: m.points_obtained ?? null,
+      max: m.max_score,
+    }));
+});
+
+function wordCount(text: string): number {
+  return text ? text.split(/\s+/).length : 0;
+}
+
 // ── Formulaire ──
 const scores = reactive<Record<string, number | null>>({});
 const comments = reactive<Record<string, string>>({});
@@ -465,18 +545,14 @@ const teacherComment = ref("");
 function hydrate(res: SubmissionGradingResponse) {
   data.value = res;
   teacherComment.value = res.teacher_comment ?? "";
-  for (const { answer } of items.value) {
-    const fromTeacher = teacherFeedback(answer);
-    // Pré-rempli seulement si la note vient déjà de l'enseignant
-    scores[answer.question_id] = fromTeacher
-      ? (answer.score_obtained ?? null)
-      : null;
-    comments[answer.question_id] = fromTeacher?.comment ?? "";
+  for (const item of items.value) {
+    scores[item.questionId] = item.teacherScore;
+    comments[item.questionId] = item.teacherComment;
   }
 }
 
 const filled = computed(() =>
-  items.value.filter((i) => typeof scores[i.answer.question_id] === "number"),
+  items.value.filter((i) => typeof scores[i.questionId] === "number"),
 );
 const remaining = computed(() => items.value.length - filled.value.length);
 
@@ -486,9 +562,9 @@ async function save() {
   actionError.value = null;
   const res = await store.grade(assignmentId, studentId, {
     answers: filled.value.map((i) => ({
-      question_id: i.answer.question_id,
-      score: scores[i.answer.question_id] as number,
-      comment: comments[i.answer.question_id]?.trim() || null,
+      question_id: i.questionId,
+      score: scores[i.questionId] as number,
+      comment: comments[i.questionId]?.trim() || null,
     })),
     teacher_comment: teacherComment.value.trim(),
   });

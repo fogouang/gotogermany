@@ -7,7 +7,8 @@ export type TrainingSessionCreateRequest = {
      * Requis pour un directeur (plusieurs branches possibles). Ignoré pour une secrétaire (sa propre branche s'applique).
      */
     branch_id?: (string | null);
-    level_id: string;
+    level_id?: (string | null);
+    sd_level?: ('A1' | 'A2' | null);
     label?: (string | null);
     start_date: string;
     end_date?: (string | null);

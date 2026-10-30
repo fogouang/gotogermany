@@ -6,6 +6,7 @@ import type { AssignmentTargetResponse } from './AssignmentTargetResponse';
 import type { SubmissionRowResponse } from './SubmissionRowResponse';
 export type AssignmentDetailResponse = {
     id: string;
+    kind?: AssignmentDetailResponse.kind;
     title: string;
     instructions: (string | null);
     subject_id: string;
@@ -21,4 +22,10 @@ export type AssignmentDetailResponse = {
     graded_count?: number;
     submissions?: Array<SubmissionRowResponse>;
 };
+export namespace AssignmentDetailResponse {
+    export enum kind {
+        EXAM = 'exam',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

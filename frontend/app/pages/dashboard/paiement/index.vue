@@ -1,7 +1,8 @@
+<!-- pages/dashboard/paiement.vue -->
 <template>
   <div class="space-y-5 pb-10">
     <NuxtLink
-      :to="localePath('/dashboard/examens')"
+      :to="localePath(backPath)"
       class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink"
     >
       <i class="pi pi-arrow-left text-xs" />
@@ -23,7 +24,7 @@
         <i class="pi pi-exclamation-triangle text-xl" />
       </span>
       <p class="font-medium text-ink">{{ t("payment.level") }}</p>
-      <Button :label="t('payment.back')" outlined size="small" @click="navigateTo(localePath('/dashboard/examens'))" />
+      <Button :label="t('payment.back')" outlined size="small" @click="navigateTo(localePath(backPath))" />
     </div>
 
     <div v-else class="grid items-start gap-5 lg:grid-cols-5">
@@ -34,12 +35,30 @@
           <span class="flex size-12 shrink-0 items-center justify-center rounded-leaf text-sm font-bold" :class="levelBg">
             {{ targetLevel.cefr_code }}
           </span>
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <p class="truncate font-semibold text-ink">{{ targetExamName }}</p>
             <p class="text-sm text-muted">
               {{ targetLevel.cefr_code }} ·
               <span class="font-medium text-primary">{{ targetLevel.subject_count }} {{ t("payment.subjet") }}</span>
             </p>
+          </div>
+
+          <!-- Start Deutsch sans niveau précisé : choix A1 / A2 -->
+          <div
+            v-if="isStartDeutsch && !sdLevelFromQuery"
+            class="flex shrink-0 gap-1 rounded-leaf border border-line bg-card-2 p-1"
+          >
+            <button
+              v-for="lvl in SD_LEVELS"
+              :key="lvl"
+              type="button"
+              class="rounded-leaf px-3 py-1.5 text-sm font-semibold transition-colors"
+              :class="sdLevel === lvl ? 'bg-card text-primary shadow-soft' : 'text-muted hover:text-ink'"
+              :disabled="loading"
+              @click="sdLevel = lvl"
+            >
+              {{ lvl }}
+            </button>
           </div>
         </section>
 
@@ -246,6 +265,9 @@ const { t, locale } = useI18n();
 const localePath = useLocalePath();
 const route = useRoute();
 const examsStore = useExamsStore();
+const startDeutschStore = useStartDeutschSessionStore();
+const authStore = useAuthStore();
+const learningTrack = useLearningTrack();
 const { activePlans, loadPlans, formatDuration } = usePlans();
 const { pay, operators, currentPayment, isPending, isCompleted, isFailed, loading, error, stopPolling, resetPayment } =
   usePayments();
@@ -264,10 +286,32 @@ const intlLocale = computed(() => ({ fr: "fr-FR", de: "de-DE" } as Record<string
 const num = (n: number) => n.toLocaleString(intlLocale.value);
 const fcfa = (n: number) => `${num(n)} FCFA`;
 
-// ── Niveau + examen depuis level_id ──
-const levelId = computed(() => route.query.level_id as string);
+// ── Niveau visé ──
+// Examen B : ?level_id=... ; Start Deutsch : ?sd_level=A1 ou A2.
+// Sans l'un ni l'autre (venu de la page Tarifs), on suit le parcours de l'élève.
+const levelId = computed(() => route.query.level_id as string | undefined);
+
+type SdLevel = "A1" | "A2";
+const SD_LEVELS: SdLevel[] = ["A1", "A2"];
+const asSdLevel = (v: unknown): SdLevel | null => (v === "A1" || v === "A2" ? v : null);
+
+const sdLevelFromQuery = asSdLevel(route.query.sd_level);
+const isStartDeutsch = computed(
+  () => !!sdLevelFromQuery || (!levelId.value && learningTrack.isStartDeutsch.value),
+);
+const sdLevel = ref<SdLevel>(
+  sdLevelFromQuery ??
+    asSdLevel((authStore.user as { target_sd_level?: string } | null)?.target_sd_level) ??
+    "A1",
+);
 
 const targetLevel = computed(() => {
+  if (isStartDeutsch.value) {
+    return {
+      cefr_code: sdLevel.value,
+      subject_count: startDeutschStore.subjects.filter((s) => s.level === sdLevel.value).length,
+    };
+  }
   for (const exam of examsStore.catalog) {
     const level = exam.levels?.find((l) => l.id === levelId.value);
     if (level) return level;
@@ -276,16 +320,24 @@ const targetLevel = computed(() => {
 });
 
 const targetExamName = computed(() => {
+  if (isStartDeutsch.value) return `Start Deutsch ${sdLevel.value}`;
   for (const exam of examsStore.catalog) {
     if (exam.levels?.some((l) => l.id === levelId.value)) return exam.name;
   }
   return "";
 });
 
+// Retour et suite selon le parcours
+const backPath = computed(() =>
+  isStartDeutsch.value ? "/dashboard/start-deutsch" : "/dashboard/examens",
+);
+
 const levelBg = computed(
   () =>
     ({
       B1: "bg-sky-500/10 text-sky-600",
+      A1: "bg-emerald-500/10 text-emerald-600",
+      A2: "bg-teal-500/10 text-teal-600",
       B2: "bg-indigo-500/10 text-indigo-600",
       C1: "bg-violet-500/10 text-violet-600",
     })[targetLevel.value?.cefr_code ?? ""] ?? "bg-primary/10 text-primary",
@@ -298,7 +350,14 @@ const operatorLabel = computed(() => operators.find((o) => o.value === form.valu
 
 // ── Init ──
 onMounted(async () => {
-  await Promise.all([loadPlans(), examsStore.catalog.length === 0 ? examsStore.fetchCatalog() : Promise.resolve()]);
+  await Promise.all([
+    loadPlans(),
+    examsStore.catalog.length === 0 ? examsStore.fetchCatalog() : Promise.resolve(),
+    // Nombre de sujets affiché pour Start Deutsch
+    isStartDeutsch.value && startDeutschStore.subjects.length === 0
+      ? startDeutschStore.fetchSubjects()
+      : Promise.resolve(),
+  ]);
   const planId = route.query.plan_id as string;
   if (planId) selectedPlan.value = activePlans.value.find((p) => p.id === planId) ?? null;
   if (!selectedPlan.value && activePlans.value.length > 0) {
@@ -318,7 +377,9 @@ const handlePay = async () => {
   confirmDialog.value = true;
 
   const res = await pay({
-    level_id: targetLevel.value.id,
+    // Niveau d'examen OU niveau Start Deutsch
+    level_id: isStartDeutsch.value ? null : levelId.value ?? null,
+    sd_level: isStartDeutsch.value ? sdLevel.value : null,
     plan_id: selectedPlan.value.id,
     operator: form.value.operator,
     phone_number: normalizedPhone.value,
@@ -335,7 +396,7 @@ const closeConfirm = () => {
 const goToExams = () => {
   stopPolling();
   confirmDialog.value = false;
-  navigateTo(localePath("/dashboard/examens"));
+  navigateTo(localePath(backPath.value));
 };
 
 onUnmounted(() => stopPolling());

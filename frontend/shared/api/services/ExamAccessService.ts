@@ -91,6 +91,67 @@ export class ExamAccessService {
         });
     }
     /**
+     * Admin Grant Sd Access
+     * Accorde ou prolonge l'accès d'un utilisateur à Start Deutsch A1 ou A2, sans paiement.
+     * @param userId
+     * @param sdLevel
+     * @param days Nombre de jours offerts. Omis = accès permanent.
+     * @param accessToken
+     * @returns ExamAccessResponse Successful Response
+     * @throws ApiError
+     */
+    public static adminGrantSdAccessApiV1AccessAdminGrantSdPost(
+        userId: string,
+        sdLevel: 'A1' | 'A2',
+        days?: (number | null),
+        accessToken?: (string | null),
+    ): CancelablePromise<ExamAccessResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/access/admin/grant-sd',
+            cookies: {
+                'access_token': accessToken,
+            },
+            query: {
+                'user_id': userId,
+                'sd_level': sdLevel,
+                'days': days,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Admin Revoke Sd Access
+     * Révoque l'accès d'un utilisateur à Start Deutsch A1 ou A2.
+     * @param userId
+     * @param sdLevel
+     * @param accessToken
+     * @returns SuccessResponse Successful Response
+     * @throws ApiError
+     */
+    public static adminRevokeSdAccessApiV1AccessAdminRevokeSdDelete(
+        userId: string,
+        sdLevel: 'A1' | 'A2',
+        accessToken?: (string | null),
+    ): CancelablePromise<SuccessResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/access/admin/revoke-sd',
+            cookies: {
+                'access_token': accessToken,
+            },
+            query: {
+                'user_id': userId,
+                'sd_level': sdLevel,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Admin Revoke Access
      * Révoque l'accès d'un utilisateur à un level — admin uniquement.
      * @param userId

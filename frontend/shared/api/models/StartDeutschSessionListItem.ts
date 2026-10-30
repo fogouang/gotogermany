@@ -3,13 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Pour la page liste des tentatives (équivalent my-results).
+ * Liste des tentatives de l'étudiant.
  */
 export type StartDeutschSessionListItem = {
     id: string;
     subject_id: string;
+    subject_title?: string;
+    subject_number?: number;
+    level?: string;
     status: string;
     score: (number | null);
+    score_percent?: (number | null);
     passed: (boolean | null);
     started_at: string;
     submitted_at: (string | null);

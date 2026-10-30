@@ -1,9 +1,7 @@
 <!-- components/start-deutsch/SprechenGroupIntroQuestion.vue -->
 <!--
-  A1 Sprechen Teil 1 — "Stellen Sie sich vor." Liste de mots-clés
-  (Name? / Alter? / Land? ...) que le candidat utilise pour se présenter
-  à l'oral. Purement présentationnel — pas de correction en V1, donc pas
-  de model-value à gérer ici.
+  A1 Sprechen Teil 1, "Stellen Sie sich vor" : mots-clés (Name? / Alter? /
+  Land? ...) pour se présenter. Affichage seulement, pas de correction.
   content = { prompts: string[] }
 -->
 <template>

@@ -60,7 +60,9 @@ class TrainingSessionService:
         else:
             raise ForbiddenException(detail="Action réservée au staff de centre.")
 
-        await LevelRepository(self.db).get_by_id_or_404(data.level_id)
+        # Niveau du catalogue des examens (B1/B2), ou niveau Start Deutsch (A1/A2)
+        if data.level_id:
+            await LevelRepository(self.db).get_by_id_or_404(data.level_id)
 
         # On valide tout le monde AVANT de créer la classe : pas de classe à moitié créée
         teacher_ids = list(dict.fromkeys(data.teacher_ids))
@@ -73,6 +75,7 @@ class TrainingSessionService:
         session = await self.session_repo.create(
             branch_id=branch.id,
             level_id=data.level_id,
+            sd_level=data.sd_level,
             label=data.label,
             start_date=data.start_date,
             end_date=data.end_date,
@@ -86,6 +89,7 @@ class TrainingSessionService:
             await self.student_link_repo.create(
                 training_session_id=session.id, student_id=student_id, enrolled_at=now
             )
+            await self._sync_student_level(student_id, session)
         return session
 
     async def update_session(
@@ -119,6 +123,31 @@ class TrainingSessionService:
             student_id=student_id,
             enrolled_at=datetime.now(timezone.utc),
         )
+        await self._sync_student_level(student_id, session)
+
+    async def _sync_student_level(self, student_id: UUID, session: TrainingSession) -> None:
+        """Le parcours de l'élève suit sa classe.
+        Classe A1/A2 : parcours start_deutsch et niveau de la classe.
+        Classe B pour un élève qui était en Start Deutsch : retour au parcours exam.
+        Un élève déjà en parcours exam n'est pas touché (comportement d'avant)."""
+        from app.modules.users.repository import UserRepository
+
+        user_repo = UserRepository(self.db)
+        student = await user_repo.get_by_id_or_404(student_id)
+        if session.sd_level:
+            await user_repo.update(
+                student.id,
+                learning_track="start_deutsch",
+                target_sd_level=session.sd_level,
+                target_level_id=None,
+            )
+        elif student.learning_track == "start_deutsch" or student.target_sd_level:
+            await user_repo.update(
+                student.id,
+                learning_track="exam",
+                target_sd_level=None,
+                target_level_id=session.level_id,
+            )
 
     async def _validate_teacher(self, center_id: UUID, teacher_id: UUID) -> User:
         """L'enseignant doit exister et appartenir au même centre que la classe."""
@@ -319,7 +348,16 @@ def _is_draft(session: TrainingSession) -> bool:
     return not any(link.ended_at is None for link in session.student_links)
 
 
+def _cefr_code(session: TrainingSession) -> str:
+    """B1, B2... pour une classe d'examen, A1 ou A2 pour Start Deutsch."""
+    if session.sd_level:
+        return session.sd_level
+    return session.level.cefr_code if session.level else ""
+
+
 def _level_label(session: TrainingSession) -> str:
+    if session.sd_level:
+        return f"Start Deutsch {session.sd_level}"
     level = session.level
     if not level:
         return ""
@@ -332,7 +370,10 @@ def _to_response(session: TrainingSession) -> TrainingSessionResponse:
         id=session.id,
         branch_id=session.branch_id,
         branch_name=session.branch.name if session.branch else "",
+        track=session.track,
         level_id=session.level_id,
+        sd_level=session.sd_level,
+        cefr_code=_cefr_code(session),
         level_name=_level_label(session),
         label=session.label,
         start_date=session.start_date,

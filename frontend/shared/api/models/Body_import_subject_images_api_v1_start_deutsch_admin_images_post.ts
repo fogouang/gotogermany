@@ -4,11 +4,11 @@
 /* eslint-disable */
 export type Body_import_subject_images_api_v1_start_deutsch_admin_images_post = {
     /**
-     * ID du sujet Start Deutsch ciblé (cf. GET /subjects)
+     * Sujet Start Deutsch visé
      */
     subject_id: string;
     /**
-     * Images PNG/JPG/WebP
+     * Images PNG, JPEG ou WEBP
      */
     files: Array<string>;
 };

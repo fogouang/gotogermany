@@ -99,33 +99,66 @@ class PaymentRepository(BaseRepository[Payment]):
         }
         
     async def get_manual_payments(self, limit: int = 20) -> list[dict]:
+        """Accès accordés à la main (operator=MANUAL), examens B et Start Deutsch,
+        avec l'échéance de l'accès créé."""
         from app.modules.users.models import User
         from app.modules.exams.models import Level, Exam
         from app.modules.exam_access.models import ExamAccess
 
+        # Jointures externes : un paiement Start Deutsch n'a pas de niveau d'examen
         result = await self.db.execute(
             select(Payment, User, Level, Exam)
             .join(User, Payment.user_id == User.id)
-            .join(Level, Payment.level_id == Level.id)
-            .join(Exam, Level.exam_id == Exam.id)
+            .outerjoin(Level, Payment.level_id == Level.id)
+            .outerjoin(Exam, Level.exam_id == Exam.id)
             .where(
                 Payment.operator == "MANUAL",
-                Payment.level_id.is_not(None),
+                Payment.level_id.is_not(None) | Payment.sd_level.is_not(None),
             )
             .order_by(Payment.created_at.desc())
             .limit(limit)
         )
         rows = result.all()
-        return [
-            {
-                "user_id": str(payment.user_id),
+
+        # Échéance actuelle de chaque accès (même utilisateur, même niveau)
+        accesses = {}
+        user_ids = {payment.user_id for payment, *_ in rows}
+        if user_ids:
+            found = await self.db.execute(
+                select(ExamAccess).where(ExamAccess.user_id.in_(user_ids))
+            )
+            for access in found.scalars().all():
+                accesses[(access.user_id, access.level_id, access.sd_level)] = access
+
+        out = []
+        for payment, user, level, exam in rows:
+            access = accesses.get((payment.user_id, payment.level_id, payment.sd_level))
+            out.append({
+                "id": payment.id,
+                "user_id": payment.user_id,
                 "user_email": user.email,
                 "user_name": user.full_name,
-                "level_name": f"{exam.name} — {level.cefr_code}",
-                "payment_status": payment.payment_status,
+                "level_id": payment.level_id,
+                "sd_level": payment.sd_level,
+                "level_name": (
+                    f"Start Deutsch {payment.sd_level}"
+                    if payment.sd_level
+                    else f"{exam.name} · {level.cefr_code}" if exam and level else ""
+                ),
+                "plan_id": payment.plan_id,
+                "promo_code_id": payment.promo_code_id,
+                "amount_gross": payment.amount_gross,
                 "amount_paid": payment.amount_paid,
+                "discount_amount": payment.amount_gross - payment.amount_paid,
+                "commission_due": payment.commission_due,
+                "currency": payment.currency,
+                "payment_status": payment.payment_status,
                 "transaction_reference": payment.transaction_reference,
-                "created_at": payment.created_at.isoformat(),
-            }
-            for payment, user, level, exam in rows
-        ]
+                "operator": payment.operator,
+                "completed_at": payment.completed_at,
+                "created_at": payment.created_at,
+                "invoice_url": payment.invoice_url,
+                "pawapay_deposit_id": payment.pawapay_deposit_id,
+                "expires_at": access.expires_at.isoformat() if access and access.expires_at else None,
+            })
+        return out

@@ -25,6 +25,31 @@
         <p class="text-[15px] text-ink leading-relaxed">{{ c.text }}</p>
       </div>
 
+      <!-- Start Deutsch 1 Lesen 3 : panneau (lieu, photo, texte) au-dessus de la ligne -->
+      <div
+        v-if="type === 'richtig_falsch' && (c.text || questionImage)"
+        class="mb-3 overflow-hidden rounded-leaf border-2 border-line bg-card"
+      >
+        <p
+          v-if="c.context"
+          class="border-b border-line bg-card-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted"
+        >
+          {{ c.context }}
+        </p>
+        <img
+          v-if="questionImage"
+          :src="imgUrl(questionImage)"
+          :alt="c.context || ''"
+          class="w-full max-h-56 object-contain bg-card"
+        />
+        <p
+          v-if="c.text"
+          class="px-4 py-3 text-[15px] font-medium text-ink leading-relaxed whitespace-pre-line"
+        >
+          {{ c.text }}
+        </p>
+      </div>
+
       <!-- Numéro · R F · énoncé, comme la grille R/F du TELC -->
       <div class="flex items-start gap-3">
         <span
@@ -69,15 +94,43 @@
 
     <!-- qcm_abc -->
     <div v-else-if="type === 'qcm_abc'">
-      <p
-        :class="[
-          'text-[15px] text-ink leading-relaxed',
-          compact ? 'mb-2.5' : 'mb-4',
-        ]"
-      >
+      <p :class="['text-[15px] text-ink leading-relaxed', compact ? 'mb-2.5' : 'mb-4']">
         {{ c.stem || c.question }}
       </p>
-      <div :class="compact ? 'space-y-1.5' : 'space-y-2'">
+      <!-- Réponses en images (Start Deutsch Hören 1) -->
+      <div v-if="hasOptionImages" class="grid grid-cols-3 gap-2 sm:gap-3">
+        <button
+          v-for="(text, key) in c.options"
+          :key="key"
+          type="button"
+          :aria-pressed="isSel(key)"
+          :aria-label="String(key).toUpperCase()"
+          :class="[
+            'relative overflow-hidden rounded-leaf border-2 bg-white transition-colors',
+            isSel(key)
+              ? 'border-primary ring-2 ring-primary/30'
+              : 'border-line hover:border-primary/40',
+          ]"
+          @click="choose(key)"
+        >
+          <img
+            v-if="optionImages[key]"
+            :src="imgUrl(optionImages[key])"
+            alt=""
+            class="aspect-square w-full object-contain p-2"
+          />
+          <span
+            v-else
+            class="flex aspect-square items-center justify-center p-2 text-center text-xs text-muted"
+            >{{ text }}</span
+          >
+          <span :class="['absolute left-1.5 top-1.5', keyClass(isSel(key))]">{{
+            String(key).toUpperCase()
+          }}</span>
+        </button>
+      </div>
+
+      <div v-else :class="compact ? 'space-y-1.5' : 'space-y-2'">
         <button
           v-for="(text, key) in c.options"
           :key="key"
@@ -93,7 +146,15 @@
           <span :class="keyClass(isSel(key))">{{
             String(key).toUpperCase()
           }}</span>
-          <span class="pt-0.5">{{ text }}</span>
+          <span class="pt-0.5">
+            <!-- Start Deutsch 1 Lesen 2 : adresse de la page web -->
+            <span
+              v-if="c.option_sources?.[key]"
+              class="block text-xs font-semibold text-primary mb-0.5"
+              >{{ c.option_sources[key] }}</span
+            >
+            {{ text }}
+          </span>
         </button>
       </div>
     </div>
@@ -296,9 +357,7 @@
           </button>
         </div>
         <p v-if="selected" class="mt-2 text-sm text-ink">
-          <span class="font-bold text-primary"
-            >{{ selected.toUpperCase() }})</span
-          >
+          <span class="font-bold text-primary">{{ selected.toUpperCase() }})</span>
           {{ wordBank[selected] ?? wordBank[selected.toUpperCase()] }}
         </p>
       </template>
@@ -625,9 +684,7 @@
       </p>
       <div
         :class="
-          c.options_reusable
-            ? 'grid grid-cols-1 sm:grid-cols-2 gap-2'
-            : 'space-y-2'
+          c.options_reusable ? 'grid grid-cols-1 sm:grid-cols-2 gap-2' : 'space-y-2'
         "
       >
         <button
@@ -685,6 +742,7 @@ const props = withDefaults(
     teilWordBank?: Record<string, string>;
     stimulusInSide?: boolean; // le support est déjà affiché dans la colonne de gauche
     compact?: boolean; // Hören : liste serrée sous le lecteur
+    teilConfig?: Record<string, any>; // images importées : question_images, option_images
     // Choix uniques (zuordnung_titre, word_bank_gap_fill) : lettres prises par les AUTRES
     // questions du Teil { lettre: numéro du texte ou de la lacune }
     takenTitres?: Record<string, number | string>;
@@ -698,6 +756,19 @@ const { t } = useI18n();
 
 const type = computed(() => String(props.question.question_type || ""));
 const c = computed<Record<string, any>>(() => props.question.content || {});
+
+// Images importées pour cette question (lesen_teil3_q11.jpg, horen_teil1_q1_a.png)
+const qNum = computed(() => String(props.question.question_number));
+const questionImage = computed<string>(
+  () => props.teilConfig?.question_images?.[qNum.value] || "",
+);
+const optionImages = computed<Record<string, string>>(
+  () => props.teilConfig?.option_images?.[qNum.value] || {},
+);
+const hasOptionImages = computed(
+  () => !!c.value.image_options && Object.keys(optionImages.value).length > 0,
+);
+const imgUrl = (path: string) => `${apiBase}/images/${path}`;
 
 const isBinary = computed(
   () => type.value === "richtig_falsch" || type.value === "ja_nein",

@@ -18,6 +18,7 @@ from app.modules.start_deutsch.schemas import (
     StartDeutschSessionSubmitRequest,
     StartDeutschSubjectDetail,
     StartDeutschSubjectSummary,
+    StartDeutschSubjectUpdate,
 )
 from app.modules.start_deutsch.service import (
     StartDeutschCatalogService,
@@ -34,26 +35,22 @@ router = APIRouter()
 
 @router.get("/subjects", response_model=list[StartDeutschSubjectSummary])
 async def list_subjects(
-    _: CurrentUser,
+    user: CurrentUser,
     level: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Catalogue Start Deutsch, accessible à tout étudiant dont le centre a une
-    licence active (vérification faite au niveau du middleware/dependency
-    d'accès centre, pas ici — à brancher comme pour le reste du catalogue).
-    """
-    return await StartDeutschCatalogService(db).list_subjects(level)
+    """Catalogue Start Deutsch, sans les sujets privés pour l'élève."""
+    return await StartDeutschCatalogService(db).list_subjects(user, level)
 
 
 @router.get("/subjects/{subject_id}", response_model=StartDeutschSubjectDetail)
 async def get_subject_detail(
     subject_id: UUID,
-    _: CurrentUser,
+    user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    """Arbre complet Module → Teil → Question (sans correct_answer) pour démarrer une session."""
-    return await StartDeutschCatalogService(db).get_subject_detail(subject_id)
+    """Arbre Module > Teil > Question, sans les réponses, pour démarrer une session."""
+    return await StartDeutschCatalogService(db).get_subject_detail(user, subject_id)
 
 
 # ── Sessions ─────────────────────────────────────────────────────
@@ -64,7 +61,7 @@ async def start_session(
     user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    return await StartDeutschSessionService(db).start_session(user.id, data.subject_id)
+    return await StartDeutschSessionService(db).start_session(user, data.subject_id)
 
 
 @router.post("/sessions/{session_id}/submit", response_model=StartDeutschSessionResponse)
@@ -112,7 +109,7 @@ async def correct_schreiben(
     return await StartDeutschSchreibenCorrectionService(db).correct(session_id, user.id, data)
 
 
-# ── Admin — Sujets (liste + suppression) ──────────────────────────
+# ── Admin : sujets ────────────────────────────────────────────────
 
 @router.get("/admin/subjects", response_model=list[StartDeutschSubjectSummary])
 async def admin_list_subjects(
@@ -120,9 +117,19 @@ async def admin_list_subjects(
     level: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Liste TOUS les sujets (actifs ou non) — vue admin, pour le sélecteur
-    audio/images et pour repérer les sujets de test à supprimer."""
+    """Tous les sujets, actifs ou non."""
     return await StartDeutschCatalogService(db).list_all_admin(level)
+
+
+@router.patch("/admin/subjects/{subject_id}", response_model=StartDeutschSubjectSummary)
+async def admin_update_subject(
+    subject_id: UUID,
+    data: StartDeutschSubjectUpdate,
+    _: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """Active ou désactive le sujet, le rend privé (banque des enseignants) ou public."""
+    return await StartDeutschCatalogService(db).update_subject(subject_id, data)
 
 
 @router.delete("/admin/subjects/{subject_id}", response_model=SuccessResponse)
@@ -131,40 +138,45 @@ async def admin_delete_subject(
     _: CurrentAdmin,
     db: AsyncSession = Depends(get_db),
 ):
-    """Supprime un sujet et tout ce qui en dépend (modules/teile/questions,
-    sessions/réponses/corrections) — cascade posée au niveau DB."""
+    """Supprime le sujet et tout ce qui en dépend (cascade en base)."""
     await StartDeutschCatalogService(db).delete_subject(subject_id)
     return SuccessResponse(message="Sujet supprimé.")
 
 
-# ── Admin — Import JSON + Audio + Images ──────────────────────────
+@router.get("/admin/subjects/{subject_id}/media")
+async def admin_subject_media(
+    subject_id: UUID,
+    _: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """Fichiers audio et images attendus par le sujet, et ceux déjà importés."""
+    from app.modules.start_deutsch.import_service import StartDeutschImportService
+
+    return await StartDeutschImportService(db).media_status(subject_id)
+
+
+# ── Admin : import JSON, audio, images ────────────────────────────
 
 @router.post("/admin/import", status_code=201)
 async def import_subject_json(
     _: CurrentAdmin,
     file: UploadFile = File(..., description="Fichier JSON du sujet Start Deutsch (A1 ou A2)"),
-    replace: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Importe un sujet Start Deutsch complet depuis un JSON (structure
-    level/title/modules[].teile[].questions, cf. import_parsers.py pour le
-    détail par format_type). Si replace=true, remplace les questions des
-    Teile déjà existants.
-    """
+    """Crée un nouveau sujet à partir du JSON (formats décrits dans import_parsers.py)."""
     from app.modules.start_deutsch.import_service import StartDeutschImportService
 
     if not file.filename or not file.filename.endswith(".json"):
         raise HTTPException(status_code=400, detail="Le fichier doit être un JSON.")
     json_bytes = await file.read()
-    return await StartDeutschImportService(db).import_from_json(json_bytes, replace=replace)
+    return await StartDeutschImportService(db).import_from_json(json_bytes)
 
 
 @router.post("/admin/audio")
 async def import_subject_audio(
     _: CurrentAdmin,
-    subject_id: UUID = Form(..., description="ID du sujet Start Deutsch ciblé (cf. GET /subjects)"),
-    files: list[UploadFile] = File(..., description="Fichiers MP3 — convention hoeren_teilN.mp3"),
+    subject_id: UUID = Form(..., description="Sujet Start Deutsch visé"),
+    files: list[UploadFile] = File(..., description="Fichiers MP3 nommés hoeren_teilN.mp3"),
     db: AsyncSession = Depends(get_db),
 ):
     from app.modules.start_deutsch.import_service import StartDeutschImportService
@@ -178,8 +190,8 @@ async def import_subject_audio(
 @router.post("/admin/images")
 async def import_subject_images(
     _: CurrentAdmin,
-    subject_id: UUID = Form(..., description="ID du sujet Start Deutsch ciblé (cf. GET /subjects)"),
-    files: list[UploadFile] = File(..., description="Images PNG/JPG/WebP"),
+    subject_id: UUID = Form(..., description="Sujet Start Deutsch visé"),
+    files: list[UploadFile] = File(..., description="Images PNG, JPEG ou WEBP"),
     db: AsyncSession = Depends(get_db),
 ):
     from app.modules.start_deutsch.import_service import StartDeutschImportService

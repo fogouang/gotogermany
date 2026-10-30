@@ -41,6 +41,11 @@ class Payment(Base, UUIDMixin, TimestampMixin):
         CheckConstraint("amount_paid >= 0", name="ck_payment_amount_paid_positive"),
         # commission_due >= 0
         CheckConstraint("commission_due >= 0", name="ck_payment_commission_positive"),
+        # Un paiement d'accès vise un niveau d'examen OU un niveau Start Deutsch, pas les deux
+        CheckConstraint(
+            "NOT (level_id IS NOT NULL AND sd_level IS NOT NULL)",
+            name="ck_payment_one_level",
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -56,6 +61,9 @@ class Payment(Base, UUIDMixin, TimestampMixin):
         nullable=True,
         index=True,
     )
+
+    # Accès Start Deutsch acheté : "A1" ou "A2" (level_id reste vide)
+    sd_level: Mapped[str | None] = mapped_column(String(5), nullable=True, index=True)
 
     promo_code_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),

@@ -47,6 +47,10 @@ def parse_richtig_falsch(teil_data: dict) -> list[dict]:
         content = {"statement": q["statement"]}
         if q["number"] in abschnitt_of:
             content["abschnitt"] = abschnitt_of[q["number"]]
+        # Start Deutsch 1 Lesen 3 : panneau propre à la question (lieu + texte)
+        for key in ("context", "text"):
+            if q.get(key):
+                content[key] = q[key]
         questions.append({
             "question_number": q["number"],
             "question_type": "richtig_falsch",
@@ -97,10 +101,16 @@ def parse_qcm_abc(teil_data: dict) -> list[dict]:
                 })
     else:
         for q in teil_data.get("questions", []):
+            content = {"stem": q["stem"], "options": q["options"]}
+            # Start Deutsch : adresse des pages web (Lesen 2), réponses en images (Hören 1)
+            if q.get("option_sources"):
+                content["option_sources"] = q["option_sources"]
+            if q.get("image_options"):
+                content["image_options"] = True
             questions.append({
                 "question_number": q["number"],
                 "question_type": "qcm_abc",
-                "content": {"stem": q["stem"], "options": q["options"]},
+                "content": content,
                 "correct_answer": {"answer": q["answer"]},
                 "points": 1, "audio_file": None,
             })
@@ -302,6 +312,9 @@ def parse_oral(teil_data: dict, question_type: str) -> list[dict]:
     # Goethe B1 Teil 1 : un Leitpunkt libre au choix du candidat
     if "leitpunkt_libre" in teil_data:
         content["leitpunkt_libre"] = bool(teil_data["leitpunkt_libre"])
+    # Start Deutsch : cartes avec un mot ou une image
+    if teil_data.get("karten_typ"):
+        content["karten_typ"] = teil_data["karten_typ"]
     return [{
         "question_number": 1,
         "question_type": question_type,
@@ -723,11 +736,10 @@ def parse_kurzantwort(teil_data: dict) -> list[dict]:
             "keywords": q.get("keywords", []),
             "correction": q.get("correction", "auto_puis_enseignant"),
         }
-                # ECL : nombre d'éléments exigés ("(2)" dans la question), réponses refusées par le corrigé officiel
+        # ECL : nombre d'éléments exigés ("(2)" dans la question), réponses refusées par le corrigé officiel
         for key in ("required_parts", "rejected_answers", "hinweis_korrektur"):
             if q.get(key) is not None:
                 correct[key] = q[key]
-                
         out.append(_q(q, "kurzantwort", content, correct))
     return out
 
@@ -768,6 +780,7 @@ def parse_oral_testdaf(teil_data: dict) -> list[dict]:
         "audio_file": audio_file or None,
     }]
 
+
 # ── ECL ─────────────────────────────────────────────────────────
 
 ORAL_ECL_KEYS = (
@@ -791,6 +804,7 @@ def parse_oral_ecl(teil_data: dict) -> list[dict]:
         "points": teil_data.get("max_score", 0),
         "audio_file": None,
     }]
+
 
 PARSERS = {
     "richtig_falsch":           parse_richtig_falsch,

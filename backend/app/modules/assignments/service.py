@@ -2,7 +2,8 @@
 app/modules/assignments/service.py
 
 Devoirs : banque de sujets privés, attribution, passage via le moteur
-d'examen, correction par l'enseignant, copies Schreiben en PDF.
+d'examen (B1/B2) ou le lecteur Start Deutsch (A1/A2), correction par
+l'enseignant, copies Schreiben en PDF.
 """
 from __future__ import annotations
 
@@ -35,6 +36,13 @@ from app.modules.assignments.schemas import (
 )
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.modules.exams.models import Exam, Level, Module, Subject
+from app.modules.start_deutsch.models import (
+    StartDeutschAnswer,
+    StartDeutschModule,
+    StartDeutschSchreibenCorrection,
+    StartDeutschSession,
+    StartDeutschSubject,
+)
 from app.modules.training_sessions.models import (
     TrainingSession,
     TrainingSessionStudent,
@@ -49,6 +57,23 @@ ANNOTATED_DIR = Path("storage/assignments")
 ANNOTATED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
 ANNOTATED_MAX_BYTES = 10 * 1024 * 1024
 DONE_STATUSES = ("submitted", "graded")
+
+SD_MODULE_LABELS = {"lesen": "Lesen", "hoeren": "Hören", "schreiben": "Schreiben", "sprechen": "Sprechen"}
+
+
+def _sd_exam_name(level: str) -> str:
+    """A1 -> Start Deutsch 1, A2 -> Start Deutsch 2."""
+    return f"Start Deutsch {level[-1]}" if level else "Start Deutsch"
+
+
+def _sd_all_corrected(result: dict) -> bool:
+    return bool(result["modules"]) and all(m["is_corrected"] for m in result["modules"])
+
+
+def _sd_percent(result: dict) -> float:
+    """Score Start Deutsch ramené sur 100, comme ExamSession.score."""
+    total_max = sum(float(m["max_score"]) for m in result["modules"])
+    return round(float(result["score"]) * 100 / total_max, 1) if total_max else 0.0
 
 
 def _now() -> datetime:
@@ -137,6 +162,14 @@ class AssignmentService:
         ).one()
         return row[0], row[1], row[2]
 
+    async def _info(self, a: Assignment) -> tuple[str, str, str]:
+        """(nom du sujet, nom de l'examen, niveau CECR), quel que soit le type de devoir."""
+        if a.sd_subject_id:
+            sd = await self.db.get(StartDeutschSubject, a.sd_subject_id)
+            return sd.title, _sd_exam_name(sd.level), sd.level
+        subject, level, exam = await self._subject_info(a.subject_id)
+        return subject.name or f"Sujet {subject.subject_number}", exam.name, level.cefr_code
+
     async def _targets(self, assignment_id: UUID) -> list[AssignmentTargetResponse]:
         rows = (
             await self.db.execute(
@@ -193,17 +226,18 @@ class AssignmentService:
         ).scalar_one_or_none()
 
     async def _summary(self, a: Assignment) -> AssignmentSummaryResponse:
-        subject, level, exam = await self._subject_info(a.subject_id)
+        subject_name, exam_name, cefr_code = await self._info(a)
         expected = await self._expected_student_ids(a.id)
         subs = await self._submissions(a.id)
         return AssignmentSummaryResponse(
             id=a.id,
+            kind=a.kind,
             title=a.title,
             instructions=a.instructions,
-            subject_id=a.subject_id,
-            subject_name=subject.name or f"Sujet {subject.subject_number}",
-            exam_name=exam.name,
-            cefr_code=level.cefr_code,
+            subject_id=a.subject_id or a.sd_subject_id,
+            subject_name=subject_name,
+            exam_name=exam_name,
+            cefr_code=cefr_code,
             due_at=a.due_at,
             is_cancelled=a.is_cancelled,
             created_at=a.created_at,
@@ -233,6 +267,7 @@ class AssignmentService:
             student_name=user.full_name if user else "",
             status=status,
             exam_session_id=sub.exam_session_id if sub else None,
+            sd_session_id=sub.sd_session_id if sub else None,
             started_at=sub.started_at if sub else None,
             submitted_at=submitted_at,
             graded_at=sub.graded_at if sub else None,
@@ -267,7 +302,7 @@ class AssignmentService:
             for subject_id, name in result.all():
                 modules.setdefault(subject_id, []).append(name)
 
-        return [
+        bank = [
             BankSubjectResponse(
                 subject_id=s.id,
                 subject_name=s.name or f"Sujet {s.subject_number}",
@@ -281,11 +316,55 @@ class AssignmentService:
             )
             for s, l, e in rows
         ]
+        if not level_id:
+            bank += await self._sd_bank()
+        return bank
+
+    async def _sd_bank(self) -> list[BankSubjectResponse]:
+        """Sujets Start Deutsch privés. Le Sprechen n'est pas évalué en devoir."""
+        subjects = (
+            await self.db.execute(
+                select(StartDeutschSubject)
+                .where(StartDeutschSubject.is_private == True, StartDeutschSubject.is_active == True)
+                .order_by(StartDeutschSubject.level, StartDeutschSubject.subject_number)
+            )
+        ).scalars().all()
+        if not subjects:
+            return []
+
+        modules: dict[UUID, list[str]] = {}
+        result = await self.db.execute(
+            select(StartDeutschModule.subject_id, StartDeutschModule.slug)
+            .where(StartDeutschModule.subject_id.in_([s.id for s in subjects]))
+            .order_by(StartDeutschModule.order)
+        )
+        for subject_id, slug in result.all():
+            if slug != "sprechen":
+                modules.setdefault(subject_id, []).append(SD_MODULE_LABELS.get(slug, slug))
+
+        return [
+            BankSubjectResponse(
+                kind="start_deutsch",
+                subject_id=s.id,
+                subject_name=s.title,
+                subject_number=s.subject_number,
+                exam_name=_sd_exam_name(s.level),
+                provider="start_deutsch",
+                cefr_code=s.level,
+                modules=modules.get(s.id, []),
+            )
+            for s in subjects
+        ]
 
     async def create(self, teacher: User, data: AssignmentCreate) -> AssignmentDetailResponse:
         center_id = await self._teacher_center_id(teacher)
 
+        # Le type se déduit du sujet : la page de création n'a pas à envoyer kind
         subject = await self.db.get(Subject, data.subject_id)
+        kind = "exam"
+        if subject is None:
+            subject = await self.db.get(StartDeutschSubject, data.subject_id)
+            kind = "start_deutsch"
         if not subject or not subject.is_private or not subject.is_active:
             raise BadRequestException(detail="Ce sujet ne fait pas partie de la banque de sujets.")
 
@@ -308,7 +387,8 @@ class AssignmentService:
 
         assignment = Assignment(
             center_id=center_id,
-            subject_id=subject.id,
+            subject_id=subject.id if kind == "exam" else None,
+            sd_subject_id=subject.id if kind == "start_deutsch" else None,
             created_by=teacher.id,
             title=data.title.strip(),
             instructions=data.instructions,
@@ -431,17 +511,26 @@ class AssignmentService:
 
         out: list[StudentAssignmentResponse] = []
         for a in assignments:
-            _, level, exam = await self._subject_info(a.subject_id)
+            _, exam_name, cefr_code = await self._info(a)
             teacher = await self.db.get(User, a.created_by)
             sub = await self._get_submission(a.id, student.id)
             status = sub.status if sub else "pending"
             submitted_at = sub.submitted_at if sub else None
+            if sub and status in DONE_STATUSES:
+                score_sheet = (
+                    await self._sd_score_sheet(sub.sd_session_id)
+                    if a.sd_subject_id
+                    else await self._score_sheet(a.subject_id, sub.exam_session_id)
+                )
+            else:
+                score_sheet = None
             out.append(StudentAssignmentResponse(
                 id=a.id,
+                kind=a.kind,
                 title=a.title,
                 instructions=a.instructions,
-                exam_name=exam.name,
-                cefr_code=level.cefr_code,
+                exam_name=exam_name,
+                cefr_code=cefr_code,
                 teacher_name=teacher.full_name if teacher else "",
                 due_at=a.due_at,
                 is_late=bool(
@@ -450,11 +539,7 @@ class AssignmentService:
                 ),
                 status=status,
                 final_score=sub.final_score if sub and status == "graded" else None,
-                score_sheet=(
-                    await self._score_sheet(a.subject_id, sub.exam_session_id)
-                    if sub and status in ("submitted", "graded")
-                    else None
-                ),
+                score_sheet=score_sheet,
             ))
         return out
 
@@ -485,19 +570,9 @@ class AssignmentService:
     async def start(self, student: User, assignment_id: UUID):
         from app.modules.exam_sessions.service import ExamSessionService
 
-        if student.role != UserRole.student:
-            raise ForbiddenException(detail="Espace réservé aux élèves.")
-        a = await self.db.get(Assignment, assignment_id)
-        if not a or a.is_cancelled or not await self._is_targeted(a.id, student.id):
-            raise NotFoundException(resource="Devoir", identifier=str(assignment_id))
-
-        sub = await self._get_submission(a.id, student.id)
-        if sub and sub.status in DONE_STATUSES:
-            raise BadRequestException(detail="Vous avez déjà rendu ce devoir.")
-        if not sub:
-            sub = AssignmentSubmission(assignment_id=a.id, student_id=student.id, status="pending")
-            self.db.add(sub)
-            await self.db.flush()
+        a, sub = await self._open_submission(student, assignment_id)
+        if a.sd_subject_id:
+            raise BadRequestException(detail="Ce devoir Start Deutsch se lance depuis son propre lecteur.")
 
         exam_id = (
             await self.db.execute(
@@ -515,6 +590,259 @@ class AssignmentService:
             sub.started_at = _now()
         await self.db.commit()
         return result
+
+    async def _open_submission(
+        self, student: User, assignment_id: UUID
+    ) -> tuple[Assignment, AssignmentSubmission]:
+        """Vérifie que l'élève peut passer le devoir et crée sa copie au premier démarrage."""
+        if student.role != UserRole.student:
+            raise ForbiddenException(detail="Espace réservé aux élèves.")
+        a = await self.db.get(Assignment, assignment_id)
+        if not a or a.is_cancelled or not await self._is_targeted(a.id, student.id):
+            raise NotFoundException(resource="Devoir", identifier=str(assignment_id))
+
+        sub = await self._get_submission(a.id, student.id)
+        if sub and sub.status in DONE_STATUSES:
+            raise BadRequestException(detail="Vous avez déjà rendu ce devoir.")
+        if not sub:
+            sub = AssignmentSubmission(assignment_id=a.id, student_id=student.id, status="pending")
+            self.db.add(sub)
+            await self.db.flush()
+        return a, sub
+
+    # ── Start Deutsch ────────────────────────────────────
+
+    async def student_has_open_sd_assignment(self, user_id: UUID, sd_subject_id: UUID) -> bool:
+        """Utilisé par l'accès Start Deutsch : devoir non rendu sur ce sujet privé ?"""
+        ids = set(
+            (
+                await self.db.execute(
+                    self._targets_query(user_id).where(Assignment.sd_subject_id == sd_subject_id)
+                )
+            ).scalars().all()
+        )
+        if not ids:
+            return False
+        done = set(
+            (
+                await self.db.execute(
+                    select(AssignmentSubmission.assignment_id).where(
+                        AssignmentSubmission.assignment_id.in_(ids),
+                        AssignmentSubmission.student_id == user_id,
+                        AssignmentSubmission.status.in_(DONE_STATUSES),
+                    )
+                )
+            ).scalars().all()
+        )
+        return bool(ids - done)
+
+    async def start_start_deutsch(self, student: User, assignment_id: UUID) -> StartDeutschSession:
+        """Démarre ou reprend un devoir Start Deutsch : renvoie la session du lecteur A1/A2."""
+        from app.modules.start_deutsch.service import StartDeutschSessionService
+
+        a, sub = await self._open_submission(student, assignment_id)
+        if not a.sd_subject_id:
+            raise BadRequestException(detail="Ce devoir ne concerne pas Start Deutsch.")
+
+        if sub.sd_session_id:
+            current = await self.db.get(StartDeutschSession, sub.sd_session_id)
+            if current and current.status == "IN_PROGRESS":
+                return current
+
+        # start_session vérifie l'accès au sujet privé (devoir ouvert) et valide la transaction
+        session = await StartDeutschSessionService(self.db).start_session(student, a.sd_subject_id)
+
+        sub.sd_session_id = session.id
+        if sub.status == "pending":
+            sub.status = "in_progress"
+            sub.started_at = _now()
+        await self.db.commit()
+        await self.db.refresh(session)
+        return session
+
+    async def _sd_sync(self, session: StartDeutschSession, sub: AssignmentSubmission, teacher_id: UUID | None) -> None:
+        """Recalcule une copie Start Deutsch (sans le Sprechen) et met à jour session et copie."""
+        from app.modules.start_deutsch.service import StartDeutschSessionService
+
+        result = await StartDeutschSessionService(self.db).get_result_for_staff(session.id)
+        now = _now()
+        session.score = float(result["score"])
+        if _sd_all_corrected(result):
+            session.status = "COMPLETED"
+            session.passed = result["passed"]
+            sub.status = "graded"
+            sub.final_score = _sd_percent(result)
+            sub.graded_at = now
+            if teacher_id:
+                sub.graded_by = teacher_id
+        else:
+            session.status = "PENDING_REVIEW"
+            session.passed = None
+            sub.status = "submitted"
+
+    async def on_sd_session_submitted(self, session: StartDeutschSession) -> None:
+        """Appelé par StartDeutschSessionService.submit_session pour une copie de devoir."""
+        subs = (
+            await self.db.execute(
+                select(AssignmentSubmission).where(AssignmentSubmission.sd_session_id == session.id)
+            )
+        ).scalars().all()
+        for sub in subs:
+            sub.submitted_at = _now()
+            await self._sd_sync(session, sub, teacher_id=None)
+        await self.db.commit()
+
+    async def _sd_score_sheet(self, sd_session_id: UUID | None) -> StudentScoreSheet | None:
+        """Relevé Start Deutsch : points par module, sans le Sprechen."""
+        from app.modules.start_deutsch.service import StartDeutschSessionService
+
+        session = await self.db.get(StartDeutschSession, sd_session_id) if sd_session_id else None
+        if not session or session.status == "IN_PROGRESS":
+            return None
+        result = await StartDeutschSessionService(self.db).get_result_for_staff(session.id)
+
+        rows = [
+            StudentModuleScore(
+                name=SD_MODULE_LABELS.get(m["slug"], m["slug"]),
+                points=round(float(m["score_obtained"]), 1) if m["is_corrected"] else None,
+                max_score=float(m["max_score"]),
+            )
+            for m in result["modules"]
+        ]
+        if not rows:
+            return None
+        is_final = _sd_all_corrected(result)
+        return StudentScoreSheet(
+            modules=rows,
+            total_points=round(sum(r.points or 0 for r in rows), 1),
+            total_max=sum(r.max_score for r in rows),
+            is_final=is_final,
+            passed=result["passed"] if is_final else None,
+        )
+
+    async def _grade_sd(
+        self, teacher: User, a: Assignment, sub: AssignmentSubmission, data: GradeRequest
+    ) -> None:
+        """Note du Schreiben Start Deutsch : enregistrée comme correction du Teil."""
+        from app.modules.start_deutsch.repository import SubjectRepository
+        from app.modules.start_deutsch.service import StartDeutschSchreibenCorrectionService
+
+        subject = await SubjectRepository(self.db).get_full_tree(a.sd_subject_id)
+        questions = {
+            q.id: (q, t)
+            for m in subject.modules
+            if m.slug != "sprechen"
+            for t in m.teile
+            for q in t.questions
+        }
+        answers = {
+            ans.question_id: ans
+            for ans in (
+                await self.db.execute(
+                    select(StartDeutschAnswer).where(StartDeutschAnswer.session_id == sub.sd_session_id)
+                )
+            ).scalars().all()
+        }
+        corrections = {
+            c.teil_id: c
+            for c in (
+                await self.db.execute(
+                    select(StartDeutschSchreibenCorrection).where(
+                        StartDeutschSchreibenCorrection.session_id == sub.sd_session_id
+                    )
+                )
+            ).scalars().all()
+        }
+
+        for item in data.answers:
+            found = questions.get(item.question_id)
+            if not found:
+                raise BadRequestException(detail="Question inconnue pour ce sujet.")
+            question, teil = found
+            if teil.format_type != "free_text":
+                raise BadRequestException(
+                    detail=f"Le Teil {teil.teil_number} est corrigé automatiquement."
+                )
+            max_score = float(teil.max_score)
+            if item.score > max_score:
+                raise BadRequestException(
+                    detail=f"Note supérieure au maximum ({max_score:g}) pour le Teil {teil.teil_number}."
+                )
+
+            answer = answers.get(question.id)
+            text = (answer.user_answer or {}).get("text", "") if answer else ""
+            if item.criteria:
+                criteria = {
+                    name: {"grade": "", "points": float(points), "label": name}
+                    for name, points in item.criteria.items()
+                }
+            else:
+                criteria = {
+                    "enseignant": {
+                        "grade": StartDeutschSchreibenCorrectionService._points_to_grade(item.score, max_score),
+                        "points": float(item.score),
+                        "label": "Note de l'enseignant",
+                        "feedback": item.comment,
+                    }
+                }
+
+            correction = corrections.get(teil.id)
+            if correction is None:
+                correction = StartDeutschSchreibenCorrection(
+                    session_id=sub.sd_session_id, teil_id=teil.id, submitted_text=text or ""
+                )
+                self.db.add(correction)
+            correction.submitted_text = text or ""
+            correction.criteria_scores = criteria
+            correction.overall_score = float(item.score)
+            correction.max_score = max_score
+            correction.feedback = item.comment
+
+        await self.db.commit()
+        # Les corrections viennent d'être écrites : on relit tout avant de recalculer
+        self.db.expire_all()
+
+        session = await self.db.get(StartDeutschSession, sub.sd_session_id)
+        sub = await self._get_submission(a.id, sub.student_id)
+        if data.teacher_comment is not None:
+            sub.teacher_comment = data.teacher_comment
+        await self._sd_sync(session, sub, teacher_id=teacher.id)
+        await self.db.commit()
+
+    async def _sd_schreiben_parts(self, sd_subject_id: UUID, sd_session_id: UUID | None) -> list[dict]:
+        from app.modules.start_deutsch.repository import SubjectRepository
+
+        subject = await SubjectRepository(self.db).get_full_tree(sd_subject_id)
+        answers = {}
+        if sd_session_id:
+            answers = {
+                ans.question_id: ans
+                for ans in (
+                    await self.db.execute(
+                        select(StartDeutschAnswer).where(StartDeutschAnswer.session_id == sd_session_id)
+                    )
+                ).scalars().all()
+            }
+
+        parts: list[dict] = []
+        for module in sorted(subject.modules, key=lambda m: m.order):
+            for teil in sorted(module.teile, key=lambda t: t.teil_number):
+                if teil.format_type != "free_text":
+                    continue
+                for q in sorted(teil.questions, key=lambda x: x.question_number):
+                    content = q.content or {}
+                    answer = answers.get(q.id)
+                    text = (answer.user_answer or {}).get("text", "") if answer else ""
+                    parts.append({
+                        "teil": teil.teil_number,
+                        "words": len(text.split()),
+                        "instruction": content.get("prompt") or teil.instructions or "",
+                        "prompts": [p for p in content.get("content_points") or [] if isinstance(p, str)],
+                        "text": text,
+                    })
+        return parts
+
+    # ── Moteur d'examen B1/B2 ────────────────────────────
 
     async def on_session_submitted(self, session: ExamSession) -> None:
         """Appelé par ExamSessionService.submit_session pour un sujet privé."""
@@ -548,7 +876,13 @@ class AssignmentService:
 
         sessions: dict[UUID, ExamSession] = {}
         result = None
-        if sub and sub.exam_session_id:
+        sd_result = None
+        if a.sd_subject_id:
+            from app.modules.start_deutsch.service import StartDeutschSessionService
+
+            if sub and sub.sd_session_id and sub.status in DONE_STATUSES:
+                sd_result = await StartDeutschSessionService(self.db).get_result_for_staff(sub.sd_session_id)
+        elif sub and sub.exam_session_id:
             session = await self.db.get(ExamSession, sub.exam_session_id)
             if session:
                 sessions[session.id] = session
@@ -561,6 +895,7 @@ class AssignmentService:
             submission=self._row(a, student_id, user, sub, sessions),
             teacher_comment=sub.teacher_comment if sub else None,
             result=result,
+            sd_result=sd_result,
         )
 
     async def grade(
@@ -570,8 +905,13 @@ class AssignmentService:
 
         a = await self._get_teacher_assignment(teacher, assignment_id)
         sub = await self._get_submission(a.id, student_id)
-        if not sub or not sub.exam_session_id or sub.status not in DONE_STATUSES:
+        session_id = sub.sd_session_id if sub and a.sd_subject_id else (sub.exam_session_id if sub else None)
+        if not sub or not session_id or sub.status not in DONE_STATUSES:
             raise BadRequestException(detail="Ce devoir n'a pas encore été rendu.")
+
+        if a.sd_subject_id:
+            await self._grade_sd(teacher, a, sub, data)
+            return await self.get_submission_for_grading(teacher, assignment_id, student_id)
 
         ess = ExamSessionService(self.db)
         subject = await ess._load_subject_full(a.subject_id)
@@ -724,16 +1064,19 @@ class AssignmentService:
         return await self._build_pdf_for(a, sub)
 
     async def _build_pdf_for(self, a: Assignment, sub: AssignmentSubmission) -> tuple[str, bytes]:
-        _, level, exam = await self._subject_info(a.subject_id)
+        _, exam_name, cefr_code = await self._info(a)
         student = await self.db.get(User, sub.student_id)
-        parts = await self._schreiben_parts(a.subject_id, sub.exam_session_id)
+        if a.sd_subject_id:
+            parts = await self._sd_schreiben_parts(a.sd_subject_id, sub.sd_session_id)
+        else:
+            parts = await self._schreiben_parts(a.subject_id, sub.exam_session_id)
         if not parts:
             raise BadRequestException(detail="Ce sujet ne contient pas de Schreiben.")
         name = student.full_name if student else "Eleve"
         pdf = self._render_schreiben_pdf(
             student_name=name,
             title=a.title,
-            exam_label=f"{exam.name} ({level.cefr_code})",
+            exam_label=f"{exam_name} ({cefr_code})",
             submitted_at=sub.submitted_at,
             parts=parts,
         )

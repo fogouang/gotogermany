@@ -1,3 +1,4 @@
+<!-- pages/dashboard/devoirs/index.vue -->
 <template>
   <div class="space-y-5 pb-10">
     <p class="text-sm text-muted">{{ t("student_assignments.subtitle") }}</p>
@@ -297,8 +298,15 @@ const visible = computed(() =>
 
 // ── Actions ──
 const route = useRoute();
+// Un devoir Start Deutsch s'ouvre dans le lecteur A1/A2
 const open = (a: StudentAssignmentResponse) =>
-  navigateTo(localePath(`/dashboard/devoirs/${a.id}`));
+  navigateTo(
+    localePath(
+      a.kind === "start_deutsch"
+        ? `/dashboard/devoirs/start-deutsch/${a.id}`
+        : `/dashboard/devoirs/${a.id}`,
+    ),
+  );
 
 // ── Relevé de points ──
 const sheetVisible = ref(false);
@@ -317,7 +325,7 @@ async function load() {
     authStore._ensureApiConfig();
     assignments.value =
       await AssignmentsService.myAssignmentsApiV1AssignmentsMeGet();
-        // S'il n'y a rien à faire mais des corrections, on ouvre directement l'onglet utile
+    // S'il n'y a rien à faire mais des corrections, on ouvre directement l'onglet utile
     if (todo.value.length === 0 && graded.value.length > 0) activeTab.value = "graded";
 
     // Arrivée depuis l'écran « Devoir rendu » : on ouvre le relevé du devoir

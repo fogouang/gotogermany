@@ -1173,7 +1173,7 @@
     "to_improve": "Areas to improve",
     "redo": "Redo",
     "choose_another": "Choose another subject",
-    "confirm_leave": "Leaving now abandons this session — it won't be graded. Continue?",
+    "confirm_leave": "Leaving now abandons this session  it won't be graded. Continue?",
     "preparing": "Preparation",
     "preparation_time_left": "Preparation time left",
     "start_now": "Start now",
@@ -1296,9 +1296,9 @@
     }
   },
   "start_deutsch": {
-    "title": "Start Deutsch — A1 & A2",
+    "title": "Start Deutsch - A1 & A2",
     "subtitle": "Practice and get familiar with the platform before your real B1/B2 tests.",
-    "info_banner": "These modules are a familiarization exercise, not a real certifying exam — use them to explore the platform without pressure.",
+    "info_banner": "These modules are a familiarization exercise, not a real certifying exam  use them to explore the platform without pressure.",
     "empty": "No subjects available right now.",
     "all_levels": "All levels",
     "session": {
@@ -1313,7 +1313,7 @@
       "score_of": "{score} points earned",
       "by_module": "Result by module",
       "pending": "Pending",
-      "detail": "Detail",
+      "detail": "Answer details",
       "your_answer": "Your answer",
       "correct_answer": "Expected answer",
       "pending_review": "Correction in progress",
@@ -1324,7 +1324,21 @@
       "pending_note": "{modules} still being marked: your score will be updated.",
       "points_of": "{score} / {max} pts",
       "oral_not_scored": "Speaking: practise out loud, not scored here",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "threshold": "Pass mark: {pct} %",
+      "modules_corrected": "{done} / {total} modules marked"
+    },
+    "catalog": {
+      "not_attempted": "New",
+      "in_progress": "In progress",
+      "pending": "Being marked",
+      "last_score": "Last score: {score} %",
+      "attempts": "{n} attempt | {n} attempts",
+      "never": "Not tried yet",
+      "description_a1": "A1 familiarisation practice · Start Deutsch 1 (Goethe-Institut, telc)",
+      "description_a2": "A2 familiarisation practice · Goethe-Zertifikat A2 (adult version, from age 16)",
+      "locked":"Locked",
+      "unlock":"Unlock this level"
     },
     "free_text": {
       "word_count": "{count} words",
@@ -1346,7 +1360,8 @@
     },
     "question_ui": {
       "none_solution": "No ad fits",
-      "unsupported_format": "This question type ({format}) is coming in a future update."
+      "unsupported_format": "This question type ({format}) is coming in a future update.",
+      "zoom": "Enlarge image {label}"
     }
   },
   "modules_section": {

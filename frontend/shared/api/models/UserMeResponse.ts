@@ -23,6 +23,7 @@ export type UserMeResponse = {
     center_id: (string | null);
     branch_id: (string | null);
     target_level_id: (string | null);
+    target_sd_level?: (string | null);
     access_expires_at: (string | null);
     requested_branch_id?: (string | null);
 };

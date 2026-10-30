@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type AssignmentCreate = {
+    kind?: AssignmentCreate.kind;
     subject_id: string;
     title: string;
     instructions?: (string | null);
@@ -10,4 +11,10 @@ export type AssignmentCreate = {
     class_ids?: Array<string>;
     student_ids?: Array<string>;
 };
+export namespace AssignmentCreate {
+    export enum kind {
+        EXAM = 'exam',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

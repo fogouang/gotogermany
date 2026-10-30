@@ -1,11 +1,16 @@
 """
 app/modules/payments/service.py
 
-Flow pawaPay :
-  1. initiate_payment() → crée Payment(PENDING) → appelle pawaPay deposit
-  2. Callback → handle_callback() → update COMPLETED/FAILED
-  3. Si COMPLETED → _grant_level_access() → ExamAccess créé avec expires_at
-  4. Facture PDF générée automatiquement
+Flow Kratos Pay (Mobile Money) :
+  1. initiate_payment() → crée Payment(PENDING) → appelle Kratos payin
+     (reference Kratos = transaction_reference)
+  2. Réponse immédiate SUCCESS → paiement validé tout de suite
+     Réponse PENDING → l'élève confirme sur son téléphone, le webhook suivra
+  3. Webhook → handle_kratos_webhook() → COMPLETED / FAILED
+  4. Si COMPLETED → _grant_level_access() → ExamAccess créé avec expires_at
+  5. Facture PDF générée automatiquement
+
+Le callback pawaPay reste en place pour les paiements lancés avant la bascule.
 """
 import json
 import logging
@@ -14,8 +19,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.payments.kratos import KratosClient, KratosError
 from app.modules.payments.models import Payment
-from app.modules.payments.pawapay import PawapayClient
 from app.modules.payments.repository import PaymentRepository
 from app.modules.payments.schemas import ManualPaymentRequest, PawapayCallbackPayload, PaymentInitiateRequest
 from app.modules.users.models import User
@@ -34,7 +39,7 @@ class PaymentService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = PaymentRepository(db)
-        self.pawapay = PawapayClient()
+        self.kratos = KratosClient()
 
     # ── Initiation ───────────────────────────────────────
 
@@ -46,8 +51,8 @@ class PaymentService:
         from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
 
-        level = await self.db.get(Level, data.level_id)
-        if not level:
+        # Niveau d'examen, ou Start Deutsch A1/A2 (validé par le schéma)
+        if data.level_id and not await self.db.get(Level, data.level_id):
             raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
         plan = await self.db.get(Plan, data.plan_id)
@@ -74,6 +79,7 @@ class PaymentService:
         payment = await self.repo.create(
             user_id=current_user.id,
             level_id=data.level_id,
+            sd_level=data.sd_level,
             plan_id=data.plan_id,
             promo_code_id=promo_code_id,
             amount_gross=amount_gross,
@@ -85,35 +91,41 @@ class PaymentService:
             operator=data.operator,
         )
 
-        logger.info(f"pawaPay deposit_id: '{str(payment.id)}' len={len(str(payment.id))}")
-
-        phone = data.phone_number.strip()
-        if not phone.startswith('237'):
-            phone = f'237{phone}'
-
         try:
-            pawapay_response = await self.pawapay.initiate_deposit(
-                deposit_id=str(payment.id),
+            kratos_response = await self.kratos.initiate_payin(
+                reference=transaction_reference,
                 amount=amount_paid,
-                phone_number=phone,
+                phone_number=data.phone_number.strip(),
                 provider="MTN_MOMO_CMR" if data.operator == "MTN" else "ORANGE_CMR",
-                client_reference_id=transaction_reference,
-                customer_message="GoToGermany",
-                metadata={"app": "gotogermany"},
+                description=f"GoToGermany {transaction_reference}",
             )
+        except KratosError as e:
+            await self.repo.update(payment.id, payment_status="FAILED")
+            logger.error(
+                f"Kratos payin refusé {transaction_reference} : {e} "
+                f"(code={e.code}, details={e.details}, request_id={e.request_id})"
+            )
+            raise BadRequestException(detail=f"Paiement refusé : {e}")
         except Exception as e:
             await self.repo.update(payment.id, payment_status="FAILED")
-            raise BadRequestException(detail=f"Erreur paiement : {str(e)}")
+            logger.error(f"Kratos payin erreur {transaction_reference} : {e}")
+            raise BadRequestException(detail="Le service de paiement est indisponible, réessayez.")
 
-        pawapay_status = pawapay_response.get("status")
-        if pawapay_status == "REJECTED":
-            failure = pawapay_response.get("failureReason", {})
-            await self.repo.update(payment.id, payment_status="FAILED")
+        status = self.kratos.internal_status(kratos_response.get("status"))
+
+        if status == "FAILED":
+            await self._fail_payment(payment, kratos_response)
             raise BadRequestException(
-                detail=f"Paiement rejeté : {failure.get('failureMessage', 'Erreur inconnue')}"
+                detail=f"Paiement refusé : {kratos_response.get('gatewayMessage') or 'erreur inconnue'}"
             )
 
-        await self.repo.update(payment.id, pawapay_deposit_id=str(payment.id))
+        if status == "COMPLETED":
+            # Paiement validé directement dans la réponse
+            await self._complete_payment(payment, kratos_response)
+            message = "Paiement confirmé."
+        else:
+            await self.repo.update(payment.id, webhook_payload=_serialize_payload(kratos_response))
+            message = "Confirmez le paiement sur votre téléphone mobile."
 
         return {
             "payment_id": payment.id,
@@ -122,68 +134,116 @@ class PaymentService:
             "amount_paid": amount_paid,
             "discount_amount": amount_gross - amount_paid,
             "currency": "XAF",
-            "message": "Confirmez le paiement sur votre téléphone mobile.",
+            "message": message,
         }
 
-    # ── Callback pawaPay ─────────────────────────────────
+    # ── Validation / échec (communs à Kratos et pawaPay) ──
+
+    async def _complete_payment(self, payment: Payment, raw_payload: dict) -> None:
+        """Passe le paiement en COMPLETED puis donne l'accès, la facture et la commission."""
+        # Relecture : un webhook et la réponse directe peuvent arriver presque ensemble
+        payment = await self.repo.get_by_id(payment.id)
+        if payment.payment_status == "COMPLETED":
+            logger.info(f"Payment {payment.id} déjà COMPLETED — ignoré")
+            return
+
+        await self.repo.update(
+            payment.id,
+            payment_status="COMPLETED",
+            completed_at=datetime.now(timezone.utc),
+            webhook_payload=_serialize_payload(raw_payload),
+        )
+        logger.info(f"Payment {payment.id} → COMPLETED")
+
+        # Achat de crédits IA — court-circuite l'accès exam si c'est le cas
+        from app.modules.ai_credit_purchases.service import AICreditPurchaseService
+        is_credit_purchase = await AICreditPurchaseService(self.db).on_payment_completed(payment)
+
+        if not is_credit_purchase:
+            await self._grant_level_access(payment)
+
+        await self._generate_invoice(payment)
+
+        from app.modules.referrals.service import ReferralService
+        await ReferralService(self.db).record_payment_earning(
+            payment_id=payment.id,
+            payer_user_id=payment.user_id,
+            payment_amount=payment.amount_paid,
+        )
+
+    async def _fail_payment(self, payment: Payment, raw_payload: dict) -> None:
+        if payment.payment_status == "COMPLETED":
+            # Un échec tardif ne défait jamais un paiement déjà validé
+            logger.warning(f"Échec reçu pour payment {payment.id} déjà COMPLETED — ignoré")
+            return
+        await self.repo.update(
+            payment.id,
+            payment_status="FAILED",
+            webhook_payload=_serialize_payload(raw_payload),
+        )
+        logger.info(f"Payment {payment.id} → FAILED")
+
+    # ── Webhook Kratos ───────────────────────────────────
+
+    async def handle_kratos_webhook(self, payload: dict) -> bool:
+        """
+        Webhook Kratos (signature vérifiée par le router quand elle est disponible).
+        Retourne False si la référence est inconnue ou si le montant ne correspond pas.
+        """
+        reference, status = KratosClient.parse_webhook(payload)
+        logger.info(f"Webhook Kratos — reference={reference} status={status}")
+
+        if not reference:
+            logger.error(f"Webhook Kratos sans référence : {payload}")
+            return False
+
+        payment = await self.repo.find_by_transaction_ref(reference)
+        if not payment:
+            logger.error(f"Payment introuvable pour la référence Kratos {reference}")
+            return False
+
+        # Sans signature vérifiable : le montant annoncé doit correspondre au paiement
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+        amount = data.get("amount")
+        if amount is not None:
+            try:
+                montant_ok = int(float(amount)) == int(payment.amount_paid)
+            except (TypeError, ValueError):
+                montant_ok = False
+            if not montant_ok:
+                logger.error(
+                    f"Webhook Kratos {reference} : montant {amount} différent de "
+                    f"{payment.amount_paid}, ignoré"
+                )
+                return False
+
+        if status == "COMPLETED":
+            await self._complete_payment(payment, payload)
+        elif status == "FAILED":
+            await self._fail_payment(payment, payload)
+        return True
+    
+
+    # ── Callback pawaPay (paiements lancés avant la bascule) ──
 
     async def handle_callback(self, payload: PawapayCallbackPayload) -> bool:
-        """
-        Traite le callback pawaPay.
-        COMPLETED → grant level access (ou crédit IA) + facture
-        FAILED → marque comme échoué
-        """
-        logger.info(f"Callback reçu — depositId={payload.depositId} status={payload.status}")
+        logger.info(f"Callback pawaPay reçu — depositId={payload.depositId} status={payload.status}")
 
         payment = await self.repo.get_by_id(UUID(payload.depositId))
         if not payment:
             logger.error(f"Payment introuvable pour depositId: {payload.depositId}")
             raise NotFoundException(resource="Payment", identifier=payload.depositId)
 
-        if payment.payment_status == "COMPLETED":
-            logger.info(f"Payment {payment.id} déjà COMPLETED — ignoré")
-            return True
-
         if payload.status == "COMPLETED":
-            await self.repo.update(
-                payment.id,
-                payment_status="COMPLETED",
-                pawapay_deposit_id=payload.depositId,
-                completed_at=datetime.now(timezone.utc),
-                webhook_payload=_serialize_payload(payload.model_dump()),
-            )
-            logger.info(f"Payment {payment.id} → COMPLETED")
-
-            # Achat de crédits IA — court-circuite l'accès exam si c'est le cas
-            from app.modules.ai_credit_purchases.service import AICreditPurchaseService
-            is_credit_purchase = await AICreditPurchaseService(self.db).on_payment_completed(payment)
-
-            if not is_credit_purchase:
-                await self._grant_level_access(payment)
-
-            await self._generate_invoice(payment)
-
-            from app.modules.referrals.service import ReferralService
-            await ReferralService(self.db).record_payment_earning(
-                payment_id=payment.id,
-                payer_user_id=payment.user_id,
-                payment_amount=payment.amount_paid,
-            )
-
+            await self._complete_payment(payment, payload.model_dump())
         elif payload.status == "FAILED":
-            await self.repo.update(
-                payment.id,
-                payment_status="FAILED",
-                webhook_payload=_serialize_payload(payload.model_dump()),
-            )
-            logger.info(f"Payment {payment.id} → FAILED")
-
+            await self._fail_payment(payment, payload.model_dump())
         return True
 
     # ── Grant Level Access ───────────────────────────────
 
     async def _grant_level_access(self, payment: Payment) -> None:
-        if payment.level_id is None:
+        if payment.level_id is None and payment.sd_level is None:
             # Pas un accès exam (ex. achat de crédits IA)
             return
 
@@ -205,7 +265,11 @@ class PaymentService:
 
         now = datetime.now(timezone.utc)
         repo = ExamAccessRepository(self.db)
-        existing = await repo.find_by_user_and_level(payment.user_id, payment.level_id)
+        if payment.sd_level:
+            existing = await repo.find_by_user_and_sd_level(payment.user_id, payment.sd_level)
+        else:
+            existing = await repo.find_by_user_and_level(payment.user_id, payment.level_id)
+        level_label = payment.sd_level or payment.level_id
 
         # Meme paiement deja traite (webhook recu deux fois) : pas de credits en double
         already_applied = existing is not None and existing.payment_id == payment.id
@@ -221,18 +285,19 @@ class PaymentService:
                 payment_id=payment.id,
                 access_type="paid",
             )
-            logger.info(f"ExamAccess renouvelé : user {payment.user_id} level {payment.level_id} jusqu'au {expires_at}")
+            logger.info(f"ExamAccess renouvelé : user {payment.user_id} level {level_label} jusqu'au {expires_at}")
         else:
             self.db.add(ExamAccess(
                 user_id=payment.user_id,
                 level_id=payment.level_id,
+                sd_level=payment.sd_level,
                 access_type="paid",
                 payment_id=payment.id,
                 expires_at=expires_at,
                 granted_at=now,
             ))
             await self.db.flush()
-            logger.info(f"ExamAccess créé : user {payment.user_id} level {payment.level_id} jusqu'au {expires_at}")
+            logger.info(f"ExamAccess créé : user {payment.user_id} level {level_label} jusqu'au {expires_at}")
 
         from app.modules.users.models import User
 
@@ -303,7 +368,12 @@ class PaymentService:
 
         from app.modules.exam_access.repository import ExamAccessRepository
         repo = ExamAccessRepository(self.db)
-        level_access_granted = await repo.user_has_access(payment.user_id, payment.level_id)
+        if payment.sd_level:
+            level_access_granted = await repo.user_has_sd_access(payment.user_id, payment.sd_level)
+        elif payment.level_id:
+            level_access_granted = await repo.user_has_access(payment.user_id, payment.level_id)
+        else:
+            level_access_granted = False
 
         return {
             "payment_id": payment.id,
@@ -320,7 +390,7 @@ class PaymentService:
         return await self.repo.get_by_user(current_user.id)
 
     # ── Paiement manuel ──────────────────────────────────
-    
+
     async def _daily_pass_price(self) -> int:
         """Prix d'une journée (réglage app_settings "daily_pass_price", 1000 par défaut)."""
         from sqlalchemy import select
@@ -333,7 +403,7 @@ class PaymentService:
             return int(row.value) if row else 1000
         except ValueError:
             return 1000
-        
+
     async def create_manual_payment(
         self,
         data: ManualPaymentRequest,
@@ -342,8 +412,7 @@ class PaymentService:
         from app.modules.exams.models import Level
         from app.modules.plans.models import Plan
 
-        level = await self.db.get(Level, data.level_id)
-        if not level:
+        if data.level_id and not await self.db.get(Level, data.level_id):
             raise NotFoundException(resource="Level", identifier=str(data.level_id))
 
         plan = None
@@ -365,6 +434,7 @@ class PaymentService:
         payment = await self.repo.create(
             user_id=data.user_id,
             level_id=data.level_id,
+            sd_level=data.sd_level,
             plan_id=plan.id if plan else None,
             duration_days=duration_days,
             promo_code_id=None,
@@ -391,7 +461,11 @@ class PaymentService:
             )
 
         from app.modules.exam_access.repository import ExamAccessRepository
-        access = await ExamAccessRepository(self.db).find_by_user_and_level(data.user_id, data.level_id)
+        access_repo = ExamAccessRepository(self.db)
+        if data.sd_level:
+            access = await access_repo.find_by_user_and_sd_level(data.user_id, data.sd_level)
+        else:
+            access = await access_repo.find_by_user_and_level(data.user_id, data.level_id)
 
         logger.info(
             f"Paiement manuel {transaction_reference} par {admin.id} pour user {data.user_id} : "
@@ -405,11 +479,11 @@ class PaymentService:
             "transaction_reference": transaction_reference,
             "user_id": data.user_id,
             "level_id": data.level_id,
+            "sd_level": data.sd_level,
             "amount_paid": amount,
             "expires_at": access.expires_at if access else None,
             "note": data.note,
         }
-        
 
     async def get_manual_payments(self, limit: int = 20) -> list[Payment]:
         return await self.repo.get_manual_payments(limit=limit)

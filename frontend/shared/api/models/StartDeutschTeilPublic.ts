@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { StartDeutschQuestionPublic } from './StartDeutschQuestionPublic';
 /**
- * Un Teil tel que vu par l'étudiant — pas de correct_answer dans les questions imbriquées.
+ * Un Teil côté étudiant : les questions n'ont pas de correct_answer.
  */
 export type StartDeutschTeilPublic = {
     id: string;

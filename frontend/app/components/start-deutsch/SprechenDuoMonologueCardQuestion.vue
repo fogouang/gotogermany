@@ -1,16 +1,13 @@
 <!-- components/start-deutsch/SprechenDuoMonologueCardQuestion.vue -->
 <!--
-  A2 Sprechen Teil 2 — "von sich erzählen". Une question centrale (ex.
-  "Was machen Sie mit Ihrem Geld?") avec 4 sous-thèmes autour (Kleidung?
-  / Lebensmittel, Miete? / Sparen? / Reisen?) que le candidat développe
-  en mini-monologue. Purement présentationnel — pas de correction en V1.
+  A2 Sprechen Teil 2, "von sich erzählen" : une question centrale
+  (ex. "Was machen Sie mit Ihrem Geld?") et quatre pistes autour
+  (Kleidung? / Miete? / Sparen? / Reisen?) à développer seul.
+  Affichage seulement, pas de correction.
 
-  Simplification volontaire par rapport au Kandidatenblatt officiel : au
-  lieu de 4 lignes diagonales exactes vers les coins (fragile en
-  responsive), on utilise un layout hub-and-spoke en grille CSS — la
-  question centrale en haut, les 4 sous-thèmes en dessous en 2x2, chacun
-  avec une flèche vers le haut indiquant le lien vers la question
-  centrale. Even sur mobile ça reste lisible (empile proprement).
+  Sur la feuille officielle, quatre traits partent de la question vers les
+  coins. Ici : la question en haut, les quatre pistes en grille 2 x 2 en
+  dessous, chacune avec une flèche vers la question. Reste lisible sur mobile.
   content = { central_question: string, sub_prompts: string[] }
 -->
 <template>

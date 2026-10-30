@@ -2,7 +2,9 @@
 <template>
   <div class="space-y-5">
     <!-- ── Statuts + création ── -->
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
       <div class="flex flex-wrap gap-2">
         <button
           v-for="f in statusFilters"
@@ -31,7 +33,11 @@
     <div class="flex flex-col gap-2 lg:flex-row lg:items-center">
       <IconField class="w-full lg:max-w-xs">
         <InputIcon class="pi pi-search" />
-        <InputText v-model="search" class="w-full" :placeholder="t('centre.classes.search')" />
+        <InputText
+          v-model="search"
+          class="w-full"
+          :placeholder="t('centre.classes.search')"
+        />
       </IconField>
       <Select
         v-model="levelFilter"
@@ -71,8 +77,15 @@
     </div>
 
     <!-- ── Chargement ── -->
-    <div v-if="loading" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <div v-for="n in 3" :key="n" class="h-48 animate-pulse rounded-card bg-card-2" />
+    <div
+      v-if="loading"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+    >
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="h-48 animate-pulse rounded-card bg-card-2"
+      />
     </div>
 
     <!-- ── Erreur ── -->
@@ -88,11 +101,17 @@
       v-else-if="filteredSessions.length === 0"
       class="flex flex-col items-center gap-2 rounded-card border border-dashed border-line bg-card px-6 py-12 text-center"
     >
-      <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <span
+        class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+      >
         <i class="pi pi-calendar" />
       </span>
-      <p class="text-sm font-medium text-ink">{{ t("centre.classes.empty_title") }}</p>
-      <p class="max-w-md text-xs text-muted">{{ t("centre.classes.empty_text") }}</p>
+      <p class="text-sm font-medium text-ink">
+        {{ t("centre.classes.empty_title") }}
+      </p>
+      <p class="max-w-md text-xs text-muted">
+        {{ t("centre.classes.empty_text") }}
+      </p>
     </div>
 
     <!-- ── Classes groupées par mois ── -->
@@ -101,7 +120,10 @@
         <h3 class="flex items-baseline gap-2 text-sm font-semibold text-ink">
           {{ group.label }}
           <span class="text-xs font-normal text-muted">
-            · {{ t("centre.classes.month_count", { n: group.total }, group.total) }}
+            ·
+            {{
+              t("centre.classes.month_count", { n: group.total }, group.total)
+            }}
           </span>
         </h3>
 
@@ -123,8 +145,12 @@
 
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="truncate font-semibold text-ink">{{ session.label || session.level_name }}</p>
-                <p v-if="session.label" class="truncate text-xs text-muted">{{ session.level_name }}</p>
+                <p class="truncate font-semibold text-ink">
+                  {{ session.label || session.level_name }}
+                </p>
+                <p v-if="session.label" class="truncate text-xs text-muted">
+                  {{ session.level_name }}
+                </p>
               </div>
               <span
                 class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -148,17 +174,32 @@
 
             <div class="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
               <div>
-                <p class="text-xl font-bold text-ink">{{ activeStudentCount(session) }}</p>
+                <p class="text-xl font-bold text-ink">
+                  {{ activeStudentCount(session) }}
+                </p>
                 <p class="text-[11px] text-muted">
-                  {{ t("centre.classes.active_label", { total: session.students.length }, activeStudentCount(session)) }}
+                  {{
+                    t(
+                      "centre.classes.active_label",
+                      { total: session.students.length },
+                      activeStudentCount(session),
+                    )
+                  }}
                 </p>
               </div>
               <div>
-                <p class="text-xl font-bold" :class="session.teachers.length ? 'text-ink' : 'text-amber-600'">
+                <p
+                  class="text-xl font-bold"
+                  :class="
+                    session.teachers.length ? 'text-ink' : 'text-amber-600'
+                  "
+                >
                   {{ session.teachers.length }}
                 </p>
                 <p class="text-[11px] text-muted">
-                  {{ t("centre.classes.teachers_label", session.teachers.length) }}
+                  {{
+                    t("centre.classes.teachers_label", session.teachers.length)
+                  }}
                 </p>
               </div>
             </div>
@@ -167,7 +208,9 @@
               class="mt-4 flex items-center justify-end gap-1.5 text-xs font-medium text-primary opacity-80 transition-opacity group-hover:opacity-100"
             >
               {{ t("centre.classes.open") }}
-              <i class="pi pi-arrow-right text-[10px] transition-transform group-hover:translate-x-0.5" />
+              <i
+                class="pi pi-arrow-right text-[10px] transition-transform group-hover:translate-x-0.5"
+              />
             </p>
           </NuxtLink>
         </div>
@@ -222,7 +265,9 @@
         <div>
           <label class="mb-1.5 block text-sm font-medium text-ink">
             {{ t("centre.classes.name") }}
-            <span class="font-normal text-muted">{{ t("centre.form.optional") }}</span>
+            <span class="font-normal text-muted">{{
+              t("centre.form.optional")
+            }}</span>
           </label>
           <InputText
             v-model="createForm.label"
@@ -233,7 +278,8 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-ink">
-              {{ t("centre.classes.start_date") }} <span class="text-red-600">*</span>
+              {{ t("centre.classes.start_date") }}
+              <span class="text-red-600">*</span>
             </label>
             <DatePicker
               v-model="createForm.start_date"
@@ -245,7 +291,9 @@
           <div>
             <label class="mb-1.5 block text-sm font-medium text-ink">
               {{ t("centre.classes.end_date") }}
-              <span class="font-normal text-muted">{{ t("centre.form.optional") }}</span>
+              <span class="font-normal text-muted">{{
+                t("centre.form.optional")
+              }}</span>
             </label>
             <DatePicker
               v-model="createForm.end_date"
@@ -256,10 +304,16 @@
             />
           </div>
         </div>
-        <Message v-if="createError" severity="error" :closable="false">{{ createError }}</Message>
+        <Message v-if="createError" severity="error" :closable="false">{{
+          createError
+        }}</Message>
       </form>
       <template #footer>
-        <Button :label="t('common.cancel')" text @click="showCreateDialog = false" />
+        <Button
+          :label="t('common.cancel')"
+          text
+          @click="showCreateDialog = false"
+        />
         <Button
           :label="t('common.create')"
           icon="pi pi-check"
@@ -291,14 +345,16 @@ const errorMessage = ref<string | null>(null);
 const branches = ref<BranchResponse[]>([]);
 const teachers = ref<UserAdminResponse[]>([]);
 
-const allLevels = computed(() =>
-  examsStore.catalog.flatMap((exam) =>
+const allLevels = computed(() => [
+  ...examsStore.catalog.flatMap((exam) =>
     (exam.levels ?? []).map((level) => ({
       label: `${exam.name} - ${level.cefr_code}`,
       value: level.id,
     })),
   ),
-);
+  { label: "Start Deutsch - A1", value: "sd:A1" },
+  { label: "Start Deutsch - A2", value: "sd:A2" },
+]);
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString(locale.value, {
@@ -317,7 +373,8 @@ type Statut = "upcoming" | "ongoing" | "finished";
 
 function statusOf(session: NormalizedTrainingSession): Statut {
   const now = Date.now();
-  if (session.end_date && new Date(session.end_date).getTime() < now) return "finished";
+  if (session.end_date && new Date(session.end_date).getTime() < now)
+    return "finished";
   if (new Date(session.start_date).getTime() > now) return "upcoming";
   return "ongoing";
 }
@@ -325,10 +382,19 @@ function statusOf(session: NormalizedTrainingSession): Statut {
 function statusBadge(session: NormalizedTrainingSession) {
   const s = statusOf(session);
   if (s === "finished")
-    return { label: t("centre.classes.status.finished"), class: "bg-card-2 text-muted" };
+    return {
+      label: t("centre.classes.status.finished"),
+      class: "bg-card-2 text-muted",
+    };
   if (s === "upcoming")
-    return { label: t("centre.classes.status.upcoming"), class: "bg-sky-500/10 text-sky-600" };
-  return { label: t("centre.classes.status.ongoing"), class: "bg-emerald-500/10 text-emerald-600" };
+    return {
+      label: t("centre.classes.status.upcoming"),
+      class: "bg-sky-500/10 text-sky-600",
+    };
+  return {
+    label: t("centre.classes.status.ongoing"),
+    class: "bg-emerald-500/10 text-emerald-600",
+  };
 }
 
 // Extrait le niveau CECR du nom (« TELC Deutsch B1 » → « B1 ») pour le filigrane
@@ -361,18 +427,37 @@ const branchFilter = ref<string | null>(null);
 const NO_TEACHER = "__none__";
 
 const statusFilters = computed(() => {
-  const count = (s: Statut) => sessions.value.filter((x) => statusOf(x) === s).length;
+  const count = (s: Statut) =>
+    sessions.value.filter((x) => statusOf(x) === s).length;
   return [
-    { key: "all" as const, label: t("centre.classes.filter_all"), count: sessions.value.length },
-    { key: "ongoing" as const, label: t("centre.classes.status.ongoing"), count: count("ongoing") },
-    { key: "upcoming" as const, label: t("centre.classes.status.upcoming"), count: count("upcoming") },
-    { key: "finished" as const, label: t("centre.classes.status.finished"), count: count("finished") },
+    {
+      key: "all" as const,
+      label: t("centre.classes.filter_all"),
+      count: sessions.value.length,
+    },
+    {
+      key: "ongoing" as const,
+      label: t("centre.classes.status.ongoing"),
+      count: count("ongoing"),
+    },
+    {
+      key: "upcoming" as const,
+      label: t("centre.classes.status.upcoming"),
+      count: count("upcoming"),
+    },
+    {
+      key: "finished" as const,
+      label: t("centre.classes.status.finished"),
+      count: count("finished"),
+    },
   ];
 });
 
 // Niveaux présents dans les classes (B1, B2…), triés
 const levelOptions = computed(() =>
-  [...new Set(sessions.value.map((s) => cefrOf(s.level_name) ?? s.level_name))].sort(),
+  [
+    ...new Set(sessions.value.map((s) => cefrOf(s.level_name) ?? s.level_name)),
+  ].sort(),
 );
 
 const teacherOptions = computed(() => [
@@ -383,7 +468,11 @@ const teacherOptions = computed(() => [
 ]);
 
 const hasExtraFilters = computed(
-  () => !!search.value.trim() || !!levelFilter.value || !!teacherFilter.value || !!branchFilter.value,
+  () =>
+    !!search.value.trim() ||
+    !!levelFilter.value ||
+    !!teacherFilter.value ||
+    !!branchFilter.value,
 );
 
 function resetFilters() {
@@ -399,8 +488,14 @@ const ORDRE: Record<Statut, number> = { ongoing: 0, upcoming: 1, finished: 2 };
 const filteredSessions = computed(() => {
   const q = search.value.trim().toLowerCase();
   return sessions.value
-    .filter((s) => activeFilter.value === "all" || statusOf(s) === activeFilter.value)
-    .filter((s) => !levelFilter.value || (cefrOf(s.level_name) ?? s.level_name) === levelFilter.value)
+    .filter(
+      (s) => activeFilter.value === "all" || statusOf(s) === activeFilter.value,
+    )
+    .filter(
+      (s) =>
+        !levelFilter.value ||
+        (cefrOf(s.level_name) ?? s.level_name) === levelFilter.value,
+    )
     .filter((s) => {
       if (!teacherFilter.value) return true;
       if (teacherFilter.value === NO_TEACHER) return s.teachers.length === 0;
@@ -441,7 +536,10 @@ function monthKey(dateStr: string) {
 }
 
 function monthLabel(dateStr: string) {
-  const label = new Date(dateStr).toLocaleDateString(locale.value, { month: "long", year: "numeric" });
+  const label = new Date(dateStr).toLocaleDateString(locale.value, {
+    month: "long",
+    year: "numeric",
+  });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -460,12 +558,22 @@ const groupedPage = computed(() => {
     firstRecordIndex.value,
     firstRecordIndex.value + rowsPerPage.value,
   );
-  const groups: { key: string; label: string; total: number; items: NormalizedTrainingSession[] }[] = [];
+  const groups: {
+    key: string;
+    label: string;
+    total: number;
+    items: NormalizedTrainingSession[];
+  }[] = [];
   for (const s of page) {
     const key = monthKey(s.start_date);
     let group = groups.find((g) => g.key === key);
     if (!group) {
-      group = { key, label: monthLabel(s.start_date), total: monthTotals.value.get(key) ?? 0, items: [] };
+      group = {
+        key,
+        label: monthLabel(s.start_date),
+        total: monthTotals.value.get(key) ?? 0,
+        items: [],
+      };
       groups.push(group);
     }
     group.items.push(s);
@@ -482,8 +590,12 @@ async function loadData() {
       ? trainingSessionsStore.fetchByCenter()
       : trainingSessionsStore.fetchByBranch(),
     centerStaffStore.fetchTeachers(),
-    examsStore.catalog.length === 0 ? examsStore.fetchCatalog() : Promise.resolve(),
-    authStore.isDirector ? centerStaffStore.fetchMyBranches() : Promise.resolve(null),
+    examsStore.catalog.length === 0
+      ? examsStore.fetchCatalog()
+      : Promise.resolve(),
+    authStore.isDirector
+      ? centerStaffStore.fetchMyBranches()
+      : Promise.resolve(null),
   ]);
 
   sessions.value = trainingSessionsStore.sessions;
@@ -507,7 +619,13 @@ const createForm = ref<{
   label: string;
   start_date: Date | null;
   end_date: Date | null;
-}>({ level_id: "", branch_id: "", label: "", start_date: null, end_date: null });
+}>({
+  level_id: "",
+  branch_id: "",
+  label: "",
+  start_date: null,
+  end_date: null,
+});
 
 function openCreateDialog() {
   createForm.value = {
@@ -535,8 +653,11 @@ async function handleCreateSession() {
   creating.value = true;
   createError.value = null;
 
+  const isSd = f.level_id.startsWith("sd:");
+
   const result = await trainingSessionsStore.createSession({
-    level_id: f.level_id,
+    level_id: isSd ? null : f.level_id,
+    sd_level: isSd ? (f.level_id.slice(3) as "A1" | "A2") : null,
     branch_id: authStore.isDirector ? f.branch_id : null,
     label: f.label.trim() || null,
     start_date: f.start_date.toISOString(),
@@ -547,7 +668,11 @@ async function handleCreateSession() {
 
   if (result.success) {
     showCreateDialog.value = false;
-    toast.add({ severity: "success", summary: t("centre.classes.created"), life: 3000 });
+    toast.add({
+      severity: "success",
+      summary: t("centre.classes.created"),
+      life: 3000,
+    });
     // On enchaîne sur le détail pour affecter enseignant et élèves
     if (result.session) {
       await navigateTo(localePath(`/centre/sessions/${result.session.id}`));

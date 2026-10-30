@@ -12,7 +12,9 @@ export const usePayments = () => {
 
   // ── User : initier un paiement + polling ────────────────────
   const pay = async (data: {
-    level_id: string;
+    // Niveau d'examen OU niveau Start Deutsch
+    level_id?: string | null;
+    sd_level?: "A1" | "A2" | null;
     plan_id: string;
     operator: string;
     phone_number: string;
@@ -40,8 +42,11 @@ export const usePayments = () => {
   // ── Admin : accorder un accès exam manuellement ─────────────
   const adminGrantExamAccess = async (data: {
     user_id: string;
-    level_id: string;
-    plan_id: string;
+    // Niveau d'examen OU niveau Start Deutsch
+    level_id?: string | null;
+    sd_level?: "A1" | "A2" | null;
+    // Formule OU pass journalier (days)
+    plan_id?: string | null;
     days?: number | null;
     note?: string | null;
   }) => {
@@ -49,8 +54,9 @@ export const usePayments = () => {
       const res =
         await PaymentsService.createManualPaymentApiV1PaymentsAdminManualPost({
           user_id: data.user_id,
-          level_id: data.level_id,
-          plan_id: data.plan_id,
+          level_id: data.level_id ?? null,
+          sd_level: data.sd_level ?? null,
+          plan_id: data.plan_id ?? null,
           days: data.days ?? null,
           note: data.note ?? null,
         });
@@ -59,7 +65,9 @@ export const usePayments = () => {
       return {
         success: false,
         message:
-          err?.body?.detail ?? err?.body?.message ?? "Erreur lors de l'activation manuelle",
+          err?.body?.detail ??
+          err?.body?.message ??
+          "Erreur lors de l'activation manuelle",
       };
     }
   };

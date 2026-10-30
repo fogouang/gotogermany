@@ -1,15 +1,13 @@
 <!-- components/start-deutsch/SprechenGroupImageCardQuestion.vue -->
 <!--
-  A1 Sprechen Teil 3 — cartes-images (objets du quotidien : pomme, chaise,
-  crayon...). Le candidat pioche une carte et formule une demande /
-  réagit à propos de l'objet. Purement présentationnel — pas de
-  correction en V1, pas de sélection possible (contrairement à
-  McImageQuestion qui, lui, attend un choix).
-  content = { cards: [{ image_file: string }] }
+  A1 Sprechen Teil 3 : cartes images (objets du quotidien). Le candidat
+  tire une carte et formule une demande, ou y répond.
+  Affichage seulement : pas de choix à faire, pas de correction.
+  content = { cards: [{ image_file: string, description?: string }] }
 -->
 <template>
- <div class="rounded-card border border-line bg-card p-4 shadow-soft">
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+  <div class="rounded-card border border-line bg-card p-4 shadow-soft">
+    <div class="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
       <div
         v-for="(card, i) in question.content.cards"
         :key="i"
@@ -17,7 +15,7 @@
       >
         <img
           :src="resolveImageUrl(card.image_file)"
-          :alt="`Karte ${i + 1}`"
+          :alt="card.description || `Karte ${i + 1}`"
           class="aspect-square w-full object-contain p-3"
         />
       </div>
@@ -28,6 +26,7 @@
 <script setup lang="ts">
 interface ImageCard {
   image_file: string;
+  description?: string;
 }
 
 interface Props {

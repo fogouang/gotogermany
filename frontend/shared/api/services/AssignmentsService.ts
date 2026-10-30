@@ -9,6 +9,7 @@ import type { BankSubjectResponse } from '../models/BankSubjectResponse';
 import type { Body_upload_annotated_copy_api_v1_assignments__assignment_id__submissions__student_id__annotated_post } from '../models/Body_upload_annotated_copy_api_v1_assignments__assignment_id__submissions__student_id__annotated_post';
 import type { GradeRequest } from '../models/GradeRequest';
 import type { SessionStartResponse } from '../models/SessionStartResponse';
+import type { StartDeutschSessionResponse } from '../models/StartDeutschSessionResponse';
 import type { StudentAssignmentResponse } from '../models/StudentAssignmentResponse';
 import type { SubmissionGradingResponse } from '../models/SubmissionGradingResponse';
 import type { SuccessResponse } from '../models/SuccessResponse';
@@ -122,6 +123,32 @@ export class AssignmentsService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/assignments/{assignment_id}/start',
+            path: {
+                'assignment_id': assignmentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Start Start Deutsch Assignment
+     * Devoir Start Deutsch : démarre (ou reprend) la session du lecteur A1/A2.
+     * @param assignmentId
+     * @param accessToken
+     * @returns StartDeutschSessionResponse Successful Response
+     * @throws ApiError
+     */
+    public static startStartDeutschAssignmentApiV1AssignmentsAssignmentIdStartDeutschStartPost(
+        assignmentId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<StartDeutschSessionResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/assignments/{assignment_id}/start-deutsch/start',
             path: {
                 'assignment_id': assignmentId,
             },

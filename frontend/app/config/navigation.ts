@@ -301,7 +301,6 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
           labelKey: "dashboard.pages.start_deutsch",
           to: "/dashboard/start-deutsch",
           icon: "pi pi-graduation-cap",
-          audience: "independent",
           track: "start_deutsch",
         },
       ],

@@ -8,6 +8,7 @@ import type { StudentScoreSheet } from './StudentScoreSheet';
  */
 export type StudentAssignmentResponse = {
     id: string;
+    kind?: StudentAssignmentResponse.kind;
     title: string;
     instructions: (string | null);
     exam_name: string;
@@ -19,4 +20,10 @@ export type StudentAssignmentResponse = {
     final_score: (number | null);
     score_sheet?: (StudentScoreSheet | null);
 };
+export namespace StudentAssignmentResponse {
+    export enum kind {
+        EXAM = 'exam',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

@@ -1,10 +1,9 @@
 <!-- components/start-deutsch/ImageDayMatchingQuestion.vue -->
 <!--
-  Nécessite teil.shared_content.images = [{label, image_file}, ...]. Une
-  question = un jour (ex. "Dienstag"), l'étudiant choisit une des images
-  partagées. Chaque lettre ne doit être utilisée qu'une fois — la
-  contrainte "déjà pris" se calcule via usedLabels (props), le composant
-  parent (qui itère les questions du Teil) la fournit.
+  Images communes au Teil : teil.shared_content.images = [{label, image_file}, ...].
+  Une question = un jour (ex. "Dienstag"), l'étudiant choisit une image.
+  Chaque lettre ne sert qu'une fois : le parent passe usedLabels, les lettres
+  déjà prises par les autres questions.
 -->
 <template>
   <div class="rounded-card border border-line bg-card p-4 shadow-soft">
@@ -62,11 +61,11 @@ interface Props {
     shared_content?: { images?: SharedImage[] } | null;
   };
   modelValue: string | null;
-  /** Lettres déjà choisies par les AUTRES questions du même Teil (chaque lettre ne sert qu'une fois) */
+  /** Lettres déjà choisies par les autres questions du Teil */
   usedLabels?: string[];
   assetsBaseUrl?: string;
   level?: string;
-  /** Numéro du sujet — évite les collisions de noms de fichiers entre sujets du même niveau */
+  /** Numéro du sujet : les images sont rangées par sujet */
   subjectNumber?: number;
 }
 

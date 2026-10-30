@@ -120,6 +120,7 @@ class TeilImageImportService:
     def _set_image_in_config(self, config: dict, key: str, path: str) -> dict:
         audio_match = re.match(r'^audio(\d+)$', key)
         bild_match = re.match(r'^bild(\d+)$', key)
+        q_match = re.match(r'^q(\d+)(?:_([a-z]))?$', key)
         if bild_match:
             # ECL Sprechen Teil 3 (Bildmontage) : sprechen_teil3_bild1.jpg -> config["bilder"][0]
             index = int(bild_match.group(1)) - 1
@@ -178,6 +179,21 @@ class TeilImageImportService:
 
         elif key == "image":
             config["image"] = path
+
+        elif q_match:
+            # A1 / A2 : hoeren_teil1_q1_a.png -> option_images["1"]["a"]
+            #           sprechen_teil3_q1.png  -> question_images["1"]
+            num, opt = q_match.group(1), q_match.group(2)
+            if opt:
+                option_images = dict(config.get("option_images") or {})
+                per_q = dict(option_images.get(num) or {})
+                per_q[opt] = path
+                option_images[num] = per_q
+                config["option_images"] = option_images
+            else:
+                question_images = dict(config.get("question_images") or {})
+                question_images[num] = path
+                config["question_images"] = question_images
 
         else:
             # Clé générique — on la stocke directement

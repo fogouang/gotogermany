@@ -12,6 +12,8 @@ export type StudentResponse = {
     is_active: boolean;
     branch_id: (string | null);
     target_level_id: (string | null);
+    target_sd_level?: (string | null);
+    learning_track?: (string | null);
     first_login_at: (string | null);
     access_expires_at: (string | null);
     created_at: string;

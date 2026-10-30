@@ -22,11 +22,26 @@ interface SessionAnswer {
   user_answer: Record<string, any>;
 }
 
+export interface StartDeutschMediaFile {
+  filename: string;
+  teil_number: number;
+  module?: string;
+  imported: boolean;
+}
+
+export interface StartDeutschMediaStatus {
+  subject_id: string;
+  audio: StartDeutschMediaFile[];
+  images: StartDeutschMediaFile[];
+}
+
 interface StartDeutschState {
   subjects: SubjectSummary[];
   subjectsLoading: boolean;
 
   sessionId: string | null;
+  /** Renseigné quand la session est la copie d'un devoir */
+  assignmentId: string | null;
   subjectId: string | null;
   subjectTitle: string;
   level: string;
@@ -54,6 +69,7 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
     subjectsLoading: false,
 
     sessionId: null,
+    assignmentId: null,
     subjectId: null,
     subjectTitle: "",
     level: "",
@@ -76,11 +92,8 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
   }),
 
   getters: {
-    // Dérivés de currentQuestion (source de vérité unique) — pas de state
-    // séparé à garder synchronisé. Avant ce fix, currentModuleIndex/
-    // currentTeilIndex étaient suivis indépendamment de currentQuestionIndex,
-    // donc changer d'onglet module ne déplaçait jamais la question affichée
-    // (elle restait bloquée sur son ancien index global).
+    // Teil, module et index de module se déduisent de la question en cours :
+    // un seul état à tenir à jour (currentQuestionIndex).
     currentQuestion: (state): FlatQuestion | undefined =>
       state.questions[state.currentQuestionIndex],
 
@@ -125,7 +138,12 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
       return q ? state.answers[q.id] : null;
     },
 
-    isAnswered: (state) => (questionId: string) => questionId in state.answers,
+    // Une réponse vide (champ effacé, texte supprimé) ne compte pas
+    isAnswered: (state) => (questionId: string) => {
+      const value = state.answers[questionId]?.user_answer;
+      if (!value) return false;
+      return Object.values(value).some((v) => v != null && String(v).trim() !== "");
+    },
 
     questionsByTeil: (state) => {
       const map: Record<string, FlatQuestion[]> = {};
@@ -174,32 +192,12 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
         const subject: SubjectDetail =
           await StartDeutschService.getSubjectDetailApiV1StartDeutschSubjectsSubjectIdGet(subjectId);
 
-        // 🔍 DEBUG — à retirer une fois que le rendu est stabilisé.
-        // Affiche le JSON brut tel que renvoyé par le backend, avant tout
-        // traitement (flatten, etc.) — utile pour comparer avec ce qui
-        // s'affiche réellement à l'écran.
-        console.log("[StartDeutsch] SubjectDetail reçu du backend:", subject);
-
         const session =
           await StartDeutschService.startSessionApiV1StartDeutschSessionsPost({
             subject_id: subjectId,
           });
 
-        this.sessionId = session.id;
-        this.subjectId = subject.id;
-        this.subjectTitle = subject.title;
-        this.level = subject.level;
-        this.subjectNumber = subject.subject_number;
-        this.status = session.status;
-        this.startedAt = new Date(session.started_at);
-        this.modules = subject.modules ?? [];
-        this.questions = this._flattenQuestions(this.modules);
-        this.currentQuestionIndex = 0;
-
-        // 🔍 DEBUG — la liste aplatie réellement utilisée par le store/UI.
-        console.log("[StartDeutsch] questions aplaties:", this.questions);
-        console.log("[StartDeutsch] modules:", this.modules);
-
+        this._applySession(subject, session);
         return { success: true, sessionId: this.sessionId };
       } catch (error: any) {
         this.error = error.body?.detail || "Erreur lors du démarrage de la session";
@@ -207,6 +205,71 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
       } finally {
         this.loading = false;
       }
+    },
+
+    /** Devoir Start Deutsch : la session est créée (ou reprise) par le module des devoirs */
+    async startAssignment(assignmentId: string) {
+      this._ensureApiConfig();
+      this.$reset();
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const session = await $fetch<{
+          id: string;
+          subject_id: string;
+          status: string;
+          started_at: string;
+        }>(`${OpenAPI.BASE}/api/v1/assignments/${assignmentId}/start-deutsch/start`, {
+          method: "POST",
+          headers: this._authHeaders(),
+        });
+
+        const subject: SubjectDetail =
+          await StartDeutschService.getSubjectDetailApiV1StartDeutschSubjectsSubjectIdGet(session.subject_id);
+
+        this._applySession(subject, session);
+        this.assignmentId = assignmentId;
+        return { success: true, sessionId: this.sessionId };
+      } catch (error: any) {
+        this.error = error?.data?.detail || error.body?.detail || "Impossible d'ouvrir ce devoir";
+        return { success: false, error: this.error };
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    _applySession(
+      subject: SubjectDetail,
+      session: { id: string; status: string; started_at: string },
+    ) {
+      this.sessionId = session.id;
+      this.subjectId = subject.id;
+      this.subjectTitle = subject.title;
+      this.level = subject.level;
+      this.subjectNumber = subject.subject_number;
+      this.status = session.status;
+      this.startedAt = new Date(session.started_at);
+      this.modules = this._sortTree(subject.modules ?? []);
+      this.questions = this._flattenQuestions(this.modules);
+      this.currentQuestionIndex = 0;
+    },
+
+    /** Modules, Teile et questions dans l'ordre de l'examen */
+    _sortTree(modules: ModulePublic[]): ModulePublic[] {
+      return [...modules]
+        .sort((a, b) => a.order - b.order)
+        .map((m) => ({
+          ...m,
+          teile: [...(m.teile ?? [])]
+            .sort((a, b) => a.teil_number - b.teil_number)
+            .map((t) => ({
+              ...t,
+              questions: [...(t.questions ?? [])].sort(
+                (a, b) => a.question_number - b.question_number,
+              ),
+            })),
+        }));
     },
 
     _flattenQuestions(modules: ModulePublic[]): FlatQuestion[] {
@@ -225,7 +288,7 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
       return questions;
     },
 
-    // ── Réponses (sauvegarde locale — envoi groupé au submit) ───
+    // ── Réponses (gardées localement, envoyées à la soumission) ──
 
     setAnswer(questionId: string, userAnswer: Record<string, any>) {
       this.answers[questionId] = { question_id: questionId, user_answer: userAnswer };
@@ -293,9 +356,6 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
           await StartDeutschService.getSessionResultApiV1StartDeutschSessionsSessionIdResultGet(sessionId);
         this.result = result;
 
-        // 🔍 DEBUG — à retirer une fois que le rendu est stabilisé.
-        console.log("[StartDeutsch] SessionResultResponse reçu du backend:", result);
-
         return { success: true, result };
       } catch (error: any) {
         this.error = error.body?.detail || "Erreur lors de la récupération du résultat";
@@ -316,7 +376,7 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
       }
     },
 
-    // ── Admin — Sujets (liste + suppression) ────────────────────
+    // ── Admin : sujets ─────────────────────────────────────────
 
     async adminListSubjects(
       level?: "A1" | "A2",
@@ -331,34 +391,51 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
       }
     },
 
+    /** Activer, désactiver, rendre privé (banque des enseignants) ou public */
+    async adminUpdateSubject(
+      subjectId: string,
+      data: { is_active?: boolean; is_private?: boolean },
+    ): Promise<{ success: boolean; data?: SubjectSummary; error?: string }> {
+      this._ensureApiConfig();
+      try {
+        const url: string = `${OpenAPI.BASE}/api/v1/start-deutsch/admin/subjects/${subjectId}`;
+        const updated = await $fetch<SubjectSummary>(url, {
+          method: "PATCH",
+          body: data,
+          headers: this._authHeaders(),
+        });
+        return { success: true, data: updated };
+      } catch (error: any) {
+        return { success: false, error: error?.data?.detail || error?.message || "Erreur lors de la mise à jour." };
+      }
+    },
+
     async adminDeleteSubject(subjectId: string): Promise<{ success: boolean; error?: string }> {
       this._ensureApiConfig();
       try {
         await StartDeutschService.adminDeleteSubjectApiV1StartDeutschAdminSubjectsSubjectIdDelete(subjectId);
         return { success: true };
       } catch (error: any) {
-        return { success: false, error: error.body?.detail || "Erreur lors de la suppression." };
+        return {
+          success: false,
+          error: error.body?.detail || error?.data?.detail || "Erreur lors de la suppression.",
+        };
       }
     },
 
-    // ── Admin — Import JSON / Audio / Images ────────────────────
-    // $fetch natif ici (pas le client OpenAPI généré) — ce sont des
-    // endpoints multipart/form-data (fichiers), moins fiables via le
-    // client généré. Centralisé dans le store plutôt que dupliqué dans
-    // chaque vue (import.vue appelait $fetch directement avant, source
-    // de bugs répétés — cf. l'historique CORS/TS de ce module).
+    // ── Admin : import JSON, audio, images ─────────────────────
+    // $fetch plutôt que le client OpenAPI : envois multipart (fichiers).
 
     _authHeaders(): HeadersInit {
       const token = useCookie("access_token").value;
       return token ? { Authorization: `Bearer ${token}` } : {};
     },
 
-    async adminImportJson(file: File, replace: boolean): Promise<{ success: boolean; data?: any; error?: string }> {
+    async adminImportJson(file: File): Promise<{ success: boolean; data?: any; error?: string }> {
       this._ensureApiConfig();
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("replace", String(replace));
 
         const url: string = `${OpenAPI.BASE}/api/v1/start-deutsch/admin/import`;
         const data = await $fetch(url, {
@@ -413,6 +490,18 @@ export const useStartDeutschSessionStore = defineStore("start-deutsch-session", 
         return { success: true, data };
       } catch (error: any) {
         return { success: false, error: error?.data?.detail || error?.message || "Erreur lors de l'import images." };
+      }
+    },
+
+    /** Fichiers audio et images attendus par un sujet, et ceux déjà importés */
+    async adminMediaStatus(subjectId: string): Promise<{ success: boolean; data?: StartDeutschMediaStatus; error?: string }> {
+      this._ensureApiConfig();
+      try {
+        const url: string = `${OpenAPI.BASE}/api/v1/start-deutsch/admin/subjects/${subjectId}/media`;
+        const data = await $fetch<StartDeutschMediaStatus>(url, { headers: this._authHeaders() });
+        return { success: true, data };
+      } catch (error: any) {
+        return { success: false, error: error?.data?.detail || error?.message || "Impossible de lire les médias du sujet." };
       }
     },
 

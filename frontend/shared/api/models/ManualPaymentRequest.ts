@@ -7,8 +7,9 @@
  */
 export type ManualPaymentRequest = {
     user_id: string;
-    level_id: string;
-    plan_id: string;
+    level_id?: (string | null);
+    sd_level?: ('A1' | 'A2' | null);
+    plan_id?: (string | null);
     days?: (number | null);
     /**
      * Ex: 'Virement Orange Money reçu le 16/06/2026'

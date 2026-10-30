@@ -14,6 +14,7 @@ import type { StartDeutschSessionResultResponse } from '../models/StartDeutschSe
 import type { StartDeutschSessionSubmitRequest } from '../models/StartDeutschSessionSubmitRequest';
 import type { StartDeutschSubjectDetail } from '../models/StartDeutschSubjectDetail';
 import type { StartDeutschSubjectSummary } from '../models/StartDeutschSubjectSummary';
+import type { StartDeutschSubjectUpdate } from '../models/StartDeutschSubjectUpdate';
 import type { SuccessResponse } from '../models/SuccessResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -21,9 +22,7 @@ import { request as __request } from '../core/request';
 export class StartDeutschService {
     /**
      * List Subjects
-     * Catalogue Start Deutsch, accessible à tout étudiant dont le centre a une
-     * licence active (vérification faite au niveau du middleware/dependency
-     * d'accès centre, pas ici — à brancher comme pour le reste du catalogue).
+     * Catalogue Start Deutsch, sans les sujets privés pour l'élève.
      * @param level
      * @param accessToken
      * @returns StartDeutschSubjectSummary Successful Response
@@ -49,7 +48,7 @@ export class StartDeutschService {
     }
     /**
      * Get Subject Detail
-     * Arbre complet Module → Teil → Question (sans correct_answer) pour démarrer une session.
+     * Arbre Module > Teil > Question, sans les réponses, pour démarrer une session.
      * @param subjectId
      * @param accessToken
      * @returns StartDeutschSubjectDetail Successful Response
@@ -210,8 +209,7 @@ export class StartDeutschService {
     }
     /**
      * Admin List Subjects
-     * Liste TOUS les sujets (actifs ou non) — vue admin, pour le sélecteur
-     * audio/images et pour repérer les sujets de test à supprimer.
+     * Tous les sujets, actifs ou non.
      * @param level
      * @param accessToken
      * @returns StartDeutschSubjectSummary Successful Response
@@ -236,9 +234,38 @@ export class StartDeutschService {
         });
     }
     /**
+     * Admin Update Subject
+     * Active ou désactive le sujet, le rend privé (banque des enseignants) ou public.
+     * @param subjectId
+     * @param requestBody
+     * @param accessToken
+     * @returns StartDeutschSubjectSummary Successful Response
+     * @throws ApiError
+     */
+    public static adminUpdateSubjectApiV1StartDeutschAdminSubjectsSubjectIdPatch(
+        subjectId: string,
+        requestBody: StartDeutschSubjectUpdate,
+        accessToken?: (string | null),
+    ): CancelablePromise<StartDeutschSubjectSummary> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/start-deutsch/admin/subjects/{subject_id}',
+            path: {
+                'subject_id': subjectId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Admin Delete Subject
-     * Supprime un sujet et tout ce qui en dépend (modules/teile/questions,
-     * sessions/réponses/corrections) — cascade posée au niveau DB.
+     * Supprime le sujet et tout ce qui en dépend (cascade en base).
      * @param subjectId
      * @param accessToken
      * @returns SuccessResponse Successful Response
@@ -263,11 +290,34 @@ export class StartDeutschService {
         });
     }
     /**
+     * Admin Subject Media
+     * Fichiers audio et images attendus par le sujet, et ceux déjà importés.
+     * @param subjectId
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static adminSubjectMediaApiV1StartDeutschAdminSubjectsSubjectIdMediaGet(
+        subjectId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/start-deutsch/admin/subjects/{subject_id}/media',
+            path: {
+                'subject_id': subjectId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Import Subject Json
-     * Importe un sujet Start Deutsch complet depuis un JSON (structure
-     * level/title/modules[].teile[].questions, cf. import_parsers.py pour le
-     * détail par format_type). Si replace=true, remplace les questions des
-     * Teile déjà existants.
+     * Crée un nouveau sujet à partir du JSON (formats décrits dans import_parsers.py).
      * @param formData
      * @param accessToken
      * @returns any Successful Response

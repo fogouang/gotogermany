@@ -1,21 +1,13 @@
 <!-- components/start-deutsch/SchreibenDownloadButton.vue -->
 <!--
-  Deux déclencheurs pour le téléchargement du PDF (sujet + réponses),
-  100% côté client via useSchreibenPdf — pas de backend :
+  Téléchargement du PDF Schreiben (sujet et réponses), généré dans le
+  navigateur par useSchreibenPdf.
 
-  1. Manuel : bouton visible quand TOUTES les tâches du module Schreiben
-     ont une réponse (free_text: texte non vide ; form_fill: tous les
-     champs remplis).
-  2. Automatique : le parent (session.vue) passe timeExpired=true quand
-     le compteur du module Schreiben atteint 0 — déclenche le
-     téléchargement immédiatement avec les réponses en l'état (même
-     incomplètes), une seule fois par session (hasAutoDownloaded).
-
-  Les deux cas sont indépendants : un étudiant qui termine avant la fin
-  du temps voit le cas 1 ; un étudiant à qui le temps manque déclenche
-  le cas 2, sans jamais les deux à la fois pour la même session (une
-  fois auto-téléchargé, le bouton manuel reste disponible en re-téléchargement
-  si besoin, mais l'auto ne se redéclenche jamais).
+  1. Bouton : visible quand toutes les tâches ont une réponse
+     (free_text : texte non vide ; form_fill : tous les champs remplis).
+  2. Automatique : quand le temps du Schreiben est écoulé (timeExpired),
+     le PDF part avec les réponses en l'état, une seule fois par session.
+     Le bouton reste ensuite disponible pour le retélécharger.
 -->
 <template>
   <div
@@ -94,8 +86,7 @@ interface Props {
   teile: SchreibenTeil[];
   /** answers[questionId].user_answer */
   answers: Record<string, any>;
-  /** Passé à true par le parent quand le compteur du module Schreiben
-   * atteint 0 — déclenche un téléchargement automatique unique. */
+  /** Vrai quand le temps du Schreiben est écoulé : téléchargement automatique unique */
   timeExpired?: boolean;
 }
 
@@ -135,9 +126,8 @@ function handleDownload() {
   });
 }
 
-// ── Déclenchement automatique — une seule fois, uniquement si le devoir
-// n'était pas déjà complet (dans ce cas le téléchargement est manuel,
-// via le bouton du bloc "complete" ci-dessus, pas besoin d'auto).
+// ── Téléchargement automatique : une seule fois, et seulement si le
+// devoir n'est pas complet (sinon l'étudiant a déjà le bouton).
 const hasAutoDownloaded = ref(false);
 
 watch(

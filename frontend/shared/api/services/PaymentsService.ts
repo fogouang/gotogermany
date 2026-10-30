@@ -16,15 +16,15 @@ import { request as __request } from '../core/request';
 export class PaymentsService {
     /**
      * Initiate Payment
-     * Initie un paiement mobile money pour l'accès à un exam.
+     * Initie un paiement Mobile Money (Kratos Pay) pour l'accès à un niveau.
      *
-     * - `exam_id` : l'exam que l'étudiant veut débloquer
+     * - `level_id` ou `sd_level` : le niveau à débloquer
      * - `plan_id` : durée choisie (7j, 1 mois, 3 mois…)
      * - `operator` : "MTN" | "ORANGE"
      * - `phone_number` : numéro mobile money
      * - `promo_code` : code partenaire optionnel
      *
-     * Retourne un code USSD à composer sur le téléphone.
+     * L'élève confirme ensuite sur son téléphone.
      * @param requestBody
      * @param accessToken
      * @returns PaymentInitiateResponse Successful Response
@@ -145,10 +145,10 @@ export class PaymentsService {
     }
     /**
      * [Admin] Valider un paiement manuellement
-     * Crée un paiement validé manuellement sans passer par My-CoolPay.
+     * Crée un paiement validé manuellement sans passer par l'opérateur de paiement.
      *
      * Cas d'usage :
-     * - My-CoolPay indisponible
+     * - Kratos indisponible
      * - Paiement par virement bancaire
      * - Paiement cash en présentiel
      * - Accès offert / correction admin

@@ -1,6 +1,6 @@
 <!-- pages/dashboard/start-deutsch/[subjectId]/result.vue -->
 <template>
-  <div class="space-y-5 pb-10">
+  <div class="pb-10">
     <!-- ── Chargement ── -->
     <div v-if="store.loading && !result" class="space-y-4">
       <div class="h-44 animate-pulse rounded-card bg-card-2" />
@@ -10,12 +10,12 @@
     <!-- ── Introuvable ── -->
     <div
       v-else-if="!result"
-      class="flex flex-col items-center justify-center rounded-card border border-line bg-card py-16 text-center shadow-soft"
+      class="flex flex-col items-center justify-center rounded-card border border-line bg-card py-20 text-center"
     >
       <span
-        class="mb-4 flex size-14 items-center justify-center rounded-card bg-red-500/10"
+        class="mb-4 flex size-14 items-center justify-center rounded-leaf bg-red-500/10"
       >
-        <i class="pi pi-exclamation-triangle text-2xl text-red-600" />
+        <i class="pi pi-exclamation-triangle text-2xl text-red-500" />
       </span>
       <p class="mb-4 font-semibold text-ink">
         {{ t("start_deutsch.result.not_found") }}
@@ -29,65 +29,21 @@
     </div>
 
     <template v-else>
-      <!-- ══ Score ══ -->
+      <!-- ══ En-tête du résultat ══ -->
       <section
-        class="rounded-card border border-line bg-card p-5 shadow-soft sm:p-7"
+        class="relative overflow-hidden rounded-card border border-line bg-card shadow-soft"
       >
-        <div
-          class="flex flex-col items-center gap-6 sm:flex-row sm:items-center"
-        >
-          <!-- Anneau : score sur les modules déjà corrigés -->
-          <div class="relative size-32 shrink-0">
-            <svg
-              class="size-32 -rotate-90"
-              viewBox="0 0 120 120"
-              aria-hidden="true"
-            >
-              <circle
-                cx="60"
-                cy="60"
-                r="52"
-                fill="none"
-                stroke-width="10"
-                class="stroke-card-2"
-              />
-              <circle
-                cx="60"
-                cy="60"
-                r="52"
-                fill="none"
-                stroke-width="10"
-                stroke-linecap="round"
-                class="transition-[stroke-dasharray] duration-700"
-                :class="ringClass"
-                :stroke-dasharray="`${(scorePercent / 100) * RING} ${RING}`"
-              />
-            </svg>
-            <div
-              class="absolute inset-0 flex flex-col items-center justify-center"
-            >
-              <span class="text-3xl font-extrabold tabular-nums text-ink"
-                >{{ scorePercent }}%</span
-              >
-              <span class="text-[11px] tabular-nums text-muted">
-                {{
-                  t("start_deutsch.result.points_of", {
-                    score: formatPoints(scoreObtained),
-                    max: formatPoints(scoreMax),
-                  })
-                }}
-              </span>
-            </div>
-          </div>
+        <div class="absolute inset-x-0 top-0 h-1" :class="barClass" />
 
-          <div class="min-w-0 flex-1 text-center sm:text-left">
-            <div
-              class="flex flex-wrap items-center justify-center gap-2 sm:justify-start"
-            >
+        <div
+          class="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+        >
+          <div class="min-w-0">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
               <span
-                class="rounded-leaf bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary"
+                class="text-xs font-semibold uppercase tracking-wider text-muted"
               >
-                {{ result.level }}
+                Start Deutsch · {{ result.level }}
               </span>
               <span
                 v-if="hasPending"
@@ -96,118 +52,134 @@
                 {{ t("start_deutsch.result.provisional") }}
               </span>
             </div>
-            <h1 class="mt-2 text-lg font-bold text-ink sm:text-xl">
-              {{ result.subject_title }}
-            </h1>
 
-            <p
-              class="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold"
-              :class="statusClass"
-            >
-              <i :class="['pi', statusIcon]" />
-              {{ statusLabel }}
-            </p>
+            <div class="flex items-center gap-3">
+              <div
+                class="flex size-12 shrink-0 items-center justify-center rounded-leaf"
+                :class="statusClass"
+              >
+                <i class="pi text-xl" :class="statusIcon" />
+              </div>
+              <h1 class="text-2xl font-bold text-ink sm:text-3xl">
+                {{ statusLabel }}
+              </h1>
+            </div>
 
-            <!-- Modules encore en correction -->
-            <div
-              v-if="hasPending"
-              class="mt-4 flex flex-col gap-3 rounded-leaf border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left sm:flex-row sm:items-center"
-            >
-              <p class="min-w-0 flex-1 text-sm text-ink">
+            <p class="mt-3 text-sm text-muted">{{ result.subject_title }}</p>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full border border-line bg-card-2 px-3 py-1.5 text-xs font-medium text-ink"
+              >
+                <i class="pi pi-list text-[11px] text-muted" />
                 {{
-                  t("start_deutsch.result.pending_note", {
-                    modules: pendingNames,
+                  t("start_deutsch.result.modules_corrected", {
+                    done: scoredModules.length,
+                    total: gradedModules.length,
+                  })
+                }}
+              </span>
+              <span
+                v-if="answerCounts.total"
+                class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold tabular-nums text-emerald-700 dark:text-emerald-400"
+              >
+                <i class="pi pi-check text-[11px]" />
+                {{ answerCounts.right }} / {{ answerCounts.total }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Score -->
+          <div
+            class="flex items-center gap-5 rounded-card border border-line bg-card-2 p-4 lg:flex-col lg:gap-2 lg:px-8"
+          >
+            <div class="relative size-28 shrink-0">
+              <svg class="size-28 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  fill="none"
+                  stroke-width="10"
+                  class="stroke-line"
+                />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  fill="none"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  class="transition-[stroke-dasharray] duration-700"
+                  :class="ringClass"
+                  :stroke-dasharray="`${(scorePercent / 100) * RING} ${RING}`"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-3xl font-extrabold leading-none tabular-nums text-ink">
+                  {{ scorePercent }}
+                </span>
+                <span class="text-xs text-muted">%</span>
+              </div>
+            </div>
+            <div class="lg:text-center">
+              <p class="text-base font-bold tabular-nums text-ink">
+                {{
+                  t("start_deutsch.result.points_of", {
+                    score: formatPoints(scoreObtained),
+                    max: formatPoints(scoreMax),
                   })
                 }}
               </p>
-              <Button
-                :label="t('start_deutsch.result.refresh')"
-                icon="pi pi-refresh"
-                size="small"
-                outlined
-                class="shrink-0"
-                :loading="refreshing"
-                @click="refresh"
-              />
+              <p class="text-xs text-muted">
+                {{ t("start_deutsch.result.threshold", { pct: PASS }) }}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ══ Résultat par module ══ -->
-      <section
-        class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
+      <div
+        class="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
       >
-        <header class="border-b border-line px-5 py-4 sm:px-6">
+        <!-- ══ Colonne principale : détail des réponses ══ -->
+        <div class="order-2 min-w-0 space-y-3 lg:order-1">
           <h2 class="font-semibold text-ink">
-            {{ t("start_deutsch.result.by_module") }}
+            {{ t("start_deutsch.result.detail") }}
           </h2>
-        </header>
 
-        <div class="divide-y divide-line">
-          <div v-for="mod in modules" :key="mod.module_id">
-            <!-- Ligne du module -->
+          <div
+            v-for="mod in modules.filter((m) => m.expandable)"
+            :key="mod.module_id"
+            class="overflow-hidden rounded-card border border-line bg-card"
+          >
             <button
               type="button"
-              class="flex w-full items-center gap-4 bg-transparent px-5 py-4 text-left transition-colors enabled:hover:bg-card-2/60 disabled:cursor-default"
-              :disabled="!mod.expandable"
-              :aria-expanded="
-                mod.expandable ? expanded.has(mod.module_id) : undefined
-              "
+              class="flex w-full items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-card-2 sm:px-6"
+              :aria-expanded="expanded.has(mod.module_id)"
               @click="toggle(mod.module_id)"
             >
-              <span
-                class="flex size-10 shrink-0 items-center justify-center rounded-leaf"
-                :class="mod.iconBubble"
-              >
-                <i :class="['pi', mod.icon]" />
-              </span>
-
-              <span class="min-w-0 flex-1">
-                <span class="block text-sm font-semibold text-ink">{{
-                  mod.label
-                }}</span>
-                <span class="block text-xs" :class="mod.subClass">{{
-                  mod.sub
-                }}</span>
-              </span>
-
-              <!-- Barre (modules notés et corrigés) -->
-              <span
-                v-if="mod.state === 'scored'"
-                class="hidden w-40 shrink-0 sm:block"
-              >
+              <div class="flex min-w-0 items-center gap-3">
                 <span
-                  class="block h-1.5 overflow-hidden rounded-full bg-card-2"
+                  class="flex size-9 shrink-0 items-center justify-center rounded-leaf"
+                  :class="mod.iconBubble"
                 >
-                  <span
-                    class="block h-full rounded-full transition-[width] duration-500"
-                    :class="mod.pct >= PASS ? 'bg-emerald-500' : 'bg-red-500'"
-                    :style="{ width: `${mod.pct}%` }"
-                  />
+                  <i class="pi text-sm" :class="mod.icon" />
                 </span>
-              </span>
-
-              <span
-                v-if="mod.state === 'scored'"
-                class="w-14 shrink-0 text-right text-sm font-bold tabular-nums"
-                :class="mod.pct >= PASS ? 'text-emerald-600' : 'text-red-600'"
-              >
-                {{ mod.pct }}%
-              </span>
-
+                <div class="min-w-0 text-left">
+                  <p class="truncate text-sm font-semibold text-ink">{{ mod.label }}</p>
+                  <p class="text-xs" :class="mod.subClass">{{ mod.sub }}</p>
+                </div>
+              </div>
               <i
-                v-if="mod.expandable"
-                class="pi pi-chevron-down shrink-0 text-xs text-faint transition-transform"
-                :class="{ 'rotate-180': expanded.has(mod.module_id) }"
+                class="pi text-sm text-muted"
+                :class="expanded.has(mod.module_id) ? 'pi-chevron-up' : 'pi-chevron-down'"
               />
-              <span v-else class="w-3 shrink-0" />
             </button>
 
-            <!-- Détail du module, juste sous sa ligne -->
             <div
-              v-if="mod.expandable && expanded.has(mod.module_id)"
-              class="border-t border-line bg-card-2/40"
+              v-if="expanded.has(mod.module_id)"
+              class="divide-y divide-line border-t border-line"
             >
               <div
                 v-for="teil in mod.raw.teile ?? []"
@@ -215,14 +187,11 @@
                 class="px-5 py-4 sm:px-6"
               >
                 <div class="mb-2 flex items-center justify-between">
-                  <p
-                    class="text-xs font-bold uppercase tracking-wide text-muted"
-                  >
+                  <p class="text-xs font-bold uppercase tracking-wide text-muted">
                     Teil {{ teil.teil_number }}
                   </p>
                   <span class="text-xs font-semibold tabular-nums text-muted">
-                    {{ formatPoints(teil.score_obtained) }} /
-                    {{ teil.max_score }} pts
+                    {{ formatPoints(teil.score_obtained) }} / {{ teil.max_score }} pts
                   </span>
                 </div>
 
@@ -230,7 +199,7 @@
                   <li
                     v-for="answer in teil.answers ?? []"
                     :key="answer.question_id"
-                    class="flex items-start gap-3 rounded-leaf bg-card px-3 py-2 text-sm"
+                    class="flex items-start gap-3 rounded-leaf bg-card-2 px-3 py-2 text-sm"
                   >
                     <span
                       class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
@@ -240,14 +209,12 @@
                     </span>
 
                     <!-- Texte libre (Schreiben) -->
-                    <div
+                    <p
                       v-if="isFreeText(answer.user_answer)"
-                      class="min-w-0 flex-1"
+                      class="min-w-0 flex-1 whitespace-pre-wrap text-ink"
                     >
-                      <p class="whitespace-pre-wrap text-ink">
-                        {{ answer.user_answer!.text || "-" }}
-                      </p>
-                    </div>
+                      {{ answer.user_answer!.text || "-" }}
+                    </p>
 
                     <!-- Réponse simple ou formulaire -->
                     <div
@@ -264,11 +231,7 @@
                       >
                         {{ formatAnswer(answer.user_answer) }}
                       </span>
-                      <template
-                        v-if="
-                          answer.is_correct === false && answer.correct_answer
-                        "
-                      >
+                      <template v-if="answer.is_correct === false && answer.correct_answer">
                         <i class="pi pi-arrow-right text-[10px] text-faint" />
                         <span class="font-semibold text-emerald-600">{{
                           formatAnswer(answer.correct_answer)
@@ -281,23 +244,93 @@
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- ══ Actions ══ -->
-      <div class="flex flex-col gap-3 sm:flex-row">
-        <Button
-          :label="t('start_deutsch.result.back')"
-          icon="pi pi-arrow-left"
-          outlined
-          class="flex-1"
-          @click="goToCatalogue"
-        />
-        <Button
-          :label="t('start_deutsch.result.retry')"
-          icon="pi pi-refresh"
-          class="flex-1"
-          @click="retrySubject"
-        />
+        <!-- ══ Colonne latérale : résumé par module ══ -->
+        <aside class="order-1 space-y-5 lg:sticky lg:top-5 lg:order-2">
+          <div class="overflow-hidden rounded-card border border-line bg-card">
+            <div class="border-b border-line px-5 py-4">
+              <h2 class="text-sm font-semibold text-ink">
+                {{ t("start_deutsch.result.by_module") }}
+              </h2>
+            </div>
+
+            <div class="divide-y divide-line">
+              <div
+                v-for="mod in modules"
+                :key="`side-${mod.module_id}`"
+                class="flex items-center gap-3 px-5 py-4"
+              >
+                <span
+                  class="flex size-10 shrink-0 items-center justify-center rounded-leaf"
+                  :class="mod.iconBubble"
+                >
+                  <i class="pi" :class="mod.icon" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="truncate text-sm font-semibold text-ink">{{ mod.label }}</p>
+                    <span
+                      v-if="mod.state === 'scored'"
+                      class="shrink-0 text-sm font-bold tabular-nums"
+                      :class="mod.pct >= PASS ? 'text-emerald-600' : 'text-red-600'"
+                    >
+                      {{ mod.pct }}%
+                    </span>
+                  </div>
+                  <div v-if="mod.state === 'scored'" class="mt-1.5">
+                    <div class="h-2 overflow-hidden rounded-full bg-card-2">
+                      <div
+                        class="h-full rounded-full transition-[width] duration-500"
+                        :class="mod.pct >= PASS ? 'bg-emerald-500' : 'bg-red-500'"
+                        :style="{ width: `${mod.pct}%` }"
+                      />
+                    </div>
+                    <p class="mt-1 text-xs tabular-nums text-muted">{{ mod.sub }}</p>
+                  </div>
+                  <p v-else class="mt-0.5 flex items-center gap-1.5 text-xs" :class="mod.subClass">
+                    <i v-if="mod.state === 'pending'" class="pi pi-clock text-xs" />
+                    {{ mod.sub }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modules encore en correction -->
+          <div
+            v-if="hasPending"
+            class="space-y-3 rounded-card border border-amber-500/30 bg-amber-500/10 p-4"
+          >
+            <p class="text-sm text-ink">
+              {{ t("start_deutsch.result.pending_note", { modules: pendingNames }) }}
+            </p>
+            <Button
+              :label="t('start_deutsch.result.refresh')"
+              icon="pi pi-refresh"
+              size="small"
+              outlined
+              class="w-full"
+              :loading="refreshing"
+              @click="refresh"
+            />
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <Button
+              :label="t('start_deutsch.result.retry')"
+              icon="pi pi-refresh"
+              class="w-full"
+              @click="retrySubject"
+            />
+            <Button
+              :label="t('start_deutsch.result.back')"
+              icon="pi pi-arrow-left"
+              outlined
+              class="w-full"
+              @click="goToCatalogue"
+            />
+          </div>
+        </aside>
       </div>
     </template>
   </div>
@@ -420,6 +453,26 @@ const scoreMax = computed(() =>
 );
 const scorePercent = computed(() => pct(scoreObtained.value, scoreMax.value));
 
+const gradedModules = computed(() =>
+  modules.value.filter((m) => m.state !== "oral"),
+);
+
+// Réponses justes sur les modules corrigés (hors Schreiben, noté par critères)
+const answerCounts = computed(() => {
+  let right = 0;
+  let total = 0;
+  for (const m of scoredModules.value) {
+    for (const teil of m.raw.teile ?? []) {
+      for (const a of teil.answers ?? []) {
+        if (a.is_correct == null || isFreeText(a.user_answer)) continue;
+        total += 1;
+        if (a.is_correct) right += 1;
+      }
+    }
+  }
+  return { right, total };
+});
+
 const pendingModules = computed(() =>
   modules.value.filter((m) => m.state === "pending"),
 );
@@ -446,6 +499,11 @@ const statusClass = computed(() => {
   return scorePercent.value >= PASS
     ? "bg-emerald-500/10 text-emerald-600"
     : "bg-primary/10 text-primary";
+});
+
+const barClass = computed(() => {
+  if (hasPending.value) return "bg-amber-500";
+  return scorePercent.value >= PASS ? "bg-emerald-500" : "bg-primary";
 });
 
 const ringClass = computed(() => {
@@ -514,5 +572,9 @@ onMounted(async () => {
   if (sessionId && (!store.result || store.result.session_id !== sessionId)) {
     await store.getResult(sessionId);
   }
+  // Modules corrigés ouverts d'office, comme sur le résultat des B
+  expanded.value = new Set(
+    modules.value.filter((m) => m.state === "scored").map((m) => m.module_id),
+  );
 });
 </script>

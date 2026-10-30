@@ -307,6 +307,7 @@
 
 <script setup lang="ts">
 import type { NormalizedTrainingSession } from "~/stores/trainingSessions";
+import type { AssignmentCreate } from "~~/shared/api";
 
 definePageMeta({ layout: "enseignant", watermark: "Hausaufgaben" });
 
@@ -329,10 +330,17 @@ const openClasses = computed(() =>
     .filter((s) => !isFinished(s))
     .map((s) => ({
       ...s,
-      level_id: (s as { level_id?: string | null }).level_id ?? null,
+      // Clé de niveau : level_id pour les B, « sd:A1 » / « sd:A2 » pour Start Deutsch
+      level_id: classLevelKey(s),
       active: s.students.filter((x) => !x.ended_at),
     })),
 );
+
+function classLevelKey(s: NormalizedTrainingSession): string | null {
+  const x = s as { level_id?: string | null; sd_level?: string | null };
+  if (x.level_id) return x.level_id;
+  return x.sd_level ? `sd:${x.sd_level}` : null;
+}
 
 // ── Cibles ──
 const selectedClassIds = ref<string[]>([]);
@@ -402,10 +410,16 @@ const targetLevelIds = computed(() => {
 const levelFilter = ref<string | null>(null);
 const selectedSubjectId = ref<string | null>(null);
 
+// Même clé côté banque de sujets
+type BankItem = (typeof assignmentsStore.bank)[number];
+function bankLevelKey(s: BankItem): string {
+  return s.level_id ?? `sd:${s.cefr_code}`;
+}
+
 const bankLevels = computed(() => {
   const map = new Map<string, string>();
   for (const s of assignmentsStore.bank)
-    map.set(s.level_id, `${s.exam_name} · ${s.cefr_code}`);
+    map.set(bankLevelKey(s), `${s.exam_name} · ${s.cefr_code}`);
   return [...map.entries()]
     .map(([id, label]) => ({ id, label }))
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -418,7 +432,7 @@ watch(targetLevelIds, (ids) => {
 
 const visibleSubjects = computed(() =>
   assignmentsStore.bank
-    .filter((s) => !levelFilter.value || s.level_id === levelFilter.value)
+    .filter((s) => !levelFilter.value || bankLevelKey(s) === levelFilter.value)
     .sort(
       (a, b) =>
         a.exam_name.localeCompare(b.exam_name) ||
@@ -437,7 +451,7 @@ const levelMismatch = computed(
   () =>
     !!selectedSubject.value &&
     targetLevelIds.value.size > 0 &&
-    !targetLevelIds.value.has(selectedSubject.value.level_id),
+    !targetLevelIds.value.has(bankLevelKey(selectedSubject.value)),
 );
 
 // Les noms de modules arrivent en slug (« lesen », « muendlicher_ausdruck »…)
@@ -480,6 +494,7 @@ async function handleSubmit() {
   submitError.value = null;
 
   const result = await assignmentsStore.create({
+    kind: (selectedSubject.value?.kind ?? "exam") as AssignmentCreate["kind"],
     subject_id: selectedSubjectId.value,
     title: title.value.trim(),
     instructions: instructions.value.trim() || null,
@@ -528,7 +543,7 @@ onMounted(async () => {
   ) {
     await nextTick();
     const s = assignmentsStore.bank.find((x) => x.subject_id === subjectId)!;
-    levelFilter.value = s.level_id;
+    levelFilter.value = bankLevelKey(s);
     selectSubject(subjectId);
   }
 });

@@ -1,22 +1,13 @@
 """
 app/modules/start_deutsch/models.py
 
-Module Start Deutsch (A1/A2) — aligné sur le pattern réel de l'app :
-- Base + UUIDMixin + TimestampMixin partagés (app.shared.database.base)
-- Types "catégoriels" (level, module_slug, format_type, status) en String
-  simple plutôt qu'en Enum Postgres, comme `question_type` sur le vrai
-  modèle Question — évite les migrations Alembic douloureuses sur ALTER TYPE
-- Tables préfixées "start_deutsch_" : nécessaire, pas juste cosmétique — les
-  noms génériques (questions, teile, sessions...) sont déjà pris par les
-  modules existants
-- Audio au niveau Teil uniquement (un seul fichier par Teil), volontairement
-  différent du modèle Question existant qui a audio_file par question — on
-  applique ici la règle déjà validée pour B1/B2 (audio continu par Teil,
-  jamais par question)
-- TYPE_CHECKING + lazy="noload" comme le reste du code
-
-⚠️ À vérifier : le chemin d'import `app.shared.database.base` — je le
-reprends tel quel du modèle Question que tu as partagé.
+Module Start Deutsch (A1, A2).
+- Base, UUIDMixin et TimestampMixin partagés (app.shared.database.base).
+- Niveau, slug de module, format_type et statut en String simple, comme
+  question_type sur le modèle Question : pas d'Enum Postgres à migrer.
+- Tables préfixées "start_deutsch_" : les noms questions, teile, sessions
+  sont déjà pris par les autres modules.
+- Audio au niveau du Teil : un fichier par Teil, jamais par question.
 """
 
 from __future__ import annotations
@@ -24,7 +15,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, false, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,7 +25,7 @@ if TYPE_CHECKING:
     from app.modules.users.models import User
 
 
-# ── Constantes applicatives (pas d'Enum Postgres, cf. convention existante) ──
+# ── Constantes ────────────────────────────────────────────────────
 
 class Level:
     A1 = "A1"
@@ -72,23 +63,26 @@ class SessionStatus:
     PENDING_REVIEW = "PENDING_REVIEW"
 
 
-# ── Catalogue de contenu ──────────────────────────────────────────
+# ── Contenu ───────────────────────────────────────────────────────
 
 class StartDeutschSubject(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "start_deutsch_subjects"
     __table_args__ = (UniqueConstraint("level", "subject_number", name="uq_sd_subject_level_number"),)
 
     level: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
-    # Plusieurs sujets par niveau (comme B1/B2 : "Sujet 1", "Sujet 2"...) —
-    # sans ce champ, un seul sujet A1/A2 pouvait exister au total, et tout
-    # import suivant se contentait de fusionner (ou d'ignorer) dans celui-ci.
+    # Plusieurs sujets par niveau : Sujet 1, Sujet 2...
     subject_number: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Privé : absent du catalogue élève, réservé aux devoirs des enseignants
+    is_private: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default=false()
+    )
 
     modules: Mapped[list["StartDeutschModule"]] = relationship(
-        "StartDeutschModule", back_populates="subject", cascade="all, delete-orphan", lazy="noload"
+        "StartDeutschModule", back_populates="subject", cascade="all, delete-orphan", lazy="noload",
+        order_by="StartDeutschModule.order",
     )
 
 
@@ -108,7 +102,8 @@ class StartDeutschModule(Base, UUIDMixin, TimestampMixin):
         "StartDeutschSubject", back_populates="modules", lazy="noload"
     )
     teile: Mapped[list["StartDeutschTeil"]] = relationship(
-        "StartDeutschTeil", back_populates="module", cascade="all, delete-orphan", lazy="noload"
+        "StartDeutschTeil", back_populates="module", cascade="all, delete-orphan", lazy="noload",
+        order_by="StartDeutschTeil.teil_number",
     )
 
 
@@ -122,13 +117,11 @@ class StartDeutschTeil(Base, UUIDMixin, TimestampMixin):
     )
     teil_number: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # ex: "mc_image", "form_fill", "sprechen_duo_negotiation"... (cf. FormatType)
+    # mc_image, form_fill, sprechen_duo_negotiation... (cf. FormatType)
     format_type: Mapped[str] = mapped_column(String(40), nullable=False)
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Un seul fichier audio pour tout le Teil (jamais par question) —
-    # chemin relatif, même convention que Question.audio_file existant
-    # ex: "start_deutsch/a1/hoeren/teil1/audio.mp3"
+    # Chemin relatif de l'audio du Teil, ex. "a1/subject1/hoeren/hoeren_teil1.mp3"
     audio_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
     max_score: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
 
@@ -136,8 +129,10 @@ class StartDeutschTeil(Base, UUIDMixin, TimestampMixin):
         "StartDeutschModule", back_populates="teile", lazy="noload"
     )
     questions: Mapped[list["StartDeutschQuestion"]] = relationship(
-        "StartDeutschQuestion", back_populates="teil", cascade="all, delete-orphan", lazy="noload"
+        "StartDeutschQuestion", back_populates="teil", cascade="all, delete-orphan", lazy="noload",
+        order_by="StartDeutschQuestion.question_number",
     )
+    # Texte, annonces ou images communs au Teil ; transcription en Hören
     shared_content: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
 
@@ -151,21 +146,19 @@ class StartDeutschQuestion(Base, UUIDMixin, TimestampMixin):
     )
     question_number: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # Contenu variable selon le format_type du Teil parent, ex:
-    # mc_image     → {"question": "...", "options": [{"label":"a","image_file":"..."}, ...]}
-    # form_fill    → {"prompt_text": "...", "fields": [{"number":1,"label":"Alter"}, ...]}
-    # free_text    → {"prompt": "...", "content_points": [...], "min_words": 20, "max_words": 30}
+    # Selon le format_type du Teil, par exemple :
+    # mc_image  {"question": "...", "options": [{"label": "a", "image_file": "..."}, ...]}
+    # form_fill {"prompt_text": "...", "fields": [{"number": 1, "label": "Alter"}, ...]}
+    # free_text {"prompt": "...", "content_points": [...], "min_words": 20, "max_words": 30}
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
-    # Variable selon format_type — QCM: {"answer":"b"} ; form_fill:
-    # {"1": "Berger", ...} ; free_text: pas de correct_answer, corrigé via
-    # StartDeutschSchreibenCorrection avec la grille A-E officielle
+    # QCM {"answer": "b"} ; form_fill {"fields": {"1": "Berger", ...}} ;
+    # free_text : aucune, corrigé par l'IA sur la grille officielle
     correct_answer: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     points: Mapped[float] = mapped_column(Float, nullable=False, default=1)
 
-    # Image de contexte de la question elle-même si besoin (ex: image unique
-    # d'une carte Sprechen A1 Teil3) — distinct de l'audio qui reste au Teil
+    # Image propre à la question si besoin (distincte de l'audio, qui reste au Teil)
     image_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     teil: Mapped["StartDeutschTeil"] = relationship(
@@ -177,7 +170,7 @@ class StartDeutschQuestion(Base, UUIDMixin, TimestampMixin):
 
     @property
     def is_auto_correctable(self) -> bool:
-        """True sauf pour free_text et les format_type sprechen_* (correction IA/manuelle)."""
+        """Faux pour free_text et les formats sprechen_* (correction IA ou manuelle)."""
         return self.format_type_of_teil_is_auto_correctable()
 
     def format_type_of_teil_is_auto_correctable(self) -> bool:
@@ -193,10 +186,10 @@ class StartDeutschQuestion(Base, UUIDMixin, TimestampMixin):
         )
 
     def __repr__(self) -> str:
-        return f"<StartDeutschQuestion #{self.question_number} — teil:{self.teil_id}>"
+        return f"<StartDeutschQuestion #{self.question_number} teil={self.teil_id}>"
 
 
-# ── Sessions / tentatives ─────────────────────────────────────────
+# ── Sessions ──────────────────────────────────────────────────────
 
 class StartDeutschSession(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "start_deutsch_sessions"
@@ -212,8 +205,7 @@ class StartDeutschSession(Base, UUIDMixin, TimestampMixin):
     status: Mapped[str] = mapped_column(String(20), default=SessionStatus.IN_PROGRESS, nullable=False)
     score: Mapped[float | None] = mapped_column(Float, nullable=True)
     passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
-    # Distincts de created_at/updated_at (TimestampMixin) : cycle de vie de la
-    # tentative elle-même, pas de la ligne DB
+    # Début et soumission de la tentative (created_at et updated_at concernent la ligne)
     started_at = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     submitted_at = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -251,7 +243,7 @@ class StartDeutschAnswer(Base, UUIDMixin, TimestampMixin):
 
 
 class StartDeutschSchreibenCorrection(Base, UUIDMixin, TimestampMixin):
-    """Correction IA d'une production Schreiben, sur la grille officielle A-E."""
+    """Correction IA d'une production Schreiben, sur la grille officielle A à E."""
 
     __tablename__ = "start_deutsch_schreiben_corrections"
 
@@ -273,3 +265,8 @@ class StartDeutschSchreibenCorrection(Base, UUIDMixin, TimestampMixin):
     session: Mapped["StartDeutschSession"] = relationship(
         "StartDeutschSession", back_populates="schreiben_corrections", lazy="noload"
     )
+
+    @property
+    def passed(self) -> bool:
+        """Tâche réussie à partir de 60 % des points."""
+        return self.max_score > 0 and self.overall_score >= 0.6 * self.max_score

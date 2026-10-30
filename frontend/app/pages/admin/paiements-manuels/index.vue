@@ -1,3 +1,4 @@
+<!-- pages/admin/paiements-manuels.vue -->
 <template>
   <div class="space-y-5">
     <!-- ── Tuiles ── -->
@@ -526,13 +527,16 @@ const initials = (s?: string | null) =>
     .map((p) => p[0]!.toUpperCase())
     .join("");
 
+const isCompleted = (row: PaymentAdminResponse) =>
+  (row.payment_status ?? "").toUpperCase() === "COMPLETED";
+
 const isActive = (row: PaymentAdminResponse) =>
-  row.payment_status === "completed" &&
+  isCompleted(row) &&
   !!row.expires_at &&
   new Date(row.expires_at) > new Date();
 
 const accessBadge = (row: PaymentAdminResponse) => {
-  if (row.payment_status !== "completed")
+  if (!isCompleted(row))
     return {
       label: row.payment_status,
       class: "bg-amber-500/15 text-amber-600",
@@ -670,15 +674,19 @@ const userOptions = computed(() =>
   })),
 );
 
-// Un accès se donne par niveau : une option par niveau de chaque examen
-const levelOptions = computed(() =>
-  (catalog.value ?? []).flatMap((e: any) =>
+// Un accès se donne par niveau : une option par niveau de chaque examen,
+// plus Start Deutsch A1 et A2 (valeur "sd:A1", "sd:A2")
+const SD_PREFIX = "sd:";
+const levelOptions = computed(() => [
+  ...(catalog.value ?? []).flatMap((e: any) =>
     (e.levels ?? []).map((l: any) => ({
       value: l.id,
       label: `${e.name} · ${l.cefr_code}`,
     })),
   ),
-);
+  { value: `${SD_PREFIX}A1`, label: "Start Deutsch · A1" },
+  { value: `${SD_PREFIX}A2`, label: "Start Deutsch · A2" },
+]);
 // ── Dialogues ──
 const showAccessDialog = ref(false);
 const showCreditsDialog = ref(false);
@@ -711,8 +719,7 @@ const accessValid = computed(() => {
   const f = accessForm.value;
   if (!f.user_id || !f.level_id) return false;
   if (f.mode === "plan") return !!f.plan_id;
-  // Pass : le backend ignore le plan mais le schéma l'exige, il faut au moins un plan actif
-  return (f.days ?? 0) >= 1 && activePlans.value.length > 0;
+  return (f.days ?? 0) >= 1;
 });
 
 const creditsValid = computed(
@@ -745,11 +752,16 @@ async function submitAccess() {
 
   const f = accessForm.value;
   const isPass = f.mode === "pass";
+  const sdLevel = f.level_id.startsWith(SD_PREFIX)
+    ? (f.level_id.slice(SD_PREFIX.length) as "A1" | "A2")
+    : null;
   const result = await adminGrantExamAccess({
     user_id: f.user_id,
-    level_id: f.level_id,
-    // Pass journalier : plan exigé par le schéma mais ignoré par le backend (prix et durée viennent de "days")
-    plan_id: isPass ? activePlans.value[0]!.id : f.plan_id,
+    // Niveau d'examen, ou Start Deutsch A1/A2
+    level_id: sdLevel ? null : f.level_id,
+    sd_level: sdLevel,
+    // Formule OU pass journalier : jamais les deux (le backend refuse sinon)
+    plan_id: isPass ? null : f.plan_id,
     days: isPass ? f.days : null,
     note: f.note.trim() || null,
   });

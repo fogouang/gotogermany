@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Une question sans son correct_answer — c'est ce que l'étudiant reçoit pendant la session.
+ * Une question sans sa réponse, telle que l'étudiant la reçoit.
  */
 export type StartDeutschQuestionPublic = {
     id: string;

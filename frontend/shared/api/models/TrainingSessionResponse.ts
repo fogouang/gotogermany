@@ -8,7 +8,10 @@ export type TrainingSessionResponse = {
     id: string;
     branch_id: string;
     branch_name: string;
-    level_id: string;
+    track?: TrainingSessionResponse.track;
+    level_id: (string | null);
+    sd_level?: ('A1' | 'A2' | null);
+    cefr_code?: string;
     level_name: string;
     label: (string | null);
     start_date: string;
@@ -18,4 +21,10 @@ export type TrainingSessionResponse = {
     teachers?: Array<TrainingSessionTeacherResponse>;
     students?: Array<TrainingSessionStudentResponse>;
 };
+export namespace TrainingSessionResponse {
+    export enum track {
+        EXAM = 'exam',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

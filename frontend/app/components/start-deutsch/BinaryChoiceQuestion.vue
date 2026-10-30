@@ -1,14 +1,15 @@
 <!-- components/start-deutsch/BinaryChoiceQuestion.vue -->
 <!--
-  Un seul composant pour true_false (Richtig/Falsch) et ja_nein (Ja/Nein) :
-  même structure, seuls les libellés changent (variant="true_false" | "ja_nein").
+  true_false (Richtig / Falsch) et ja_nein (Ja / Nein) : même structure,
+  seuls les libellés changent.
 
-  Deux sources possibles pour le texte à lire (cf. import_parsers.py::parse_true_false) :
-  1. Texte PARTAGÉ par tout le Teil (Lesen Teil 1, Hören Teil 2) :
-     teil.shared_content.text, à gauche (colonne sticky sur desktop),
-     énoncé et boutons à droite. Empilé sur mobile.
-  2. Texte PROPRE à la question (Lesen Teil 3 "Hinweisschilder") :
-     question.content.context + question.content.text, affichés dans le bloc question.
+  Texte à lire, deux cas :
+  1. commun au Teil (Lesen Teil 1) : teil.shared_content.text, à gauche sur
+     desktop, au-dessus sur mobile ;
+  2. propre à la question (Lesen Teil 3, panneaux) : question.content.context
+     et question.content.text, dans le bloc de la question.
+  En Hören, le texte est une transcription (shared_content.transcript) :
+  il n'est jamais affiché ici.
 -->
 <template>
   <div :class="hasSharedText ? 'lg:grid lg:grid-cols-2 lg:items-start lg:gap-6' : ''">
@@ -20,7 +21,7 @@
     </div>
 
     <div class="mt-4 rounded-card border border-line bg-card p-4 shadow-soft lg:mt-0">
-      <!-- Contexte propre à la question (Teil 3), ex. "An einer Wohnungstür" -->
+      <!-- Lieu propre à la question (Teil 3), ex. "An einer Wohnungstür" -->
       <p v-if="question.content.context" class="mb-2 text-sm font-semibold italic text-muted">
         {{ question.content.context }}
       </p>
@@ -65,13 +66,13 @@ interface Props {
     question_number: number;
     content: {
       statement: string;
-      /** Propre à la question (Teil 3 multi-texte) */
+      /** Teil 3 : lieu du panneau */
       context?: string;
-      /** Propre à la question (Teil 3 multi-texte) */
+      /** Teil 3 : texte du panneau */
       text?: string;
     };
   };
-  /** Teil parent : porte le texte partagé (Teil 1, Hören Teil 2) dans shared_content.text */
+  /** Teil parent : texte commun dans shared_content.text */
   teil?: { shared_content?: { text?: string } | null };
   modelValue: string | null;
   variant: "true_false" | "ja_nein";

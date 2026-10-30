@@ -1,13 +1,8 @@
 <!-- components/start-deutsch/QuestionRenderer.vue -->
 <!--
-  Point d'entrée unique pour afficher une question, quel que soit son
-  format_type. S'appuie sur useStartDeutschFormatType pour savoir quel
-  composant monter — évite un mur de v-if dans les pages de session.
-
-  Les 6 format_type Sprechen sont présentationnels uniquement (pas de
-  correction en V1, cf. commentaire dans import_parsers.py) — ils
-  reçoivent question/teil/assets mais n'émettent pas de model-value,
-  contrairement aux formats notés automatiquement.
+  Affiche une question selon le format_type de son Teil.
+  Les formats Sprechen servent à l'affichage seulement : ils n'émettent
+  pas de réponse.
 -->
 <template>
   <McTextQuestion
@@ -153,12 +148,11 @@ interface Props {
   };
   modelValue: Record<string, any> | null;
   assetsBaseUrl?: string;
-  /** Niveau (A1/A2) — nécessaire pour reconstruire l'URL exacte des images */
+  /** Niveau (A1, A2), pour construire l'URL des images */
   level?: string;
-  /** Numéro du sujet — nécessaire depuis qu'il peut exister plusieurs sujets
-   * par niveau (évite les collisions de noms de fichiers entre sujets) */
+  /** Numéro du sujet : les images sont rangées par sujet */
   subjectNumber?: number;
-  /** Pour image_day_matching : lettres déjà utilisées par les autres questions du Teil */
+  /** image_day_matching : lettres déjà prises par les autres questions du Teil */
   usedLabels?: string[];
 }
 

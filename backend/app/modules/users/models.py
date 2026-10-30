@@ -101,13 +101,15 @@ class User(Base, UUIDMixin, TimestampMixin):
         DateTime(timezone=True), nullable=True
     )
 
-    # Ciblage examen (pertinent uniquement pour un student rattaché à un centre)
-    # Parcours de l'étudiant individuel : "exam" (B1/B2) ou "start_deutsch" (A1/A2).
-    # Null = jamais choisi (affiche l'accueil). Sans objet pour un élève de centre.
+    # Parcours : "exam" (B1/B2) ou "start_deutsch" (A1/A2).
+    # Étudiant individuel : choisi à l'accueil (null = jamais choisi).
+    # Élève de centre : fixé par le centre (validation de l'inscription, classe).
     learning_track: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
-    # Ciblage examen (pertinent uniquement pour un student rattaché à un centre)
+    # Niveau ciblé : un niveau du catalogue des examens (B1/B2)...
     target_level_id: Mapped[UUID | None] = mapped_column(ForeignKey("levels.id"), nullable=True)
+    # ... ou un niveau Start Deutsch ("A1" ou "A2"), jamais les deux
+    target_sd_level: Mapped[str | None] = mapped_column(String(5), nullable=True)
     
     target_level: Mapped["Level | None"] = relationship("Level", foreign_keys=[target_level_id], lazy="noload")
 

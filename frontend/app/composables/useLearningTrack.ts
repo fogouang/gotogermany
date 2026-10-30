@@ -2,7 +2,7 @@
 // Parcours de l'étudiant : "exam" (B1/B2 : telc, Goethe, ÖSD) ou "start_deutsch" (A1/A2).
 //
 // Ordre de lecture :
-//   1. élève de centre : toujours "exam" (niveau fixé par le centre)
+//   1. élève de centre : niveau fixé par le centre (A1/A2 → start_deutsch, sinon exam)
 //   2. champ backend learning_track (source de vérité, suit le compte partout)
 //   3. choix enregistré dans ce navigateur, par compte (cache, évite le flash)
 //   4. sinon "exam" (comportement d'avant les parcours)
@@ -58,30 +58,84 @@ export function useLearningTrack() {
   const authStore = useAuthStore();
 
   // Choix faits pendant la visite, par clé : réactifs, contrairement au localStorage
-  const choixVisite = useState<Record<string, LearningTrack>>("learning-track", () => ({}));
+  const choixVisite = useState<Record<string, LearningTrack>>(
+    "learning-track",
+    () => ({}),
+  );
 
-  const userId = computed(() => (authStore.user as { id?: string } | null)?.id ?? null);
+  const userId = computed(
+    () => (authStore.user as { id?: string } | null)?.id ?? null,
+  );
   // Une clé par compte ; sans compte chargé, la clé du dernier parcours connu
-  const cle = computed(() => (userId.value ? `${STORAGE_PREFIX}:${userId.value}` : STORAGE_LAST));
+  const cle = computed(() =>
+    userId.value ? `${STORAGE_PREFIX}:${userId.value}` : STORAGE_LAST,
+  );
   const estEleveCentre = computed(() => !!authStore.branchId);
+
+  const examsStore = useExamsStore();
+
+  /** Niveau CECR attribué par le centre (A1, A2, B1...) */
+  const niveauCentre = computed<string | null>(() => {
+    if (!estEleveCentre.value) return null;
+    // Classe Start Deutsch : le niveau est directement sur le compte
+    if (authStore.targetSdLevel) return authStore.targetSdLevel;
+    const id = authStore.targetLevelId;
+    if (!id) return null;
+    for (const exam of examsStore.catalog ?? []) {
+      const level = (exam.levels ?? []).find((l) => l.id === id) as
+        | { cefr_code?: string }
+        | undefined;
+      if (level) return (level.cefr_code ?? "").toUpperCase() || null;
+    }
+    return null;
+  });
+
+  // Le catalogue sert à lire un niveau B : on le charge s'il ne l'est pas encore
+  if (import.meta.client) {
+    watch(
+      () => [estEleveCentre.value, authStore.targetLevelId] as const,
+      ([centre, levelId]) => {
+        if (
+          centre &&
+          levelId &&
+          !examsStore.catalog.length &&
+          !examsStore.loading
+        ) {
+          void examsStore.fetchCatalog();
+        }
+      },
+      { immediate: true },
+    );
+  }
 
   /** Parcours enregistré dans le compte, ou null */
   const choixServeur = computed<LearningTrack | null>(() => {
-    const v = (authStore.user as { learning_track?: unknown } | null)?.learning_track;
+    const v = (authStore.user as { learning_track?: unknown } | null)
+      ?.learning_track;
     return estTrack(v) ? v : null;
   });
 
   /** Choix explicite de l'étudiant, ou null s'il n'a jamais choisi */
   const choixExplicite = computed<LearningTrack | null>(
-    () => choixServeur.value ?? choixVisite.value[cle.value] ?? lireLocal(cle.value),
+    () =>
+      choixServeur.value ??
+      choixVisite.value[cle.value] ??
+      lireLocal(cle.value),
   );
 
-  const track = computed<LearningTrack>(() =>
-    estEleveCentre.value ? "exam" : (choixExplicite.value ?? "exam"),
-  );
+  const track = computed<LearningTrack>(() => {
+    if (estEleveCentre.value) {
+      if (niveauCentre.value === "A1" || niveauCentre.value === "A2")
+        return "start_deutsch";
+      return choixServeur.value ?? "exam";
+    }
+    return choixExplicite.value ?? "exam";
+  });
 
   /** L'étudiant a déjà choisi (ou n'a pas à choisir : élève de centre) */
-  const hasChosen = computed(() => estEleveCentre.value || choixExplicite.value !== null);
+  const hasChosen = computed(
+    () => estEleveCentre.value || choixExplicite.value !== null,
+  );
 
   // Le compte fait foi : on aligne le cache du navigateur sur lui
   if (import.meta.client) {
@@ -98,7 +152,11 @@ export function useLearningTrack() {
     if (estEleveCentre.value) return;
 
     // Effet immédiat dans la visite + cache navigateur
-    choixVisite.value = { ...choixVisite.value, [cle.value]: value, [STORAGE_LAST]: value };
+    choixVisite.value = {
+      ...choixVisite.value,
+      [cle.value]: value,
+      [STORAGE_LAST]: value,
+    };
     ecrireLocal([cle.value, STORAGE_LAST], value);
 
     // Enregistrement dans le compte (suit l'étudiant sur tous ses appareils).
@@ -115,5 +173,6 @@ export function useLearningTrack() {
     isStartDeutsch: computed(() => track.value === "start_deutsch"),
     canSwitchTrack: computed(() => !estEleveCentre.value),
     setTrack,
+    centerLevelCode: niveauCentre,
   };
 }

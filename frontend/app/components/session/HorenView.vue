@@ -84,9 +84,7 @@
               v-if="gi === activeIndex"
               class="flex items-center gap-1.5 text-xs font-semibold text-primary"
             >
-              <span
-                class="h-2 w-2 rounded-full bg-primary animate-pulse"
-              ></span>
+              <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
               {{ t("session.horen.now_playing") }}
             </span>
             <span v-else class="text-xs text-faint whitespace-nowrap">
@@ -139,6 +137,7 @@
               >
                 <QuestionItem
                   :question="q"
+                  :teil-config="cfg"
                   :answer="answers[q.id]?.user_answer"
                   compact
                   @answer="
@@ -467,6 +466,7 @@
                 >
                   <QuestionItem
                     :question="q"
+                    :teil-config="cfg"
                     :answer="answers[q.id]?.user_answer"
                     compact
                     @answer="

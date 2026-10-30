@@ -3,12 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Accès enrichi avec infos du level et de l'exam parent.
- * Pour la liste des levels accessibles de l'user.
+ * Accès enrichi avec infos du niveau et de l'examen parent.
+ * Pour la liste des niveaux accessibles de l'user.
  */
 export type ExamAccessWithLevelResponse = {
     id: string;
-    level_id: string;
+    level_id: (string | null);
+    sd_level?: (string | null);
     access_type: string;
     granted_at: string;
     expires_at: (string | null);

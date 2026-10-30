@@ -4,8 +4,9 @@
 /* eslint-disable */
 export type PaymentAdminResponse = {
     id: string;
-    level_id: string;
-    plan_id: string;
+    level_id: (string | null);
+    sd_level?: (string | null);
+    plan_id: (string | null);
     promo_code_id: (string | null);
     amount_gross: number;
     amount_paid: number;

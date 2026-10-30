@@ -25,6 +25,7 @@ from app.modules.exams.import_parsers import PARSERS
 from app.modules.exams.models import Exam, Level, Subject, Module, Teil
 from app.modules.questions.models import Question
 from app.shared.exceptions.http import BadRequestException, NotFoundException
+from app.modules.exams.import_normalize import normalize_exam_json
 
 
 def _extract_provider(data: dict) -> str:
@@ -476,6 +477,7 @@ class ExamImportService:
     ) -> dict:
         try:
             data = json.loads(json_bytes.decode("utf-8"))
+            data = normalize_exam_json(data)
         except Exception:
             raise BadRequestException(detail="Fichier JSON invalide.")
 

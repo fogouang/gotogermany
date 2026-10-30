@@ -1295,9 +1295,9 @@
     }
   },
   "start_deutsch": {
-    "title": "Start Deutsch — A1 & A2",
+    "title": "Start Deutsch - A1 & A2",
     "subtitle": "Übe und mach dich mit der Plattform vertraut, bevor du deine echten B1/B2-Tests machst.",
-    "info_banner": "Diese Module dienen nur zum Üben und Kennenlernen der Plattform — kein echtes zertifizierendes Examen. Nutze sie ohne Druck.",
+    "info_banner": "Diese Module dienen nur zum Üben und Kennenlernen der Plattform  kein echtes zertifizierendes Examen. Nutze sie ohne Druck.",
     "empty": "Momentan sind keine Themen verfügbar.",
     "all_levels": "Alle Niveaus",
     "session": {
@@ -1312,7 +1312,7 @@
       "score_of": "{score} Punkte erreicht",
       "by_module": "Ergebnis pro Modul",
       "pending": "Ausstehend",
-      "detail": "Details",
+      "detail": "Antworten im Detail",
       "your_answer": "Ihre Antwort",
       "correct_answer": "Erwartete Antwort",
       "pending_review": "Korrektur läuft",
@@ -1323,7 +1323,21 @@
       "pending_note": "{modules} wird noch korrigiert: Dein Ergebnis wird aktualisiert.",
       "points_of": "{score} / {max} Pkt.",
       "oral_not_scored": "Sprechen: Übe laut, wird hier nicht bewertet",
-      "refresh": "Aktualisieren"
+      "refresh": "Aktualisieren",
+      "threshold": "Bestehensgrenze: {pct} %",
+      "modules_corrected": "{done} / {total} Module bewertet"
+    },
+    "catalog": {
+      "not_attempted": "Neu",
+      "in_progress": "Begonnen",
+      "pending": "Wird bewertet",
+      "last_score": "Letztes Ergebnis: {score} %",
+      "attempts": "{n} Versuch | {n} Versuche",
+      "never": "Noch nicht versucht",
+      "description_a1": "Übungstest A1 · Start Deutsch 1 (Goethe-Institut, telc)",
+      "description_a2": "Übungstest A2 · Goethe-Zertifikat A2 (Erwachsene, ab 16 Jahren)",
+      "locked":"Gesperrt",
+      "unlock":"Niveau freischalten"
     },
     "free_text": {
       "word_count": "{count} Wörter",
@@ -1345,7 +1359,8 @@
     },
     "question_ui": {
       "none_solution": "Keine Anzeige passt",
-      "unsupported_format": "Dieser Fragetyp ({format}) kommt in einem späteren Update."
+      "unsupported_format": "Dieser Fragetyp ({format}) kommt in einem späteren Update.",
+      "zoom": "Bild {label} vergrößern"
     }
   },
   "modules_section": {

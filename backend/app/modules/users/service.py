@@ -640,9 +640,14 @@ class UserService:
         return student
 
     async def approve_join_request(
-        self, student_id: UUID, target_level_id: UUID, staff: User
+        self,
+        student_id: UUID,
+        staff: User,
+        target_level_id: UUID | None = None,
+        target_sd_level: str | None = None,
     ) -> User:
         """Validation : rattachement à la succursale et au niveau, rien de plus.
+        Niveau d'examen (B1/B2, parcours exam) ou Start Deutsch A1/A2.
         Les crédits et l'accès aux sujets arrivent à l'activation, quand le
         centre encaisse le paiement de l'élève."""
         from app.modules.centers.repository import BranchRepository
@@ -651,7 +656,7 @@ class UserService:
         student = await self._get_join_request(student_id, staff)
         branch = await BranchRepository(self.db).get_by_id_or_404(student.requested_branch_id)
 
-        if not await self.db.get(Level, target_level_id):
+        if target_level_id and not await self.db.get(Level, target_level_id):
             raise BadRequestException(detail="Niveau introuvable.")
 
         return await self.repo.update(
@@ -660,7 +665,8 @@ class UserService:
             requested_branch_id=None,
             join_requested_at=None,
             target_level_id=target_level_id,
-            learning_track="exam",
+            target_sd_level=target_sd_level,
+            learning_track="start_deutsch" if target_sd_level else "exam",
         )
 
     async def reject_join_request(self, student_id: UUID, staff: User) -> None:

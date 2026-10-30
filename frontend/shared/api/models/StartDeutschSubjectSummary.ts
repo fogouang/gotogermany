@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Version légère pour les listes de catalogue (pas de modules imbriqués).
+ * Pour les listes : sans les modules.
  */
 export type StartDeutschSubjectSummary = {
     id: string;
@@ -12,5 +12,7 @@ export type StartDeutschSubjectSummary = {
     title: string;
     description: (string | null);
     is_active: boolean;
+    is_private?: boolean;
+    is_locked?: boolean;
 };
 

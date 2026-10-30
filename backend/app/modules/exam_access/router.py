@@ -1,6 +1,7 @@
 """
 app/modules/exam_access/router.py
 """
+from typing import Literal
 from uuid import UUID
 from fastapi import Depends
 from fastapi.routing import APIRouter
@@ -58,6 +59,37 @@ async def admin_grant_access(
 ):
     """Accorde ou prolonge l'accès d'un utilisateur à un niveau, sans paiement."""
     return await ExamAccessService(db).grant_admin_access(user_id, level_id, days)
+
+
+@router.post("/admin/grant-sd", response_model=ExamAccessResponse, status_code=201)
+async def admin_grant_sd_access(
+    user_id: UUID,
+    sd_level: Literal["A1", "A2"],
+    _: CurrentAdmin,
+    days: int | None = Query(
+        default=None, ge=1, le=365,
+        description="Nombre de jours offerts. Omis = accès permanent.",
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    """Accorde ou prolonge l'accès d'un utilisateur à Start Deutsch A1 ou A2, sans paiement."""
+    return await ExamAccessService(db).grant_admin_sd_access(user_id, sd_level, days)
+
+
+@router.delete("/admin/revoke-sd", response_model=SuccessResponse)
+async def admin_revoke_sd_access(
+    user_id: UUID,
+    sd_level: Literal["A1", "A2"],
+    _: CurrentAdmin,
+    db: AsyncSession = Depends(get_db),
+):
+    """Révoque l'accès d'un utilisateur à Start Deutsch A1 ou A2."""
+    repo = ExamAccessRepository(db)
+    access = await repo.find_by_user_and_sd_level(user_id, sd_level)
+    if not access:
+        return SuccessResponse(message="Aucun accès trouvé.")
+    await repo.delete(access.id)
+    return SuccessResponse(message="Accès révoqué.")
 
 
 @router.delete("/admin/revoke", response_model=SuccessResponse)

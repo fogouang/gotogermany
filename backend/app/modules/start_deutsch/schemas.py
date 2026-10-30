@@ -1,16 +1,11 @@
 """
 app/modules/start_deutsch/schemas.py
 
-Schémas Pydantic pour le module Start Deutsch (A1/A2).
-Pydantic v2 (model_config = ConfigDict(from_attributes=True)).
+Schémas Pydantic v2 du module Start Deutsch (A1, A2).
 
-Toutes les classes sont préfixées "StartDeutsch" — pas par style, mais
-par nécessité : openapi-typescript-codegen désambiguïse deux classes de
-même nom entre modules en les préfixant par le chemin du module
-(ex. app__modules__exam_sessions__schemas__SessionResultResponse), ce qui
-fait disparaître l'export "plat" que le code existant utilisait. Le
-préfixe systématique évite ce genre de collision, y compris pour de futurs
-schémas qui n'entrent pas encore en conflit aujourd'hui.
+Toutes les classes commencent par "StartDeutsch" : openapi-typescript-codegen
+renomme deux classes homonymes de modules différents avec le chemin complet
+(app__modules__exam_sessions__schemas__...), ce qui casse les imports du front.
 """
 
 from __future__ import annotations
@@ -24,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ── Catalogue : lecture ────────────────────────────────────────────
 
 class StartDeutschTeilPublic(BaseModel):
-    """Un Teil tel que vu par l'étudiant — pas de correct_answer dans les questions imbriquées."""
+    """Un Teil côté étudiant : les questions n'ont pas de correct_answer."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,7 +34,7 @@ class StartDeutschTeilPublic(BaseModel):
 
 
 class StartDeutschQuestionPublic(BaseModel):
-    """Une question sans son correct_answer — c'est ce que l'étudiant reçoit pendant la session."""
+    """Une question sans sa réponse, telle que l'étudiant la reçoit."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,7 +46,7 @@ class StartDeutschQuestionPublic(BaseModel):
 
 
 class StartDeutschQuestionWithAnswer(StartDeutschQuestionPublic):
-    """Variante admin/correction — inclut la réponse correcte."""
+    """Admin et correction : avec la réponse attendue."""
 
     correct_answer: dict | None
 
@@ -67,7 +62,7 @@ class StartDeutschModulePublic(BaseModel):
 
 
 class StartDeutschSubjectSummary(BaseModel):
-    """Version légère pour les listes de catalogue (pas de modules imbriqués)."""
+    """Pour les listes : sans les modules."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -77,10 +72,20 @@ class StartDeutschSubjectSummary(BaseModel):
     title: str
     description: str | None
     is_active: bool
+    is_private: bool = False
+    # Catalogue élève : sujet fermé tant que le niveau n'est pas payé (cadenas)
+    is_locked: bool = False
+
+
+class StartDeutschSubjectUpdate(BaseModel):
+    """Admin : activer, désactiver, rendre privé ou public."""
+
+    is_active: bool | None = None
+    is_private: bool | None = None
 
 
 class StartDeutschSubjectDetail(StartDeutschSubjectSummary):
-    """Version complète avec l'arbre Module → Teil → Question, pour démarrer une session."""
+    """Avec l'arbre Module > Teil > Question, pour démarrer une session."""
 
     modules: list[StartDeutschModulePublic] = Field(default_factory=list)
 
@@ -105,14 +110,19 @@ class StartDeutschSessionResponse(BaseModel):
 
 
 class StartDeutschSessionListItem(BaseModel):
-    """Pour la page liste des tentatives (équivalent my-results)."""
+    """Liste des tentatives de l'étudiant."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     subject_id: uuid.UUID
+    subject_title: str = ""
+    subject_number: int = 0
+    level: str = ""
     status: str
+    # Points bruts (Lesen, Hören, Schreiben) et pourcentage, sans le Sprechen
     score: float | None
+    score_percent: float | None = None
     passed: bool | None
     started_at: datetime
     submitted_at: datetime | None
@@ -159,9 +169,7 @@ class StartDeutschModuleResult(BaseModel):
 
 
 class StartDeutschSessionResultResponse(BaseModel):
-    """Résultat complet d'une session — pensé pour alimenter une page de résultat
-    du même esprit que celle déjà en place pour B1/B2 (score par Teil/module,
-    seuil de réussite, réponses détaillées)."""
+    """Résultat d'une session : score par module et par Teil, seuil, réponses."""
 
     session_id: uuid.UUID
     subject_id: uuid.UUID
@@ -179,7 +187,7 @@ class StartDeutschSessionResultResponse(BaseModel):
 # ── Correction Schreiben (IA) ───────────────────────────────────────
 
 class StartDeutschCriterionScore(BaseModel):
-    grade: str  # "A" à "E", cf. barème officiel
+    grade: str  # de "A" à "E", barème officiel
     points: float
     label: str | None = None
     feedback: str | None = None
