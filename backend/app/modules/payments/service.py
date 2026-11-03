@@ -1,12 +1,12 @@
 """
 app/modules/payments/service.py
 
-Flow Kratos Pay (Mobile Money) :
-  1. initiate_payment() → crée Payment(PENDING) → appelle Kratos payin
-     (reference Kratos = transaction_reference)
-  2. Réponse immédiate SUCCESS → paiement validé tout de suite
-     Réponse PENDING → l'élève confirme sur son téléphone, le webhook suivra
-  3. Webhook → handle_kratos_webhook() → COMPLETED / FAILED
+Flow Kratos Pay (Mobile Money, API « transactions ») :
+  1. initiate_payment() → crée Payment(PENDING) → POST /transactions
+     (idempotency_key = transaction_reference, uuid Kratos rangé dans pawapay_deposit_id)
+  2. L'élève confirme sur son téléphone
+  3. Webhook ou polling du front → _refresh_from_kratos() relit la transaction
+     chez Kratos → COMPLETED / FAILED
   4. Si COMPLETED → _grant_level_access() → ExamAccess créé avec expires_at
   5. Facture PDF générée automatiquement
 
@@ -92,8 +92,8 @@ class PaymentService:
         )
 
         try:
-            kratos_response = await self.kratos.initiate_payin(
-                reference=transaction_reference,
+            kratos_tx = await self.kratos.create_collection(
+                idempotency_key=transaction_reference,
                 amount=amount_paid,
                 phone_number=data.phone_number.strip(),
                 provider="MTN_MOMO_CMR" if data.operator == "MTN" else "ORANGE_CMR",
@@ -102,29 +102,31 @@ class PaymentService:
         except KratosError as e:
             await self.repo.update(payment.id, payment_status="FAILED")
             logger.error(
-                f"Kratos payin refusé {transaction_reference} : {e} "
-                f"(code={e.code}, details={e.details}, request_id={e.request_id})"
+                f"Kratos collecte refusée {transaction_reference} : {e} "
+                f"(http={e.http_status}, code={e.code}, details={e.details}, request_id={e.request_id})"
             )
             raise BadRequestException(detail=f"Paiement refusé : {e}")
         except Exception as e:
             await self.repo.update(payment.id, payment_status="FAILED")
-            logger.error(f"Kratos payin erreur {transaction_reference} : {e}")
+            logger.error(f"Kratos collecte erreur {transaction_reference} : {e}")
             raise BadRequestException(detail="Le service de paiement est indisponible, réessayez.")
 
-        status = self.kratos.internal_status(kratos_response.get("status"))
+        # L'uuid Kratos est rangé dans pawapay_deposit_id (colonne existante, String(36))
+        kratos_uuid = kratos_tx.get("uuid")
+        if kratos_uuid:
+            await self.repo.update(payment.id, pawapay_deposit_id=str(kratos_uuid))
+
+        status = self.kratos.internal_status(kratos_tx.get("status"))
 
         if status == "FAILED":
-            await self._fail_payment(payment, kratos_response)
-            raise BadRequestException(
-                detail=f"Paiement refusé : {kratos_response.get('gatewayMessage') or 'erreur inconnue'}"
-            )
+            await self._fail_payment(payment, kratos_tx)
+            raise BadRequestException(detail="Paiement refusé par l'opérateur.")
 
         if status == "COMPLETED":
-            # Paiement validé directement dans la réponse
-            await self._complete_payment(payment, kratos_response)
+            await self._complete_payment(payment, kratos_tx)
             message = "Paiement confirmé."
         else:
-            await self.repo.update(payment.id, webhook_payload=_serialize_payload(kratos_response))
+            await self.repo.update(payment.id, webhook_payload=_serialize_payload(kratos_tx))
             message = "Confirmez le paiement sur votre téléphone mobile."
 
         return {
@@ -183,46 +185,56 @@ class PaymentService:
         )
         logger.info(f"Payment {payment.id} → FAILED")
 
-    # ── Webhook Kratos ───────────────────────────────────
+    # ── Kratos : webhook et relecture du statut ─────────
 
-    async def handle_kratos_webhook(self, payload: dict) -> bool:
+    async def _refresh_from_kratos(self, payment: Payment) -> Payment:
         """
-        Webhook Kratos (signature vérifiée par le router quand elle est disponible).
-        Retourne False si la référence est inconnue ou si le montant ne correspond pas.
+        Relit la transaction chez Kratos et applique son statut. C'est la source
+        de vérité : un webhook ne sert que de signal, son contenu n'est pas cru tel quel.
         """
-        reference, status = KratosClient.parse_webhook(payload)
-        logger.info(f"Webhook Kratos — reference={reference} status={status}")
+        if payment.payment_status != "PENDING" or not payment.pawapay_deposit_id:
+            return payment
+        try:
+            tx = await self.kratos.get_transaction(payment.pawapay_deposit_id)
+        except Exception as e:
+            logger.warning(f"Relecture Kratos impossible pour {payment.transaction_reference} : {e}")
+            return payment
 
-        if not reference:
-            logger.error(f"Webhook Kratos sans référence : {payload}")
-            return False
-
-        payment = await self.repo.find_by_transaction_ref(reference)
-        if not payment:
-            logger.error(f"Payment introuvable pour la référence Kratos {reference}")
-            return False
-
-        # Sans signature vérifiable : le montant annoncé doit correspondre au paiement
-        data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
-        amount = data.get("amount")
+        status = self.kratos.internal_status(tx.get("status"))
+        amount = tx.get("amount")
         if amount is not None:
             try:
-                montant_ok = int(float(amount)) == int(payment.amount_paid)
+                if int(float(amount)) != int(payment.amount_paid):
+                    logger.error(
+                        f"Kratos {payment.transaction_reference} : montant {amount} différent de "
+                        f"{payment.amount_paid}, ignoré"
+                    )
+                    return payment
             except (TypeError, ValueError):
-                montant_ok = False
-            if not montant_ok:
-                logger.error(
-                    f"Webhook Kratos {reference} : montant {amount} différent de "
-                    f"{payment.amount_paid}, ignoré"
-                )
-                return False
+                return payment
 
         if status == "COMPLETED":
-            await self._complete_payment(payment, payload)
+            await self._complete_payment(payment, tx)
         elif status == "FAILED":
-            await self._fail_payment(payment, payload)
+            await self._fail_payment(payment, tx)
+        return await self.repo.get_by_id(payment.id)
+
+    async def handle_kratos_webhook(self, payload: dict) -> bool:
+        """Webhook Kratos : retrouve le paiement puis relit son statut chez Kratos."""
+        uuid, reference, status = KratosClient.parse_webhook(payload)
+        logger.info(f"Webhook Kratos — uuid={uuid} reference={reference} status={status}")
+
+        payment = None
+        if uuid:
+            payment = await self.repo.find_by_pawapay_deposit_id(uuid)
+        if not payment and reference:
+            payment = await self.repo.find_by_transaction_ref(reference)
+        if not payment:
+            logger.error(f"Webhook Kratos : paiement introuvable (uuid={uuid}, reference={reference})")
+            return False
+
+        await self._refresh_from_kratos(payment)
         return True
-    
 
     # ── Callback pawaPay (paiements lancés avant la bascule) ──
 
@@ -365,6 +377,11 @@ class PaymentService:
         payment = await self.repo.find_by_transaction_ref(transaction_reference)
         if not payment or payment.user_id != current_user.id:
             raise NotFoundException(resource="Payment", identifier=transaction_reference)
+
+        # Paiement Kratos encore en attente : on relit le statut chez Kratos
+        # (le polling du front suffit même si le webhook n'arrive pas)
+        if payment.payment_status == "PENDING" and payment.operator in ("MTN", "ORANGE"):
+            payment = await self._refresh_from_kratos(payment)
 
         from app.modules.exam_access.repository import ExamAccessRepository
         repo = ExamAccessRepository(self.db)

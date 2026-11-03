@@ -8,6 +8,8 @@ from sqlalchemy.orm import selectinload
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.shared.database.repository import BaseRepository
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from app.shared.exceptions.base import DatabaseException
 
 
 class ExamSessionRepository(BaseRepository[ExamSession]):
@@ -178,13 +180,39 @@ class ExamSessionAnswerRepository(BaseRepository[ExamSessionAnswer]):
         question_id: UUID,
         user_answer: dict,
     ) -> ExamSessionAnswer:
-        existing = await self.find_by_session_and_question(session_id, question_id)
-        if existing:
-            return await self.update(existing.id, user_answer=user_answer)
-        return await self.create(
-            session_id=session_id,
-            question_id=question_id,
-            user_answer=user_answer,
+        """
+        Upsert atomique côté PostgreSQL (INSERT ... ON CONFLICT DO UPDATE).
+        Évite la race condition quand deux requêtes arrivent en même temps
+        pour la même question (autosave en double, double clic, etc.).
+        """
+        stmt = (
+            pg_insert(ExamSessionAnswer)
+            .values(
+                session_id=session_id,
+                question_id=question_id,
+                user_answer=user_answer,
+            )
+            .on_conflict_do_update(
+                constraint="uq_answer_session_question",
+                set_={
+                    "user_answer": user_answer,
+                    "updated_at": func.now(),
+                },
+            )
+            .returning(ExamSessionAnswer)
         )
+
+        try:
+            result = await self.db.execute(
+                select(ExamSessionAnswer)
+                .from_statement(stmt)
+                .execution_options(populate_existing=True)
+            )
+            answer = result.scalar_one()
+            await self.db.commit()
+            return answer
+        except Exception as e:
+            await self.db.rollback()
+            raise DatabaseException(str(e))
         
     

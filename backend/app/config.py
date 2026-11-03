@@ -25,9 +25,12 @@ class Settings(BaseSettings):
     PAWAPAY_API_TOKEN: str
     PAWAPAY_SANDBOX: bool = True
     
-    KRATOS_PUBLIC_KEY: str = ""
-    KRATOS_BASE_URL: str = "https://api.kratospay.com"
-    KRATOS_ENV: str = "live"
+    # Kratos Pay (API « transactions »)
+    KRATOS_API_KEY: str = ""            # sk_live_… (prod) ou sk_test_… (staging)
+    KRATOS_APP_ID: str = ""             # Identifiant de l'application
+    KRATOS_BASE_URL: str = "https://api.kratospay.com/api/v1"
+    KRATOS_WEBHOOK_SECRET: str = ""
+    KRATOS_WEBHOOK_ALGO: str = "sha256"
     KRATOS_WEBHOOK_STRICT: bool = True
     
     # AI Correction Configuration
