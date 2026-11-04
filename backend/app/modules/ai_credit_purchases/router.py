@@ -22,6 +22,8 @@ from app.modules.ai_credit_purchases.schemas import (
     CreditPurchaseResponse,
     ManualCreditGrantRequest,
     ManualCreditGrantResponse,
+    CreditCardPurchaseRequest,
+    CreditCardPurchaseResponse
 )
 from app.modules.ai_credit_purchases.service import AICreditPurchaseService
 from app.modules.auth.dependencies import CurrentAdmin, CurrentUser
@@ -41,7 +43,7 @@ Service = Annotated[AICreditPurchaseService, Depends(get_service)]
 
 @router.get("/pricing", response_model=SuccessResponse[CreditPricingResponse])
 async def get_pricing(service: Service):
-    return SuccessResponse(data=service.get_pricing_info(), message="OK")
+    return SuccessResponse(data=await service.get_pricing_info(), message="OK")
 
 
 @router.get("/balance", response_model=SuccessResponse[CreditBalanceResponse])
@@ -54,6 +56,12 @@ async def get_balance(service: Service, current_user: CurrentUser):
 async def purchase_credits(data: CreditPurchaseRequest, service: Service, current_user: CurrentUser):
     result = await service.purchase_credits(user_id=current_user.id, data=data)
     return SuccessResponse(data=result, message="Paiement initié")
+
+@router.post("/purchase/card", response_model=SuccessResponse[CreditCardPurchaseResponse], status_code=201)
+async def purchase_credits_card(data: CreditCardPurchaseRequest, service: Service, current_user: CurrentUser):
+    """Achat par carte (Stripe, en euros) : renvoie l'adresse de la page Stripe."""
+    result = await service.purchase_credits_card(user=current_user, data=data)
+    return SuccessResponse(data=result, message="Redirection vers le paiement")
 
 
 @router.get("/history", response_model=SuccessResponse[CreditPurchaseHistoryResponse])

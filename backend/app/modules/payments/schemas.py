@@ -33,6 +33,21 @@ class PaymentInitiateRequest(BaseSchema):
             raise ValueError("Indiquez un niveau d'examen ou un niveau Start Deutsch (A1, A2).")
         return self
 
+class CardPaymentRequest(BaseSchema):
+    """Paiement par carte (Stripe, en euros) d'un niveau d'examen ou Start Deutsch."""
+    level_id: uuid.UUID | None = None
+    sd_level: Literal["A1", "A2"] | None = None
+    plan_id: uuid.UUID
+    promo_code: str | None = None
+    # Langue de l'élève, pour le retour sur /fr/..., /en/..., /de/...
+    locale: Literal["fr", "en", "de"] = "fr"
+
+    @model_validator(mode="after")
+    def one_level(self):
+        if (self.level_id is None) == (self.sd_level is None):
+            raise ValueError("Indiquez un niveau d'examen ou un niveau Start Deutsch (A1, A2).")
+        return self
+    
 # Supprimer WebhookPayload, remplacer par :
 class PawapayCallbackPayload(BaseSchema):
     depositId: str
@@ -59,7 +74,13 @@ class PaymentInitiateResponse(BaseSchema):
     currency: str
     message: str   # "Confirmez le paiement sur votre téléphone"
 
-
+class CardPaymentResponse(BaseSchema):
+    payment_id: uuid.UUID
+    transaction_reference: str
+    checkout_url: str      # page Stripe vers laquelle rediriger l'élève
+    amount_eur: float
+    currency: str = "EUR"
+    
 class PaymentStatusResponse(BaseSchema):
     """Statut d'un paiement — polled par le frontend."""
     payment_id: uuid.UUID
@@ -70,6 +91,8 @@ class PaymentStatusResponse(BaseSchema):
     operator: str | None
     completed_at: datetime | None
     exam_access_granted: bool       # True si ExamAccess créé
+    charged_amount: float | None = None    # montant débité par carte (euros)
+    charged_currency: str | None = None
 
 class PaymentResponse(BaseSchema):
     """Response complète d'un paiement — historique."""
@@ -89,6 +112,8 @@ class PaymentResponse(BaseSchema):
     completed_at: datetime | None
     created_at: datetime
     invoice_url: str | None = None
+    charged_amount: int | None = None      # paiement par carte : montant débité en centimes
+    charged_currency: str | None = None
 
 class PaymentAdminResponse(PaymentResponse):
     user_id: uuid.UUID

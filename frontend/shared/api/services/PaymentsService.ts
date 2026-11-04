@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CardPaymentRequest } from '../models/CardPaymentRequest';
+import type { CardPaymentResponse } from '../models/CardPaymentResponse';
 import type { ManualPaymentRequest } from '../models/ManualPaymentRequest';
 import type { ManualPaymentResponse } from '../models/ManualPaymentResponse';
 import type { PaymentAdminResponse } from '../models/PaymentAdminResponse';
@@ -37,6 +39,31 @@ export class PaymentsService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/payments',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Initiate Card Payment
+     * Paiement par carte (Stripe, en euros) : renvoie l'adresse de la page Stripe.
+     * @param requestBody
+     * @param accessToken
+     * @returns CardPaymentResponse Successful Response
+     * @throws ApiError
+     */
+    public static initiateCardPaymentApiV1PaymentsCardPost(
+        requestBody: CardPaymentRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<CardPaymentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/payments/card',
             cookies: {
                 'access_token': accessToken,
             },

@@ -19,6 +19,8 @@ export type PaymentAdminResponse = {
     completed_at: (string | null);
     created_at: string;
     invoice_url?: (string | null);
+    charged_amount?: (number | null);
+    charged_currency?: (string | null);
     user_id: string;
     user_email?: (string | null);
     user_name?: (string | null);

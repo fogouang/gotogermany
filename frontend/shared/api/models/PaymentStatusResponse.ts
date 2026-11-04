@@ -14,5 +14,7 @@ export type PaymentStatusResponse = {
     operator: (string | null);
     completed_at: (string | null);
     exam_access_granted: boolean;
+    charged_amount?: (number | null);
+    charged_currency?: (string | null);
 };
 

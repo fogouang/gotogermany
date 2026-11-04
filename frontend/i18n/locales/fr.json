@@ -192,6 +192,7 @@
     "popular": "Le plus choisi",
     "per_day": "soit",
     "per_day_suffix": "FCFA/jour",
+    "by_card": "ou {price} par carte",
     "ai_credits": "{n} crédit IA inclus | {n} crédits IA inclus",
     "features": {
       "full_access": "Accès complet à l'examen et au niveau choisis",
@@ -838,7 +839,6 @@
     "payment_method": "Méthode de paiement",
     "mobile_money": "Mobile Money",
     "mobile_desc": "Orange, MTN",
-    "card": "Carte bancaire",
     "card_desc": "Visa, Mastercard",
     "operator": "Opérateur *",
     "phone": "Numéro de téléphone *",
@@ -877,8 +877,33 @@
       "failed_desc": "Veuillez réessayer.",
       "retry": "Réessayer",
       "go_to_exams": "Accéder aux examens"
+    },
+    "success": {
+      "amount": "Montant",
+      "method": "Moyen de paiement",
+      "date": "Date",
+      "card": "Carte bancaire",
+      "access_active": "Votre accès est actif. Tous les sujets de votre niveau sont maintenant ouverts.",
+      "pending_desc": "Nous attendons la confirmation de l'opérateur. Cette page se met à jour toute seule.",
+      "missing_title": "Paiement introuvable",
+      "missing_desc": "Nous ne retrouvons pas ce paiement. Vérifiez vos factures ou réessayez.",
+      "redirect": "Redirection dans {n} s…",
+      "go_start_deutsch": "Aller à Start Deutsch",
+      "invoices": "Mes factures",
+      "later": "Continuer sans attendre"
+    },
+    "card": {
+      "title": "Carte bancaire",
+      "desc": "Visa, Mastercard · en euros",
+      "unavailable": "Non disponible pour cette formule",
+      "pay": "Payer par carte",
+      "redirect_info": "Vous allez être redirigé vers la page de paiement sécurisée Stripe. Aucune donnée de carte ne passe par nos serveurs.",
+      "secure": "Paiement par carte sécurisé par Stripe",
+      "cancelled": "Paiement annulé. Vous pouvez réessayer quand vous voulez.",
+      "error": "Le paiement par carte n'a pas pu démarrer."
     }
   },
+
   "my_results": {
     "title": "Mes résultats",
     "subtitle": "Historique de vos sessions d'examen",
@@ -1328,8 +1353,8 @@
       "never": "Jamais tenté",
       "description_a1": "Entraînement de familiarisation A1 · Start Deutsch 1 (Goethe-Institut, telc)",
       "description_a2": "Entraînement de familiarisation A2 · Goethe-Zertifikat A2 (version adulte, à partir de 16 ans)",
-      "locked":"Verrouillé",
-      "unlock":"Débloquer ce niveau"
+      "locked": "Verrouillé",
+      "unlock": "Débloquer ce niveau"
     },
     "free_text": {
       "word_count": "{count} mots",
@@ -1978,7 +2003,9 @@
     "history_empty": "Aucun achat pour l'instant.",
     "help_title": "Un problème avec le paiement Mobile Money ?",
     "help_whatsapp": "Nous écrire sur WhatsApp",
-    "whatsapp_message": "Bonjour, je souhaite acheter des crédits IA sur GoToGermany."
+    "whatsapp_message": "Bonjour, je souhaite acheter des crédits IA sur GoToGermany.",
+    "card_price": "{price} le crédit · Visa, Mastercard",
+    "card_waiting_title": "Paiement par carte en cours de confirmation"
   },
   "student_assignments": {
     "subtitle": "Les devoirs donnés par vos enseignants.",

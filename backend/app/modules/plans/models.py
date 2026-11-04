@@ -37,6 +37,11 @@ class Plan(Base, UUIDMixin, TimestampMixin):
         Integer, nullable=False,
         doc="Prix en FCFA — ex: 2500, 5000, 12000"
     )
+       # Prix en euros pour le paiement par carte (vide = pas payable par carte)
+    price_eur: Mapped[float | None] = mapped_column(
+        Numeric(10, 2), nullable=True,
+        doc="Prix en euros — ex: 15.00"
+    )
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, index=True
     )

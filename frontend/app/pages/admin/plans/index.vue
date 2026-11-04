@@ -91,6 +91,15 @@
             }}
             FCFA / jour
           </p>
+          <p
+            v-if="plan.price_eur"
+            class="mt-1 text-xs font-semibold text-primary"
+          >
+            Carte : {{ formatEur(plan.price_eur) }}
+          </p>
+          <p v-else class="mt-1 text-xs text-faint">
+            Pas de paiement par carte
+          </p>
         </div>
 
         <p
@@ -217,6 +226,24 @@
           }}
           FCFA / jour
         </p>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Prix carte (€) <span class="font-normal text-muted">(optionnel)</span>
+          </label>
+          <InputNumber
+            v-model="form.price_eur"
+            mode="currency"
+            currency="EUR"
+            locale="fr-FR"
+            :min="0"
+            class="w-full"
+            inputClass="w-full"
+            placeholder="15,00 €"
+          />
+          <p class="mt-1 text-xs text-muted">
+            Prix payé par carte (Visa, Mastercard). Vide : la formule n'est payable qu'en Mobile Money.
+          </p>
+        </div>
 
         <div>
           <label class="mb-1.5 block text-sm font-medium text-ink"
@@ -396,6 +423,9 @@ const activeCount = computed(
   () => plans.value.filter((p) => p.is_active).length,
 );
 
+const formatEur = (n: number) =>
+  Number(n).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+
 // Payload complet attendu par updatePlan
 function payloadOf(plan: PlanResponse, overrides: Partial<PlanResponse> = {}) {
   const p = { ...plan, ...overrides };
@@ -408,6 +438,7 @@ function payloadOf(plan: PlanResponse, overrides: Partial<PlanResponse> = {}) {
     ai_credits: p.ai_credits ?? 0,
     display_order: p.display_order,
     is_active: p.is_active,
+    price_eur: p.price_eur ?? null,
   };
 }
 
@@ -447,6 +478,7 @@ const defaultForm = () => ({
   ai_credits: 0 as number | null,
   display_order: plans.value.length,
   is_active: true,
+  price_eur: null as number | null,
 });
 
 const form = ref(defaultForm());
@@ -469,6 +501,7 @@ function openEdit(plan: PlanResponse) {
     ai_credits: plan.ai_credits ?? 0,
     display_order: plan.display_order,
     is_active: plan.is_active,
+    price_eur: plan.price_eur ?? null,
   };
   formError.value = null;
   formDialog.value = true;
@@ -491,6 +524,7 @@ async function handleSave() {
     ai_credits: f.ai_credits ?? 0,
     display_order: f.display_order,
     is_active: f.is_active,
+    price_eur: f.price_eur ?? null
   };
 
   const res = editingPlan.value

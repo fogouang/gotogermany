@@ -14,6 +14,7 @@ class PlanCreate(BaseSchema):
     name: str = Field(..., min_length=2, max_length=100)
     duration_days: int = Field(..., gt=0)
     price: int = Field(..., ge=0, description="Prix en FCFA")
+    price_eur: float | None = Field(default=None, ge=0.5, le=10000, description="Prix carte en euros")
     is_active: bool = True
     description: str | None = Field(default=None, max_length=500)
     features: list[str] | None = Field(
@@ -33,6 +34,7 @@ class PlanUpdate(BaseSchema):
     name: str | None = Field(None, min_length=2, max_length=100)
     duration_days: int | None = Field(None, gt=0)
     price: int | None = Field(None, ge=0)
+    price_eur: float | None = Field(None, ge=0.5, le=10000)
     is_active: bool | None = None
     description: str | None = None
     features: list[str] | None = None
@@ -45,6 +47,7 @@ class PlanResponse(BaseSchema):
     name: str
     duration_days: int
     price: int
+    price_eur: float | None = None
     is_active: bool
     description: str | None = None
     features: list[str] | None = None

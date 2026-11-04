@@ -204,6 +204,7 @@
     "per_day": "also",
     "per_day_suffix": "FCFA/Tag",
     "ai_credits": "{n} KI-Credit inklusive | {n} KI-Credits inklusive",
+    "by_card": "oder {price} per Karte",
     "features": {
       "full_access": "Voller Zugang zu Ihrer gewählten Prüfung und Stufe",
       "all_modules": "Lesen, Hören, Schreiben und Sprechen inklusive",
@@ -848,7 +849,6 @@
     "payment_method": "Zahlungsmethode",
     "mobile_money": "Mobile Money",
     "mobile_desc": "Orange, MTN",
-    "card": "Bankkarte",
     "card_desc": "Visa, Mastercard",
     "operator": "Betreiber *",
     "phone": "Telefonnummer *",
@@ -887,8 +887,33 @@
       "failed_desc": "Bitte versuchen Sie es erneut.",
       "retry": "Erneut versuchen",
       "go_to_exams": "Zu den Prüfungen"
+    },
+    "success": {
+      "amount": "Betrag",
+      "method": "Zahlungsart",
+      "date": "Datum",
+      "card": "Bankkarte",
+      "access_active": "Ihr Zugang ist aktiv. Alle Themen Ihres Niveaus sind jetzt freigeschaltet.",
+      "pending_desc": "Wir warten auf die Bestätigung des Anbieters. Diese Seite aktualisiert sich automatisch.",
+      "missing_title": "Zahlung nicht gefunden",
+      "missing_desc": "Diese Zahlung wurde nicht gefunden. Prüfen Sie Ihre Rechnungen oder versuchen Sie es erneut.",
+      "redirect": "Weiterleitung in {n} s…",
+      "go_start_deutsch": "Zu Start Deutsch",
+      "invoices": "Meine Rechnungen",
+      "later": "Ohne Warten fortfahren"
+    },
+    "card": {
+      "title": "Bankkarte",
+      "desc": "Visa, Mastercard · in Euro",
+      "unavailable": "Für diesen Tarif nicht verfügbar",
+      "pay": "Mit Karte bezahlen",
+      "redirect_info": "Sie werden zur sicheren Zahlungsseite von Stripe weitergeleitet. Keine Kartendaten laufen über unsere Server.",
+      "secure": "Kartenzahlung gesichert durch Stripe",
+      "cancelled": "Zahlung abgebrochen. Sie können es jederzeit erneut versuchen.",
+      "error": "Die Kartenzahlung konnte nicht gestartet werden."
     }
   },
+
   "my_results": {
     "title": "Meine Ergebnisse",
     "subtitle": "Verlauf meiner Prüfungssitzungen",
@@ -1336,8 +1361,8 @@
       "never": "Noch nicht versucht",
       "description_a1": "Übungstest A1 · Start Deutsch 1 (Goethe-Institut, telc)",
       "description_a2": "Übungstest A2 · Goethe-Zertifikat A2 (Erwachsene, ab 16 Jahren)",
-      "locked":"Gesperrt",
-      "unlock":"Niveau freischalten"
+      "locked": "Gesperrt",
+      "unlock": "Niveau freischalten"
     },
     "free_text": {
       "word_count": "{count} Wörter",
@@ -1979,7 +2004,9 @@
     "history_empty": "Noch keine Käufe.",
     "help_title": "Probleme mit Mobile Money?",
     "help_whatsapp": "Schreiben Sie uns auf WhatsApp",
-    "whatsapp_message": "Hallo, ich möchte KI-Credits auf GoToGermany kaufen."
+    "whatsapp_message": "Hallo, ich möchte KI-Credits auf GoToGermany kaufen.",
+    "card_price": "{price} pro Guthaben · Visa, Mastercard",
+    "card_waiting_title": "Kartenzahlung wird bestätigt"
   },
   "student_assignments": {
     "subtitle": "Die Hausaufgaben Ihrer Lehrkräfte.",

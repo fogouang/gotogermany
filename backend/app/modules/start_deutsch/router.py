@@ -1,6 +1,9 @@
 """
 app/modules/start_deutsch/router.py
 """
+from fastapi import Request
+from app.modules.security.guard import ContentGuard
+
 from uuid import UUID
 
 from fastapi import Depends, File, Form, HTTPException, UploadFile
@@ -47,9 +50,11 @@ async def list_subjects(
 async def get_subject_detail(
     subject_id: UUID,
     user: CurrentUser,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """Arbre Module > Teil > Question, sans les réponses, pour démarrer une session."""
+    await ContentGuard(db).check(request, user, "subject_view", subject_id)
     return await StartDeutschCatalogService(db).get_subject_detail(user, subject_id)
 
 
@@ -59,8 +64,10 @@ async def get_subject_detail(
 async def start_session(
     data: StartDeutschSessionCreateRequest,
     user: CurrentUser,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
+    await ContentGuard(db).check(request, user, "session_start", data.subject_id)
     return await StartDeutschSessionService(db).start_session(user, data.subject_id)
 
 
@@ -88,8 +95,10 @@ async def list_my_sessions(
 async def get_session_result(
     session_id: UUID,
     user: CurrentUser,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
+    await ContentGuard(db).check(request, user, "result_view", session_id)
     return await StartDeutschSessionService(db).get_result(session_id, user.id)
 
 

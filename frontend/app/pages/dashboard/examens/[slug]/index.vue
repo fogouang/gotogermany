@@ -242,7 +242,7 @@
           class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
         >
           <button
-            v-for="subject in level.subjects"
+            v-for="subject in sortedSubjects(level)"
             :key="subject.id"
             type="button"
             class="group relative flex items-center gap-4 rounded-card border bg-card px-4 py-4 text-left shadow-soft transition-colors"
@@ -480,6 +480,12 @@ const sortedLevels = computed(() => {
 const totalSubjects = computed(() =>
   sortedLevels.value.reduce((sum, l) => sum + (l.subjects?.length || 0), 0),
 );
+
+/** Sujets d'un niveau triés par numéro (l'API ne garantit pas l'ordre) */
+const sortedSubjects = (level: LevelWithSubjectsResponse) =>
+  [...(level.subjects ?? [])].sort(
+    (a, b) => a.subject_number - b.subject_number,
+  );
 
 const catalogLevel = (level: LevelWithSubjectsResponse) =>
   examsStore.catalog

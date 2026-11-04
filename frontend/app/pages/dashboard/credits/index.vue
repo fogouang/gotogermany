@@ -5,28 +5,51 @@
     <div class="grid items-start gap-5 lg:grid-cols-3">
       <!-- ══════════ Colonne droite : solde ══════════ -->
       <aside class="space-y-4 lg:sticky lg:top-0 lg:order-last">
-        <section class="relative isolate overflow-hidden rounded-card border border-line bg-card p-6 text-center shadow-soft">
-          <span class="mx-auto mb-3 flex size-14 items-center justify-center rounded-full bg-amber-500/15 text-amber-600">
+        <section
+          class="relative isolate overflow-hidden rounded-card border border-line bg-card p-6 text-center shadow-soft"
+        >
+          <span
+            class="mx-auto mb-3 flex size-14 items-center justify-center rounded-full bg-amber-500/15 text-amber-600"
+          >
             <i class="pi pi-sparkles text-2xl" />
           </span>
-          <div v-if="loading && !balance" class="mx-auto h-10 w-20 animate-pulse rounded-leaf bg-card-2" />
-          <p v-else class="text-4xl font-extrabold leading-none text-ink">{{ aiCredits }}</p>
-          <p class="mt-2 text-sm text-muted">{{ t("ai_credits.available", { n: aiCredits }, aiCredits) }}</p>
+          <div
+            v-if="loading && !balance"
+            class="mx-auto h-10 w-20 animate-pulse rounded-leaf bg-card-2"
+          />
+          <p v-else class="text-4xl font-extrabold leading-none text-ink">
+            {{ aiCredits }}
+          </p>
+          <p class="mt-2 text-sm text-muted">
+            {{ t("ai_credits.available", { n: aiCredits }, aiCredits) }}
+          </p>
         </section>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-card border border-line bg-card p-4 shadow-soft">
-            <p class="text-lg font-bold leading-none text-ink">{{ totalPurchased }}</p>
-            <p class="mt-1.5 text-xs text-muted">{{ t("ai_credits.total_purchased") }}</p>
+            <p class="text-lg font-bold leading-none text-ink">
+              {{ totalPurchased }}
+            </p>
+            <p class="mt-1.5 text-xs text-muted">
+              {{ t("ai_credits.total_purchased") }}
+            </p>
           </div>
           <div class="rounded-card border border-line bg-card p-4 shadow-soft">
-            <p class="text-lg font-bold leading-none text-ink">{{ fcfa(totalSpent) }}</p>
-            <p class="mt-1.5 text-xs text-muted">{{ t("ai_credits.total_spent") }}</p>
+            <p class="text-lg font-bold leading-none text-ink">
+              {{ spentLabel }}
+            </p>
+            <p class="mt-1.5 text-xs text-muted">
+              {{ t("ai_credits.total_spent") }}
+            </p>
           </div>
         </div>
 
-        <section class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft">
-          <p class="text-sm font-medium text-ink">{{ t("ai_credits.help_title") }}</p>
+        <section
+          class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft"
+        >
+          <p class="text-sm font-medium text-ink">
+            {{ t("ai_credits.help_title") }}
+          </p>
           <a
             :href="whatsappUrl"
             target="_blank"
@@ -41,19 +64,28 @@
 
       <!-- ══════════ Colonne gauche : achat + historique ══════════ -->
       <div class="space-y-5 lg:col-span-2">
-        <section class="space-y-5 rounded-card border border-line bg-card p-5 shadow-soft sm:p-6">
+        <section
+          class="space-y-5 rounded-card border border-line bg-card p-5 shadow-soft sm:p-6"
+        >
           <header>
-            <h2 class="font-semibold text-ink">{{ t("ai_credits.buy_title") }}</h2>
+            <h2 class="font-semibold text-ink">
+              {{ t("ai_credits.buy_title") }}
+            </h2>
             <p v-if="pricing" class="mt-0.5 text-sm text-muted">
               {{ t("ai_credits.per_credit", { price: fcfa(pricePerCredit) }) }}
             </p>
-            <div v-else class="mt-1.5 h-4 w-64 animate-pulse rounded bg-card-2" />
+            <div
+              v-else
+              class="mt-1.5 h-4 w-64 animate-pulse rounded bg-card-2"
+            />
           </header>
 
           <!-- ── Étape : formulaire ── -->
           <template v-if="step === 'form'">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("ai_credits.quantity") }}</label>
+              <label class="mb-1.5 block text-sm font-medium text-ink">{{
+                t("ai_credits.quantity")
+              }}</label>
               <InputNumber
                 v-model="credits"
                 :min="minPurchase"
@@ -63,10 +95,18 @@
                 buttonLayout="horizontal"
                 :step="1"
               >
-                <template #decrementbuttonicon><i class="pi pi-minus" /></template>
-                <template #incrementbuttonicon><i class="pi pi-plus" /></template>
+                <template #decrementbuttonicon
+                  ><i class="pi pi-minus"
+                /></template>
+                <template #incrementbuttonicon
+                  ><i class="pi pi-plus"
+                /></template>
               </InputNumber>
-              <p class="mt-1 text-xs text-faint">{{ t("ai_credits.range", { min: minPurchase, max: maxPurchase }) }}</p>
+              <p class="mt-1 text-xs text-faint">
+                {{
+                  t("ai_credits.range", { min: minPurchase, max: maxPurchase })
+                }}
+              </p>
 
               <div class="mt-3 flex flex-wrap gap-2">
                 <button
@@ -74,7 +114,11 @@
                   :key="qty"
                   type="button"
                   class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
-                  :class="credits === qty ? 'border-primary bg-primary/10 text-primary' : 'border-line bg-card text-muted hover:border-primary/30'"
+                  :class="
+                    credits === qty
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-line bg-card text-muted hover:border-primary/30'
+                  "
                   @click="credits = qty"
                 >
                   {{ t("ai_credits.preset", { n: qty }) }}
@@ -82,53 +126,146 @@
               </div>
             </div>
 
-            <div>
-              <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("payment.operator") }}</label>
-              <div class="grid grid-cols-2 gap-2">
-                <button
-                  v-for="op in operators"
-                  :key="op.value"
-                  type="button"
-                  class="flex items-center gap-3 rounded-leaf border-2 p-3 text-left transition-colors"
-                  :class="operator === op.value ? 'border-primary bg-primary/10' : 'border-line bg-card hover:border-primary/30'"
-                  @click="operator = op.value"
-                >
-                  <span class="flex size-9 shrink-0 items-center justify-center rounded-leaf text-xs font-black" :class="op.badge">
-                    {{ op.short }}
-                  </span>
-                  <span class="text-sm font-medium text-ink">{{ op.label }}</span>
-                </button>
-              </div>
+            <!-- Moyen de paiement -->
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                class="flex flex-col items-start gap-1 rounded-leaf border-2 p-3 text-left transition-colors"
+                :class="
+                  method === 'mobile'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-line bg-card hover:border-primary/30'
+                "
+                @click="method = 'mobile'"
+              >
+                <i class="pi pi-mobile text-lg text-primary" />
+                <span class="text-sm font-semibold text-ink">{{
+                  t("payment.mobile_money")
+                }}</span>
+                <span class="text-xs text-muted">{{
+                  t("payment.mobile_desc")
+                }}</span>
+              </button>
+              <button
+                type="button"
+                class="flex flex-col items-start gap-1 rounded-leaf border-2 p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                :class="
+                  method === 'card'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-line bg-card hover:border-primary/30'
+                "
+                :disabled="!cardAvailable"
+                @click="method = 'card'"
+              >
+                <i class="pi pi-credit-card text-lg text-primary" />
+                <span class="text-sm font-semibold text-ink">{{
+                  t("payment.card.title")
+                }}</span>
+                <span class="text-xs text-muted">
+                  {{
+                    cardAvailable
+                      ? t("ai_credits.card_price", {
+                          price: eur(pricePerCreditEur!),
+                        })
+                      : t("payment.card.unavailable")
+                  }}
+                </span>
+              </button>
             </div>
 
-            <div>
-              <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("payment.phone") }}</label>
-              <InputText
-                v-model="phone"
-                inputmode="numeric"
-                placeholder="6XXXXXXXX"
-                fluid
-                :invalid="phoneTouched && !phoneValid"
-                @blur="phoneTouched = true"
-              />
-              <p class="mt-1 text-xs" :class="phoneTouched && !phoneValid ? 'text-red-600' : 'text-faint'">
-                {{ phoneTouched && !phoneValid ? t("ai_credits.phone_invalid") : t("payment.phone_hint") }}
+            <template v-if="method === 'mobile'">
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{
+                  t("payment.operator")
+                }}</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    v-for="op in operators"
+                    :key="op.value"
+                    type="button"
+                    class="flex items-center gap-3 rounded-leaf border-2 p-3 text-left transition-colors"
+                    :class="
+                      operator === op.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-line bg-card hover:border-primary/30'
+                    "
+                    @click="operator = op.value"
+                  >
+                    <span
+                      class="flex size-9 shrink-0 items-center justify-center rounded-leaf text-xs font-black"
+                      :class="op.badge"
+                    >
+                      {{ op.short }}
+                    </span>
+                    <span class="text-sm font-medium text-ink">{{
+                      op.label
+                    }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-ink">{{
+                  t("payment.phone")
+                }}</label>
+                <InputText
+                  v-model="phone"
+                  inputmode="numeric"
+                  placeholder="6XXXXXXXX"
+                  fluid
+                  :invalid="phoneTouched && !phoneValid"
+                  @blur="phoneTouched = true"
+                />
+                <p
+                  class="mt-1 text-xs"
+                  :class="
+                    phoneTouched && !phoneValid ? 'text-red-600' : 'text-faint'
+                  "
+                >
+                  {{
+                    phoneTouched && !phoneValid
+                      ? t("ai_credits.phone_invalid")
+                      : t("payment.phone_hint")
+                  }}
+                </p>
+              </div>
+            </template>
+
+            <p
+              v-else
+              class="flex items-start gap-2 rounded-leaf bg-card-2 p-3 text-xs text-muted"
+            >
+              <i class="pi pi-lock mt-0.5 text-[11px]" />
+              {{ t("payment.card.redirect_info") }}
+            </p>
+
+            <div
+              class="flex items-center justify-between rounded-leaf bg-card-2 px-4 py-3"
+            >
+              <div>
+                <p class="text-xs text-muted">{{ t("payment.total") }}</p>
+                <p class="text-2xl font-extrabold text-primary">
+                  {{ totalLabel }}
+                </p>
+              </div>
+              <p class="text-xs text-muted">
+                {{ t("ai_credits.preset", { n: credits ?? 0 }) }}
               </p>
             </div>
 
-            <div class="flex items-center justify-between rounded-leaf bg-card-2 px-4 py-3">
-              <div>
-                <p class="text-xs text-muted">{{ t("payment.total") }}</p>
-                <p class="text-2xl font-extrabold text-primary">{{ pricing ? fcfa(totalAmount) : "..." }}</p>
-              </div>
-              <p class="text-xs text-muted">{{ t("ai_credits.preset", { n: credits ?? 0 }) }}</p>
-            </div>
-
-            <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
+            <Message v-if="errorMessage" severity="error" :closable="false">{{
+              errorMessage
+            }}</Message>
 
             <Button
-              :label="t('ai_credits.pay', { amount: pricing ? fcfa(totalAmount) : '' })"
-              icon="pi pi-arrow-right"
+              :label="
+                method === 'card'
+                  ? t('payment.card.pay')
+                  : t('ai_credits.pay', { amount: totalLabel })
+              "
+              :icon="
+                method === 'card' ? 'pi pi-credit-card' : 'pi pi-arrow-right'
+              "
               iconPos="right"
               class="w-full"
               :loading="loadingPurchase"
@@ -137,50 +274,112 @@
             />
           </template>
 
-          <!-- ── Étape : attente de confirmation ── -->
+          <!-- ── Étape : attente de confirmation (Mobile Money ou retour de Stripe) ── -->
           <div v-else-if="step === 'waiting'" class="space-y-4">
-            <div class="flex flex-col items-center gap-2 rounded-leaf bg-sky-500/10 px-4 py-6 text-center">
-              <i class="pi pi-mobile text-3xl text-sky-600" />
-              <p class="font-semibold text-ink">{{ t("payment.pin") }}</p>
-              <p class="text-sm text-muted">{{ t("payment.message") }}</p>
-              <p v-if="lastPurchase" class="text-lg font-bold text-ink">{{ fcfa(lastPurchase.total_amount) }}</p>
-              <p v-if="lastPurchase?.transaction_reference" class="break-all text-xs text-faint">
-                {{ t("payment.ref") }} : {{ lastPurchase.transaction_reference }}
+            <div
+              class="flex flex-col items-center gap-2 rounded-leaf bg-sky-500/10 px-4 py-6 text-center"
+            >
+              <i
+                class="pi text-3xl text-sky-600"
+                :class="waitingByCard ? 'pi-credit-card' : 'pi-mobile'"
+              />
+              <p class="font-semibold text-ink">
+                {{
+                  waitingByCard
+                    ? t("ai_credits.card_waiting_title")
+                    : t("payment.pin")
+                }}
+              </p>
+              <p class="text-sm text-muted">
+                {{
+                  waitingByCard
+                    ? t("payment.success.pending_desc")
+                    : t("payment.message")
+                }}
+              </p>
+              <p
+                v-if="lastPurchase && !waitingByCard"
+                class="text-lg font-bold text-ink"
+              >
+                {{ fcfa(lastPurchase.total_amount) }}
+              </p>
+              <p v-if="waitingRef" class="break-all text-xs text-faint">
+                {{ t("payment.ref") }} : {{ waitingRef }}
               </p>
             </div>
-            <div class="flex items-center justify-center gap-2 text-sm text-muted">
+            <div
+              class="flex items-center justify-center gap-2 text-sm text-muted"
+            >
               <i class="pi pi-spin pi-spinner text-xs" />
               {{ t("payment.polling") }}
             </div>
           </div>
 
           <!-- ── Étape : succès ── -->
-          <div v-else-if="step === 'success'" class="flex flex-col items-center gap-3 py-4 text-center">
-            <span class="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+          <div
+            v-else-if="step === 'success'"
+            class="flex flex-col items-center gap-3 py-4 text-center"
+          >
+            <span
+              class="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600"
+            >
               <i class="pi pi-check-circle text-3xl" />
             </span>
-            <p class="text-lg font-bold text-ink">{{ t("ai_credits.success_title") }}</p>
-            <p class="text-sm text-muted">
-              {{ t("ai_credits.success_text", { n: lastPurchase?.credits ?? 0 }, lastPurchase?.credits ?? 0) }}
+            <p class="text-lg font-bold text-ink">
+              {{ t("ai_credits.success_title") }}
             </p>
-            <Button :label="t('ai_credits.buy_more')" icon="pi pi-plus" outlined @click="resetState" />
+            <p class="text-sm text-muted">
+              {{
+                t(
+                  "ai_credits.success_text",
+                  { n: lastPurchase?.credits ?? 0 },
+                  lastPurchase?.credits ?? 0,
+                )
+              }}
+            </p>
+            <Button
+              :label="t('ai_credits.buy_more')"
+              icon="pi pi-plus"
+              outlined
+              @click="resetState"
+            />
           </div>
 
           <!-- ── Étape : échec ou délai dépassé ── -->
           <div v-else class="flex flex-col items-center gap-3 py-4 text-center">
             <span
               class="flex size-16 items-center justify-center rounded-full"
-              :class="step === 'failed' ? 'bg-red-500/10 text-red-600' : 'bg-amber-500/15 text-amber-600'"
+              :class="
+                step === 'failed'
+                  ? 'bg-red-500/10 text-red-600'
+                  : 'bg-amber-500/15 text-amber-600'
+              "
             >
-              <i class="pi text-3xl" :class="step === 'failed' ? 'pi-times-circle' : 'pi-clock'" />
+              <i
+                class="pi text-3xl"
+                :class="step === 'failed' ? 'pi-times-circle' : 'pi-clock'"
+              />
             </span>
             <p class="text-lg font-bold text-ink">
-              {{ step === "failed" ? t("ai_credits.failed_title") : t("ai_credits.timeout_title") }}
+              {{
+                step === "failed"
+                  ? t("ai_credits.failed_title")
+                  : t("ai_credits.timeout_title")
+              }}
             </p>
             <p class="max-w-md text-sm text-muted">
-              {{ step === "failed" ? t("ai_credits.failed_text") : t("ai_credits.timeout_text") }}
+              {{
+                step === "failed"
+                  ? t("ai_credits.failed_text")
+                  : t("ai_credits.timeout_text")
+              }}
             </p>
-            <Button :label="t('ai_credits.retry')" icon="pi pi-refresh" outlined @click="resetState" />
+            <Button
+              :label="t('ai_credits.retry')"
+              icon="pi pi-refresh"
+              outlined
+              @click="resetState"
+            />
           </div>
         </section>
 
@@ -188,30 +387,59 @@
         <section class="space-y-2">
           <h3 class="text-sm font-semibold text-ink">
             {{ t("ai_credits.history_title") }}
-            <span v-if="history.length" class="font-normal text-muted">· {{ history.length }}</span>
+            <span v-if="history.length" class="font-normal text-muted"
+              >· {{ history.length }}</span
+            >
           </h3>
 
           <div v-if="historyLoading" class="space-y-2">
-            <div v-for="n in 3" :key="n" class="h-14 animate-pulse rounded-card bg-card-2" />
+            <div
+              v-for="n in 3"
+              :key="n"
+              class="h-14 animate-pulse rounded-card bg-card-2"
+            />
           </div>
 
-          <p v-else-if="history.length === 0" class="rounded-card border border-dashed border-line bg-card px-4 py-8 text-center text-sm text-muted">
+          <p
+            v-else-if="history.length === 0"
+            class="rounded-card border border-dashed border-line bg-card px-4 py-8 text-center text-sm text-muted"
+          >
             {{ t("ai_credits.history_empty") }}
           </p>
 
-          <ul v-else class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft">
-            <li v-for="item in sortedHistory" :key="item.id" class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 sm:px-5">
-              <span class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-amber-500/15 text-xs font-bold text-amber-600">
+          <ul
+            v-else
+            class="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-soft"
+          >
+            <li
+              v-for="item in sortedHistory"
+              :key="item.id"
+              class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 sm:px-5"
+            >
+              <span
+                class="flex size-9 shrink-0 items-center justify-center rounded-leaf bg-amber-500/15 text-xs font-bold text-amber-600"
+              >
                 +{{ item.credits_purchased }}
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-ink">{{ fcfa(item.total_amount) }}</p>
+                <p class="text-sm font-medium text-ink">
+                  {{
+                    item.charged_amount && item.charged_currency === "EUR"
+                      ? eur(item.charged_amount)
+                      : fcfa(item.total_amount)
+                  }}
+                </p>
                 <p class="truncate text-xs text-muted">
                   {{ formatDate(item.created_at) }}
-                  <span v-if="item.transaction_reference"> · {{ item.transaction_reference }}</span>
+                  <span v-if="item.transaction_reference">
+                    · {{ item.transaction_reference }}</span
+                  >
                 </p>
               </div>
-              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="statusBadge(item.payment_status)">
+              <span
+                class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                :class="statusBadge(item.payment_status)"
+              >
                 {{ formatStatus(item.payment_status) }}
               </span>
             </li>
@@ -226,6 +454,10 @@
 definePageMeta({ layout: "dashboard", watermark: "KI-Guthaben" });
 
 const { t, te, locale } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const toast = useToast();
+const paymentsStore = usePaymentsStore();
 const {
   balance,
   pricing,
@@ -237,21 +469,56 @@ const {
   lastPurchase,
   aiCredits,
   pricePerCredit,
+  pricePerCreditEur,
   minPurchase,
   maxPurchase,
   fetchPricing,
   fetchBalance,
   fetchHistory,
   purchaseCredits,
+  purchaseCreditsByCard,
 } = useAiCredits();
 
 // ── Format ──
-const intlLocale = computed(() => ({ fr: "fr-FR", de: "de-DE" } as Record<string, string>)[locale.value] ?? "en-GB");
-const fcfa = (n: number) => `${Math.round(n).toLocaleString(intlLocale.value)} FCFA`;
+const intlLocale = computed(
+  () =>
+    (({ fr: "fr-FR", de: "de-DE" }) as Record<string, string>)[locale.value] ??
+    "en-GB",
+);
+const fcfa = (n: number) =>
+  `${Math.round(n).toLocaleString(intlLocale.value)} FCFA`;
+const eur = (n: number) =>
+  Number(n).toLocaleString(intlLocale.value, {
+    style: "currency",
+    currency: "EUR",
+  });
 const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString(intlLocale.value, { day: "2-digit", month: "short", year: "numeric" });
+  new Date(d).toLocaleDateString(intlLocale.value, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
-const formatStatus = (s: string) => (te(`invoices.status.${s}`) ? t(`invoices.status.${s}`) : s);
+// Total dépensé dans la devise réellement payée (FCFA en Mobile Money, euros par carte)
+const spentLabel = computed(() => {
+  const paid = history.value.filter((i) => i.payment_status === "COMPLETED");
+  const isCard = (i: (typeof paid)[number]) =>
+    !!i.charged_amount && i.charged_currency === "EUR";
+  const totalEurPaid = paid
+    .filter(isCard)
+    .reduce((s, i) => s + Number(i.charged_amount), 0);
+  const totalFcfaPaid = paid
+    .filter((i) => !isCard(i))
+    .reduce((s, i) => s + Number(i.total_amount), 0);
+
+  const parts: string[] = [];
+  if (totalFcfaPaid > 0) parts.push(fcfa(totalFcfaPaid));
+  if (totalEurPaid > 0) parts.push(eur(totalEurPaid));
+  return parts.length ? parts.join(" + ") : fcfa(0);
+});
+
+const formatStatus = (s: string) =>
+  te(`invoices.status.${s}`) ? t(`invoices.status.${s}`) : s;
 const statusBadge = (s: string) =>
   ({
     COMPLETED: "bg-emerald-500/10 text-emerald-600",
@@ -263,37 +530,70 @@ const statusBadge = (s: string) =>
 // ── Formulaire ──
 type Step = "form" | "waiting" | "success" | "failed" | "timeout";
 const step = ref<Step>("form");
+const method = ref<"mobile" | "card">("mobile");
 const credits = ref<number | null>(10);
 const operator = ref<"MTN" | "ORANGE" | null>(null);
 const phone = ref("");
 const phoneTouched = ref(false);
 const errorMessage = ref("");
+// Référence suivie pendant l'attente (achat en cours ou retour de Stripe)
+const waitingRef = ref<string | null>(null);
+const waitingByCard = ref(false);
 
 const operators = [
-  { value: "MTN" as const, label: "MTN Mobile Money", short: "MTN", badge: "bg-yellow-400 text-black" },
-  { value: "ORANGE" as const, label: "Orange Money", short: "OM", badge: "bg-orange-500 text-white" },
+  {
+    value: "MTN" as const,
+    label: "MTN Mobile Money",
+    short: "MTN",
+    badge: "bg-yellow-400 text-black",
+  },
+  {
+    value: "ORANGE" as const,
+    label: "Orange Money",
+    short: "OM",
+    badge: "bg-orange-500 text-white",
+  },
 ];
 
-const presets = computed(() => [5, 10, 20, 50].filter((n) => n >= minPurchase.value && n <= maxPurchase.value));
-
-const normalizedPhone = computed(() => phone.value.replace(/\s+/g, "").replace(/^(\+?237)/, ""));
-const phoneValid = computed(() => /^[69]\d{8}$/.test(normalizedPhone.value));
-
-const totalAmount = computed(() => (credits.value ?? 0) * pricePerCredit.value);
-
-const canProceed = computed(
-  () =>
-    !!pricing.value &&
-    !!operator.value &&
-    phoneValid.value &&
-    !!credits.value &&
-    credits.value >= minPurchase.value &&
-    credits.value <= maxPurchase.value,
+const presets = computed(() =>
+  [5, 10, 20, 50].filter(
+    (n) => n >= minPurchase.value && n <= maxPurchase.value,
+  ),
 );
 
-// ── Achat + vérification ──
+const normalizedPhone = computed(() =>
+  phone.value.replace(/\s+/g, "").replace(/^(\+?237)/, ""),
+);
+const phoneValid = computed(() => /^[69]\d{8}$/.test(normalizedPhone.value));
+
+const cardAvailable = computed(() => !!pricePerCreditEur.value);
+const totalAmount = computed(() => (credits.value ?? 0) * pricePerCredit.value);
+const totalEur = computed(
+  () => (credits.value ?? 0) * (pricePerCreditEur.value ?? 0),
+);
+const totalLabel = computed(() =>
+  !pricing.value
+    ? "..."
+    : method.value === "card"
+      ? eur(totalEur.value)
+      : fcfa(totalAmount.value),
+);
+
+const canProceed = computed(() => {
+  const qtyOk =
+    !!pricing.value &&
+    !!credits.value &&
+    credits.value >= minPurchase.value &&
+    credits.value <= maxPurchase.value;
+  if (!qtyOk) return false;
+  if (method.value === "card") return cardAvailable.value;
+  return !!operator.value && phoneValid.value;
+});
+
+// ── Vérification du paiement ──
+// Le statut est relu chez Kratos ou Stripe à chaque appel : aucun achat ne reste bloqué
 const POLL_MS = 5000;
-const MAX_ATTEMPTS = 36; // 3 minutes
+const MAX_ATTEMPTS = 120; // 10 minutes : le temps de saisir le code PIN ou de payer par carte
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let attempts = 0;
 
@@ -305,26 +605,43 @@ const stopPolling = () => {
 const finish = async (result: Step) => {
   stopPolling();
   step.value = result;
-  if (result === "success") await fetchBalance();
+  if (result === "success") await Promise.all([fetchBalance(), fetchHistory()]);
+  else await fetchHistory();
 };
 
-const startPolling = (paymentId: string) => {
+const startPolling = (reference: string) => {
   stopPolling();
   attempts = 0;
-  pollTimer = setInterval(async () => {
+  const tick = async () => {
     attempts++;
-    await fetchHistory();
-    const status = history.value.find((h) => h.payment_id === paymentId)?.payment_status;
+    const res = await paymentsStore.checkStatus(reference);
+    const status = res.data?.payment_status;
     if (status === "COMPLETED") finish("success");
     else if (status === "FAILED") finish("failed");
     else if (attempts >= MAX_ATTEMPTS) finish("timeout");
-  }, POLL_MS);
+  };
+  void tick();
+  pollTimer = setInterval(tick, POLL_MS);
 };
 
 const purchase = async () => {
   phoneTouched.value = true;
   if (!canProceed.value) return;
   errorMessage.value = "";
+
+  // Carte : redirection vers Stripe, le suivi reprend au retour (?ref=...)
+  if (method.value === "card") {
+    const lang = (
+      ["fr", "en", "de"].includes(locale.value) ? locale.value : "fr"
+    ) as "fr" | "en" | "de";
+    const result = await purchaseCreditsByCard({
+      credits: credits.value!,
+      locale: lang,
+    });
+    if (!result.success)
+      errorMessage.value = result.message || t("ai_credits.error");
+    return;
+  }
 
   const result = await purchaseCredits({
     credits: credits.value!,
@@ -340,30 +657,53 @@ const purchase = async () => {
   if (result.data.payment_status === "COMPLETED") return finish("success");
   if (result.data.payment_status === "FAILED") return finish("failed");
 
+  waitingRef.value = result.data.transaction_reference ?? null;
+  waitingByCard.value = false;
   step.value = "waiting";
-  startPolling(result.data.payment_id);
+  if (waitingRef.value) startPolling(waitingRef.value);
 };
 
 const resetState = () => {
   stopPolling();
   step.value = "form";
   errorMessage.value = "";
+  waitingRef.value = null;
 };
 
 // ── Historique ──
 const historyLoaded = ref(false);
 const historyLoading = computed(() => !historyLoaded.value);
-const sortedHistory = computed(() => [...history.value].sort((a, b) => b.created_at.localeCompare(a.created_at)));
+const sortedHistory = computed(() =>
+  [...history.value].sort((a, b) => b.created_at.localeCompare(a.created_at)),
+);
 
 // ── WhatsApp ──
 const whatsappUrl = computed(
-  () => `https://wa.me/237670886288?text=${encodeURIComponent(t("ai_credits.whatsapp_message"))}`,
+  () =>
+    `https://wa.me/237670886288?text=${encodeURIComponent(t("ai_credits.whatsapp_message"))}`,
 );
 
 onMounted(async () => {
   await Promise.all([fetchPricing(), fetchBalance(), fetchHistory()]);
   historyLoaded.value = true;
   if (credits.value! < minPurchase.value) credits.value = minPurchase.value;
+
+  // Retour de Stripe : on suit le paiement, puis on nettoie l'adresse
+  const ref = route.query.ref;
+  if (typeof ref === "string" && ref) {
+    waitingRef.value = ref;
+    waitingByCard.value = true;
+    step.value = "waiting";
+    startPolling(ref);
+    router.replace({ query: {} });
+  } else if (route.query.cancelled) {
+    toast.add({
+      severity: "info",
+      summary: t("payment.card.cancelled"),
+      life: 5000,
+    });
+    router.replace({ query: {} });
+  }
 });
 
 onBeforeUnmount(stopPolling);

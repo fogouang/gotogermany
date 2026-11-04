@@ -22,5 +22,7 @@ export type PaymentResponse = {
     completed_at: (string | null);
     created_at: string;
     invoice_url?: (string | null);
+    charged_amount?: (number | null);
+    charged_currency?: (string | null);
 };
 

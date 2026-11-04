@@ -8,6 +8,7 @@
 import { AiCreditsService } from "#shared/api";
 import type {
   CreditBalanceResponse,
+  CreditCardPurchaseRequest,
   CreditPricingResponse,
   CreditPurchaseHistoryItem,
   CreditPurchaseResponse,
@@ -91,6 +92,31 @@ export const useAiCredits = () => {
     }
   };
 
+  // ── Achat par carte (Stripe) : redirection vers la page de paiement ──
+  const purchaseCreditsByCard = async (data: {
+    credits: number;
+    locale: "fr" | "en" | "de";
+  }) => {
+    loadingPurchase.value = true;
+    error.value = null;
+    try {
+      const res =
+        await AiCreditsService.purchaseCreditsCardApiV1AiCreditsPurchaseCardPost(
+          data as CreditCardPurchaseRequest,
+        );
+      if (res.data?.checkout_url) window.location.href = res.data.checkout_url;
+      return { success: true, data: res.data };
+    } catch (err: any) {
+      const msg =
+        err?.body?.detail ??
+        err?.body?.message ??
+        "Erreur lors du paiement par carte";
+      error.value = msg;
+      loadingPurchase.value = false;
+      return { success: false, message: msg };
+    }
+  };
+
   // ── Admin : accord manuel ────────────────────────────────────
   const adminGrantCredits = async (data: {
     user_id: string;
@@ -148,6 +174,7 @@ export const useAiCredits = () => {
     loadingPurchase,
     lastPurchase,
     error,
+    purchaseCreditsByCard,
 
     // Computed utiles
     aiCredits: computed(() => balance.value?.ai_credits ?? 0),
@@ -155,6 +182,9 @@ export const useAiCredits = () => {
     minPurchase: computed(() => pricing.value?.min_purchase ?? 5),
     maxPurchase: computed(() => pricing.value?.max_purchase ?? 500),
     pricingExamples: computed(() => pricing.value?.examples ?? []),
+    pricePerCreditEur: computed(
+      () => pricing.value?.price_per_credit_eur ?? null,
+    ),
 
     // Actions
     fetchPricing,

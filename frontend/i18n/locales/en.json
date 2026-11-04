@@ -203,6 +203,7 @@
     "popular": "Most chosen",
     "per_day": "that's",
     "per_day_suffix": "FCFA/day",
+    "by_card": "or {price} by card",
     "ai_credits": "{n} AI credit included | {n} AI credits included",
     "features": {
       "full_access": "Full access to your chosen exam and level",
@@ -848,7 +849,6 @@
     "payment_method": "Payment method",
     "mobile_money": "Mobile Money",
     "mobile_desc": "Orange, MTN",
-    "card": "Bank card",
     "card_desc": "Visa, Mastercard",
     "operator": "Operator *",
     "phone": "Phone number *",
@@ -887,8 +887,33 @@
       "failed_desc": "Please try again.",
       "retry": "Retry",
       "go_to_exams": "Access exams"
+    },
+    "success": {
+      "amount": "Amount",
+      "method": "Payment method",
+      "date": "Date",
+      "card": "Bank card",
+      "access_active": "Your access is active. All subjects for your level are now open.",
+      "pending_desc": "We are waiting for the operator's confirmation. This page updates on its own.",
+      "missing_title": "Payment not found",
+      "missing_desc": "We cannot find this payment. Check your invoices or try again.",
+      "redirect": "Redirecting in {n} s…",
+      "go_start_deutsch": "Go to Start Deutsch",
+      "invoices": "My invoices",
+      "later": "Continue without waiting"
+    },
+    "card": {
+      "title": "Bank card",
+      "desc": "Visa, Mastercard · in euros",
+      "unavailable": "Not available for this plan",
+      "pay": "Pay by card",
+      "redirect_info": "You will be redirected to Stripe's secure payment page. No card data goes through our servers.",
+      "secure": "Card payment secured by Stripe",
+      "cancelled": "Payment cancelled. You can try again whenever you like.",
+      "error": "The card payment could not be started."
     }
   },
+
   "my_results": {
     "title": "My results",
     "subtitle": "History of your exam sessions",
@@ -1337,8 +1362,8 @@
       "never": "Not tried yet",
       "description_a1": "A1 familiarisation practice · Start Deutsch 1 (Goethe-Institut, telc)",
       "description_a2": "A2 familiarisation practice · Goethe-Zertifikat A2 (adult version, from age 16)",
-      "locked":"Locked",
-      "unlock":"Unlock this level"
+      "locked": "Locked",
+      "unlock": "Unlock this level"
     },
     "free_text": {
       "word_count": "{count} words",
@@ -1977,7 +2002,9 @@
     "history_empty": "No purchases yet.",
     "help_title": "Having trouble with Mobile Money?",
     "help_whatsapp": "Message us on WhatsApp",
-    "whatsapp_message": "Hello, I would like to buy AI credits on GoToGermany."
+    "whatsapp_message": "Hello, I would like to buy AI credits on GoToGermany.",
+    "card_price": "{price} per credit · Visa, Mastercard",
+    "card_waiting_title": "Card payment being confirmed"
   },
   "student_assignments": {
     "subtitle": "Assignments given by your teachers.",

@@ -12,5 +12,7 @@ export type CreditPurchaseHistoryItem = {
     payment_status: string;
     transaction_reference: (string | null);
     created_at: string;
+    charged_amount?: (number | null);
+    charged_currency?: (string | null);
 };
 

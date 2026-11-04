@@ -2,7 +2,7 @@
  * composables/usePayments.ts
  */
 import { usePaymentsStore } from "~/stores/payments";
-import type { PaymentStatusResponse } from "#shared/api";
+import type { CardPaymentRequest, PaymentStatusResponse } from "#shared/api";
 import { PaymentsService } from "#shared/api";
 
 export const usePayments = () => {
@@ -11,6 +11,8 @@ export const usePayments = () => {
   const toast = useToast();
 
   // ── User : initier un paiement + polling ────────────────────
+  const localePath = useLocalePath();
+
   const pay = async (data: {
     // Niveau d'examen OU niveau Start Deutsch
     level_id?: string | null;
@@ -22,20 +24,33 @@ export const usePayments = () => {
     const res = await paymentsStore.initiatePayment(data);
     if (!res.success) return res;
 
-    paymentsStore.startPolling(
-      res.data!.transaction_reference,
-      (status: PaymentStatusResponse) => {
-        if (
-          status.payment_status === "COMPLETED" &&
-          status.exam_access_granted
-        ) {
-          router.push({
-            path: "/dashboard/paiement/succes",
-            query: { ref: res.data!.transaction_reference },
-          });
-        }
-      },
+    const ref = res.data!.transaction_reference;
+    paymentsStore.startPolling(ref, (status: PaymentStatusResponse) => {
+      if (status.payment_status !== "COMPLETED") return;
+      // La page de succès recharge l'accès, affiche le reçu puis redirige
+      router.push(
+        localePath({
+          path: "/dashboard/paiement/succes",
+          query: { ref, next: data.sd_level ? "start-deutsch" : "examens" },
+        }),
+      );
+    });
+    return res;
+  };
+
+  // ── User : paiement par carte (redirection vers Stripe) ─────
+  const payByCard = async (data: {
+    level_id?: string | null;
+    sd_level?: "A1" | "A2" | null;
+    plan_id: string;
+    locale: "fr" | "en" | "de";
+  }) => {
+    const res = await paymentsStore.initiateCardPayment(
+      data as CardPaymentRequest,
     );
+    if (res.success && res.data?.checkout_url) {
+      window.location.href = res.data.checkout_url;
+    }
     return res;
   };
 
@@ -104,6 +119,7 @@ export const usePayments = () => {
     accessGranted: computed(() => paymentsStore.accessGranted),
     // Actions user
     pay,
+    payByCard,
     checkStatus: paymentsStore.checkStatus,
     stopPolling: paymentsStore.stopPolling,
     fetchMyPayments: paymentsStore.fetchMyPayments,

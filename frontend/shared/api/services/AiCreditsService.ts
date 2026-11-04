@@ -2,9 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CreditCardPurchaseRequest } from '../models/CreditCardPurchaseRequest';
 import type { CreditPurchaseRequest } from '../models/CreditPurchaseRequest';
 import type { ManualCreditGrantRequest } from '../models/ManualCreditGrantRequest';
 import type { SuccessResponse_CreditBalanceResponse_ } from '../models/SuccessResponse_CreditBalanceResponse_';
+import type { SuccessResponse_CreditCardPurchaseResponse_ } from '../models/SuccessResponse_CreditCardPurchaseResponse_';
 import type { SuccessResponse_CreditPricingResponse_ } from '../models/SuccessResponse_CreditPricingResponse_';
 import type { SuccessResponse_CreditPurchaseHistoryResponse_ } from '../models/SuccessResponse_CreditPurchaseHistoryResponse_';
 import type { SuccessResponse_CreditPurchaseResponse_ } from '../models/SuccessResponse_CreditPurchaseResponse_';
@@ -59,6 +61,31 @@ export class AiCreditsService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/ai-credits/purchase',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Purchase Credits Card
+     * Achat par carte (Stripe, en euros) : renvoie l'adresse de la page Stripe.
+     * @param requestBody
+     * @param accessToken
+     * @returns SuccessResponse_CreditCardPurchaseResponse_ Successful Response
+     * @throws ApiError
+     */
+    public static purchaseCreditsCardApiV1AiCreditsPurchaseCardPost(
+        requestBody: CreditCardPurchaseRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<SuccessResponse_CreditCardPurchaseResponse_> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/ai-credits/purchase/card',
             cookies: {
                 'access_token': accessToken,
             },

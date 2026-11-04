@@ -9,6 +9,10 @@ export type PlanCreate = {
      * Prix en FCFA
      */
     price: number;
+    /**
+     * Prix carte en euros
+     */
+    price_eur?: (number | null);
     is_active?: boolean;
     description?: (string | null);
     /**

@@ -1,6 +1,10 @@
 """
 app/modules/exam_sessions/router.py
 """
+
+from fastapi import Request
+from app.modules.security.guard import ContentGuard
+
 from uuid import UUID
 import uuid
 
@@ -28,16 +32,13 @@ from app.shared.schemas.responses import SuccessResponse
 router = APIRouter()
 
 
-@router.post("", response_model=SessionStartResponse, status_code=201)
 async def start_session(
     data: SessionStartRequest,
     current_user: CurrentUser,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Démarre une session d'examen.
-    Retourne tout le contenu de l'exam (modules + teile + questions).
-    """
+    await ContentGuard(db).check(request, current_user, "session_start", data.subject_id)
     return await ExamSessionService(db).start_session(
         user_id=current_user.id,
         exam_id=data.exam_id,
@@ -175,16 +176,13 @@ async def submit_session(
     )
 
 
-@router.get("/{session_id}/result", response_model=SessionResultResponse)
 async def get_result(
     session_id: UUID,
     current_user: CurrentUser,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Consulte le résultat d'une session soumise.
-    Révèle les correct_answer pour chaque question.
-    """
+    await ContentGuard(db).check(request, current_user, "result_view", session_id)
     return await ExamSessionService(db).get_result(
         session_id=session_id,
         user_id=current_user.id,

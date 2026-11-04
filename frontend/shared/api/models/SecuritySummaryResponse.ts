@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SessionStartRequest = {
-    exam_id: string;
-    subject_id?: (string | null);
-    module_slugs?: (Array<string> | null);
+export type SecuritySummaryResponse = {
+    open_incidents: number;
+    open_high: number;
+    blocked_users: number;
 };
 

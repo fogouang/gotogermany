@@ -101,7 +101,8 @@
               </p>
 
               <!-- Prix -->
-              <div class="my-6">
+              <div class="my-6 space-y-2">
+                <!-- Mobile Money (FCFA) -->
                 <div class="flex items-baseline gap-1.5">
                   <span
                     class="font-heading text-4xl font-extrabold tracking-tight"
@@ -112,16 +113,45 @@
                     class="text-sm font-medium"
                     :class="
                       index === recommendedIndex
-                        ? 'text-white/60'
+                        ? 'text-white/50'
                         : 'text-faint'
                     "
                   >
                     FCFA
                   </span>
+                  <span
+                    class="ml-1 text-xs"
+                    :class="
+                      index === recommendedIndex
+                        ? 'text-white/50'
+                        : 'text-faint'
+                    "
+                  >
+                    · Mobile Money
+                  </span>
                 </div>
+
+                <!-- Carte (EUR) -->
+                <div v-if="plan.price_eur" class="flex items-baseline gap-1.5">
+                  <span class="font-heading text-2xl font-bold tracking-tight">
+                    {{ eur(plan.price_eur) }}
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 text-xs"
+                    :class="
+                      index === recommendedIndex
+                        ? 'text-white/50'
+                        : 'text-faint'
+                    "
+                  >
+                    · <i class="pi pi-credit-card text-[11px]" />
+                    {{ t("pricing.by_card") }}
+                  </span>
+                </div>
+
                 <p
                   v-if="plan.ai_credits"
-                  class="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+                  class="mt-3! inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
                   :class="
                     index === recommendedIndex
                       ? 'bg-accent-500/15 text-accent-400'
@@ -259,12 +289,19 @@ const { retenirRedirection } = useChoixExamen();
 const featuresTraduites = (features?: string[] | null) =>
   (features ?? []).filter((k) => te(`pricing.features.${k}`));
 
+const { locale } = useI18n();
+const eur = (n: number) =>
+  Number(n).toLocaleString(
+    ({ fr: "fr-FR", de: "de-DE" } as Record<string, string>)[locale.value] ??
+      "en-GB",
+    { style: "currency", currency: "EUR" },
+  );
+
 const moyensPaiement = [
   { src: "/images/orange.jpg", alt: "Orange Money" },
   { src: "/images/momo.jpg", alt: "MTN MoMo" },
   { src: "/images/visa.png", alt: "Visa" },
   { src: "/images/master.png", alt: "Mastercard" },
-  { src: "/images/paypal.png", alt: "PayPal" },
 ];
 
 const recommendedIndex = computed(() => {
@@ -278,7 +315,7 @@ const recommendedIndex = computed(() => {
 const selectPlan = (plan: PlanResponse) => {
   const chemin = `/dashboard/paiement?plan_id=${plan.id}`;
   if (authStore.isAuthenticated) {
-    navigateTo(chemin);
+    navigateTo(localePath(chemin));
   } else {
     retenirRedirection(chemin);
   }

@@ -16,5 +16,7 @@ export type InvoiceResponse = {
     customer_email: (string | null);
     product_description: string;
     partner_info?: (PartnerInfoResponse | null);
+    charged_amount?: (number | null);
+    charged_currency?: (string | null);
 };
 

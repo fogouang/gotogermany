@@ -5,6 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Literal
 
 
 # ============================================================================
@@ -13,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class CreditPricingResponse(BaseModel):
     price_per_credit: int
+    price_per_credit_eur: float | None = None   # None : pas de paiement par carte
     min_purchase: int
     max_purchase: int
     examples: list[dict] = []
@@ -46,7 +48,20 @@ class CreditPurchaseResponse(BaseModel):
     transaction_reference: str | None = None
     model_config = ConfigDict(from_attributes=True)
 
+class CreditCardPurchaseRequest(BaseModel):
+    """Achat de crédits par carte (Stripe, en euros)."""
+    credits: int = Field(..., ge=5, le=500)
+    # Langue de l'élève, pour le retour sur /fr/..., /en/..., /de/...
+    locale: Literal["fr", "en", "de"] = "fr"
 
+
+class CreditCardPurchaseResponse(BaseModel):
+    payment_id: UUID
+    transaction_reference: str
+    checkout_url: str      # page Stripe vers laquelle rediriger l'élève
+    credits: int
+    amount_eur: float
+    
 # ============================================================================
 # MANUAL GRANT — Admin
 # ============================================================================
@@ -78,6 +93,8 @@ class CreditPurchaseHistoryItem(BaseModel):
     transaction_reference: str | None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+    charged_amount: float | None = None      # montant payé par carte (euros)
+    charged_currency: str | None = None
 
 
 class CreditPurchaseHistoryResponse(BaseModel):

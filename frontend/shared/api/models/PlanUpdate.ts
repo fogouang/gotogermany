@@ -6,6 +6,7 @@ export type PlanUpdate = {
     name?: (string | null);
     duration_days?: (number | null);
     price?: (number | null);
+    price_eur?: (number | null);
     is_active?: (boolean | null);
     description?: (string | null);
     features?: (Array<string> | null);

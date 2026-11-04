@@ -9,7 +9,7 @@ import { request as __request } from '../core/request';
 export class InvoicesService {
     /**
      * Generate Invoice
-     * Génère ou régénère la facture PDF d'un paiement.
+     * Marque le reçu comme disponible (le PDF est généré au téléchargement).
      * @param paymentId
      * @param accessToken
      * @returns any Successful Response
@@ -48,6 +48,33 @@ export class InvoicesService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/invoices/payment/{payment_id}',
+            path: {
+                'payment_id': paymentId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Download Invoice Pdf
+     * Reçu PDF généré à la volée : rien n'est stocké sur le serveur.
+     * Réservé à l'élève qui a payé et aux admins.
+     * @param paymentId
+     * @param accessToken
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static downloadInvoicePdfApiV1InvoicesPaymentIdPdfGet(
+        paymentId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/invoices/{payment_id}/pdf',
             path: {
                 'payment_id': paymentId,
             },

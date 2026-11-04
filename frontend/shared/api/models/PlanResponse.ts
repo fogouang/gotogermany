@@ -7,6 +7,7 @@ export type PlanResponse = {
     name: string;
     duration_days: number;
     price: number;
+    price_eur?: (number | null);
     is_active: boolean;
     description?: (string | null);
     features?: (Array<string> | null);

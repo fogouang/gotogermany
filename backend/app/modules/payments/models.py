@@ -110,6 +110,12 @@ class Payment(Base, UUIDMixin, TimestampMixin):
     
     pawapay_deposit_id: Mapped[str | None] = mapped_column(String(36), nullable=True)  # UUID pawaPay
     
+    # Paiement par carte : montant réellement débité (centimes) et devise
+    charged_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    charged_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    # Référence chez le prestataire (id de session Stripe)
+    provider_ref: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    
     # Opérateur utilisé : "MTN", "ORANGE", etc.
     operator: Mapped[str | None] = mapped_column(String(30), nullable=True)
 

@@ -20,26 +20,40 @@
       v-else-if="!targetLevel"
       class="flex flex-col items-center gap-3 rounded-card border border-dashed border-line bg-card px-6 py-14 text-center"
     >
-      <span class="flex size-14 items-center justify-center rounded-full bg-red-500/10 text-red-600">
+      <span
+        class="flex size-14 items-center justify-center rounded-full bg-red-500/10 text-red-600"
+      >
         <i class="pi pi-exclamation-triangle text-xl" />
       </span>
       <p class="font-medium text-ink">{{ t("payment.level") }}</p>
-      <Button :label="t('payment.back')" outlined size="small" @click="navigateTo(localePath(backPath))" />
+      <Button
+        :label="t('payment.back')"
+        outlined
+        size="small"
+        @click="navigateTo(localePath(backPath))"
+      />
     </div>
 
     <div v-else class="grid items-start gap-5 lg:grid-cols-5">
       <!-- ══════════ Gauche : niveau, plan, inclus ══════════ -->
       <div class="space-y-5 lg:col-span-3">
         <!-- Niveau visé -->
-        <section class="flex items-center gap-4 rounded-card border border-line bg-card p-5 shadow-soft">
-          <span class="flex size-12 shrink-0 items-center justify-center rounded-leaf text-sm font-bold" :class="levelBg">
+        <section
+          class="flex items-center gap-4 rounded-card border border-line bg-card p-5 shadow-soft"
+        >
+          <span
+            class="flex size-12 shrink-0 items-center justify-center rounded-leaf text-sm font-bold"
+            :class="levelBg"
+          >
             {{ targetLevel.cefr_code }}
           </span>
           <div class="min-w-0 flex-1">
             <p class="truncate font-semibold text-ink">{{ targetExamName }}</p>
             <p class="text-sm text-muted">
               {{ targetLevel.cefr_code }} ·
-              <span class="font-medium text-primary">{{ targetLevel.subject_count }} {{ t("payment.subjet") }}</span>
+              <span class="font-medium text-primary"
+                >{{ targetLevel.subject_count }} {{ t("payment.subjet") }}</span
+              >
             </p>
           </div>
 
@@ -53,7 +67,11 @@
               :key="lvl"
               type="button"
               class="rounded-leaf px-3 py-1.5 text-sm font-semibold transition-colors"
-              :class="sdLevel === lvl ? 'bg-card text-primary shadow-soft' : 'text-muted hover:text-ink'"
+              :class="
+                sdLevel === lvl
+                  ? 'bg-card text-primary shadow-soft'
+                  : 'text-muted hover:text-ink'
+              "
               :disabled="loading"
               @click="sdLevel = lvl"
             >
@@ -63,33 +81,62 @@
         </section>
 
         <!-- Durée -->
-        <section class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft">
-          <h2 class="text-sm font-semibold text-ink">{{ t("payment.choose_duration") }}</h2>
+        <section
+          class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft"
+        >
+          <h2 class="text-sm font-semibold text-ink">
+            {{ t("payment.choose_duration") }}
+          </h2>
           <div class="grid gap-2 sm:grid-cols-2">
             <button
               v-for="plan in activePlans"
               :key="plan.id"
               type="button"
               class="flex items-center justify-between gap-3 rounded-leaf border-2 p-4 text-left transition-colors"
-              :class="selectedPlan?.id === plan.id ? 'border-primary bg-primary/10' : 'border-line bg-card hover:border-primary/30'"
+              :class="
+                selectedPlan?.id === plan.id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-line bg-card hover:border-primary/30'
+              "
               @click="selectedPlan = plan"
             >
               <span class="flex min-w-0 items-center gap-3">
                 <span
                   class="flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors"
-                  :class="selectedPlan?.id === plan.id ? 'border-primary bg-primary' : 'border-line'"
+                  :class="
+                    selectedPlan?.id === plan.id
+                      ? 'border-primary bg-primary'
+                      : 'border-line'
+                  "
                 >
-                  <i v-if="selectedPlan?.id === plan.id" class="pi pi-check text-[10px] text-white" />
+                  <i
+                    v-if="selectedPlan?.id === plan.id"
+                    class="pi pi-check text-[10px] text-white"
+                  />
                 </span>
                 <span class="min-w-0">
-                  <span class="block truncate text-sm font-semibold text-ink">{{ plan.name }}</span>
-                  <span class="block text-xs text-muted">{{ formatDuration(plan.duration_days) }}</span>
+                  <span class="block truncate text-sm font-semibold text-ink">{{
+                    plan.name
+                  }}</span>
+                  <span class="block text-xs text-muted">{{
+                    formatDuration(plan.duration_days)
+                  }}</span>
                 </span>
               </span>
               <span class="shrink-0 text-right">
-                <span class="block font-bold text-ink">{{ fcfa(plan.price) }}</span>
-                <span class="block text-xs text-muted">
-                  {{ num(Math.round(plan.price / plan.duration_days)) }} {{ t("payment.per_day") }}
+                <span class="block font-bold text-ink">
+                  {{
+                    method === "card" && plan.price_eur
+                      ? eur(plan.price_eur)
+                      : fcfa(plan.price)
+                  }}
+                </span>
+                <span
+                  v-if="method === 'mobile'"
+                  class="block text-xs text-muted"
+                >
+                  {{ num(Math.round(plan.price / plan.duration_days)) }}
+                  {{ t("payment.per_day") }}
                 </span>
               </span>
             </button>
@@ -97,10 +144,18 @@
         </section>
 
         <!-- Inclus -->
-        <section class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft">
-          <h2 class="text-sm font-semibold text-ink">{{ t("payment.included") }}</h2>
+        <section
+          class="space-y-3 rounded-card border border-line bg-card p-5 shadow-soft"
+        >
+          <h2 class="text-sm font-semibold text-ink">
+            {{ t("payment.included") }}
+          </h2>
           <ul class="grid gap-2 sm:grid-cols-2">
-            <li v-for="key in featureKeys" :key="key" class="flex items-center gap-2 text-sm text-ink">
+            <li
+              v-for="key in featureKeys"
+              :key="key"
+              class="flex items-center gap-2 text-sm text-ink"
+            >
               <i class="pi pi-check-circle text-xs text-primary" />
               {{ t(`payment.features.${key}`) }}
             </li>
@@ -109,76 +164,168 @@
       </div>
 
       <!-- ══════════ Droite : paiement ══════════ -->
-      <aside class="space-y-5 rounded-card border border-line bg-card p-5 shadow-soft lg:sticky lg:top-0 lg:col-span-2">
-        <div class="flex items-center gap-3">
-          <img :src="img('orange.jpg')" alt="Orange Money" class="h-8 rounded-md object-contain" />
-          <img :src="img('momo.jpg')" alt="MTN MoMo" class="h-8 rounded-md object-contain" />
-          <div>
-            <p class="text-sm font-semibold text-ink">{{ t("payment.mobile_money") }}</p>
-            <p class="text-xs text-muted">{{ t("payment.mobile_desc") }}</p>
-          </div>
-        </div>
-
-        <!-- Opérateur -->
-        <div>
-          <label class="mb-2 block text-sm font-medium text-ink">{{ t("payment.operator") }}</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              v-for="op in operators"
-              :key="op.value"
-              type="button"
-              class="flex items-center gap-2.5 rounded-leaf border-2 p-3 text-left transition-colors"
-              :class="form.operator === op.value ? 'border-primary bg-primary/10' : 'border-line bg-card hover:border-primary/30'"
-              :disabled="loading"
-              @click="form.operator = op.value"
-            >
+      <aside
+        class="space-y-5 rounded-card border border-line bg-card p-5 shadow-soft lg:sticky lg:top-0 lg:col-span-2"
+      >
+        <!-- Moyen de paiement -->
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            class="flex flex-col items-start gap-1 rounded-leaf border-2 p-3 text-left transition-colors"
+            :class="
+              method === 'mobile'
+                ? 'border-primary bg-primary/10'
+                : 'border-line bg-card hover:border-primary/30'
+            "
+            :disabled="loading || cardLoading"
+            @click="method = 'mobile'"
+          >
+            <span class="flex items-center gap-1.5">
               <img
-                :src="img(op.value === 'MTN' ? 'momo.jpg' : 'orange.jpg')"
-                :alt="op.label"
-                class="size-8 shrink-0 rounded-md object-contain"
+                :src="img('orange.jpg')"
+                alt="Orange Money"
+                class="size-6 rounded object-contain"
               />
-              <span class="text-sm font-medium text-ink">{{ op.label }}</span>
-            </button>
+              <img
+                :src="img('momo.jpg')"
+                alt="MTN MoMo"
+                class="size-6 rounded object-contain"
+              />
+            </span>
+            <span class="text-sm font-semibold text-ink">{{
+              t("payment.mobile_money")
+            }}</span>
+            <span class="text-xs text-muted">{{
+              t("payment.mobile_desc")
+            }}</span>
+          </button>
+          <button
+            type="button"
+            class="flex flex-col items-start gap-1 rounded-leaf border-2 p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            :class="
+              method === 'card'
+                ? 'border-primary bg-primary/10'
+                : 'border-line bg-card hover:border-primary/30'
+            "
+            :disabled="!cardAvailable || loading || cardLoading"
+            @click="method = 'card'"
+          >
+            <i class="pi pi-credit-card text-lg text-primary" />
+            <span class="text-sm font-semibold text-ink">{{
+              t("payment.card.title")
+            }}</span>
+            <span class="text-xs text-muted">
+              {{
+                cardAvailable
+                  ? t("payment.card.desc")
+                  : t("payment.card.unavailable")
+              }}
+            </span>
+          </button>
+        </div>
+
+        <template v-if="method === 'mobile'">
+          <!-- Opérateur -->
+          <div>
+            <label class="mb-2 block text-sm font-medium text-ink">{{
+              t("payment.operator")
+            }}</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                v-for="op in operators"
+                :key="op.value"
+                type="button"
+                class="flex items-center gap-2.5 rounded-leaf border-2 p-3 text-left transition-colors"
+                :class="
+                  form.operator === op.value
+                    ? 'border-primary bg-primary/10'
+                    : 'border-line bg-card hover:border-primary/30'
+                "
+                :disabled="loading"
+                @click="form.operator = op.value"
+              >
+                <img
+                  :src="img(op.value === 'MTN' ? 'momo.jpg' : 'orange.jpg')"
+                  :alt="op.label"
+                  class="size-8 shrink-0 rounded-md object-contain"
+                />
+                <span class="text-sm font-medium text-ink">{{ op.label }}</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Numéro -->
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-ink">{{ t("payment.phone") }}</label>
-          <InputText
-            v-model="form.phone_number"
-            inputmode="numeric"
-            placeholder="690000000"
-            fluid
-            :disabled="loading"
-            :invalid="phoneTouched && !phoneValid"
-            @blur="phoneTouched = true"
-          />
-          <p class="mt-1.5 text-xs" :class="phoneTouched && !phoneValid ? 'text-red-600' : 'text-faint'">
-            <i class="pi pi-info-circle mr-1" />
-            {{ phoneTouched && !phoneValid ? t("ai_credits.phone_invalid") : t("payment.phone_hint") }}
-          </p>
-        </div>
+          <!-- Numéro -->
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">{{
+              t("payment.phone")
+            }}</label>
+            <InputText
+              v-model="form.phone_number"
+              inputmode="numeric"
+              placeholder="690000000"
+              fluid
+              :disabled="loading"
+              :invalid="phoneTouched && !phoneValid"
+              @blur="phoneTouched = true"
+            />
+            <p
+              class="mt-1.5 text-xs"
+              :class="
+                phoneTouched && !phoneValid ? 'text-red-600' : 'text-faint'
+              "
+            >
+              <i class="pi pi-info-circle mr-1" />
+              {{
+                phoneTouched && !phoneValid
+                  ? t("ai_credits.phone_invalid")
+                  : t("payment.phone_hint")
+              }}
+            </p>
+          </div>
+        </template>
 
-        <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+        <!-- Carte : pas d'opérateur ni de numéro, redirection vers Stripe -->
+        <p
+          v-else
+          class="flex items-start gap-2 rounded-leaf bg-card-2 p-3 text-xs text-muted"
+        >
+          <i class="pi pi-lock mt-0.5 text-[11px]" />
+          {{ t("payment.card.redirect_info") }}
+        </p>
+
+        <Message v-if="error || cardError" severity="error" :closable="false">{{
+          error || cardError
+        }}</Message>
 
         <!-- Total + CTA -->
         <div class="space-y-4 border-t border-line pt-4">
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-muted">{{ t("payment.total") }}</span>
-            <span class="text-2xl font-extrabold text-ink">{{ selectedPlan ? fcfa(selectedPlan.price) : "-" }}</span>
+            <span class="text-sm font-medium text-muted">{{
+              t("payment.total")
+            }}</span>
+            <span class="text-2xl font-extrabold text-ink">{{
+              !selectedPlan
+                ? "-"
+                : method === "card"
+                  ? eur(selectedPlan.price_eur ?? 0)
+                  : fcfa(selectedPlan.price)
+            }}</span>
           </div>
           <Button
-            :label="t('payment.pay_now')"
-            icon="pi pi-lock"
+            :label="
+              method === 'card' ? t('payment.card.pay') : t('payment.pay_now')
+            "
+            :icon="method === 'card' ? 'pi pi-credit-card' : 'pi pi-lock'"
             class="w-full"
             size="large"
-            :loading="loading"
+            :loading="loading || cardLoading"
             :disabled="!canPay"
             @click="handlePay"
           />
           <p class="text-center text-xs text-faint">
-            <i class="pi pi-shield mr-1" />{{ t("payment.secure") }}
+            <i class="pi pi-shield mr-1" />{{
+              method === "card" ? t("payment.card.secure") : t("payment.secure")
+            }}
           </p>
         </div>
       </aside>
@@ -195,7 +342,13 @@
       <div class="space-y-5 text-center">
         <span
           class="mx-auto flex size-16 items-center justify-center rounded-full"
-          :class="isCompleted ? 'bg-emerald-500/10 text-emerald-600' : isFailed ? 'bg-red-500/10 text-red-600' : 'bg-amber-500/15 text-amber-600'"
+          :class="
+            isCompleted
+              ? 'bg-emerald-500/10 text-emerald-600'
+              : isFailed
+                ? 'bg-red-500/10 text-red-600'
+                : 'bg-amber-500/15 text-amber-600'
+          "
         >
           <i v-if="isPending" class="pi pi-spin pi-spinner text-2xl" />
           <i v-else-if="isCompleted" class="pi pi-check-circle text-3xl" />
@@ -223,27 +376,52 @@
           </p>
         </div>
 
-        <div v-if="isPending" class="space-y-2 rounded-leaf bg-card-2 p-4 text-left text-sm">
+        <div
+          v-if="isPending"
+          class="space-y-2 rounded-leaf bg-card-2 p-4 text-left text-sm"
+        >
           <p class="flex items-start gap-2 text-ink">
             <i class="pi pi-mobile mt-0.5 text-amber-600" />
-            <span>{{ t("payment.message").trim() }} : <strong>{{ normalizedPhone }}</strong></span>
+            <span
+              >{{ t("payment.message").trim() }} :
+              <strong>{{ normalizedPhone }}</strong></span
+            >
           </p>
-          <p class="pl-6 text-muted">{{ t("payment.pin") }} ({{ operatorLabel }})</p>
+          <p class="pl-6 text-muted">
+            {{ t("payment.pin") }} ({{ operatorLabel }})
+          </p>
           <p class="flex items-center gap-2 pt-1 text-xs text-faint">
             <i class="pi pi-clock text-[10px]" />
             {{ t("payment.polling") }}
           </p>
         </div>
 
-        <div v-if="currentPayment?.transaction_reference" class="rounded-leaf bg-card-2 px-4 py-3 text-left">
+        <div
+          v-if="currentPayment?.transaction_reference"
+          class="rounded-leaf bg-card-2 px-4 py-3 text-left"
+        >
           <p class="text-xs text-muted">{{ t("payment.ref") }}</p>
-          <p class="break-all font-mono text-sm font-semibold text-ink">{{ currentPayment.transaction_reference }}</p>
+          <p class="break-all font-mono text-sm font-semibold text-ink">
+            {{ currentPayment.transaction_reference }}
+          </p>
         </div>
       </div>
 
       <template #footer>
-        <Button v-if="isPending" :label="t('invoices.close')" text severity="secondary" @click="closeConfirm" />
-        <Button v-if="isFailed" :label="t('payment.confirm.retry')" severity="secondary" outlined @click="closeConfirm" />
+        <Button
+          v-if="isPending"
+          :label="t('invoices.close')"
+          text
+          severity="secondary"
+          @click="closeConfirm"
+        />
+        <Button
+          v-if="isFailed"
+          :label="t('payment.confirm.retry')"
+          severity="secondary"
+          outlined
+          @click="closeConfirm"
+        />
         <Button
           v-if="isCompleted"
           :label="t('payment.confirm.go_to_exams')"
@@ -269,11 +447,29 @@ const startDeutschStore = useStartDeutschSessionStore();
 const authStore = useAuthStore();
 const learningTrack = useLearningTrack();
 const { activePlans, loadPlans, formatDuration } = usePlans();
-const { pay, operators, currentPayment, isPending, isCompleted, isFailed, loading, error, stopPolling, resetPayment } =
-  usePayments();
+const {
+  pay,
+  payByCard,
+  operators,
+  currentPayment,
+  isPending,
+  isCompleted,
+  isFailed,
+  loading,
+  error,
+  stopPolling,
+  resetPayment,
+} = usePayments();
+const toast = useToast();
 
 const img = (name: string) => `/images/${name}`;
-const featureKeys = ["unlimited", "subjects", "audio", "corrections", "progress"];
+const featureKeys = [
+  "unlimited",
+  "subjects",
+  "audio",
+  "corrections",
+  "progress",
+];
 
 const loadingData = ref(true);
 const selectedPlan = ref<PlanResponse | null>(null);
@@ -281,10 +477,29 @@ const confirmDialog = ref(false);
 const form = ref({ operator: "", phone_number: "" });
 const phoneTouched = ref(false);
 
+// ── Moyen de paiement ──
+const method = ref<"mobile" | "card">("mobile");
+const cardLoading = ref(false);
+const cardError = ref<string | null>(null);
+const cardAvailable = computed(() => !!selectedPlan.value?.price_eur);
+watch(cardAvailable, (ok) => {
+  if (!ok && method.value === "card") method.value = "mobile";
+});
+
 // ── Format ──
-const intlLocale = computed(() => ({ fr: "fr-FR", de: "de-DE" } as Record<string, string>)[locale.value] ?? "en-GB");
+const intlLocale = computed(
+  () =>
+    (({ fr: "fr-FR", de: "de-DE" }) as Record<string, string>)[locale.value] ??
+    "en-GB",
+);
 const num = (n: number) => n.toLocaleString(intlLocale.value);
 const fcfa = (n: number) => `${num(n)} FCFA`;
+
+const eur = (n: number) =>
+  Number(n).toLocaleString(intlLocale.value, {
+    style: "currency",
+    currency: "EUR",
+  });
 
 // ── Niveau visé ──
 // Examen B : ?level_id=... ; Start Deutsch : ?sd_level=A1 ou A2.
@@ -293,15 +508,20 @@ const levelId = computed(() => route.query.level_id as string | undefined);
 
 type SdLevel = "A1" | "A2";
 const SD_LEVELS: SdLevel[] = ["A1", "A2"];
-const asSdLevel = (v: unknown): SdLevel | null => (v === "A1" || v === "A2" ? v : null);
+const asSdLevel = (v: unknown): SdLevel | null =>
+  v === "A1" || v === "A2" ? v : null;
 
 const sdLevelFromQuery = asSdLevel(route.query.sd_level);
 const isStartDeutsch = computed(
-  () => !!sdLevelFromQuery || (!levelId.value && learningTrack.isStartDeutsch.value),
+  () =>
+    !!sdLevelFromQuery ||
+    (!levelId.value && learningTrack.isStartDeutsch.value),
 );
 const sdLevel = ref<SdLevel>(
   sdLevelFromQuery ??
-    asSdLevel((authStore.user as { target_sd_level?: string } | null)?.target_sd_level) ??
+    asSdLevel(
+      (authStore.user as { target_sd_level?: string } | null)?.target_sd_level,
+    ) ??
     "A1",
 );
 
@@ -309,7 +529,9 @@ const targetLevel = computed(() => {
   if (isStartDeutsch.value) {
     return {
       cefr_code: sdLevel.value,
-      subject_count: startDeutschStore.subjects.filter((s) => s.level === sdLevel.value).length,
+      subject_count: startDeutschStore.subjects.filter(
+        (s) => s.level === sdLevel.value,
+      ).length,
     };
   }
   for (const exam of examsStore.catalog) {
@@ -344,41 +566,64 @@ const levelBg = computed(
 );
 
 // ── Téléphone ──
-const normalizedPhone = computed(() => form.value.phone_number.replace(/\s+/g, "").replace(/^(\+?237)/, ""));
+const normalizedPhone = computed(() =>
+  form.value.phone_number.replace(/\s+/g, "").replace(/^(\+?237)/, ""),
+);
 const phoneValid = computed(() => /^[69]\d{8}$/.test(normalizedPhone.value));
-const operatorLabel = computed(() => operators.find((o) => o.value === form.value.operator)?.label ?? form.value.operator);
+const operatorLabel = computed(
+  () =>
+    operators.find((o) => o.value === form.value.operator)?.label ??
+    form.value.operator,
+);
 
 // ── Init ──
 onMounted(async () => {
   await Promise.all([
     loadPlans(),
-    examsStore.catalog.length === 0 ? examsStore.fetchCatalog() : Promise.resolve(),
+    examsStore.catalog.length === 0
+      ? examsStore.fetchCatalog()
+      : Promise.resolve(),
     // Nombre de sujets affiché pour Start Deutsch
     isStartDeutsch.value && startDeutschStore.subjects.length === 0
       ? startDeutschStore.fetchSubjects()
       : Promise.resolve(),
   ]);
   const planId = route.query.plan_id as string;
-  if (planId) selectedPlan.value = activePlans.value.find((p) => p.id === planId) ?? null;
+  if (planId)
+    selectedPlan.value = activePlans.value.find((p) => p.id === planId) ?? null;
   if (!selectedPlan.value && activePlans.value.length > 0) {
-    selectedPlan.value = activePlans.value[Math.floor(activePlans.value.length / 2)] ?? null;
+    selectedPlan.value =
+      activePlans.value[Math.floor(activePlans.value.length / 2)] ?? null;
   }
   loadingData.value = false;
+
+  if (route.query.cancelled) {
+    toast.add({
+      severity: "info",
+      summary: t("payment.card.cancelled"),
+      life: 5000,
+    });
+  }
 });
 
 // ── Validation ──
-const canPay = computed(() => !!selectedPlan.value && !!targetLevel.value && !!form.value.operator && phoneValid.value);
+const canPay = computed(() => {
+  if (!selectedPlan.value || !targetLevel.value) return false;
+  if (method.value === "card") return cardAvailable.value;
+  return !!form.value.operator && phoneValid.value;
+});
 
 // ── Payer ──
 const handlePay = async () => {
   phoneTouched.value = true;
+  if (method.value === "card") return handleCardPay();
   if (!canPay.value || !selectedPlan.value || !targetLevel.value) return;
   resetPayment();
   confirmDialog.value = true;
 
   const res = await pay({
     // Niveau d'examen OU niveau Start Deutsch
-    level_id: isStartDeutsch.value ? null : levelId.value ?? null,
+    level_id: isStartDeutsch.value ? null : (levelId.value ?? null),
     sd_level: isStartDeutsch.value ? sdLevel.value : null,
     plan_id: selectedPlan.value.id,
     operator: form.value.operator,
@@ -386,6 +631,26 @@ const handlePay = async () => {
   });
 
   if (!res.success) confirmDialog.value = false;
+};
+
+const handleCardPay = async () => {
+  if (!canPay.value || !selectedPlan.value) return;
+  cardLoading.value = true;
+  cardError.value = null;
+  const lang = (
+    ["fr", "en", "de"].includes(locale.value) ? locale.value : "fr"
+  ) as "fr" | "en" | "de";
+  const res = await payByCard({
+    level_id: isStartDeutsch.value ? null : (levelId.value ?? null),
+    sd_level: isStartDeutsch.value ? sdLevel.value : null,
+    plan_id: selectedPlan.value.id,
+    locale: lang,
+  });
+  // En cas de succès, la redirection vers Stripe est en cours : le bouton reste en chargement
+  if (!res.success) {
+    cardError.value = res.error ?? t("payment.card.error");
+    cardLoading.value = false;
+  }
 };
 
 const closeConfirm = () => {

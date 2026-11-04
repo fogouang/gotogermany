@@ -38,3 +38,4 @@ import app.modules.start_deutsch.models
 import app.modules.training_sessions.models
 import app.modules.sales.models  # noqa: F401
 import app.modules.assignments.models  # noqa: F401
+import app.modules.security.models  # noqa: F401

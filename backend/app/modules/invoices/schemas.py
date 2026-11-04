@@ -26,3 +26,5 @@ class InvoiceResponse(BaseSchema):
     customer_email: str | None
     product_description: str
     partner_info: PartnerInfoResponse | None = None
+    charged_amount: float | None = None    # paiement par carte : montant débité en euros
+    charged_currency: str | None = None

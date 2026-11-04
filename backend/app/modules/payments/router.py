@@ -10,6 +10,8 @@ Endpoints :
   POST /payments/callback/{secret}            → callback pawaPay (anciens paiements + relais Lumina)
   GET  /payments/admin/summary                → stats admin
 """
+from app.modules.payments.schemas import CardPaymentRequest
+from app.modules.payments.schemas import CardPaymentResponse
 import json
 import logging
 from uuid import UUID
@@ -18,6 +20,7 @@ from fastapi import Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.modules.payments.stripe_client import StripeClient
 
 from app.config import get_settings
 from app.modules.auth.dependencies import CurrentAdmin, CurrentUser
@@ -61,6 +64,16 @@ async def initiate_payment(
     result = await PaymentService(db).initiate_payment(data, current_user)
     return PaymentInitiateResponse(**result)
 
+@router.post("/card", response_model=CardPaymentResponse, status_code=201)
+async def initiate_card_payment(
+    data: CardPaymentRequest,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Paiement par carte (Stripe, en euros) : renvoie l'adresse de la page Stripe."""
+    result = await PaymentService(db).initiate_card_payment(data, current_user)
+    return CardPaymentResponse(**result)
+
 
 @router.get("/status/{transaction_reference}", response_model=PaymentStatusResponse)
 async def get_payment_status(
@@ -103,6 +116,25 @@ async def get_payment(
 # URL obfusquée — ne pas documenter publiquement
 _WEBHOOK_SECRET = "jkdKo0Lp8lsdfjk4j0HJhskfak93d"
 
+@router.post("/stripe/webhook", include_in_schema=False)
+async def stripe_webhook(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Webhook Stripe : signature vérifiée, puis relecture de la session chez Stripe."""
+    raw_body = await request.body()
+    if not StripeClient().verify_webhook(raw_body, request.headers.get("stripe-signature")):
+        return JSONResponse(status_code=400, content={"status": "invalid_signature"})
+
+    try:
+        event = json.loads(raw_body)
+        await PaymentService(db).handle_stripe_event(event)
+    except Exception as e:
+        logger.exception(f"Webhook Stripe : erreur de traitement : {e}")
+        # 500 : Stripe renverra l'événement plus tard
+        return JSONResponse(status_code=500, content={"status": "error"})
+
+    return {"received": True}
 
 @router.post(f"/kratos/webhook/{_WEBHOOK_SECRET}", include_in_schema=False)
 async def kratos_webhook(

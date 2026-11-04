@@ -49,7 +49,7 @@
           <div>
             <p class="text-xs text-muted">{{ t("invoices.total") }}</p>
             <p class="text-2xl font-bold leading-tight text-ink">
-              {{ fcfa(totalPaid) }}
+              {{ totalPaidLabel }}
             </p>
           </div>
         </div>
@@ -98,7 +98,7 @@
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
               <p class="font-semibold text-ink">
-                {{ fcfa(payment.amount_paid) }}
+                {{ paymentAmount(payment) }}
               </p>
               <span
                 class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -109,7 +109,9 @@
             </div>
             <p class="mt-0.5 truncate text-xs text-muted">
               {{ formatDate(payment.created_at) }}
-              <span v-if="payment.operator"> · {{ payment.operator }}</span>
+              <span v-if="payment.operator">
+                · {{ operatorLabel(payment.operator) }}</span
+              >
             </p>
             <p class="truncate text-xs text-faint">
               {{ t("invoices.ref") }} {{ payment.transaction_reference }}
@@ -214,7 +216,10 @@
           <div class="flex justify-between text-base font-bold">
             <span class="text-ink">{{ t("invoices.total") }}</span>
             <span class="text-primary">{{
-              fcfa(currentInvoice.amount_paid)
+              currentInvoice.charged_amount &&
+              currentInvoice.charged_currency === "EUR"
+                ? eur(currentInvoice.charged_amount)
+                : fcfa(currentInvoice.amount_paid)
             }}</span>
           </div>
         </div>
@@ -228,23 +233,11 @@
           @click="invoiceDialog = false"
         />
         <Button
-          v-if="currentInvoice?.invoice_url"
+          v-if="currentInvoice"
           :label="t('invoices.download_pdf')"
           icon="pi pi-download"
-          @click="
-            downloadInvoice(
-              currentInvoice.invoice_url!,
-              `facture-${currentInvoice.transaction_reference}.pdf`,
-            )
-          "
-        />
-        <Button
-          v-else-if="currentInvoice"
-          :label="t('invoices.generate_pdf')"
-          icon="pi pi-refresh"
-          outlined
-          :loading="invoiceLoading"
-          @click="handleGenerate"
+          :loading="downloading"
+          @click="handleDownload"
         />
       </template>
     </Dialog>
@@ -256,14 +249,10 @@ definePageMeta({ layout: "dashboard", watermark: "Rechnungen" });
 
 const { t, te, locale } = useI18n();
 const localePath = useLocalePath();
+const toast = useToast();
 const { myPayments, loading, fetchMyPayments } = usePayments();
-const {
-  currentInvoice,
-  fetchInvoice,
-  generateInvoice,
-  downloadInvoice,
-  formatDate,
-} = useInvoices();
+const { currentInvoice, fetchInvoice, formatDate } = useInvoices();
+const { download, downloading } = useApiDownload();
 
 const invoiceDialog = ref(false);
 const invoiceLoading = ref(false);
@@ -277,6 +266,26 @@ const numberLocale = computed(
 );
 const fcfa = (n: number) =>
   `${Math.round(n).toLocaleString(numberLocale.value)} FCFA`;
+const eur = (n: number) =>
+  Number(n).toLocaleString(numberLocale.value, {
+    style: "currency",
+    currency: "EUR",
+  });
+
+// Paiement par carte : charged_amount est en centimes dans la liste
+const isCard = (p: {
+  charged_amount?: number | null;
+  charged_currency?: string | null;
+}) => !!p.charged_amount && p.charged_currency === "EUR";
+const paymentAmount = (p: (typeof myPayments.value)[number]) =>
+  isCard(p) ? eur(p.charged_amount! / 100) : fcfa(p.amount_paid);
+
+const operatorLabel = (op: string) =>
+  ({
+    MTN: "MTN Mobile Money",
+    ORANGE: "Orange Money",
+    STRIPE: t("payment.card.title"),
+  })[op] ?? op;
 
 const formatStatus = (status: string) =>
   te(`invoices.status.${status}`) ? t(`invoices.status.${status}`) : status;
@@ -300,12 +309,20 @@ const statusStyle = (status: string) =>
           badge: "bg-amber-500/15 text-amber-600",
         };
 
-// ── Résumé ──
-const totalPaid = computed(() =>
-  myPayments.value
-    .filter((p) => p.payment_status === "COMPLETED")
-    .reduce((s, p) => s + (p.amount_paid ?? 0), 0),
-);
+// ── Résumé : total dans la devise réellement payée ──
+const totalPaidLabel = computed(() => {
+  const paid = myPayments.value.filter((p) => p.payment_status === "COMPLETED");
+  const totalEur = paid
+    .filter(isCard)
+    .reduce((s, p) => s + p.charged_amount! / 100, 0);
+  const totalFcfa = paid
+    .filter((p) => !isCard(p))
+    .reduce((s, p) => s + (p.amount_paid ?? 0), 0);
+  const parts: string[] = [];
+  if (totalFcfa > 0) parts.push(fcfa(totalFcfa));
+  if (totalEur > 0) parts.push(eur(totalEur));
+  return parts.length ? parts.join(" + ") : fcfa(0);
+});
 
 // ── Filtres ──
 type StatusFilter = "all" | "COMPLETED" | "PENDING" | "FAILED";
@@ -356,7 +373,7 @@ const pagedPayments = computed(() =>
 );
 watch(statusFilter, () => (first.value = 0));
 
-// ── Facture ──
+// ── Reçu ──
 const openInvoice = async (paymentId: string) => {
   loadingInvoice.value = paymentId;
   invoiceDialog.value = true;
@@ -366,11 +383,21 @@ const openInvoice = async (paymentId: string) => {
   loadingInvoice.value = null;
 };
 
-const handleGenerate = async () => {
-  if (!currentInvoice.value) return;
-  invoiceLoading.value = true;
-  await generateInvoice(currentInvoice.value.payment_id);
-  invoiceLoading.value = false;
+// PDF généré à la volée par le backend, récupéré en blob
+const handleDownload = async () => {
+  const inv = currentInvoice.value;
+  if (!inv) return;
+  const lang = ["fr", "en", "de"].includes(locale.value) ? locale.value : "en";
+  const res = await download(
+    `/api/v1/invoices/${inv.payment_id}/pdf?lang=${lang}`,
+    `recu_${inv.transaction_reference}.pdf`,
+  );
+  if (!res.success)
+    toast.add({
+      severity: "error",
+      summary: res.error || t("invoices.download_error"),
+      life: 4000,
+    });
 };
 
 onMounted(fetchMyPayments);

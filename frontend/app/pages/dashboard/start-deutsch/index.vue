@@ -161,9 +161,14 @@ const levelOptions = computed(() => [
 ]);
 
 const filteredSubjects = computed(() =>
-  filterLevel.value
+  (filterLevel.value
     ? store.subjects.filter((s) => s.level === filterLevel.value)
-    : store.subjects,
+    : [...store.subjects]
+  ).sort(
+    (a, b) =>
+      a.level.localeCompare(b.level) ||
+      a.title.localeCompare(b.title, undefined, { numeric: true }),
+  ),
 );
 
 function setLevelFilter(value: "A1" | "A2" | "") {

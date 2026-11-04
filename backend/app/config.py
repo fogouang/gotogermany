@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     KRATOS_WEBHOOK_ALGO: str = "sha256"
     KRATOS_WEBHOOK_STRICT: bool = True
     
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    AI_CREDIT_PRICE_EUR: float = 0.10   # prix d'un crédit IA par carte (si absent de app_settings)
+    
     # AI Correction Configuration
     AI_PROVIDER: str = "gemini"  # Options: "grok", "gemini", "claude"
     # Gemini (Google)

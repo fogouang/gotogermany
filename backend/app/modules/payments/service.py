@@ -20,9 +20,15 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.payments.kratos import KratosClient, KratosError
+from app.modules.payments.stripe_client import StripeClient
 from app.modules.payments.models import Payment
 from app.modules.payments.repository import PaymentRepository
-from app.modules.payments.schemas import ManualPaymentRequest, PawapayCallbackPayload, PaymentInitiateRequest
+from app.modules.payments.schemas import (
+    CardPaymentRequest,
+    ManualPaymentRequest,
+    PawapayCallbackPayload,
+    PaymentInitiateRequest,
+)
 from app.modules.users.models import User
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 
@@ -40,6 +46,7 @@ class PaymentService:
         self.db = db
         self.repo = PaymentRepository(db)
         self.kratos = KratosClient()
+        self.stripe = StripeClient()
 
     # ── Initiation ───────────────────────────────────────
 
@@ -139,6 +146,150 @@ class PaymentService:
             "message": message,
         }
 
+    
+        # ── Carte bancaire (Stripe Checkout, en euros) ───────
+
+    async def initiate_card_payment(self, data: CardPaymentRequest, current_user: User) -> dict:
+        """
+        Crée le paiement (PENDING) puis la page Stripe. Les montants du paiement
+        restent en FCFA (stats, commissions, factures) ; le montant réellement
+        débité en euros est dans charged_amount (centimes) / charged_currency.
+        """
+        from app.config import get_settings
+        from app.modules.exams.models import Level
+        from app.modules.plans.models import Plan
+
+        if not self.stripe.enabled:
+            raise BadRequestException(detail="Le paiement par carte n'est pas disponible pour le moment.")
+
+        level = None
+        if data.level_id:
+            level = await self.db.get(Level, data.level_id)
+            if not level:
+                raise NotFoundException(resource="Level", identifier=str(data.level_id))
+
+        plan = await self.db.get(Plan, data.plan_id)
+        if not plan or not plan.is_active:
+            raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+        if not plan.price_eur or float(plan.price_eur) <= 0:
+            raise BadRequestException(detail="Cette formule n'est pas disponible par carte.")
+
+        promo_code_id = None
+        amount_gross = plan.price
+        amount_paid = plan.price
+        commission_due = 0.0
+        eur_cents = int(round(float(plan.price_eur) * 100))
+
+        if data.promo_code:
+            promo = await self._apply_promo_code(code=data.promo_code, amount=amount_gross)
+            if promo:
+                promo_code_id = promo["promo_code_id"]
+                amount_paid = promo["amount_paid"]
+                commission_due = promo["commission_due"]
+                # Même réduction sur le prix en euros
+                if amount_gross:
+                    eur_cents = int(round(eur_cents * amount_paid / amount_gross))
+
+        if eur_cents < 50:
+            raise BadRequestException(detail="Montant trop faible pour un paiement par carte (minimum 0,50 €).")
+
+        transaction_reference = await self.repo.generate_transaction_reference()
+        payment = await self.repo.create(
+            user_id=current_user.id,
+            level_id=data.level_id,
+            sd_level=data.sd_level,
+            plan_id=data.plan_id,
+            promo_code_id=promo_code_id,
+            amount_gross=amount_gross,
+            amount_paid=amount_paid,
+            commission_due=commission_due,
+            currency="XAF",
+            payment_status="PENDING",
+            transaction_reference=transaction_reference,
+            operator="STRIPE",
+            charged_amount=eur_cents,
+            charged_currency="EUR",
+        )
+
+        # Retour sur le site, dans la langue de l'élève
+        base = get_settings().FRONTEND_BASE_URL.rstrip("/")
+        nxt = "start-deutsch" if data.sd_level else "examens"
+        level_query = f"sd_level={data.sd_level}" if data.sd_level else f"level_id={data.level_id}"
+        success_url = f"{base}/{data.locale}/dashboard/paiement/succes?ref={transaction_reference}&next={nxt}"
+        cancel_url = f"{base}/{data.locale}/dashboard/paiement?{level_query}&plan_id={plan.id}&cancelled=1"
+
+        level_label = f"Start Deutsch {data.sd_level}" if data.sd_level else (
+            getattr(level, "name", None) or getattr(level, "cefr_code", None) or "Examen"
+        )
+
+        try:
+            session = await self.stripe.create_checkout_session(
+                reference=transaction_reference,
+                amount_cents=eur_cents,
+                currency="EUR",
+                product_name=f"GoToGermany · {level_label} · {plan.name}",
+                description=f"Accès {plan.duration_days} jours à la préparation {level_label}",
+                customer_email=current_user.email,
+                success_url=success_url,
+                cancel_url=cancel_url,
+            )
+        except Exception as e:
+            await self.repo.update(payment.id, payment_status="FAILED")
+            logger.error(f"Stripe checkout impossible pour {transaction_reference} : {e}")
+            raise BadRequestException(detail="Le paiement par carte est indisponible, réessayez plus tard.")
+
+        await self.repo.update(payment.id, provider_ref=session["id"])
+
+        return {
+            "payment_id": payment.id,
+            "transaction_reference": transaction_reference,
+            "checkout_url": session["url"],
+            "amount_eur": eur_cents / 100,
+            "currency": "EUR",
+        }
+
+    async def _refresh_from_stripe(self, payment: Payment) -> Payment:
+        """Relit la session chez Stripe : seule source de vérité pour valider une carte."""
+        if payment.payment_status != "PENDING" or not payment.provider_ref:
+            return payment
+        try:
+            s = await self.stripe.retrieve_session(payment.provider_ref)
+        except Exception as e:
+            logger.warning(f"Relecture Stripe impossible pour {payment.transaction_reference} : {e}")
+            return payment
+
+        if s["payment_status"] in ("paid", "no_payment_required"):
+            if payment.charged_amount and s["amount_total"] != payment.charged_amount:
+                logger.error(
+                    f"Stripe {payment.transaction_reference} : montant {s['amount_total']} "
+                    f"différent de {payment.charged_amount}, ignoré"
+                )
+                return payment
+            await self._complete_payment(payment, s)
+        elif s["status"] == "expired":
+            await self._fail_payment(payment, s)
+        return await self.repo.get_by_id(payment.id)
+
+    async def handle_stripe_event(self, event: dict) -> bool:
+        """Webhook Stripe (signature vérifiée par le router) : on relit la session."""
+        etype = event.get("type", "")
+        if not etype.startswith("checkout.session."):
+            return False
+        obj = (event.get("data") or {}).get("object") or {}
+        reference = obj.get("client_reference_id") or (obj.get("metadata") or {}).get("transaction_reference")
+        logger.info(f"Webhook Stripe {etype} — session={obj.get('id')} reference={reference}")
+        if not reference:
+            return False
+        payment = await self.repo.find_by_transaction_ref(reference)
+        if not payment:
+            logger.error(f"Webhook Stripe : paiement introuvable ({reference})")
+            return False
+        if not payment.provider_ref and obj.get("id"):
+            await self.repo.update(payment.id, provider_ref=obj["id"])
+            payment = await self.repo.get_by_id(payment.id)
+        await self._refresh_from_stripe(payment)
+        return True
+    
     # ── Validation / échec (communs à Kratos et pawaPay) ──
 
     async def _complete_payment(self, payment: Payment, raw_payload: dict) -> None:
@@ -380,8 +531,11 @@ class PaymentService:
 
         # Paiement Kratos encore en attente : on relit le statut chez Kratos
         # (le polling du front suffit même si le webhook n'arrive pas)
-        if payment.payment_status == "PENDING" and payment.operator in ("MTN", "ORANGE"):
-            payment = await self._refresh_from_kratos(payment)
+        if payment.payment_status == "PENDING":
+            if payment.operator in ("MTN", "ORANGE"):
+                payment = await self._refresh_from_kratos(payment)
+            elif payment.operator == "STRIPE":
+                payment = await self._refresh_from_stripe(payment)
 
         from app.modules.exam_access.repository import ExamAccessRepository
         repo = ExamAccessRepository(self.db)
@@ -401,6 +555,9 @@ class PaymentService:
             "operator": payment.operator,
             "completed_at": payment.completed_at,
             "exam_access_granted": level_access_granted,
+            # Paiement par carte : montant réellement débité (euros)
+            "charged_amount": payment.charged_amount / 100 if payment.charged_amount else None,
+            "charged_currency": payment.charged_currency,
         }
 
     async def get_my_payments(self, current_user: User) -> list[Payment]:

@@ -89,6 +89,16 @@ export const NAVIGATION: Record<NavRole, NavSection[]> = {
       ],
     },
     {
+      title: "Sécurité",
+      items: [
+        {
+          label: "Sécurité du contenu",
+          to: "/admin/securite",
+          icon: "pi pi-shield",
+        },
+      ],
+    },
+    {
       title: "Configuration",
       items: [
         { label: "Paramètres", to: "/admin/settings", icon: "pi pi-cog" },
