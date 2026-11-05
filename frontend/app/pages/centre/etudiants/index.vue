@@ -160,7 +160,7 @@
                   </div>
                 </td>
                 <td class="px-5 py-3 text-muted">
-                  {{ levelLabel(student.target_level_id) }}
+                  {{ levelLabel(targetKey(student)) }}
                 </td>
                 <td class="px-5 py-3">
                   <span
@@ -536,7 +536,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ActivationResponse, StudentResponse } from "#shared/api";
+import type {
+  ActivationRequest,
+  ActivationResponse,
+  StudentResponse,
+} from "#shared/api";
 import CentreJoinLinkCard from "~/components/centre/JoinLinkCard.vue";
 import CentreJoinRequestsPanel from "~/components/centre/JoinRequestsPanel.vue";
 
@@ -600,19 +604,32 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// ── Niveaux ──
-const allLevels = computed(() =>
-  examsStore.catalog.flatMap((exam) =>
+// ── Niveaux : examens du catalogue + Start Deutsch (codé "sd:A1" / "sd:A2") ──
+const SD_LEVELS = ["A1", "A2"] as const;
+
+const allLevels = computed(() => [
+  ...SD_LEVELS.map((lvl) => ({
+    label: `Start Deutsch ${lvl}`,
+    value: `sd:${lvl}`,
+  })),
+  ...examsStore.catalog.flatMap((exam) =>
     (exam.levels ?? []).map((level) => ({
       label: `${exam.name} - ${level.cefr_code}`,
       value: level.id,
     })),
   ),
-);
+]);
 
-function levelLabel(id: string | null) {
-  if (!id) return "-";
-  return allLevels.value.find((l) => l.value === id)?.label ?? "-";
+/** Niveau visé par l'élève, au format de la liste (id d'examen ou "sd:A1"). */
+function targetKey(s: StudentResponse) {
+  if (s.target_level_id) return s.target_level_id;
+  if (s.target_sd_level) return `sd:${s.target_sd_level}`;
+  return "";
+}
+
+function levelLabel(key: string | null) {
+  if (!key) return "-";
+  return allLevels.value.find((l) => l.value === key)?.label ?? "-";
 }
 
 // ── État de l'accès ──
@@ -859,7 +876,7 @@ const canActivate = computed(
 function openActivation(student: StudentResponse) {
   selectedStudent.value = student;
   activationForm.value = {
-    level_id: student.target_level_id ?? "",
+    level_id: targetKey(student),
     plan_id: activePlans.value.length === 1 ? activePlans.value[0]!.id : "",
     paid: false,
   };
@@ -881,12 +898,15 @@ async function handleActivate() {
   activating.value = true;
   activationError.value = null;
 
+  // Start Deutsch part dans sd_level, un examen classique dans level_id
+  const key = activationForm.value.level_id;
+  const isSd = key.startsWith("sd:");
   const result = await salesStore.activateAccount({
     student_id: selectedStudent.value.id,
-    level_id: activationForm.value.level_id,
+    level_id: isSd ? null : key,
+    sd_level: isSd ? (key.slice(3) as ActivationRequest["sd_level"]) : null,
     plan_id: activationForm.value.plan_id,
   });
-
   activating.value = false;
 
   if (result.success) {
