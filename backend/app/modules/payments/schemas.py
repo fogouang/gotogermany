@@ -123,7 +123,18 @@ class PaymentAdminResponse(PaymentResponse):
     pawapay_deposit_id: str | None = None
     expires_at: str | None = None  # depuis ExamAccess       # le code saisi, pas juste l'ID
 
+class PaymentAdminListItem(PaymentAdminResponse):
+    """Ligne de la liste admin : élève, achat et références chez le prestataire."""
+    user_phone: str | None = None
+    kind: str = "other"            # exam | start_deutsch | credits | other
+    credits: int | None = None     # achat de crédits IA
+    provider_ref: str | None = None  # id de session Stripe
 
+
+class PaymentAdminListResponse(BaseSchema):
+    items: list[PaymentAdminListItem]
+    total: int
+    
 class PaymentSummaryResponse(BaseSchema):
     """Stats paiements pour le dashboard admin."""
     total_payments: int

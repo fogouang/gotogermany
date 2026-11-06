@@ -10,6 +10,8 @@ Endpoints :
   POST /payments/callback/{secret}            → callback pawaPay (anciens paiements + relais Lumina)
   GET  /payments/admin/summary                → stats admin
 """
+from fastapi import Query
+from typing import Literal
 from app.modules.payments.schemas import CardPaymentRequest
 from app.modules.payments.schemas import CardPaymentResponse
 import json
@@ -35,6 +37,8 @@ from app.modules.payments.schemas import (
     PaymentResponse,
     PaymentStatusResponse,
     PaymentSummaryResponse,
+    PaymentAdminListResponse,
+    PaymentAdminListItem
 )
 from app.modules.payments.service import PaymentService
 from app.shared.database.session import get_db
@@ -267,3 +271,23 @@ async def list_manual_payments(
     """
     payments = await PaymentService(db).get_manual_payments()
     return [PaymentAdminResponse.model_validate(p) for p in payments]
+
+
+@router.get("/admin/list", response_model=PaymentAdminListResponse)
+async def list_admin_payments(
+    _: CurrentAdmin,
+    source: Literal["online", "manual", "partner", "all"] = "online",
+    status: Literal["COMPLETED", "PENDING", "FAILED"] | None = None,
+    search: str | None = Query(default=None, max_length=100),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    """Tous les paiements (en ligne par défaut) avec l'élève et l'achat — admin."""
+    items, total = await PaymentService(db).repo.get_admin_payments(
+        source=source, status=status, search=search, limit=limit, offset=offset
+    )
+    return PaymentAdminListResponse(
+        items=[PaymentAdminListItem.model_validate(i) for i in items],
+        total=total,
+    )

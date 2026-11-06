@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import column, func, or_, select, table
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.payments.models import Payment
@@ -162,3 +162,122 @@ class PaymentRepository(BaseRepository[Payment]):
                 "expires_at": access.expires_at.isoformat() if access and access.expires_at else None,
             })
         return out
+    
+    
+    async def get_admin_payments(
+        self,
+        *,
+        source: str = "online",
+        status: str | None = None,
+        search: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[dict], int]:
+        """Liste admin des paiements, avec l'élève et ce qui a été acheté.
+
+        source : online (Mobile Money et carte), manual, partner ou all."""
+        from app.modules.exam_access.models import ExamAccess
+        from app.modules.exams.models import Exam, Level
+        from app.modules.users.models import User
+
+        # Table des achats de crédits IA, lue sans dépendre du nom du modèle
+        credit_purchases = table(
+            "ai_credit_purchases", column("payment_id"), column("credits_purchased")
+        )
+
+        conditions = []
+        if source == "online":
+            conditions.append(Payment.operator.in_(("MTN", "ORANGE", "STRIPE")))
+        elif source == "manual":
+            conditions.append(Payment.operator == "MANUAL")
+        elif source == "partner":
+            conditions.append(Payment.operator == "PARTNER")
+        if status:
+            conditions.append(Payment.payment_status == status)
+        if search:
+            like = f"%{search.strip()}%"
+            conditions.append(
+                or_(
+                    User.email.ilike(like),
+                    User.full_name.ilike(like),
+                    User.phone.ilike(like),
+                    Payment.transaction_reference.ilike(like),
+                )
+            )
+
+        base = (
+            select(Payment, User, Level, Exam, credit_purchases.c.credits_purchased)
+            .join(User, Payment.user_id == User.id)
+            .outerjoin(Level, Payment.level_id == Level.id)
+            .outerjoin(Exam, Level.exam_id == Exam.id)
+            .outerjoin(credit_purchases, credit_purchases.c.payment_id == Payment.id)
+            .where(*conditions)
+        )
+
+        total = (
+            await self.db.execute(select(func.count()).select_from(base.subquery()))
+        ).scalar_one()
+
+        rows = (
+            await self.db.execute(
+                base.order_by(Payment.created_at.desc()).limit(limit).offset(offset)
+            )
+        ).all()
+
+        # Échéance actuelle de l'accès acheté (même élève, même niveau)
+        accesses = {}
+        user_ids = {payment.user_id for payment, *_ in rows}
+        if user_ids:
+            found = await self.db.execute(
+                select(ExamAccess).where(ExamAccess.user_id.in_(user_ids))
+            )
+            for access in found.scalars().all():
+                accesses[(access.user_id, access.level_id, access.sd_level)] = access
+
+        items = []
+        for payment, user, level, exam, credits in rows:
+            if credits:
+                kind, label = "credits", f"{credits} crédits IA"
+            elif payment.sd_level:
+                kind, label = "start_deutsch", f"Start Deutsch {payment.sd_level}"
+            elif exam and level:
+                kind, label = "exam", f"{exam.name} · {level.cefr_code}"
+            else:
+                kind, label = "other", ""
+
+            access = (
+                accesses.get((payment.user_id, payment.level_id, payment.sd_level))
+                if kind in ("exam", "start_deutsch")
+                else None
+            )
+            items.append({
+                "id": payment.id,
+                "user_id": payment.user_id,
+                "user_email": user.email,
+                "user_name": user.full_name,
+                "user_phone": user.phone,
+                "level_id": payment.level_id,
+                "sd_level": payment.sd_level,
+                "level_name": label,
+                "kind": kind,
+                "credits": credits,
+                "plan_id": payment.plan_id,
+                "promo_code_id": payment.promo_code_id,
+                "amount_gross": payment.amount_gross,
+                "amount_paid": payment.amount_paid,
+                "discount_amount": payment.amount_gross - payment.amount_paid,
+                "commission_due": payment.commission_due,
+                "currency": payment.currency,
+                "charged_amount": payment.charged_amount,
+                "charged_currency": payment.charged_currency,
+                "payment_status": payment.payment_status,
+                "transaction_reference": payment.transaction_reference,
+                "operator": payment.operator,
+                "completed_at": payment.completed_at,
+                "created_at": payment.created_at,
+                "invoice_url": payment.invoice_url,
+                "pawapay_deposit_id": payment.pawapay_deposit_id,
+                "provider_ref": payment.provider_ref,
+                "expires_at": access.expires_at.isoformat() if access and access.expires_at else None,
+            })
+        return items, total

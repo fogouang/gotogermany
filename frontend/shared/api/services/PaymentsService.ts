@@ -6,6 +6,7 @@ import type { CardPaymentRequest } from '../models/CardPaymentRequest';
 import type { CardPaymentResponse } from '../models/CardPaymentResponse';
 import type { ManualPaymentRequest } from '../models/ManualPaymentRequest';
 import type { ManualPaymentResponse } from '../models/ManualPaymentResponse';
+import type { PaymentAdminListResponse } from '../models/PaymentAdminListResponse';
 import type { PaymentAdminResponse } from '../models/PaymentAdminResponse';
 import type { PaymentInitiateRequest } from '../models/PaymentInitiateRequest';
 import type { PaymentInitiateResponse } from '../models/PaymentInitiateResponse';
@@ -220,6 +221,44 @@ export class PaymentsService {
             url: '/api/v1/payments/admin/manual-list',
             cookies: {
                 'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List Admin Payments
+     * Tous les paiements (en ligne par défaut) avec l'élève et l'achat — admin.
+     * @param source
+     * @param status
+     * @param search
+     * @param limit
+     * @param offset
+     * @param accessToken
+     * @returns PaymentAdminListResponse Successful Response
+     * @throws ApiError
+     */
+    public static listAdminPaymentsApiV1PaymentsAdminListGet(
+        source: 'online' | 'manual' | 'partner' | 'all' = 'online',
+        status?: ('COMPLETED' | 'PENDING' | 'FAILED' | null),
+        search?: (string | null),
+        limit: number = 50,
+        offset?: number,
+        accessToken?: (string | null),
+    ): CancelablePromise<PaymentAdminListResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/payments/admin/list',
+            cookies: {
+                'access_token': accessToken,
+            },
+            query: {
+                'source': source,
+                'status': status,
+                'search': search,
+                'limit': limit,
+                'offset': offset,
             },
             errors: {
                 422: `Validation Error`,

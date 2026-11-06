@@ -21,7 +21,7 @@
       </div>
     </div>
     <div
-      v-else-if="loadingPayments"
+      v-else-if="loadingSummary"
       class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6"
     >
       <div
@@ -35,10 +35,40 @@
     <section
       class="overflow-hidden rounded-card border border-line bg-card shadow-soft"
     >
-      <header
-        class="flex flex-col gap-3 border-b border-line px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
-      >
-        <h2 class="font-semibold text-ink">Paiements manuels</h2>
+      <header class="space-y-3 border-b border-line px-5 py-4">
+        <div
+          class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <!-- Source -->
+          <div class="flex flex-wrap gap-1 rounded-leaf bg-card-2 p-1">
+            <button
+              v-for="s in SOURCES"
+              :key="s.value"
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-leaf px-3 py-1.5 text-xs font-semibold transition-colors"
+              :class="
+                source === s.value
+                  ? 'bg-card text-ink shadow-soft'
+                  : 'text-muted hover:text-ink'
+              "
+              @click="source = s.value"
+            >
+              <i :class="s.icon" class="text-[11px]" />
+              {{ s.label }}
+            </button>
+          </div>
+
+          <IconField class="w-full lg:w-80">
+            <InputIcon class="pi pi-search" />
+            <InputText
+              v-model="search"
+              class="w-full"
+              placeholder="Nom, email, téléphone ou référence"
+            />
+          </IconField>
+        </div>
+
+        <!-- Statut -->
         <div class="flex flex-wrap gap-2">
           <button
             v-for="f in filters"
@@ -53,20 +83,11 @@
             @click="filterStatus = f.value"
           >
             {{ f.label }}
-            <span
-              class="rounded-full bg-card-2 px-1.5 text-[10px] text-muted"
-              >{{ f.count }}</span
-            >
+            <span class="rounded-full bg-card-2 px-1.5 text-[10px] text-muted">{{
+              f.count ?? "…"
+            }}</span>
           </button>
         </div>
-        <IconField class="w-full lg:w-72">
-          <InputIcon class="pi pi-search" />
-          <InputText
-            v-model="search"
-            class="w-full"
-            placeholder="Élève, email, niveau ou référence"
-          />
-        </IconField>
       </header>
 
       <!-- Chargement -->
@@ -74,13 +95,13 @@
         <div
           v-for="n in 5"
           :key="n"
-          class="h-12 animate-pulse rounded-leaf bg-card-2"
+          class="h-14 animate-pulse rounded-leaf bg-card-2"
         />
       </div>
 
       <!-- Vide -->
       <p
-        v-else-if="filteredPayments.length === 0"
+        v-else-if="payments.length === 0"
         class="px-5 py-12 text-center text-sm text-muted"
       >
         Aucun paiement trouvé
@@ -90,33 +111,70 @@
       <template v-else>
         <ul class="divide-y divide-line">
           <li
-            v-for="payment in paginatedPayments"
+            v-for="payment in payments"
             :key="payment.id"
             class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-5"
           >
-            <!-- Élève + niveau + référence -->
+            <!-- Moyen de paiement -->
+            <span
+              class="flex size-9 shrink-0 items-center justify-center rounded-leaf text-[10px] font-black"
+              :class="operatorStyle(payment.operator).class"
+              v-tooltip.top="operatorStyle(payment.operator).label"
+            >
+              <i
+                v-if="operatorStyle(payment.operator).icon"
+                :class="operatorStyle(payment.operator).icon"
+                class="text-sm"
+              />
+              <template v-else>{{ operatorStyle(payment.operator).short }}</template>
+            </span>
+
+            <!-- Élève -->
             <div class="min-w-48 flex-1">
               <p class="truncate text-sm font-medium text-ink">
                 {{ payment.user_name || payment.user_email || "-" }}
               </p>
-              <p
-                class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted"
-              >
-                <span v-if="payment.level_name">{{ payment.level_name }}</span>
-                <span>· {{ formatDate(payment.created_at) }}</span>
-                <span class="font-mono"
-                  >· {{ payment.transaction_reference }}</span
+              <p class="mt-0.5 truncate text-xs text-muted">
+                <span v-if="displayEmail(payment.user_email)">{{
+                  displayEmail(payment.user_email)
+                }}</span>
+                <span v-if="payment.user_phone">
+                  <template v-if="displayEmail(payment.user_email)"> · </template
+                  >{{ payment.user_phone }}</span
+                >
+              </p>
+            </div>
+
+            <!-- Achat -->
+            <div class="min-w-44 flex-1">
+              <p class="flex items-center gap-1.5 text-sm text-ink">
+                <i :class="kindIcon(payment.kind)" class="text-xs text-muted" />
+                <span class="truncate">{{ payment.level_name || "-" }}</span>
+              </p>
+              <p class="mt-0.5 truncate text-xs text-muted">
+                {{ formatDateTime(payment.created_at) }}
+                <span v-if="payment.expires_at">
+                  · accès jusqu'au {{ formatDate(payment.expires_at) }}</span
+                >
+              </p>
+              <p class="truncate font-mono text-[11px] text-faint">
+                {{ payment.transaction_reference }}
+                <span v-if="providerRef(payment)">
+                  · {{ providerRef(payment) }}</span
                 >
               </p>
             </div>
 
             <!-- Montant -->
-            <div class="w-36 text-right">
+            <div class="w-32 text-right">
               <p class="text-sm font-semibold text-ink">
-                {{ fcfa(payment.amount_paid) }}
+                {{ paymentAmount(payment) }}
+              </p>
+              <p v-if="isCard(payment)" class="text-xs text-muted">
+                ≈ {{ fcfa(payment.amount_paid) }}
               </p>
               <p
-                v-if="payment.discount_amount > 0"
+                v-else-if="payment.discount_amount > 0"
                 class="text-xs text-emerald-600"
               >
                 -{{ fcfa(payment.discount_amount) }}
@@ -131,7 +189,7 @@
               {{ statusBadge(payment.payment_status).label }}
             </span>
 
-            <!-- Facture -->
+            <!-- Reçu -->
             <div class="w-9 text-right">
               <Button
                 v-if="payment.payment_status === 'COMPLETED'"
@@ -140,8 +198,8 @@
                 rounded
                 size="small"
                 severity="secondary"
-                v-tooltip.top="'Voir la facture'"
-                aria-label="Voir la facture"
+                v-tooltip.top="'Voir le reçu'"
+                aria-label="Voir le reçu"
                 @click="openInvoice(payment.id)"
               />
             </div>
@@ -149,20 +207,20 @@
         </ul>
 
         <Paginator
-          v-if="filteredPayments.length > 20"
+          v-if="total > rows"
           v-model:first="first"
           v-model:rows="rows"
-          :totalRecords="filteredPayments.length"
+          :totalRecords="total"
           :rowsPerPageOptions="[20, 50, 100]"
           class="border-t border-line"
         />
       </template>
     </section>
 
-    <!-- ══ Facture ══ -->
+    <!-- ══ Reçu ══ -->
     <Dialog
       v-model:visible="invoiceDialog"
-      header="Détail facture"
+      header="Détail du reçu"
       modal
       :style="{ width: '95vw', maxWidth: '34rem' }"
     >
@@ -189,6 +247,9 @@
             <p class="text-xs text-muted">Date</p>
             <p class="font-medium text-ink">
               {{ formatDate(currentInvoice.payment_date) }}
+            </p>
+            <p class="truncate text-xs text-muted">
+              {{ currentInvoice.operator }}
             </p>
           </div>
         </div>
@@ -219,7 +280,10 @@
           >
             <span class="text-ink">Total payé</span>
             <span class="text-emerald-600">{{
-              fcfa(currentInvoice.amount_paid)
+              currentInvoice.charged_amount &&
+              currentInvoice.charged_currency === "EUR"
+                ? eur(currentInvoice.charged_amount)
+                : fcfa(currentInvoice.amount_paid)
             }}</span>
           </div>
         </div>
@@ -228,23 +292,11 @@
       <template #footer>
         <Button label="Fermer" text @click="invoiceDialog = false" />
         <Button
-          v-if="currentInvoice?.invoice_url"
-          label="Télécharger PDF"
+          v-if="currentInvoice"
+          label="Télécharger le PDF"
           icon="pi pi-download"
-          @click="
-            downloadInvoice(
-              currentInvoice.invoice_url!,
-              `facture-${currentInvoice.transaction_reference}.pdf`,
-            )
-          "
-        />
-        <Button
-          v-else-if="currentInvoice"
-          label="Générer PDF"
-          icon="pi pi-refresh"
-          outlined
-          :loading="invoiceLoading"
-          @click="handleGenerate"
+          :loading="downloading"
+          @click="handleDownload"
         />
       </template>
     </Dialog>
@@ -252,27 +304,87 @@
 </template>
 
 <script setup lang="ts">
-import type { PaymentAdminResponse, PaymentSummaryResponse } from "#shared/api";
+import type {
+  PaymentAdminListItem,
+  PaymentSummaryResponse,
+} from "#shared/api";
 
 definePageMeta({ layout: "admin" });
 
 const toast = useToast();
-const {
-  currentInvoice,
-  fetchInvoice,
-  generateInvoice,
-  downloadInvoice,
-  formatDate,
-} = useInvoices();
-
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
+const { currentInvoice, fetchInvoice, formatDate } = useInvoices();
+const { download, downloading } = useApiDownload();
 
 // Composables Nuxt : appelés en haut du setup, jamais après un await
 const config = useRuntimeConfig();
 const tokenCookie = useCookie("access_token");
 
+// ── Format ──
+const fcfa = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
+const eur = (n: number) =>
+  Number(n).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const formatDateTime = (d: string) =>
+  new Date(d).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const PLACEHOLDER_EMAIL_DOMAIN = "@internal.gotogermany";
+const displayEmail = (email?: string | null) =>
+  !email || email.endsWith(PLACEHOLDER_EMAIL_DOMAIN) ? "" : email;
+
+// Paiement par carte : charged_amount en centimes
+const isCard = (p: PaymentAdminListItem) =>
+  !!p.charged_amount && p.charged_currency === "EUR";
+const paymentAmount = (p: PaymentAdminListItem) =>
+  isCard(p) ? eur(p.charged_amount! / 100) : fcfa(p.amount_paid);
+
+// Référence chez le prestataire : uuid Kratos ou session Stripe
+const providerRef = (p: PaymentAdminListItem) => {
+  const ref = p.operator === "STRIPE" ? p.provider_ref : p.pawapay_deposit_id;
+  return ref ? (ref.length > 18 ? `${ref.slice(0, 18)}…` : ref) : "";
+};
+
+function operatorStyle(op?: string | null) {
+  switch (op) {
+    case "MTN":
+      return { label: "MTN Mobile Money", short: "MTN", icon: "", class: "bg-yellow-400 text-black" };
+    case "ORANGE":
+      return { label: "Orange Money", short: "OM", icon: "", class: "bg-orange-500 text-white" };
+    case "STRIPE":
+      return { label: "Carte bancaire", short: "", icon: "pi pi-credit-card", class: "bg-sky-500/10 text-sky-600" };
+    case "MANUAL":
+      return { label: "Paiement manuel", short: "", icon: "pi pi-user-edit", class: "bg-card-2 text-muted" };
+    case "PARTNER":
+      return { label: "Centre ou ambassadeur", short: "", icon: "pi pi-building", class: "bg-primary/10 text-primary" };
+    default:
+      return { label: op || "-", short: "?", icon: "", class: "bg-card-2 text-muted" };
+  }
+}
+
+const kindIcon = (kind?: string | null) =>
+  ({
+    credits: "pi pi-sparkles",
+    start_deutsch: "pi pi-flag",
+    exam: "pi pi-book",
+  })[kind ?? ""] ?? "pi pi-shopping-bag";
+
+function statusBadge(status: string) {
+  if (status === "COMPLETED")
+    return { label: "Payé", class: "bg-emerald-500/10 text-emerald-600" };
+  if (status === "FAILED")
+    return { label: "Échoué", class: "bg-red-500/10 text-red-600" };
+  if (status === "PENDING")
+    return { label: "En attente", class: "bg-amber-500/15 text-amber-600" };
+  return { label: status, class: "bg-card-2 text-muted" };
+}
+
 // ── Résumé ──
 const summary = ref<PaymentSummaryResponse | null>(null);
+const loadingSummary = ref(false);
 
 const stats = computed(() => {
   const s = summary.value;
@@ -323,84 +435,79 @@ const stats = computed(() => {
   ];
 });
 
-// ── Paiements ──
-const payments = ref<PaymentAdminResponse[]>([]);
-const loadingPayments = ref(false);
-const filterStatus = ref("");
-const search = ref("");
+// ── Filtres ──
+type Source = "online" | "manual" | "partner" | "all";
+type Status = "" | "COMPLETED" | "PENDING" | "FAILED";
 
-const STATUTS = [
+const SOURCES: { label: string; value: Source; icon: string }[] = [
+  { label: "En ligne", value: "online", icon: "pi pi-globe" },
+  { label: "Manuels", value: "manual", icon: "pi pi-user-edit" },
+  { label: "Partenaires", value: "partner", icon: "pi pi-building" },
+  { label: "Tous", value: "all", icon: "pi pi-list" },
+];
+
+const STATUTS: { label: string; value: Status }[] = [
   { label: "Tous", value: "" },
   { label: "Payés", value: "COMPLETED" },
   { label: "En attente", value: "PENDING" },
   { label: "Échoués", value: "FAILED" },
 ];
 
-const filters = computed(() =>
-  STATUTS.map((s) => ({
-    ...s,
-    count: s.value
-      ? payments.value.filter((p) => p.payment_status === s.value).length
-      : payments.value.length,
-  })),
-);
-
-function statusBadge(status: string) {
-  if (status === "COMPLETED")
-    return { label: "Payé", class: "bg-emerald-500/10 text-emerald-600" };
-  if (status === "FAILED")
-    return { label: "Échoué", class: "bg-red-500/10 text-red-600" };
-  if (status === "PENDING")
-    return { label: "En attente", class: "bg-amber-500/15 text-amber-600" };
-  return { label: status, class: "bg-card-2 text-muted" };
-}
-
-const filteredPayments = computed(() => {
-  const q = search.value.trim().toLowerCase();
-  return payments.value
-    .filter(
-      (p) => !filterStatus.value || p.payment_status === filterStatus.value,
-    )
-    .filter(
-      (p) =>
-        !q ||
-        p.transaction_reference.toLowerCase().includes(q) ||
-        (p.user_name ?? "").toLowerCase().includes(q) ||
-        (p.user_email ?? "").toLowerCase().includes(q) ||
-        (p.level_name ?? "").toLowerCase().includes(q),
-    );
+const source = ref<Source>("online");
+const filterStatus = ref<Status>("");
+const search = ref("");
+const debouncedSearch = ref("");
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+watch(search, (v) => {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => (debouncedSearch.value = v.trim()), 350);
 });
 
-// ── Pagination ──
+// Compteurs par statut pour la source et la recherche en cours
+const counts = ref<Record<string, number | null>>({});
+const filters = computed(() =>
+  STATUTS.map((s) => ({ ...s, count: counts.value[s.value] ?? null })),
+);
+
+// ── Liste (filtrée et paginée par le serveur) ──
+const payments = ref<PaymentAdminListItem[]>([]);
+const total = ref(0);
+const loadingPayments = ref(false);
 const first = ref(0);
 const rows = ref(20);
-const paginatedPayments = computed(() =>
-  filteredPayments.value.slice(first.value, first.value + rows.value),
-);
 
-watch([filterStatus, search], () => {
-  first.value = 0;
-});
+async function api() {
+  const mod = await import("#shared/api");
+  mod.OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
+  mod.OpenAPI.TOKEN = tokenCookie.value ?? undefined;
+  return mod.PaymentsService;
+}
 
-// ── Chargement ──
-async function loadData() {
+const listCall = (
+  svc: Awaited<ReturnType<typeof api>>,
+  status: Status,
+  limit: number,
+  offset: number,
+) =>
+  svc.listAdminPaymentsApiV1PaymentsAdminListGet(
+    source.value as any,
+    (status || null) as any,
+    debouncedSearch.value || null,
+    limit,
+    offset,
+  );
+
+async function loadPayments() {
   loadingPayments.value = true;
   try {
-    const { PaymentsService, OpenAPI } = await import("#shared/api");
-    OpenAPI.BASE = config.public.apiBaseUrl || "http://localhost:8001";
-    OpenAPI.TOKEN = tokenCookie.value ?? undefined;
-
-    // Seule liste disponible côté admin : les paiements manuels
-    const [sum, list] = await Promise.all([
-      PaymentsService.getSummaryApiV1PaymentsAdminSummaryGet(),
-      PaymentsService.listManualPaymentsApiV1PaymentsAdminManualListGet(),
-    ]);
-    summary.value = sum;
-    payments.value = list;
+    const svc = await api();
+    const res = await listCall(svc, filterStatus.value, rows.value, first.value);
+    payments.value = res.items;
+    total.value = res.total;
   } catch (e: any) {
     toast.add({
       severity: "error",
-      summary: e.body?.detail || "Erreur",
+      summary: e.body?.detail || "Erreur de chargement des paiements",
       life: 3000,
     });
   } finally {
@@ -408,7 +515,46 @@ async function loadData() {
   }
 }
 
-// ── Facture ──
+async function loadCounts() {
+  counts.value = {};
+  try {
+    const svc = await api();
+    const results = await Promise.all(
+      STATUTS.map((s) => listCall(svc, s.value, 1, 0)),
+    );
+    const next: Record<string, number> = {};
+    STATUTS.forEach((s, i) => (next[s.value] = results[i]!.total));
+    counts.value = next;
+  } catch {
+    // Les compteurs restent sur « … », la liste reste utilisable
+  }
+}
+
+async function loadSummary() {
+  loadingSummary.value = true;
+  try {
+    const svc = await api();
+    summary.value = await svc.getSummaryApiV1PaymentsAdminSummaryGet();
+  } catch {
+    summary.value = null;
+  } finally {
+    loadingSummary.value = false;
+  }
+}
+
+// Changement de source ou de recherche : compteurs + liste depuis le début
+watch([source, debouncedSearch], () => {
+  first.value = 0;
+  loadCounts();
+  loadPayments();
+});
+watch(filterStatus, () => {
+  first.value = 0;
+  loadPayments();
+});
+watch([first, rows], loadPayments);
+
+// ── Reçu ──
 const invoiceDialog = ref(false);
 const invoiceLoading = ref(false);
 
@@ -419,12 +565,24 @@ async function openInvoice(paymentId: string) {
   invoiceLoading.value = false;
 }
 
-async function handleGenerate() {
-  if (!currentInvoice.value) return;
-  invoiceLoading.value = true;
-  await generateInvoice(currentInvoice.value.payment_id);
-  invoiceLoading.value = false;
+async function handleDownload() {
+  const inv = currentInvoice.value;
+  if (!inv) return;
+  const res = await download(
+    `/api/v1/invoices/${inv.payment_id}/pdf?lang=fr`,
+    `recu_${inv.transaction_reference}.pdf`,
+  );
+  if (!res.success)
+    toast.add({
+      severity: "error",
+      summary: res.error || "Téléchargement impossible",
+      life: 4000,
+    });
 }
 
-onMounted(loadData);
+onMounted(() => {
+  loadSummary();
+  loadCounts();
+  loadPayments();
+});
 </script>

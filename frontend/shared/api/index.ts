@@ -112,6 +112,8 @@ export type { PartnerSettingsUpdate } from './models/PartnerSettingsUpdate';
 export type { PartnerStatsResponse } from './models/PartnerStatsResponse';
 export type { PartnerSummaryResponse } from './models/PartnerSummaryResponse';
 export type { PartnerUpdateRequest } from './models/PartnerUpdateRequest';
+export type { PaymentAdminListItem } from './models/PaymentAdminListItem';
+export type { PaymentAdminListResponse } from './models/PaymentAdminListResponse';
 export type { PaymentAdminResponse } from './models/PaymentAdminResponse';
 export type { PaymentInitiateRequest } from './models/PaymentInitiateRequest';
 export type { PaymentInitiateResponse } from './models/PaymentInitiateResponse';
