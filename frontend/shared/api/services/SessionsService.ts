@@ -10,10 +10,36 @@ import type { BlockStateResponse } from '../models/BlockStateResponse';
 import type { BulkAnswerSubmitRequest } from '../models/BulkAnswerSubmitRequest';
 import type { SessionListResponse } from '../models/SessionListResponse';
 import type { SessionResultResponse } from '../models/SessionResultResponse';
+import type { SessionStartRequest } from '../models/SessionStartRequest';
+import type { SessionStartResponse } from '../models/SessionStartResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class SessionsService {
+    /**
+     * Start Session
+     * @param requestBody
+     * @param accessToken
+     * @returns SessionStartResponse Successful Response
+     * @throws ApiError
+     */
+    public static startSessionApiV1SessionsPost(
+        requestBody: SessionStartRequest,
+        accessToken?: (string | null),
+    ): CancelablePromise<SessionStartResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/sessions',
+            cookies: {
+                'access_token': accessToken,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
     /**
      * Get My Sessions
      * Liste toutes les sessions de l'utilisateur connecté.
@@ -206,6 +232,31 @@ export class SessionsService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/sessions/{session_id}/submit',
+            path: {
+                'session_id': sessionId,
+            },
+            cookies: {
+                'access_token': accessToken,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Result
+     * @param sessionId
+     * @param accessToken
+     * @returns SessionResultResponse Successful Response
+     * @throws ApiError
+     */
+    public static getResultApiV1SessionsSessionIdResultGet(
+        sessionId: string,
+        accessToken?: (string | null),
+    ): CancelablePromise<SessionResultResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/sessions/{session_id}/result',
             path: {
                 'session_id': sessionId,
             },

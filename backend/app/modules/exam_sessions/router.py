@@ -31,7 +31,7 @@ from app.shared.schemas.responses import SuccessResponse
 
 router = APIRouter()
 
-@router.post("/start", response_model=SessionStartResponse, status_code=201)
+@router.post("", response_model=SessionStartResponse, status_code=201)
 async def start_session(
     data: SessionStartRequest,
     current_user: CurrentUser,

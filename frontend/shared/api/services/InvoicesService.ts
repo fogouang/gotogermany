@@ -61,15 +61,17 @@ export class InvoicesService {
     }
     /**
      * Download Invoice Pdf
-     * Reçu PDF généré à la volée : rien n'est stocké sur le serveur.
-     * Réservé à l'élève qui a payé et aux admins.
+     * Reçu PDF généré à la volée, dans la langue de l'élève.
+     * Rien n'est stocké sur le serveur. Réservé à l'élève qui a payé et aux admins.
      * @param paymentId
+     * @param lang
      * @param accessToken
      * @returns any Successful Response
      * @throws ApiError
      */
     public static downloadInvoicePdfApiV1InvoicesPaymentIdPdfGet(
         paymentId: string,
+        lang: 'fr' | 'en' | 'de' = 'fr',
         accessToken?: (string | null),
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
@@ -80,6 +82,9 @@ export class InvoicesService {
             },
             cookies: {
                 'access_token': accessToken,
+            },
+            query: {
+                'lang': lang,
             },
             errors: {
                 422: `Validation Error`,

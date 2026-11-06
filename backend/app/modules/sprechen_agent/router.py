@@ -4,6 +4,7 @@ app/modules/sprechen_agent/router.py
 
 from __future__ import annotations
 
+from starlette.websockets import WebSocketState
 import asyncio
 import contextlib
 import json
@@ -191,7 +192,18 @@ async def _refund_credits(db: AsyncSession, user_id: UUID) -> None:
     )
     await db.commit()
 
-
+async def _end_without_grading(ctx: "_ConnectionContext") -> None:
+    """Session terminée sans correction (abandon, page quittée, coupure,
+    erreur du fournisseur) : on ferme proprement et on rend les crédits.
+    Ne fait rien la deuxième fois."""
+    if ctx.ended:
+        return
+    ctx.ended = True
+    await ctx.service.abandon_session(ctx.session, ctx.segment)
+    if ctx.credits_charged and not ctx.graded and not _credits_exempt(ctx.user):
+        ctx.credits_charged = False
+        await _refund_credits(ctx.service.db, ctx.user.id)
+        
 # ---------------------------------------------------------------------------
 # Internal signaling exceptions
 # ---------------------------------------------------------------------------
@@ -229,10 +241,37 @@ class _ConnectionContext:
     teil_deadline: float | None = None
     # Crédits déjà débités pour cette session (une seule fois)
     credits_charged: bool = False
+    
+    # La session est allée jusqu'à la correction : crédits consommés
+    graded: bool = False
+    # Fin déjà traitée (abandon, coupure...) : évite un double remboursement
+    ended: bool = False
+
+
+def _ws_open(websocket: WebSocket) -> bool:
+    return (
+        websocket.application_state == WebSocketState.CONNECTED
+        and websocket.client_state == WebSocketState.CONNECTED
+    )
 
 
 async def _send_event(websocket: WebSocket, event: OutboundEvent) -> None:
-    await websocket.send_text(event.model_dump_json())
+    """N'envoie rien si l'élève est déjà parti (page quittée, abandon)."""
+    if not _ws_open(websocket):
+        return
+    try:
+        await websocket.send_text(event.model_dump_json())
+    except (RuntimeError, WebSocketDisconnect):
+        pass
+
+
+async def _send_bytes(websocket: WebSocket, data: bytes) -> None:
+    if not _ws_open(websocket):
+        return
+    try:
+        await websocket.send_bytes(data)
+    except (RuntimeError, WebSocketDisconnect):
+        pass
 
 
 async def _send_role_signal(ctx: _ConnectionContext) -> None:
@@ -280,23 +319,18 @@ async def _open_first_segment_of_teil(ctx: _ConnectionContext) -> None:
 
 async def _start_paid_session(ctx: _ConnectionContext) -> None:
     """Premier "Commencer" de la session : débit des crédits, puis
-    ouverture de la première connexion Live. Remboursement si cette
-    toute première connexion échoue (l'élève n'a rien pu faire)."""
+    ouverture de la première connexion Live. Les crédits sont rendus
+    par _end_without_grading() si la session n'arrive pas à la correction."""
     exempt = _credits_exempt(ctx.user)
     if not exempt and not await _charge_credits(ctx.service.db, ctx.user.id):
-        await ctx.service.abandon_session(ctx.session, None)
+        await _end_without_grading(ctx)
         await ctx.websocket.close(
             code=WS_CLOSE_INSUFFICIENT_CREDITS, reason="Credits insuffisants."
         )
         raise _SessionEnded()
 
     ctx.credits_charged = True
-    try:
-        await _open_first_segment_of_teil(ctx)
-    except live_client.LiveConnectionError:
-        if not exempt:
-            await _refund_credits(ctx.service.db, ctx.user.id)
-        raise
+    await _open_first_segment_of_teil(ctx)
 
 
 async def _enter_preparation_phase(ctx: _ConnectionContext) -> None:
@@ -351,8 +385,9 @@ async def _relay_client_to_agent(ctx: _ConnectionContext) -> None:
             continue
 
         if isinstance(inbound, AbandonSessionMessage):
-            await ctx.service.abandon_session(ctx.session, ctx.segment)
-            await ctx.websocket.close(code=1000)
+            await _end_without_grading(ctx)
+            with contextlib.suppress(Exception):
+                await ctx.websocket.close(code=1000)
             raise _SessionEnded()
 
         if isinstance(inbound, ReadyToStartMessage):
@@ -411,7 +446,7 @@ async def _pump_segment_until_turn_end(ctx: _ConnectionContext) -> bool:
 
             if event.type == "audio_delta" and event.audio_bytes:
                 agent_talking = True
-                await ctx.websocket.send_bytes(event.audio_bytes)
+                await _send_bytes(ctx.websocket, event.audio_bytes)
 
             elif event.type == "text_delta" and event.text:
                 speaker = event.speaker or "agent"
@@ -463,6 +498,8 @@ async def _relay_agent_to_client(ctx: _ConnectionContext) -> None:
             response = await ctx.service.finalize_session(
                 ctx.session, anthropic_api_key=ctx.keys.anthropic
             )
+            ctx.graded = True
+            ctx.ended = True
             await ctx.websocket.send_text(
                 json.dumps({"type": "session_ended", "session_id": str(ctx.session.session_id), "reason": "completed"})
             )
@@ -557,23 +594,16 @@ async def sprechen_session_ws(
     except* _SessionEnded:
         pass
     except* WebSocketDisconnect:
-        await service.abandon_session(ctx.session, ctx.segment)
+        await _end_without_grading(ctx)
     except* _LiveProviderError as eg:
-        await service.abandon_session(ctx.session, ctx.segment)
-        try:
+        await _end_without_grading(ctx)
+        with contextlib.suppress(Exception):
             await ctx.websocket.close(code=1011, reason=str(eg.exceptions[0]))
-        except Exception:  # noqa: BLE001
-            pass
     except* live_client.LiveConnectionError as eg:
-        # live_client.open_segment() already retries with backoff on a
-        # connect/handshake failure (see its own docstring) — reaching
-        # here means the Live provider stayed unreachable across every
-        # retry, not just a passing blip. Ends the session the same
-        # clean way a disconnect does, but tells the frontend
-        # explicitly (via reason="error") so it can show a real
-        # "connection lost" screen instead of just going silent.
-        await service.abandon_session(ctx.session, ctx.segment)
-        try:
+        # Fournisseur Live injoignable malgré les tentatives : fin propre,
+        # crédits rendus, et le front affiche l'écran "connexion perdue".
+        await _end_without_grading(ctx)
+        with contextlib.suppress(Exception):
             await ctx.websocket.send_text(
                 json.dumps({
                     "type": "session_ended",
@@ -581,12 +611,15 @@ async def sprechen_session_ws(
                     "reason": "error",
                 })
             )
-        except Exception:  # noqa: BLE001
-            pass
-        try:
+        with contextlib.suppress(Exception):
             await ctx.websocket.close(code=1011, reason=str(eg.exceptions[0]))
-        except Exception:  # noqa: BLE001
-            pass
+    except* RuntimeError:
+        # Envoi sur une connexion déjà fermée : l'élève est parti
+        await _end_without_grading(ctx)
+    finally:
+        # Quelle que soit la sortie, une session non corrigée ne coûte rien
+        if not ctx.graded:
+            await _end_without_grading(ctx)
 
 
 # ---------------------------------------------------------------------------

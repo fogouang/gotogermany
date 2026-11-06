@@ -223,6 +223,7 @@ export const useSessionStore = defineStore("session", {
 
         return { success: true, sessionId: this.sessionId };
       } catch (error: any) {
+        console.error("[startSession]", error?.status, error?.body ?? error);
         this.error =
           error.body?.detail || "Erreur lors du démarrage de la session";
         return { success: false, error: this.error };

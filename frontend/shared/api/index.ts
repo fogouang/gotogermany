@@ -148,6 +148,7 @@ export type { SessionHistoryItem } from './models/SessionHistoryItem';
 export type { SessionHistoryListResponse } from './models/SessionHistoryListResponse';
 export type { SessionListResponse } from './models/SessionListResponse';
 export type { SessionResultResponse } from './models/SessionResultResponse';
+export type { SessionStartRequest } from './models/SessionStartRequest';
 export type { SessionStartResponse } from './models/SessionStartResponse';
 export type { SetAmbassadorRequest } from './models/SetAmbassadorRequest';
 export { SettlementCreate } from './models/SettlementCreate';
