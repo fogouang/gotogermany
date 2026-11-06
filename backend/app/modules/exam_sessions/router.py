@@ -31,7 +31,7 @@ from app.shared.schemas.responses import SuccessResponse
 
 router = APIRouter()
 
-
+@router.post("/start", response_model=SessionStartResponse, status_code=201)
 async def start_session(
     data: SessionStartRequest,
     current_user: CurrentUser,
@@ -175,7 +175,7 @@ async def submit_session(
         user_id=current_user.id,
     )
 
-
+@router.get("/{session_id}/result", response_model=SessionResultResponse)
 async def get_result(
     session_id: UUID,
     current_user: CurrentUser,
