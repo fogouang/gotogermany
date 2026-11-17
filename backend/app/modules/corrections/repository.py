@@ -10,6 +10,10 @@ toute la normalisation passe désormais par response_normalizer, une seule
 fois, ici, à l'écriture. Les colonnes JSONB `criteria`/`tasks` stockent donc
 directement la forme finale déjà consommée telle quelle par le frontend —
 _to_response() dans service.py n'a plus rien à retraiter.
+
+Les textes du candidat (payload.tasks[].text) sont transmis au normalizer pour
+les règles de longueur appliquées par le backend (ECL). ai_provider enregistre
+le modèle réellement utilisé, lu dans ai_result["_usage"]["model"].
 """
 from __future__ import annotations
 import uuid
@@ -22,6 +26,9 @@ from app.modules.corrections.schemas import CorrectionPayload
 from app.modules.corrections.response_normalizer import normalize_correction_result
 
 logger = logging.getLogger(__name__)
+
+# Longueur de la colonne Correction.ai_provider (String(30))
+_AI_PROVIDER_MAX_LEN = 30
 
 
 class CorrectionRepository:
@@ -82,15 +89,25 @@ class CorrectionRepository:
         Créer une nouvelle correction à partir du payload et du résultat IA.
 
         Args:
-            payload: Données contextuelles (session, user, provider, level, max_score)
+            payload: Données contextuelles (session, user, provider, level, max_score,
+                     tasks avec les textes du candidat)
             ai_result: JSON retourné par le modèle IA (déjà parsé), quel que
                        soit son format brut — normalize_correction_result()
-                       absorbe les 3 formes possibles (nested/flat/osd_b2).
+                       absorbe toutes les formes possibles (nested/flat/osd_b2/ecl/testdaf).
 
         Returns:
             Correction créée et persistée
         """
-        normalized = normalize_correction_result(payload.provider, payload.level, ai_result)
+        normalized = normalize_correction_result(
+            payload.provider,
+            payload.level,
+            ai_result,
+            task_texts=[t.text for t in payload.tasks],
+        )
+
+        # Modèle réellement utilisé (claude-sonnet-4-6, gemini-2.5-flash-lite...)
+        usage = ai_result.get("_usage") or {}
+        ai_provider = str(usage.get("model") or "gemini")[:_AI_PROVIDER_MAX_LEN]
 
         correction = Correction(
             session_id=payload.session_id,
@@ -106,7 +123,7 @@ class CorrectionRepository:
             corrections_list=normalized["corrections_list"],
             suggestions=normalized["suggestions"],
             appreciation=normalized["appreciation"],
-            ai_provider="gemini",
+            ai_provider=ai_provider,
         )
 
         self.db.add(correction)
@@ -116,6 +133,7 @@ class CorrectionRepository:
         logger.info(
             f"Correction créée: session={payload.session_id} "
             f"{payload.provider.upper()} {payload.level.upper()} "
-            f"{correction.overall_score}/{correction.max_score}"
+            f"{correction.overall_score}/{correction.max_score} "
+            f"({ai_provider}, cost=${usage.get('cost_usd', 0)})"
         )
         return correction

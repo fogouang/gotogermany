@@ -128,7 +128,7 @@
       </div>
     </template>
 
-    <!-- ══ Onglet Mes corrections ══ -->
+    <!-- ══ Onglet Mes corrections : regroupées par sujet, paginées ══ -->
     <template v-else>
       <div v-if="store.loadingResults" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div v-for="i in 4" :key="i" class="h-44 animate-pulse rounded-card bg-card-2" />
@@ -144,75 +144,139 @@
         <Button :label="t('simulator.see_subjects')" icon="pi pi-list-check" @click="activeTab = 'sujets'" />
       </div>
 
-      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <button
-          v-for="result in store.results"
-          :key="result.id"
-          type="button"
-          class="flex flex-col gap-3 rounded-card border border-line bg-card p-5 text-left shadow-soft transition-all hover:border-primary/40"
-          @click="openResult(result)"
-        >
-          <div class="flex w-full items-start gap-3">
-            <!-- Score circulaire -->
-            <div class="relative size-14 shrink-0">
-              <svg class="size-14 -rotate-90" viewBox="0 0 56 56">
-                <circle cx="28" cy="28" r="22" fill="none" class="stroke-card-2" stroke-width="6" />
-                <circle
-                  cx="28"
-                  cy="28"
-                  r="22"
-                  fill="none"
-                  :class="result.passed ? 'stroke-emerald-500' : 'stroke-orange-500'"
-                  stroke-width="6"
-                  stroke-linecap="round"
-                  :stroke-dasharray="`${(result.score_percentage / 100) * 138} 138`"
-                />
-              </svg>
-              <span class="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-ink">
-                {{ Math.round(result.score_percentage) }}%
+      <div v-else class="space-y-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div
+            v-for="group in pagedGroups"
+            :key="group.subjectId"
+            class="flex flex-col gap-3 rounded-card border border-line bg-card p-5 shadow-soft"
+          >
+            <!-- En-tête : dernière tentative -->
+            <div class="flex w-full items-start gap-3">
+              <div class="relative size-14 shrink-0">
+                <svg class="size-14 -rotate-90" viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="22" fill="none" class="stroke-card-2" stroke-width="6" />
+                  <circle
+                    cx="28"
+                    cy="28"
+                    r="22"
+                    fill="none"
+                    :class="group.latest.passed ? 'stroke-emerald-500' : 'stroke-orange-500'"
+                    stroke-width="6"
+                    stroke-linecap="round"
+                    :stroke-dasharray="`${(group.latest.score_percentage / 100) * 138} 138`"
+                  />
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-ink">
+                  {{ Math.round(group.latest.score_percentage) }}%
+                </span>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold leading-snug text-ink">
+                  {{ group.title || t("simulator.deleted_subject") }}
+                </p>
+                <p class="mt-0.5 text-xs text-faint">
+                  {{ t("simulator.last_attempt") }} · {{ formatDate(group.latest.created_at) }}
+                </p>
+                <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <Tag :value="group.provider.toUpperCase()" :class="['text-xs', providerTagClass(group.provider)]" />
+                  <Tag :value="group.level.toUpperCase()" severity="info" />
+                  <Tag
+                    :value="group.latest.passed ? t('simulator.passed') : t('simulator.not_passed')"
+                    :severity="group.latest.passed ? 'success' : 'danger'"
+                  />
+                </div>
+                <p class="mt-1.5 text-xs text-muted">
+                  {{ t("simulator.attempts", group.attempts.length) }}
+                  <template v-if="group.attempts.length > 1">
+                    · {{ t("simulator.best_score", { pct: Math.round(group.best.score_percentage) }) }}
+                  </template>
+                </p>
+              </div>
+            </div>
+
+            <!-- Détail par critère (dernière tentative) -->
+            <div class="w-full space-y-1.5 rounded-leaf bg-card-2 px-3 py-2.5">
+              <div v-for="c in criteriaList(group.latest)" :key="c.key" class="flex items-center gap-2">
+                <span class="w-20 shrink-0 truncate text-xs text-muted">{{ c.label }}</span>
+                <div class="h-1 flex-1 rounded-full bg-line">
+                  <div
+                    class="h-1 rounded-full transition-all"
+                    :class="c.pct >= 70 ? 'bg-emerald-500' : c.pct >= 50 ? 'bg-orange-400' : 'bg-red-500'"
+                    :style="{ width: c.pct + '%' }"
+                  />
+                </div>
+                <span class="w-10 shrink-0 text-right text-xs tabular-nums text-muted">{{ c.score }}/{{ c.max }}</span>
+              </div>
+            </div>
+
+            <div class="flex w-full items-center justify-between pt-1">
+              <span class="text-xs font-bold" :class="group.latest.passed ? 'text-emerald-600' : 'text-orange-600'">
+                {{ group.latest.overall_score }} / {{ group.latest.max_score }} pts
               </span>
+              <button
+                type="button"
+                class="flex items-center gap-1 text-xs font-semibold text-primary"
+                @click="openResult(group.latest)"
+              >
+                {{ t("simulator.see") }} <i class="pi pi-arrow-right text-xs" />
+              </button>
             </div>
 
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold leading-snug text-ink">
-                {{ result.subject_title || t("simulator.deleted_subject") }}
-              </p>
-              <p class="mt-0.5 text-xs text-faint">{{ formatDate(result.created_at) }}</p>
-              <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                <Tag :value="result.provider.toUpperCase()" :class="['text-xs', providerTagClass(result.provider)]" />
-                <Tag :value="result.level.toUpperCase()" severity="info" />
-                <Tag
-                  :value="result.passed ? t('simulator.passed') : t('simulator.not_passed')"
-                  :severity="result.passed ? 'success' : 'danger'"
+            <!-- Toutes les tentatives du sujet -->
+            <template v-if="group.attempts.length > 1">
+              <button
+                type="button"
+                class="flex items-center gap-1.5 self-start text-xs font-medium text-muted hover:text-ink"
+                @click="toggleGroup(group.subjectId)"
+              >
+                <i
+                  class="pi text-[10px]"
+                  :class="expandedGroups.has(group.subjectId) ? 'pi-chevron-up' : 'pi-chevron-down'"
                 />
-              </div>
-            </div>
-          </div>
+                {{
+                  expandedGroups.has(group.subjectId)
+                    ? t("simulator.hide_attempts")
+                    : t("simulator.show_attempts")
+                }}
+              </button>
 
-          <!-- Détail par critère -->
-          <div class="w-full space-y-1.5 rounded-leaf bg-card-2 px-3 py-2.5">
-            <div v-for="c in criteriaList(result)" :key="c.key" class="flex items-center gap-2">
-              <span class="w-20 shrink-0 truncate text-xs text-muted">{{ c.label }}</span>
-              <div class="h-1 flex-1 rounded-full bg-line">
-                <div
-                  class="h-1 rounded-full transition-all"
-                  :class="c.pct >= 70 ? 'bg-emerald-500' : c.pct >= 50 ? 'bg-orange-400' : 'bg-red-500'"
-                  :style="{ width: c.pct + '%' }"
-                />
-              </div>
-              <span class="w-10 shrink-0 text-right text-xs tabular-nums text-muted">{{ c.score }}/{{ c.max }}</span>
-            </div>
+              <ul v-if="expandedGroups.has(group.subjectId)" class="divide-y divide-line rounded-leaf border border-line">
+                <li
+                  v-for="attempt in group.attempts"
+                  :key="attempt.id"
+                  class="flex items-center justify-between gap-3 px-3 py-2 text-xs"
+                >
+                  <span class="text-faint">{{ formatDate(attempt.created_at) }}</span>
+                  <span class="flex items-center gap-2">
+                    <span class="tabular-nums text-ink">
+                      {{ attempt.overall_score }}/{{ attempt.max_score }} · {{ Math.round(attempt.score_percentage) }}%
+                    </span>
+                    <i
+                      class="pi text-[10px]"
+                      :class="attempt.passed ? 'pi-check text-emerald-600' : 'pi-times text-orange-600'"
+                    />
+                    <button
+                      type="button"
+                      class="font-semibold text-primary hover:underline"
+                      @click="openResult(attempt)"
+                    >
+                      {{ t("simulator.see") }}
+                    </button>
+                  </span>
+                </li>
+              </ul>
+            </template>
           </div>
+        </div>
 
-          <div class="flex w-full items-center justify-between pt-1">
-            <span class="text-xs font-bold" :class="result.passed ? 'text-emerald-600' : 'text-orange-600'">
-              {{ result.overall_score }} / {{ result.max_score }} pts
-            </span>
-            <span class="flex items-center gap-1 text-xs font-semibold text-primary">
-              {{ t("simulator.see") }} <i class="pi pi-arrow-right text-xs" />
-            </span>
-          </div>
-        </button>
+        <Paginator
+          v-if="groupedResults.length > PAGE_SIZE"
+          v-model:first="first"
+          :rows="PAGE_SIZE"
+          :total-records="groupedResults.length"
+        />
       </div>
     </template>
   </div>
@@ -313,14 +377,73 @@ const resetFilters = () => {
 
 // ── Historique : géré par useSimulatorStore ──
 
+// Rechargé à chaque ouverture de l'onglet, pour voir les nouvelles corrections
 const switchToResults = () => {
   activeTab.value = "resultats";
-  if (!store.results.length) store.fetchMyResults();
+  store.fetchMyResults();
 };
 
 const openResult = (result: SimulatorResultResponse) => {
   store.loadResultIntoCorrection(result);
   router.push(localePath(`/dashboard/simulateur/${result.subject_id}/resultats`));
+};
+
+// ── Regroupement par sujet + pagination ──
+
+interface ResultGroup {
+  subjectId: string;
+  title: string | null;
+  provider: string;
+  level: string;
+  attempts: SimulatorResultResponse[]; // de la plus récente à la plus ancienne
+  latest: SimulatorResultResponse;
+  best: SimulatorResultResponse;
+}
+
+// L'API renvoie les résultats du plus récent au plus ancien : l'ordre
+// d'insertion dans la Map trie donc les sujets par activité récente.
+const groupedResults = computed<ResultGroup[]>(() => {
+  const groups = new Map<string, ResultGroup>();
+  for (const r of store.results) {
+    const key = String(r.subject_id);
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        subjectId: key,
+        title: r.subject_title ?? null,
+        provider: r.provider,
+        level: r.level,
+        attempts: [],
+        latest: r,
+        best: r,
+      };
+      groups.set(key, group);
+    }
+    group.attempts.push(r);
+    if (r.score_percentage > group.best.score_percentage) group.best = r;
+  }
+  return [...groups.values()];
+});
+
+const PAGE_SIZE = 6;
+const first = ref(0);
+const pagedGroups = computed(() => groupedResults.value.slice(first.value, first.value + PAGE_SIZE));
+
+// Retour à la première page quand la liste change (nouvelle correction)
+watch(
+  () => store.results.length,
+  () => {
+    first.value = 0;
+  },
+);
+
+// Nouveau Set à chaque clic : un Set modifié sur place n'est pas suivi par Vue
+const expandedGroups = ref<Set<string>>(new Set());
+const toggleGroup = (subjectId: string) => {
+  const next = new Set(expandedGroups.value);
+  if (next.has(subjectId)) next.delete(subjectId);
+  else next.add(subjectId);
+  expandedGroups.value = next;
 };
 
 const criteriaList = (result: SimulatorResultResponse) => {

@@ -16,7 +16,12 @@ des 3 notes est multipliée par 3 → max 45.
 que telc ne note pas indépendamment — corrigé ici. Le vocabulaire est
 maintenant évalué comme composante de "Formale Richtigkeit", conformément
 au barème réel.
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 
 def get_telc_b1_prompt(
@@ -62,7 +67,6 @@ I. BERÜCKSICHTIGUNG DER LEITPUNKTE (15 Pt) — Inhalt
    2 Punkte behandelt → 5-8
    1 Punkt oder weniger → 0-4
    ❌ Thema komplett verfehlt (kein Brief / falscher Empfänger) → MAX 4/15, overall_score MAX 20/45
-   ❌ Weniger als 80 Wörter → -3
 
 II. KOMMUNIKATIVE GESTALTUNG (15 Pt) — Struktur, Kohärenz, Register
    Informelle Struktur korrekt (Anrede/Hauptteil/Grußformel/Unterschrift), logischer Textfluss, Konnektoren sinnvoll eingesetzt, durchgehend informelles Register (du-Form).
@@ -73,7 +77,8 @@ II. KOMMUNIKATIVE GESTALTUNG (15 Pt) — Struktur, Kohärenz, Register
 III. FORMALE RICHTIGKEIT (15 Pt) — Grammatik, Orthografie, Wortschatz
    Korrekte Zeitformen (Präsens, Perfekt, Futur mit werden/wollen), Satzstellung (Verb Position 2, Nebensätze mit weil/dass/ob), Kasus nach Präpositionen, Rechtschreibung, Zeichensetzung, angemessener und vielfältiger Wortschatz ohne übermäßige Wiederholung von Grundwörtern.
 
-KORRIGIERTER TEXT: thematisch korrekt → nur Fehler korrigieren, Ideen beibehalten, fehlende Konnektoren ergänzen. Thema verfehlt → vollständig neu schreiben (korrekte Struktur, alle Punkte, 120-150 Wörter, Niveau des Kandidaten annähernd beibehalten).
+{CORRECTION_RULES}
+UMRECHNUNG richtigkeit_score: sehr gut 13-15 | gut 10-12 | ausreichend 6-9 | schwach 0-5.
 
 ═══════════════════════════════════════════════════════
 BEWERTUNGSMASSSTAB
@@ -83,19 +88,22 @@ BEWERTUNGSMASSSTAB
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT — NUR gültiges JSON, kein Markdown, kein Text davor/danach.
 Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 15 für suggestions), auf Deutsch, kein Fließtext.
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann corrected_text und model_text.
 ═══════════════════════════════════════════════════════
 
 {{
-  "corrected_text": "Die vollständig korrigierte oder neu geschriebene informelle E-Mail",
+  "corrections": [
+    {{"error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "leitpunkte_score": 12, "leitpunkte_feedback": "max 20 Wörter",
   "gestaltung_score": 11, "gestaltung_feedback": "max 20 Wörter",
   "richtigkeit_score": 11, "richtigkeit_feedback": "max 20 Wörter",
   "overall_score": 34,
   "passed": true,
   "appreciation": "max 20 Wörter, ermutigend und konkret",
-  "corrections": [
-    {{"error": "identifizierter Fehler", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
+  "thema_verfehlt": false,
+  "corrected_text": "Originaltext, nur die gelisteten Fehler korrigiert",
+  "model_text": "Mustertext: verbesserte informelle E-Mail nach Aufgabenstellung, 120-150 Wörter",
   "suggestions": ["max 15 Wörter (Struktur/Leitpunkte)", "max 15 Wörter (Gestaltung)", "max 15 Wörter (Richtigkeit)"]
 }}
 

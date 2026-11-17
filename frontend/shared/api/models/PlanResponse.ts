@@ -13,5 +13,13 @@ export type PlanResponse = {
     features?: (Array<string> | null);
     ai_credits?: number;
     display_order: number;
+    track?: PlanResponse.track;
+    is_popular?: boolean;
 };
+export namespace PlanResponse {
+    export enum track {
+        STANDARD = 'standard',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

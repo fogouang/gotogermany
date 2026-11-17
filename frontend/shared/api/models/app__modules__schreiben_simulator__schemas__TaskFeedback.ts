@@ -10,6 +10,7 @@ export type app__modules__schreiben_simulator__schemas__TaskFeedback = {
     key: string;
     label: string;
     corrected_text: string;
+    model_text?: string;
     main_strengths?: Array<string>;
     main_weaknesses?: Array<string>;
     score?: (number | null);

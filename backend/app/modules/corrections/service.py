@@ -9,6 +9,11 @@ Orchestre la correction IA :
 5. Appeler l'IA
 6. Valider le résultat
 7. Persister + retourner
+
+Le texte original du candidat (tasks[].original_text) n'est pas stocké dans
+la correction : il est relu depuis les réponses free_text de la session à
+chaque lecture (_to_response_with_originals), ce qui couvre aussi les
+corrections enregistrées avant cet ajout.
 """
 from __future__ import annotations
 import uuid
@@ -31,8 +36,9 @@ from app.modules.corrections.prompts import (
     build_correction_prompt,
     get_max_score,
     TaskData,
+    EXPECTED_TASK_COUNT,
 )
-from app.modules.corrections.response_normalizer import CRITERIA_CONFIG
+from app.modules.corrections.response_normalizer import CRITERIA_CONFIG, rebuild_corrected_text
 from app.modules.exam_sessions.models import ExamSession, ExamSessionAnswer
 from app.modules.exams.models import Subject, Level
 
@@ -170,7 +176,7 @@ class CorrectionService:
         existing = await self.repo.get_by_session(request.exam_session_id)
         if existing:
             logger.info(f"Correction déjà existante pour session {request.exam_session_id}")
-            return _to_response(existing)
+            return await self._to_response_with_originals(existing)
 
         # 2. Charger la session avec toutes ses relations
         session = await self._load_session(request.exam_session_id, current_user_id)
@@ -234,7 +240,7 @@ class CorrectionService:
         # 9. Mettre à jour le score_breakdown de la session
         await self._update_session_score(session, correction)
 
-        return _to_response(correction)
+        return await self._to_response_with_originals(correction)
 
     async def get_by_id(
         self,
@@ -247,7 +253,7 @@ class CorrectionService:
             raise ValueError(f"Correction {correction_id} introuvable.")
         if correction.user_id != current_user_id:
             raise PermissionError("Accès refusé.")
-        return _to_response(correction)
+        return await self._to_response_with_originals(correction)
 
     async def get_by_session(
         self,
@@ -260,9 +266,51 @@ class CorrectionService:
             return None
         if correction.user_id != current_user_id:
             raise PermissionError("Accès refusé.")
-        return _to_response(correction)
+        return await self._to_response_with_originals(correction)
 
     # ── Helpers privés ───────────────────────────────────
+
+    async def _to_response_with_originals(self, correction: Correction) -> CorrectionResponse:
+        """
+        Convertir la correction en réponse et y ajouter le texte original du
+        candidat pour chaque tâche (même ordre : réponses free_text triées par
+        teil_number, comme lors de la construction du prompt).
+        Si les réponses sont introuvables, la correction est renvoyée sans texte original.
+        """
+        response = _to_response(correction)
+        try:
+            payloads = await self._extract_tasks(
+                correction.session_id, correction.provider, correction.level
+            )
+        except ValueError:
+            logger.warning(f"Textes originaux introuvables pour session {correction.session_id}")
+            return response
+
+        # Tâche au choix : afficher le vrai Teil traité (ex. "Teil 2"), pas le Teil renuméroté
+        if len(response.tasks) == 1 and payloads and payloads[0].teil_number != 1:
+            response.tasks[0].label = f"Teil {payloads[0].teil_number}"
+            
+        # Texte corrigé reconstruit depuis l'original + corrections, et liste réduite
+        # aux corrections réellement appliquées : liste et texte toujours identiques
+        all_corrections = list(response.corrections_list)
+        dumps = [c.model_dump() for c in all_corrections]
+        kept_idx: set[int] = set()
+        for i, task in enumerate(response.tasks):
+            task_no = str(i + 1)
+            task_idx = [k for k, d in enumerate(dumps) if str(d.get("task", "1") or "1") == task_no]
+            if i < len(payloads):
+                task.original_text = payloads[i].text
+                rebuilt, applied = rebuild_corrected_text(
+                    payloads[i].text, [dumps[k] for k in task_idx], i + 1
+                )
+                if rebuilt:
+                    task.corrected_text = rebuilt
+                    applied_ids = {id(a) for a in applied}
+                    kept_idx.update(k for k in task_idx if id(dumps[k]) in applied_ids)
+                    continue
+            kept_idx.update(task_idx)
+        response.corrections_list = [c for k, c in enumerate(all_corrections) if k in kept_idx]
+        return response
 
     async def _load_session(
         self,
@@ -342,6 +390,17 @@ class CorrectionService:
                     **fields,
                 )
             )
+
+        # Tâches au choix (telc B2 : Aufgabe A ou B) : l'examen n'attend qu'une
+        # tâche, on garde celle que l'élève a rédigée (même logique que le simulateur)
+        expected = EXPECTED_TASK_COUNT.get((provider, level))
+        if expected == 1 and len(tasks) > 1:
+            written = [t for t in tasks if (t.text or "").strip()]
+            if len(written) != 1:
+                raise ValueError(
+                    "Pour ce sujet, rédigez une seule des tâches proposées (au choix)."
+                )
+            tasks = written
 
         return tasks
 

@@ -1,5 +1,9 @@
 /**
  * stores/correction.store.ts
+ *
+ * tasks[].model_text (Mustertext) : version améliorée attendue, distincte de
+ * corrected_text (correction minimale du texte de l'élève). Vide ("") pour
+ * les corrections enregistrées avant cet ajout.
  */
 import { defineStore } from "pinia";
 import { CorrectionsService, OpenAPI } from "#shared/api";
@@ -33,11 +37,26 @@ export const useCorrectionStore = defineStore("correction", {
     cecrlLevel: (state): string => {
       if (!state.current) return "";
       const pct = state.current.score_percentage;
-      if (pct >= 87) return "C1";
-      if (pct >= 70) return state.current.level.toUpperCase() + "+";
-      if (pct >= 60) return state.current.level.toUpperCase();
-      if (pct >= 45) return state.current.level.toUpperCase() + "-";
-      return state.current.level === "b2" ? "B1" : "A2";
+      const lvl = state.current.level.toUpperCase();
+      // Même échelle que les prompts : 87 % et plus = niveau au-dessus (B1 -> B2, B2 -> C1)
+      const NEXT: Record<string, string> = {
+        A1: "A2",
+        A2: "B1",
+        B1: "B2",
+        B2: "C1",
+        C1: "C2",
+      };
+      const PREV: Record<string, string> = {
+        A2: "A1",
+        B1: "A2",
+        B2: "B1",
+        C1: "B2",
+      };
+      if (pct >= 87) return NEXT[lvl] ?? lvl;
+      if (pct >= 70) return lvl + "+";
+      if (pct >= 60) return lvl;
+      if (pct >= 45) return lvl + "-";
+      return PREV[lvl] ?? lvl;
     },
 
     // Critères de notation tels qu'envoyés par le backend (libellé et max inclus)
@@ -66,7 +85,9 @@ export const useCorrectionStore = defineStore("correction", {
     ): Array<{
       key: string;
       label: string;
+      originalText: string;
       correctedText: string;
+      modelText: string;
       strengths: string[];
       weaknesses: string[];
       score: number | null;
@@ -82,7 +103,9 @@ export const useCorrectionStore = defineStore("correction", {
       return state.current.tasks.map((t) => ({
         key: t.key,
         label: t.label,
+        originalText: t.original_text ?? "",
         correctedText: t.corrected_text,
+        modelText: t.model_text ?? "",
         strengths: t.main_strengths ?? [],
         weaknesses: t.main_weaknesses ?? [],
         score: t.score ?? null,

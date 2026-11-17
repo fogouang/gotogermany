@@ -14,7 +14,12 @@ Pondération OFFICIELLE telc B2 (même système que B1 — confirmé via telc.ne
 ⚠️ Corrigé depuis l'ancienne version à 4 critères (15/10/10/10) qui séparait
 Wortschatz de Grammatik — non conforme au barème réel telc (même correction
 que pour telc B1).
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 
 def get_telc_b2_prompt(
@@ -70,7 +75,7 @@ I. AUFGABENBEWÄLTIGUNG (15 Pt) — mind. 3 Punkte (Option a) ODER 2 Punkte + 1 
    1 Punkt oder thematisch verfehlt → 0-4
    ❌ Thema verfehlt (kein Beschwerdebrief) → MAX 4/15, overall_score MAX 20/45
    ❌ Sofortige Anwaltsdrohung → -3 | Keine Betreffzeile → -1 | Keine konkrete Forderung → -2
-   ❌ Weniger als 100 Wörter → -4
+   
 
 II. KOMMUNIKATIVE GESTALTUNG (15 Pt) — logische Struktur (Einleitung→Problembeschreibung→Forderung), Konnektoren vielfältig, klare Absatzgliederung, kein Themensprung, durchgehend formelles Register (Sie-Form).
    ❌ "du" statt "Sie" → -4
@@ -78,7 +83,9 @@ II. KOMMUNIKATIVE GESTALTUNG (15 Pt) — logische Struktur (Einleitung→Problem
 
 III. FORMALE RICHTIGKEIT (15 Pt) — Konjunktiv II für höfliche Forderungen ("Ich wäre Ihnen dankbar, wenn..."), Passiv ("Das Gerät wurde geliefert..."), Nebensätze (obwohl/da/weil/sodass), Genitiv nach Präpositionen, Rechtschreibung/Zeichensetzung, formelles präzises Vokabular (Mängelrüge, Reklamation, Gewährleistung), keine Umgangssprache, keine Wortwiederholungen.
 
-KORRIGIERTER TEXT: thematisch korrekt → Fehler korrigieren, Register formeller machen, Anwaltsdrohung abschwächen, Ideen beibehalten. Thema verfehlt/Struktur komplett falsch → vollständig neu schreiben (vollständige Briefstruktur, mind. 3 Punkte, 150-200 Wörter).
+{CORRECTION_RULES}
+Falsches Register (du statt Sie) und sofortige Anwaltsdrohung sind Fehler: in "corrections" listen und im corrected_text korrigieren.
+UMRECHNUNG richtigkeit_score: sehr gut 13-15 | gut 10-12 | ausreichend 6-9 | schwach 0-5.
 
 ═══════════════════════════════════════════════════════
 BEWERTUNGSMASSSTAB
@@ -88,19 +95,22 @@ BEWERTUNGSMASSSTAB
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT — NUR gültiges JSON, kein Markdown, kein Text davor/danach.
 Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 15 für suggestions), auf Deutsch, kein Fließtext.
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann corrected_text und model_text.
 ═══════════════════════════════════════════════════════
 
 {{
-  "corrected_text": "Der vollständig korrigierte oder neu geschriebene Beschwerdebrief",
+  "corrections": [
+    {{"error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "aufgabenbewaeltigung_score": 12, "aufgabenbewaeltigung_feedback": "max 20 Wörter",
   "gestaltung_score": 11, "gestaltung_feedback": "max 20 Wörter",
   "richtigkeit_score": 11, "richtigkeit_feedback": "max 20 Wörter",
   "overall_score": 34,
   "passed": true,
   "appreciation": "max 20 Wörter, ermutigend und konkret",
-  "corrections": [
-    {{"error": "identifizierter Fehler im Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
+  "appreciation": "max 20 Wörter, ermutigend und konkret"
+  "corrected_text": "Originaltext, nur die gelisteten Fehler korrigiert",
+  "model_text": "Mustertext: vollständiger Beschwerdebrief nach Aufgabenstellung, 150-200 Wörter",
   "suggestions": ["max 15 Wörter (Struktur/Forderung)", "max 15 Wörter (Gestaltung)", "max 15 Wörter (Richtigkeit)"]
 }}
 

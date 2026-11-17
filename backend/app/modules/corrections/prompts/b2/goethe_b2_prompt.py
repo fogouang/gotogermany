@@ -11,7 +11,14 @@ Pondération OFFICIELLE Goethe B2 (confirmée via goethe.de) — 4 critères
 (L'ancienne version utilisait 30/25/25/20 et un découpage 70/30 par tâche
 dans le docstring — les deux étaient incohérents avec la grille officielle
 et entre eux. Corrigé ici.)
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
+thema_verfehlt par tâche : lu par response_normalizer, qui plafonne
+Erfüllung à 6/25 si une tâche est hors sujet.
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 
 def get_goethe_b2_prompt(
@@ -87,7 +94,8 @@ BEWERTUNGSKRITERIEN (je 25 Punkte, über beide Teile zusammen)
 4. KORREKTHEIT (25 Pt) — Konjunktiv II, Passiv, Relativsätze, Infinitivkonstruktionen mit "zu", Genitiv, Groß-/Kleinschreibung, Kommasetzung.
    ❌ Kein Konjunktiv II in Teil 2 → -3
 
-KORRIGIERTE TEXTE: thematisch korrekt → Fehler korrigieren, Ideen beibehalten. Thema komplett verfehlt oder Struktur komplett falsch → vollständig neu schreiben.
+{CORRECTION_RULES}
+UMRECHNUNG korrektheit_score (Fehlerdichte über beide Teile): sehr gut 22-25 | gut 17-21 | ausreichend 11-16 | schwach 0-10.
 
 ═══════════════════════════════════════════════════════
 BEWERTUNGSMASSSTAB
@@ -97,9 +105,13 @@ BEWERTUNGSMASSSTAB
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT — NUR gültiges JSON, kein Markdown, kein Text davor/danach.
 Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 10 für strengths/weaknesses, 15 für suggestions), auf Deutsch, kein Fließtext.
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann die Texte.
 ═══════════════════════════════════════════════════════
 
 {{
+  "corrections": [
+    {{"task": "1", "error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "global_assessment": {{
     "overall_score": 68,
     "passed": true,
@@ -113,19 +125,20 @@ Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 10 für strengt
   }},
   "task_feedbacks": {{
     "task1": {{
-      "corrected_text": "Vollständig korrigierter Meinungstext",
+      "thema_verfehlt": false,
+      "corrected_text": "Originaltext Teil 1, nur Fehler korrigiert",
+      "model_text": "Mustertext Meinungstext nach Pflichtstruktur, ca. 150 Wörter",
       "main_strengths": ["max 10 Wörter"],
       "main_weaknesses": ["max 10 Wörter"]
     }},
     "task2": {{
-      "corrected_text": "Vollständig korrigierte formelle E-Mail",
+      "thema_verfehlt": false,
+      "corrected_text": "Originaltext Teil 2, nur Fehler korrigiert",
+      "model_text": "Mustertext formelle E-Mail nach Pflichtstruktur, ca. 100 Wörter",
       "main_strengths": ["max 10 Wörter"],
       "main_weaknesses": ["max 10 Wörter"]
     }}
   }},
-  "corrections": [
-    {{"task": "1", "error": "Fehler im Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
   "suggestions": ["max 15 Wörter (Teil 1)", "max 15 Wörter (Teil 1)", "max 15 Wörter (Teil 2)"]
 }}
 

@@ -23,5 +23,6 @@ export type SimulatorCorrectResponse = {
     tasks: Array<app__modules__schreiben_simulator__schemas__TaskFeedback>;
     corrections_list: Array<Record<string, any>>;
     suggestions: Array<string>;
+    ai_usage?: (Record<string, any> | null);
 };
 

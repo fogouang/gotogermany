@@ -94,11 +94,26 @@
     "add": "Hinzufügen"
   },
   "hero": {
+    "eyebrow": "Vorbereitung auf Deutschprüfungen",
     "title": "Holen Sie sich das Zertifikat, das Ihnen die Türen nach Deutschland öffnet.",
-    "subtitle": "Aufgaben im offiziellen Prüfungsformat, ein Prüfungssimulator unter echten Bedingungen für alle vier Teile (Lesen, Hören, Schreiben, Sprechen), KI-Korrektur und Live-Sitzungen mit einem Prüfer. Goethe, telc, ÖSD, TestDaF oder ECL: Sie gehen bestens vorbereitet in die Prüfung.",
-    "cta": "Training starten",
-    "social_proof": "+500 zufriedene Lernende",
-    "image_alt": "Student bereitet sich auf die Deutschprüfung vor"
+    "subtitle": "Komplette Prüfungssätze im offiziellen Format, unter echten Prüfungsbedingungen für alle vier Teile (Lesen, Hören, Schreiben, Sprechen), mit KI-Korrektur und Live-Sessions mit einem Prüfer. Goethe, telc, ÖSD, TestDaF oder Start Deutsch: Die ersten 3 Prüfungssätze jedes Niveaus sind kostenlos.",
+    "cta": "Kostenlosen Prüfungssatz starten",
+    "see_prices": "Preise ansehen",
+    "premium_from": "Premium ab {price} FCFA",
+    "premium_desc": "Alle Prüfungssätze Ihrer Prüfung, unbegrenzt während Ihres Zugangs",
+    "structure_title": "Ablauf eines Prüfungssatzes",
+    "structure_note": "Offizielles Format mit Zeitvorgaben, wie am Prüfungstag",
+    "social_proof": "Über 100 zufriedene Lernende",
+    "image_alt": "Student bereitet sich auf eine Deutschprüfung vor",
+    "demo": "Demo ansehen",
+    "demo_title": "GoToGermany in Aktion",
+    "demo_sujet": "Ablauf eines Prüfungssatzes",
+    "demo_sprechen": "Mündliche Prüfung (Sprechen)"
+  },
+  "whatsapp_band": {
+    "title": "Treten Sie der GoToGermany-Community auf WhatsApp bei",
+    "description": "Sie bereiten sich auf eine Deutschprüfung vor? Erhalten Sie regelmäßig Tipps, tauschen Sie sich über Ihre Ergebnisse aus und stellen Sie Ihre Fragen.",
+    "cta": "Gruppe beitreten"
   },
   "how_it_works": {
     "title": "So funktioniert's",
@@ -134,7 +149,7 @@
     "subtitle2": "B1-, B2- oder C1-Zertifikat",
     "subtitle3": " beim richtigen Anbieter vor",
     "features": "Prüfungssimulationen im offiziellen Format · Sofortige KI-Korrektur für Schreiben · Sprechsimulator für Sprechen",
-    "cta": "Jetzt starten",
+    "cta": "Kostenlosen Prüfungssatz testen",
     "disclaimer": "GoToGermany ist eine unabhängige Vorbereitungsplattform und steht in keiner Verbindung zu den genannten Institutionen. Die Namen und Logos von Goethe, telc, ÖSD, TestDaF und ECL sind Eigentum ihrer jeweiligen Inhaber.",
     "orgs": {
       "goethe": {
@@ -204,15 +219,28 @@
     "per_day": "also",
     "per_day_suffix": "FCFA/Tag",
     "ai_credits": "{n} KI-Credit inklusive | {n} KI-Credits inklusive",
+    "buy_whatsapp": "Per WhatsApp kaufen",
+    "whatsapp_message": "Hallo, ich möchte das Angebot {plan} ({days} Tage, {price} FCFA) bei GoToGermany.",
     "by_card": "oder {price} per Karte",
+    "tracks": {
+      "standard": "B1 / B2 / TestDaF",
+      "start_deutsch": "Start Deutsch (A1 / A2)"
+    },
+    "full_access": "Voller Zugang zu Ihrer Prüfung: Goethe, telc, ÖSD oder TestDaF",
+    "progress": "Verfolgen Sie Ihren Fortschritt",
     "features": {
-      "full_access": "Voller Zugang zu Ihrer gewählten Prüfung und Stufe",
-      "all_modules": "Lesen, Hören, Schreiben und Sprechen inklusive",
-      "multi_provider": "Goethe, telc, ÖSD, TestDaF oder ECL nach Wahl",
-      "corrections": "KI-Korrektur für Schreiben und Sprechsimulator",
-      "progress": "Fortschrittsverfolgung pro Modul",
-      "unlimited_attempts": "Unbegrenzte Prüfungssätze während der gesamten Laufzeit",
-      "mobile_access": "Auf Handy und Computer verfügbar"
+      "full_access": "Voller Zugang zu deiner Prüfung: Goethe, telc, ÖSD oder TestDaF",
+      "sd_full_access": "Voller Zugang zu Start Deutsch A1 oder Goethe-Zertifikat A2",
+      "all_modules": "Komplette Prüfungssätze im offiziellen Format: Lesen, Hören, Schreiben, Sprechen",
+      "exam_conditions": "Ablauf und Zeitvorgaben wie am Prüfungstag",
+      "sd_guided_writing": "Geführtes Schreiben: Formular und Nachricht (A1), SMS und E-Mail (A2)",
+      "sd_oral_cards": "Sprechen üben mit den Karten und Bildern aus der Prüfung",
+      "corrections": "KI-Korrektur für Schreiben und Sprechen",
+      "sd_beginner_friendly": "Einfache Anweisungen, ideal für Anfänger",
+      "pass_fail_result": "Ergebnis bestanden / nicht bestanden nach jedem Prüfungssatz",
+      "progress": "Verfolge deinen Fortschritt",
+      "sd_next_step_b1": "Die ideale Grundlage für den Weg zu B1",
+      "mobile_access": "Auf Handy und Computer"
     },
     "cta": "Dieses Angebot wählen",
     "default_description": "Voller Zugang zur Prüfung Ihrer Wahl für",
@@ -799,7 +827,9 @@
     "page_title": "Schreiben-Korrektur - DeutschTest",
     "back_to_result": "Zurück zum Ergebnis",
     "teil": "Teil {n}",
-    "malus": "Abzug: -{n}"
+    "malus": "Abzug: -{n}",
+    "your_text": "Ihr Text",
+    "original_unavailable": "Originaltext nicht verfügbar."
   },
   "invoices": {
     "title": "Meine Zahlungen",
@@ -972,13 +1002,20 @@
     "redo": "Dieses Thema wiederholen",
     "page_title": "Schreiben-Simulator - DeutschTest",
     "passed": "Prüfung bestanden",
-    "not_passed": "Nicht bestanden"
+    "not_passed": "Nicht bestanden",
+    "attempts": "{n} Versuch | {n} Versuche",
+    "best_score": "Bestes Ergebnis: {pct} %",
+    "show_attempts": "Versuche anzeigen",
+    "hide_attempts": "Versuche ausblenden",
+    "last_attempt": "Letzter Versuch"
   },
   "simulator_result": {
     "no_correction": "Keine Korrektur verfügbar.",
     "back_simulator": "Zurück zum Simulator",
     "score": "Punktzahl",
     "success_rate": "Erfolgsquote",
+    "model_text": "Mustertext",
+    "model_text_hint": "Beispiel für eine erwartete Antwort zu dieser Aufgabe. Das ist keine Korrektur Ihres Textes.",
     "level": "Niveau",
     "criteria_title": "Kriteriendetails",
     "task_title": "Korrektur nach Teil",

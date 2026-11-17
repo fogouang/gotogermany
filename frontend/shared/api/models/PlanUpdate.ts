@@ -12,5 +12,7 @@ export type PlanUpdate = {
     features?: (Array<string> | null);
     ai_credits?: (number | null);
     display_order?: (number | null);
+    track?: ('standard' | 'start_deutsch' | null);
+    is_popular?: (boolean | null);
 };
 

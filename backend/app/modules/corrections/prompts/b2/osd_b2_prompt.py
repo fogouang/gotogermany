@@ -27,7 +27,12 @@ Règles officielles supplémentaires :
 que la certification soit valide est 10/30 (plancher) ; la réussite de l'écrit
 dépend du total Lesen+Hören+Schreiben (42/70). `passed` est calculé sur 18/30
 (60%) comme repère interne ; `floor_reached` indique le plancher officiel.
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 
 def _bullets(points: list[str] | None) -> str:
@@ -125,39 +130,43 @@ task_score = max(0, A + K + T + L + F), Obergrenze 15.
 ❌ Textlänge < 50% der in der Aufgabenstellung geforderten Wortanzahl (jede Aufgabe) → task_score dieser Aufgabe = 0 (n.b.)
 ❌ Thema komplett verfehlt (eine Aufgabe) → alle Kriterien dieser Aufgabe = 0
 
-KORRIGIERTER TEXT: thematisch korrekt → Fehler korrigieren, Ideen beibehalten. Thema verfehlt/Struktur komplett falsch → vollständig neu schreiben.
+{CORRECTION_RULES}
+UMRECHNUNG f_malus (Fehlerdichte je Aufgabe): sehr gut 0 | gut -1 | ausreichend -2 | schwach -3.
 
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT — NUR gültiges JSON, kein Markdown, kein Text davor/danach.
 Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 15 für suggestions), auf Deutsch, kein Fließtext.
 "task1" bewertet IMMER Teil 1 (Beschwerde-Mail), "task2" IMMER Teil 2 (Meinungsäußerung).
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann die Texte.
 ═══════════════════════════════════════════════════════
 
 {{
+  "corrections": [
+    {{"task": "1", "error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "global_assessment": {{
     "overall_score": 21,
     "floor_reached": true,
     "appreciation": "max 20 Wörter, ermutigend und konkret"
   }},
   "task1": {{
-    "a_score": 4, "k_score": 2, "t_score": 2, "l_score": 3, "f_malus": -1,
+    "a_score": 4, "k_score": 2, "t_score": 2, "l_score": 3, "f_malus": -1,"thema_verfehlt": false,
     "task_score": 10,
     "feedback": "max 20 Wörter",
-    "corrected_text": "Vollständig korrigierte Beschwerde-Mail",
+    "corrected_text": "Originaltext Teil 1, nur Fehler korrigiert",
+    "model_text": "Mustertext Beschwerde-Mail nach Pflichtstruktur",
     "main_strengths": ["max 10 Wörter"],
     "main_weaknesses": ["max 10 Wörter"]
   }},
   "task2": {{
-    "a_score": 4, "k_score": 2, "t_score": 3, "l_score": 3, "f_malus": -1,
+    "a_score": 4, "k_score": 2, "t_score": 3, "l_score": 3, "f_malus": -1,"thema_verfehlt": false,
     "task_score": 11,
     "feedback": "max 20 Wörter",
-    "corrected_text": "Vollständig korrigierte Meinungsäußerung",
+    "corrected_text": "Originaltext Teil 2, nur Fehler korrigiert",
+    "model_text": "Mustertext Meinungsäußerung nach Pflichtstruktur",
     "main_strengths": ["max 10 Wörter"],
     "main_weaknesses": ["max 10 Wörter"]
   }},
-  "corrections": [
-    {{"task": "1", "error": "Fehler im Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
   "suggestions": ["max 15 Wörter (Teil 1)", "max 15 Wörter (Teil 2)", "max 15 Wörter (Formale Richtigkeit)"]
 }}
 

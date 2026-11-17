@@ -2,8 +2,7 @@
   <section
     class="relative overflow-hidden bg-canvas pt-10 pb-16 sm:pt-14 lg:pb-24"
   >
-    <!-- Décor : grille discrète + halos -->
-   
+    <!-- Décor : halos -->
     <div
       class="pointer-events-none absolute -top-40 -left-40 size-120 rounded-full bg-accent-500/15 blur-3xl"
       aria-hidden="true"
@@ -39,16 +38,47 @@
             :label="t('hero.cta')"
             @click="handleCta"
           />
-          <AppLinkButton
-            :to="localePath('/tarifs')"
-            variant="outline"
-            size="md"
-            :label="t('nav.pricing')"
-            icon="pi pi-tags"
-            icon-pos="left"
-            class="h-12!"
-          />
+          <button
+            type="button"
+            class="inline-flex h-12 items-center gap-2.5 rounded-leaf border border-line bg-card px-5 text-sm font-semibold text-ink shadow-soft transition-colors hover:border-accent-500/50"
+            @click="demoOpen = true"
+          >
+            <span
+              class="flex size-7 items-center justify-center rounded-full bg-accent-500 text-accent-950"
+            >
+              <i class="pi pi-play text-[10px]" />
+            </span>
+            {{ t("hero.demo") }}
+          </button>
         </div>
+
+        <!-- Encart Premium : mène à la section tarifs de la page -->
+        <a
+          v-if="minPrice"
+          href="#tarifs"
+          class="mt-6 flex max-w-lg flex-col gap-2 rounded-card border border-accent-500/40 bg-accent-500/5 p-5 transition-colors hover:border-accent-500 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p
+              class="font-heading text-lg font-bold text-accent-700 dark:text-accent-400"
+            >
+              {{
+                t("hero.premium_from", {
+                  price: minPrice.toLocaleString("fr-FR"),
+                })
+              }}
+            </p>
+            <p class="mt-0.5 text-sm text-muted">
+              {{ t("hero.premium_desc") }}
+            </p>
+          </div>
+          <span
+            class="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            {{ t("hero.see_prices") }}
+            <i class="pi pi-arrow-down text-xs" />
+          </span>
+        </a>
 
         <!-- Preuve sociale -->
         <div class="mt-8 flex items-center gap-3">
@@ -106,6 +136,38 @@
         />
       </div>
     </div>
+
+    <!-- Démo vidéo (rendue dans <body> par PrimeVue) -->
+    <Dialog
+      v-model:visible="demoOpen"
+      modal
+      dismissableMask
+      :header="t('hero.demo_title')"
+      :style="{ width: '95vw', maxWidth: '60rem' }"
+      @hide="pauseVideo"
+    >
+      <div class="space-y-4">
+        <div v-if="demos.length > 1" class="flex justify-center">
+          <SelectButton
+            v-model="selectedDemo"
+            :options="demoOptions"
+            optionLabel="label"
+            optionValue="value"
+            :allowEmpty="false"
+          />
+        </div>
+        <video
+          ref="videoEl"
+          :key="currentDemo.src"
+          :src="currentDemo.src"
+          :poster="currentDemo.poster"
+          controls
+          playsinline
+          preload="metadata"
+          class="aspect-video w-full rounded-card bg-black"
+        />
+      </div>
+    </Dialog>
   </section>
 </template>
 
@@ -113,10 +175,16 @@
 import { useAuthDialog } from "~/composables/useAuthDialog";
 
 const { t } = useI18n();
-const localePath = useLocalePath();
 
 const authStore = useAuthStore();
 const { openSignup } = useAuthDialog();
+const { activePlans, loadPlans } = usePlans();
+
+// Prix d'appel : la formule la moins chère, tous parcours confondus
+const minPrice = computed(() => {
+  const prices = activePlans.value.map((p) => p.price).filter((p) => p > 0);
+  return prices.length ? Math.min(...prices) : null;
+});
 
 // Connecté : direction son espace ; invité : inscription
 const handleCta = () => {
@@ -130,4 +198,32 @@ const handleCta = () => {
     openSignup();
   }
 };
+
+onMounted(() => {
+  if (!activePlans.value.length) loadPlans();
+});
+
+// ── Démo vidéo ──
+const demoOpen = ref(false);
+const videoEl = ref<HTMLVideoElement | null>(null);
+
+// Retire une ligne tant que la vidéo correspondante n'est pas prête
+const demos = [
+  { value: "sujet", src: "/videos/demo-sujet.mp4", poster: "/videos/demo-sujet.jpg" },
+  { value: "schreiben", src: "/videos/demo-schreiben.mp4", poster: "/videos/demo-schreiben.jpg" },
+  { value: "sprechen", src: "/videos/demo-sprechen.mp4", poster: "/videos/demo-sprechen.jpg" },
+];
+
+const selectedDemo = ref(demos[0]?.value ?? "sujet");
+
+const demoOptions = computed(() =>
+  demos.map((d) => ({ label: t(`hero.demo_${d.value}`), value: d.value })),
+);
+
+const currentDemo = computed(
+  () => demos.find((d) => d.value === selectedDemo.value) ?? demos[0]!,
+);
+
+// Fermeture : on coupe le son
+const pauseVideo = () => videoEl.value?.pause();
 </script>

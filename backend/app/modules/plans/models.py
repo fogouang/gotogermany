@@ -19,7 +19,7 @@ class Plan(Base, UUIDMixin, TimestampMixin):
     """
     Plan d'abonnement — durée + prix.
     Créé et géré par l'admin.
-    S'applique à tous les examens (prix unique par plan).
+    Rattaché à un parcours : "standard" (B1/B2/TestDaF) ou "start_deutsch" (A1/A2).
     """
     __tablename__ = "plans"
 
@@ -67,6 +67,20 @@ class Plan(Base, UUIDMixin, TimestampMixin):
      
     display_order: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0
+    )
+    
+    # Parcours auquel s'applique le plan
+    track: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="standard",
+        server_default="standard",
+        index=True,
+        doc="standard (B1/B2/TestDaF) | start_deutsch (A1/A2)",
+    )
+    # Badge "Populaire" sur la page tarifs
+    is_popular: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
     )
 
     # Relations

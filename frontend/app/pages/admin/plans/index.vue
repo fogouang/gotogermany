@@ -66,6 +66,19 @@
             >
               {{ formatDuration(plan.duration_days) }}
             </span>
+            <div class="mt-1.5 flex flex-wrap gap-1.5">
+              <span
+                class="inline-flex rounded-full bg-card-2 px-2.5 py-0.5 text-[11px] font-semibold text-muted"
+              >
+                {{ trackLabel(plan.track) }}
+              </span>
+              <span
+                v-if="plan.is_popular"
+                class="inline-flex items-center gap-1 rounded-full bg-accent-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-accent-700"
+              >
+                <i class="pi pi-star-fill text-[9px]" /> Populaire
+              </span>
+            </div>
           </div>
           <span
             class="shrink-0 rounded-full bg-card-2 px-2 py-0.5 text-[11px] font-semibold text-muted"
@@ -181,12 +194,26 @@
       <form class="space-y-4" @submit.prevent="handleSave">
         <div>
           <label class="mb-1.5 block text-sm font-medium text-ink"
+            >Parcours <span class="text-red-600">*</span></label
+          >
+          <SelectButton
+            v-model="form.track"
+            :options="trackOptions"
+            optionLabel="label"
+            optionValue="value"
+            :allowEmpty="false"
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink"
             >Nom <span class="text-red-600">*</span></label
           >
           <InputText
             v-model="form.name"
             class="w-full"
-            placeholder="ex. 1 mois, Accès 30 jours"
+            placeholder="ex. Sprint, Fokus, Prüfungsreif"
           />
         </div>
 
@@ -212,7 +239,7 @@
               :min="0"
               class="w-full"
               inputClass="w-full"
-              placeholder="5000"
+              placeholder="10350"
             />
           </div>
         </div>
@@ -283,7 +310,7 @@
           >
           <div class="space-y-1.5">
             <label
-              v-for="feat in featureOptions"
+              v-for="feat in visibleFeatureOptions"
               :key="feat.key"
               :for="`feat-${feat.key}`"
               class="flex cursor-pointer items-center gap-3 rounded-leaf border px-3 py-2 text-sm transition-colors"
@@ -316,12 +343,18 @@
               placeholder="0"
             />
           </div>
-          <div class="flex items-end pb-2">
+          <div class="flex flex-col justify-end gap-2 pb-2">
             <label
               class="flex cursor-pointer items-center gap-2 text-sm text-ink"
             >
               <ToggleSwitch v-model="form.is_active" />
               Plan actif
+            </label>
+            <label
+              class="flex cursor-pointer items-center gap-2 text-sm text-ink"
+            >
+              <ToggleSwitch v-model="form.is_popular" />
+              Badge « Populaire »
             </label>
           </div>
         </div>
@@ -377,7 +410,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PlanResponse } from "#shared/api";
+import type { PlanCreate, PlanResponse } from "#shared/api";
 
 definePageMeta({ layout: "admin" });
 
@@ -394,18 +427,31 @@ const {
   formatPrice,
 } = usePlans();
 
-// Options de features disponibles, clés alignées avec pricing.features.* (i18n)
-const featureOptions = [
-  { key: "full_access", label: "Accès complet à l'examen et niveau choisi" },
-  { key: "all_modules", label: "Lesen, Hören, Schreiben, Sprechen inclus" },
-  { key: "multi_provider", label: "TELC, Goethe ou ÖSD au choix" },
-  { key: "corrections", label: "Corrections automatiques par IA" },
-  { key: "progress", label: "Suivi de votre progression" },
-  {
-    key: "unlimited_attempts",
-    label: "Sujets illimités pendant la durée du plan",
-  },
-  { key: "mobile_access", label: "Accessible sur mobile et ordinateur" },
+// ── Parcours ──
+type Track = "standard" | "start_deutsch";
+
+const trackOptions: { label: string; value: Track }[] = [
+  { label: "B1 / B2 / TestDaF", value: "standard" },
+  { label: "Start Deutsch (A1 / A2)", value: "start_deutsch" },
+];
+
+const trackLabel = (t?: string | null) =>
+  trackOptions.find((o) => o.value === t)?.label ?? "B1 / B2 / TestDaF";
+
+// Options de features, clés alignées avec pricing.features.* (i18n)
+const featureOptions: { key: string; label: string; tracks: Track[] }[] = [
+  { key: "full_access", label: "Accès complet à ton examen : Goethe, telc, ÖSD ou TestDaF", tracks: ["standard"] },
+  { key: "sd_full_access", label: "Accès complet à Start Deutsch A1 ou Goethe-Zertifikat A2", tracks: ["start_deutsch"] },
+  { key: "all_modules", label: "Sujets complets au format officiel : Lesen, Hören, Schreiben, Sprechen", tracks: ["standard", "start_deutsch"] },
+  { key: "exam_conditions", label: "Déroulé et chronomètre comme le jour de l'examen", tracks: ["standard"] },
+  { key: "sd_guided_writing", label: "Écrit guidé : formulaire et message (A1), SMS et e-mail (A2)", tracks: ["start_deutsch"] },
+  { key: "sd_oral_cards", label: "Oral préparé avec les cartes et images du jour de l'examen", tracks: ["start_deutsch"] },
+  { key: "corrections", label: "Correction IA de l'écrit et de l'oral", tracks: ["standard"] },
+  { key: "sd_beginner_friendly", label: "Consignes simples, pensées pour les débutants", tracks: ["start_deutsch"] },
+  { key: "pass_fail_result", label: "Résultat réussi / échoué après chaque sujet", tracks: ["standard", "start_deutsch"] },
+  { key: "progress", label: "Suivi de ta progression", tracks: ["standard"] },
+  { key: "sd_next_step_b1", label: "La bonne base pour enchaîner sur le B1", tracks: ["start_deutsch"] },
+  { key: "mobile_access", label: "Sur mobile et ordinateur", tracks: ["standard", "start_deutsch"] },
 ];
 
 function featureLabel(key: string) {
@@ -415,7 +461,9 @@ function featureLabel(key: string) {
 const sortedPlans = computed(() =>
   [...plans.value].sort(
     (a, b) =>
-      a.display_order - b.display_order || a.duration_days - b.duration_days,
+      (a.track ?? "").localeCompare(b.track ?? "") ||
+      a.display_order - b.display_order ||
+      a.duration_days - b.duration_days,
   ),
 );
 
@@ -439,6 +487,8 @@ function payloadOf(plan: PlanResponse, overrides: Partial<PlanResponse> = {}) {
     display_order: p.display_order,
     is_active: p.is_active,
     price_eur: p.price_eur ?? null,
+    track: (p.track ?? "standard") as Track,
+    is_popular: p.is_popular ?? false,
   };
 }
 
@@ -479,9 +529,24 @@ const defaultForm = () => ({
   display_order: plans.value.length,
   is_active: true,
   price_eur: null as number | null,
+  track: "standard" as Track,
+  is_popular: false,
 });
 
 const form = ref(defaultForm());
+
+const visibleFeatureOptions = computed(() =>
+  featureOptions.filter((f) => f.tracks.includes(form.value.track)),
+);
+
+// Changement de parcours : on retire les fonctionnalités de l'autre parcours
+watch(
+  () => form.value.track,
+  () => {
+    const allowed = new Set(visibleFeatureOptions.value.map((f) => f.key));
+    form.value.features = form.value.features.filter((k) => allowed.has(k));
+  },
+);
 
 function openCreate() {
   editingPlan.value = null;
@@ -502,6 +567,8 @@ function openEdit(plan: PlanResponse) {
     display_order: plan.display_order,
     is_active: plan.is_active,
     price_eur: plan.price_eur ?? null,
+    track: (plan.track ?? "standard") as Track,
+    is_popular: plan.is_popular ?? false,
   };
   formError.value = null;
   formDialog.value = true;
@@ -524,12 +591,17 @@ async function handleSave() {
     ai_credits: f.ai_credits ?? 0,
     display_order: f.display_order,
     is_active: f.is_active,
-    price_eur: f.price_eur ?? null
+    price_eur: f.price_eur ?? null,
+    track: f.track,
+    is_popular: f.is_popular,
   };
 
   const res = editingPlan.value
     ? await updatePlan(editingPlan.value.id, payload)
-    : await createPlan(payload);
+    : await createPlan({
+        ...payload,
+        track: payload.track as PlanCreate["track"],
+      });
 
   if (res.success) {
     formDialog.value = false;

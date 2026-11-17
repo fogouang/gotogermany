@@ -314,7 +314,7 @@ class SalesService:
         from app.modules.exams.models import Level
         from app.modules.payments.models import Payment
         from app.modules.payments.repository import PaymentRepository
-        from app.modules.payments.service import PaymentService
+        from app.modules.payments.service import PaymentService, _check_plan_track
         from app.modules.plans.models import Plan
 
         # Verrou sur la ligne du partenaire : deux activations simultanées
@@ -341,7 +341,8 @@ class SalesService:
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
-
+        _check_plan_track(plan, level_id, sd_level)
+        
         trial = partner.trial_active
         if trial:
             # Essai : activation offerte, rien à encaisser ni à reverser

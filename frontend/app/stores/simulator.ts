@@ -7,6 +7,9 @@
 // telc/Goethe, structure ÖSD B2 avec sub_criteria agrégée en amont côté
 // backend). Ces deux getters ne font plus qu'un renommage de champs
 // (snake_case backend -> camelCase frontend).
+//
+// tasks[].model_text (Mustertext) : version améliorée attendue, distincte de
+// corrected_text (correction minimale). Vide pour les anciennes corrections.
 import { defineStore } from "pinia";
 import { SchreibenSimulatorService, OpenAPI } from "#shared/api";
 import type {
@@ -52,11 +55,25 @@ export const useSimulatorStore = defineStore("simulator", {
       if (!state.correction) return "";
       const pct = state.correction.score_percentage;
       const lvl = state.correction.level.toUpperCase();
-      if (pct >= 87) return "C1";
+      // Même échelle que les prompts : 87 % et plus = niveau au-dessus (B1 -> B2, B2 -> C1)
+      const NEXT: Record<string, string> = {
+        A1: "A2",
+        A2: "B1",
+        B1: "B2",
+        B2: "C1",
+        C1: "C2",
+      };
+      const PREV: Record<string, string> = {
+        A2: "A1",
+        B1: "A2",
+        B2: "B1",
+        C1: "B2",
+      };
+      if (pct >= 87) return NEXT[lvl] ?? lvl;
       if (pct >= 70) return lvl + "+";
       if (pct >= 60) return lvl;
       if (pct >= 45) return lvl + "-";
-      return state.correction.level === "b2" ? "B1" : "A2";
+      return PREV[lvl] ?? lvl;
     },
 
     // ÖSD B2 uniquement : vrai plancher officiel (>=10/30), distinct du
@@ -82,6 +99,7 @@ export const useSimulatorStore = defineStore("simulator", {
         key: t.key,
         label: t.label,
         correctedText: t.corrected_text,
+        modelText: t.model_text ?? "",
         strengths: t.main_strengths,
         weaknesses: t.main_weaknesses,
         // Optionnels — présents seulement pour les barèmes qui notent la
@@ -232,7 +250,11 @@ export const useSimulatorStore = defineStore("simulator", {
       }
     },
 
-    async correct(subjectId: string, taskTexts: string[]) {
+    async correct(
+      subjectId: string,
+      taskTexts: string[],
+      taskChoices: Array<Record<string, string>> = [],
+    ) {
       this._ensureApiConfig();
       this.correcting = true;
       this.correctionError = null;
@@ -246,9 +268,20 @@ export const useSimulatorStore = defineStore("simulator", {
       try {
         this.correction =
           await SchreibenSimulatorService.correctSubmissionApiV1SchreibenSimulatorCorrectPost(
-            { subject_id: subjectId, task_texts: taskTexts },
+            {
+              subject_id: subjectId,
+              task_texts: taskTexts,
+              task_choices: taskChoices,
+            },
           );
 
+        // Tâche au choix (telc B2) : une seule tâche corrigée, son texte devient task1
+        const written = taskTexts.filter((t) => t.trim());
+        const onlyText = written.length === 1 ? written[0] : undefined;
+        if (this.correction.tasks.length === 1 && onlyText) {
+          this.originalAnswers = { task1: onlyText };
+        }
+        
         // ← Décrémenter le crédit après succès
         const authStore = useAuthStore();
         authStore.aiCredits = Math.max(0, authStore.aiCredits - 1);

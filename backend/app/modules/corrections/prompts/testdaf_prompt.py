@@ -15,7 +15,12 @@ HYPOTHÈSE (raster détaillé non publié) : 10 points par tâche
   Aufgabenbewältigung 4 | Textaufbau 3 | Sprachliche Realisierung 3
   TDN estimé : >= 16 TDN 5 | >= 13 TDN 4 | >= 9 TDN 3 | sinon unter TDN 3
 TODO : nombres de mots officiels non publiés (à compléter).
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 
 def get_testdaf_prompt(
@@ -53,31 +58,35 @@ Thema verfehlt -> Aufgabe 0 Punkte.
 
 GESCHÄTZTES NIVEAU (Gesamtpunkte /20) : >= 16 TDN 5 | >= 13 TDN 4 | >= 9 TDN 3 | sonst unter TDN 3.
 
-KORRIGIERTE TEXTE : Fehler korrigieren, Ideen beibehalten.
+{CORRECTION_RULES}
+UMRECHNUNG sprache_score (Fehlerdichte je Aufgabe): sehr gut 3 | gut 2 | ausreichend 1 | schwach 0.
 
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT : NUR gültiges JSON, kein Markdown.
 Feedback auf Deutsch, kurz (max 15 Wörter pro Eintrag).
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann die Texte.
 ═══════════════════════════════════════════════════════
 {{
+  "corrections": [
+    {{"task": "1", "error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "global_assessment": {{
     "overall_score": 14,
     "tdn_estimate": "TDN 4",
     "appreciation": "max 20 Wörter"
   }},
   "task1": {{
-    "inhalt_score": 3, "aufbau_score": 2, "sprache_score": 2, "task_score": 7,
-    "corrected_text": "Vollständig korrigierter Text",
+    "inhalt_score": 3, "aufbau_score": 2, "sprache_score": 2, "task_score": 7,"thema_verfehlt": false,
+    "corrected_text": "Originaltext 1, nur Fehler korrigiert",
+    "model_text": "Mustertext argumentativer Text",
     "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]
   }},
   "task2": {{
-    "inhalt_score": 3, "aufbau_score": 2, "sprache_score": 2, "task_score": 7,
-    "corrected_text": "Vollständig korrigierte Zusammenfassung",
+    "inhalt_score": 3, "aufbau_score": 2, "sprache_score": 2, "task_score": 7,"thema_verfehlt": false,
+    "corrected_text": "Originalzusammenfassung, nur Fehler korrigiert",
+    "model_text": "Mustertext Zusammenfassung aus beiden Quellen",
     "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]
   }},
-  "corrections": [
-    {{"task": "1", "error": "Fehler", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
   "suggestions": ["max 15 Wörter", "max 15 Wörter"]
 }}
 

@@ -518,9 +518,25 @@ const wordCount = (i: number): number => {
 const totalWords = computed(() => answers.value.reduce((sum, _, i) => sum + wordCount(i), 0));
 const canCorrect = computed(() => answers.value.some((_, i) => wordCount(i) > 0));
 
+// ── Choix de thème / variante d'opinion : un état par tâche ──
+const selectedThemes = ref<Record<number, string | null>>({});
+const selectedVariants = ref<Record<number, string | null>>({});
+
+// Choix envoyés au backend (même ordre que les textes) : seule l'option
+// choisie est transmise à l'IA. Tâche sans option -> {}.
+const buildTaskChoices = (): Array<Record<string, string>> =>
+  (subject.value?.tasks ?? []).map((_, i) => {
+    const choice: Record<string, string> = {};
+    const theme = selectedThemes.value[i];
+    const variant = selectedVariants.value[i];
+    if (theme) choice.theme = theme;
+    if (variant) choice.variant = variant;
+    return choice;
+  });
+
 const launchCorrection = async () => {
   store.clearCorrection();
-  await store.correct(subjectId, answers.value);
+  await store.correct(subjectId, answers.value, buildTaskChoices());
   await authStore.fetchUser();
 };
 
@@ -543,10 +559,6 @@ const mittelKey = (task: any) =>
     formatType: task.themes ? "oral_monologue" : undefined, // ADJUST: pas de format_type réel ici, à vérifier contre resolveMittelKey
     teilNumber: task.teil,
   });
-
-// ── Choix de thème / variante d'opinion : un état par tâche ──
-const selectedThemes = ref<Record<number, string | null>>({});
-const selectedVariants = ref<Record<number, string | null>>({});
 
 const isWritingUnlocked = (i: number, task: any): boolean => {
   if (task.themes) return !!selectedThemes.value[i];

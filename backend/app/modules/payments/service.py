@@ -39,6 +39,19 @@ def _serialize_payload(data: dict) -> dict:
     """Sérialise un dict pour stockage JSONB — convertit datetime en str."""
     return json.loads(json.dumps(data, default=str))
 
+def _check_plan_track(plan, level_id, sd_level) -> None:
+    """
+    Un plan ne s'achète que pour son parcours :
+    "start_deutsch" pour A1/A2 (sd_level), "standard" pour B1/B2/TestDaF (level_id).
+    """
+    if not level_id and not sd_level:
+        return  # pas un accès examen (ex. achat de crédits IA)
+    expected = "start_deutsch" if sd_level else "standard"
+    if (plan.track or "standard") != expected:
+        raise BadRequestException(
+            detail="Cette formule ne correspond pas à l'examen choisi. "
+                   "Choisissez une formule de votre parcours."
+        )
 
 class PaymentService:
 
@@ -60,11 +73,11 @@ class PaymentService:
 
         # Niveau d'examen, ou Start Deutsch A1/A2 (validé par le schéma)
         if data.level_id and not await self.db.get(Level, data.level_id):
-            raise NotFoundException(resource="Level", identifier=str(data.level_id))
-
+            raise NotFoundException(resource="Level", identifier=str(data.level_id))        
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+        _check_plan_track(plan, data.level_id, data.sd_level)
 
         promo_code_id = None
         amount_gross = plan.price
@@ -171,6 +184,9 @@ class PaymentService:
         plan = await self.db.get(Plan, data.plan_id)
         if not plan or not plan.is_active:
             raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+        
+        _check_plan_track(plan, data.level_id, data.sd_level)
+        
         if not plan.price_eur or float(plan.price_eur) <= 0:
             raise BadRequestException(detail="Cette formule n'est pas disponible par carte.")
 
@@ -598,6 +614,7 @@ class PaymentService:
             plan = await self.db.get(Plan, data.plan_id)
             if not plan or not plan.is_active:
                 raise NotFoundException(resource="Plan", identifier=str(data.plan_id))
+            _check_plan_track(plan, data.level_id, data.sd_level)
             amount = plan.price
             duration_days = None
 

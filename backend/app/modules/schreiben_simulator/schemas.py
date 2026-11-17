@@ -109,9 +109,12 @@ class SimulatorCorrectRequest(BaseModel):
     """
     Le frontend envoie le sujet + les textes rédigés par le candidat.
     task_texts est une liste ordonnée : [texte_teil1, texte_teil2, ...]
+    task_choices (optionnel, même ordre) : choix du candidat pour les sujets à options,
+    ex. [{"theme": "A"}, {"variant": "1"}, {}]. Vide = l'IA identifie l'option au texte.
     """
     subject_id: uuid.UUID
     task_texts: list[str]    # 1, 2 ou 3 textes selon le sujet
+    task_choices: list[dict[str, str]] = Field(default_factory=list)
 
 
 class CriterionScore(BaseModel):
@@ -135,7 +138,8 @@ class TaskFeedback(BaseModel):
     """Feedback pour une tâche individuelle — même contrat que corrections/schemas.py."""
     key: str
     label: str
-    corrected_text: str
+    corrected_text: str                 # Texte du candidat, fautes corrigées uniquement
+    model_text: str = ""                # Mustertext : version améliorée attendue ("" pour les anciennes corrections)
     main_strengths: list[str] = Field(default_factory=list)
     main_weaknesses: list[str] = Field(default_factory=list)
     score: float | None = None
@@ -167,6 +171,9 @@ class SimulatorCorrectResponse(BaseModel):
 
     corrections_list: list[dict]
     suggestions: list[str]
+
+    # Coût réel de la correction : {model, input_tokens, output_tokens, cost_usd}
+    ai_usage: dict | None = None
 
 
 class SimulatorResultResponse(BaseModel):

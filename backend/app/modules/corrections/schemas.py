@@ -12,6 +12,10 @@ task_feedbacks en dict) sont remplacés par des listes génériques `criteria` e
 `tasks`, produites par response_normalizer.normalize_correction_result().
 Nécessaire car les 5 barèmes (Goethe B2, Goethe/ÖSD B1, telc B1, telc B2, ÖSD B2)
 n'ont plus le même nombre ni les mêmes noms de critères — voir response_normalizer.py.
+
+Ajout : TaskFeedback.model_text (Mustertext), distinct de corrected_text
+(correction minimale du texte du candidat). Stocké dans la colonne JSONB
+`tasks`, aucune migration nécessaire.
 """
 from __future__ import annotations
 import uuid
@@ -56,7 +60,9 @@ class TaskFeedback(BaseModel):
     """Feedback pour une tâche individuelle."""
     key: str                            # "task1", "task2", "task3"
     label: str                          # "Teil 1", "Teil 2"...
-    corrected_text: str
+    original_text: str = ""             # Texte du candidat tel qu'il l'a écrit (rempli à la lecture)
+    corrected_text: str                 # Texte du candidat, fautes corrigées uniquement
+    model_text: str = ""                # Mustertext : version améliorée attendue ("" pour les anciennes corrections)
     main_strengths: list[str] = Field(default_factory=list)
     main_weaknesses: list[str] = Field(default_factory=list)
     # Optionnels — remplis seulement pour les barèmes qui notent la tâche

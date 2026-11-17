@@ -14,8 +14,8 @@ Mapping :
     ecl     + b1/b2   → get_ecl_prompt             (ESQUISSE à valider)
     testdaf + b2/c1   → get_testdaf_prompt         (ESQUISSE à valider)
 """
-from app.modules.corrections.testdaf_prompt import get_testdaf_prompt
-from app.modules.corrections.ecl_prompt import get_ecl_prompt
+from app.modules.corrections.prompts.testdaf_prompt import get_testdaf_prompt
+from app.modules.corrections.prompts.ecl_prompt import get_ecl_prompt
 from dataclasses import dataclass, field
 
 from app.modules.corrections.prompts.b1.telc_b1_prompt import get_telc_b1_prompt

@@ -17,6 +17,6 @@ class PlanRepository(BaseRepository[Plan]):
         result = await self.db.execute(
             select(Plan)
             .where(Plan.is_active == True)
-            .order_by(Plan.display_order, Plan.price)
+            .order_by(Plan.track, Plan.display_order, Plan.price)
         )
         return list(result.scalars().all())

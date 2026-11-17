@@ -94,11 +94,26 @@
     "add": "Add"
   },
   "hero": {
+    "eyebrow": "German exam preparation",
     "title": "Earn the certificate that opens the doors to Germany.",
-    "subtitle": "A bank of official-format papers, a real-conditions exam simulator for all four modules (Lesen, Hören, Schreiben, Sprechen), AI correction and live sessions with an examiner. Goethe, telc, ÖSD, TestDaF or ECL: you walk in ready on exam day.",
-    "cta": "Start training",
-    "social_proof": "+500 satisfied learners",
-    "image_alt": "Student preparing for German exam"
+    "subtitle": "Complete tests in the official format, under real exam conditions for all four parts (Lesen, Hören, Schreiben, Sprechen), with AI feedback and live sessions with an examiner. Goethe, telc, ÖSD, TestDaF or Start Deutsch: the first 3 tests of each level are free.",
+    "cta": "Start a free test",
+    "see_prices": "See prices",
+    "premium_from": "Premium from {price} FCFA",
+    "premium_desc": "Every test for your exam, unlimited during your plan",
+    "structure_title": "How a test runs",
+    "structure_note": "Official, timed format, just like on exam day",
+    "social_proof": "100+ satisfied learners",
+    "image_alt": "Student preparing for a German exam",
+    "demo": "Watch the demo",
+    "demo_title": "GoToGermany in action",
+    "demo_sujet": "Taking a full test",
+    "demo_sprechen": "Speaking test (Sprechen)"
+  },
+  "whatsapp_band": {
+    "title": "Join the GoToGermany community on WhatsApp",
+    "description": "Preparing for a German exam? Get regular tips, share your results and ask your questions whenever you get stuck.",
+    "cta": "Join the group"
   },
   "how_it_works": {
     "title": "How it works",
@@ -134,7 +149,7 @@
     "subtitle2": "B1, B2 or C1",
     "subtitle3": " certification with the right provider",
     "features": "Official-format mock exams · Instant AI correction for Schreiben · Speaking simulator for Sprechen",
-    "cta": "Get started",
+    "cta": "Try a free test",
     "disclaimer": "GoToGermany is an independent preparation platform, not affiliated with the organisations listed. The Goethe, telc, ÖSD, TestDaF and ECL names and logos are the property of their respective owners.",
     "orgs": {
       "goethe": {
@@ -203,16 +218,30 @@
     "popular": "Most chosen",
     "per_day": "that's",
     "per_day_suffix": "FCFA/day",
-    "by_card": "or {price} by card",
+    "by_card": "by card",
     "ai_credits": "{n} AI credit included | {n} AI credits included",
+    "buy_whatsapp": "Buy via WhatsApp",
+    "whatsapp_message": "Hello, I would like the {plan} plan ({days} days, {price} FCFA) on GoToGermany.",
+    "tracks": {
+      "standard": "B1 / B2 / TestDaF",
+      "start_deutsch": "Start Deutsch (A1 / A2)"
+    },
+    "full_access_days": "{n} days of full access",
     "features": {
-      "full_access": "Full access to your chosen exam and level",
-      "all_modules": "Lesen, Hören, Schreiben and Sprechen included",
+      "full_access": "Full access to your exam: Goethe, telc, ÖSD or TestDaF",
+      "sd_full_access": "Full access to Start Deutsch A1 or Goethe-Zertifikat A2",
+      "all_modules": "Complete tests in the official format: Lesen, Hören, Schreiben, Sprechen",
+      "exam_conditions": "Same flow and timing as on exam day",
+      "sd_guided_writing": "Guided writing: form and message (A1), text and email (A2)",
+      "sd_oral_cards": "Speaking practice with the exam-day cards and pictures",
+      "corrections": "AI feedback on writing and speaking",
+      "sd_beginner_friendly": "Simple instructions, made for beginners",
+      "pass_fail_result": "Pass / fail result after every test",
+      "progress": "Track your progress",
+      "sd_next_step_b1": "A solid base to move on to B1",
+      "mobile_access": "On mobile and computer",
       "multi_provider": "Goethe, telc, ÖSD, TestDaF or ECL, your choice",
-      "corrections": "AI correction for Schreiben and a speaking simulator",
-      "progress": "Progress tracking module by module",
-      "unlimited_attempts": "Unlimited papers for the whole duration of the plan",
-      "mobile_access": "Available on mobile and computer"
+      "unlimited_attempts": "Unlimited papers for the whole duration of the plan"
     },
     "cta": "Choose this plan",
     "default_description": "Full access to the exam of your choice for",
@@ -799,7 +828,9 @@
     "page_title": "Schreiben Correction  DeutschTest",
     "back_to_result": "Back to result",
     "teil": "Teil {n}",
-    "malus": "Penalty: -{n}"
+    "malus": "Penalty: -{n}",
+    "your_text": "Your text",
+    "original_unavailable": "Original text unavailable."
   },
   "invoices": {
     "title": "My payments",
@@ -972,13 +1003,20 @@
     "redo": "Redo this subject",
     "page_title": "Schreiben Simulator DeutschTest",
     "passed": "Prüfung bestanden",
-    "not_passed": "Nicht bestanden"
+    "not_passed": "Nicht bestanden",
+    "attempts": "{n} attempt | {n} attempts",
+    "best_score": "Best: {pct} %",
+    "show_attempts": "Show attempts",
+    "hide_attempts": "Hide attempts",
+    "last_attempt": "Last attempt"
   },
   "simulator_result": {
     "no_correction": "No correction available.",
     "back_simulator": "Back to simulator",
     "score": "Score",
     "success_rate": "Success rate",
+    "model_text": "Texte modèle",
+    "model_text_hint": "Exemple de réponse attendue pour ce sujet. Ce n'est pas la correction de votre texte.",
     "level": "Level",
     "criteria_title": "Criteria details",
     "task_title": "Correction by Teil",

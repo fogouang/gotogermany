@@ -14,7 +14,12 @@ Critères officiels (eclexam.eu, "Criteria for Assessing Writing"), 0 à 5 chacu
 
 HYPOTHÈSE (à confirmer) : chaque texte noté sur 25 (5 x 5), note Schreiben =
 moyenne des deux textes (max 25). Module réussi à 40 % = 10/25 (règle 2026).
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 WORD_TARGET = {"b1": 100, "b2": 150}
 
@@ -37,7 +42,7 @@ def get_ecl_prompt(
     target = WORD_TARGET.get(level, 150)
 
     return f"""Du bist ein erfahrener Prüfer für die ECL-Prüfung Deutsch, Niveau {niveau}, Teil Schreiben.
-Der Kandidat hat 2 Texte geschrieben (je ca. {target} Wörter), jeder zu 4 vorgegebenen Leitpunkten.
+Der Kandidat hat 2 Texte geschrieben (je ca. {target} Wörter), jeder zu den vorgegebenen Leitpunkten (Anzahl je Aufgabe siehe unten).
 
 ═══════════════════════════════════════════════════════
 BEWERTUNG PRO TEXT (offizielle ECL-Kriterien, je 0 bis 5 Punkte)
@@ -46,20 +51,25 @@ BEWERTUNG PRO TEXT (offizielle ECL-Kriterien, je 0 bis 5 Punkte)
 2. SCHRIFTLICHE KORREKTHEIT : Absätze, Zeichensetzung, Rechtschreibung.
 3. WORTSCHATZ : Umfang und angemessener Einsatz, Niveau {niveau}.
 4. STIL : Register, Textsorte, pragmatische und soziolinguistische Angemessenheit.
-5. KOMMUNIKATIVE WIRKSAMKEIT : Aufgabe erfüllt, alle 4 Leitpunkte behandelt, Textsorte eingehalten.
+5. KOMMUNIKATIVE WIRKSAMKEIT : Aufgabe erfüllt, alle vorgegebenen Leitpunkte behandelt, Textsorte eingehalten.
 
 Bänder : 5, 3, 1 und 0 beschrieben ; 4 und 2 sind Zwischenstufen.
 ❗ Kommunikative Wirksamkeit = 0 (Thema verfehlt) -> der ganze Text erhält 0 Punkte.
 ❗ Pro fehlendem Leitpunkt Kommunikative Wirksamkeit um mindestens 1 senken.
 ❗ Deutlich zu kurzer Text (< 70 % von {target} Wörtern) -> Kommunikative Wirksamkeit max. 2.
 
-KORRIGIERTE TEXTE : Fehler korrigieren, Ideen und Aufbau des Kandidaten beibehalten.
+{CORRECTION_RULES}
+UMRECHNUNG formale_korrektheit und schriftliche_korrektheit (Fehlerdichte je Text): sehr gut 5 | gut 4 | ausreichend 2-3 | schwach 0-1.
 
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT : NUR gültiges JSON, kein Markdown, kein Text davor/danach.
 Feedback auf Deutsch, kurz (max 15 Wörter pro Eintrag).
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann die Texte.
 ═══════════════════════════════════════════════════════
 {{
+  "corrections": [
+    {{"task": "1", "error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "global_assessment": {{
     "overall_score": 17,
     "passed": true,
@@ -73,7 +83,9 @@ Feedback auf Deutsch, kurz (max 15 Wörter pro Eintrag).
     "kommunikative_wirksamkeit": 4,
     "task_score": 18,
     "leitpunkte_behandelt": 4,
-    "corrected_text": "Vollständig korrigierter Text 1",
+      "thema_verfehlt": false,
+    "corrected_text": "Originaltext 1, nur Fehler korrigiert",
+    "model_text": "Mustertext 1 mit allen Leitpunkte, ca. {target} Wörter",
     "main_strengths": ["max 10 Wörter"],
     "main_weaknesses": ["max 10 Wörter"]
   }},
@@ -85,13 +97,12 @@ Feedback auf Deutsch, kurz (max 15 Wörter pro Eintrag).
     "kommunikative_wirksamkeit": 4,
     "task_score": 16,
     "leitpunkte_behandelt": 4,
-    "corrected_text": "Vollständig korrigierter Text 2",
+    "thema_verfehlt": false,
+    "corrected_text": "Originaltext 2, nur Fehler korrigiert",
+    "model_text": "Mustertext 2 mit allen Leitpunkten, ca. {target} Wörter",
     "main_strengths": ["max 10 Wörter"],
     "main_weaknesses": ["max 10 Wörter"]
   }},
-  "corrections": [
-    {{"task": "1", "error": "Fehler", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
   "suggestions": ["max 15 Wörter", "max 15 Wörter"]
 }}
 

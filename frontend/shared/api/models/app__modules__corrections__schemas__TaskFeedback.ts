@@ -9,7 +9,9 @@ import type { SubCriterionScore } from './SubCriterionScore';
 export type app__modules__corrections__schemas__TaskFeedback = {
     key: string;
     label: string;
+    original_text?: string;
     corrected_text: string;
+    model_text?: string;
     main_strengths?: Array<string>;
     main_weaknesses?: Array<string>;
     score?: (number | null);

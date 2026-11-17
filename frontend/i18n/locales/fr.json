@@ -83,11 +83,26 @@
     "add": "Ajouter"
   },
   "hero": {
+    "eyebrow": "Préparation aux examens d'allemand",
     "title": "Décrochez le certificat qui vous ouvre les portes de l'Allemagne.",
-    "subtitle": "Banque de sujets au format officiel, simulateur d'examen en conditions réelles pour les quatre épreuves (Lesen, Hören, Schreiben, Sprechen), correction IA et sessions live avec un examinateur. Goethe, telc, ÖSD, TestDaF ou ECL : vous arrivez prêt le jour J.",
-    "cta": "S'entraîner",
-    "social_proof": "+500 apprenants satisfaits",
-    "image_alt": "Étudiant préparant son examen d'allemand"
+    "subtitle": "Des sujets complets au format officiel, en conditions réelles pour les quatre épreuves (Lesen, Hören, Schreiben, Sprechen), avec correction IA et sessions live avec un examinateur. Goethe, telc, ÖSD, TestDaF ou Start Deutsch : les 3 premiers sujets de chaque niveau sont gratuits.",
+    "cta": "Commencer un sujet gratuit",
+    "see_prices": "Voir les prix",
+    "premium_from": "Premium dès {price} FCFA",
+    "premium_desc": "Tous les sujets de votre examen, sans limite pendant votre formule",
+    "structure_title": "Déroulé d'un sujet",
+    "structure_note": "Format officiel et chronométré, comme le jour de l'examen",
+    "social_proof": "+100 apprenants satisfaits",
+    "image_alt": "Étudiant préparant son examen d'allemand",
+    "demo": "Voir la démo",
+    "demo_title": "GoToGermany en action",
+    "demo_sujet": "Passage d'un sujet",
+    "demo_sprechen": "Épreuve orale (Sprechen)"
+  },
+  "whatsapp_band": {
+    "title": "Rejoignez la communauté GoToGermany sur WhatsApp",
+    "description": "Vous préparez un examen d'allemand ? Recevez des conseils réguliers, partagez vos résultats et posez vos questions quand quelque chose bloque.",
+    "cta": "Rejoindre le groupe"
   },
   "how_it_works": {
     "title": "Comment ça marche",
@@ -123,7 +138,7 @@
     "subtitle2": "B1, B2 ou C1",
     "subtitle3": " avec le bon organisme",
     "features": "Simulations au format officiel · Correction IA instantanée du Schreiben · Simulateur d'oral pour le Sprechen",
-    "cta": "Commencer",
+    "cta": "Essayer un sujet gratuit",
     "disclaimer": "GoToGermany est une plateforme de préparation indépendante, non affiliée aux organismes cités. Les noms et logos Goethe, telc, ÖSD, TestDaF et ECL appartiennent à leurs propriétaires respectifs.",
     "orgs": {
       "goethe": {
@@ -192,16 +207,30 @@
     "popular": "Le plus choisi",
     "per_day": "soit",
     "per_day_suffix": "FCFA/jour",
-    "by_card": "ou {price} par carte",
+    "by_card": "par carte",
     "ai_credits": "{n} crédit IA inclus | {n} crédits IA inclus",
+    "buy_whatsapp": "Acheter par WhatsApp",
+    "whatsapp_message": "Bonjour, je souhaite la formule {plan} ({days} jours, {price} FCFA) sur GoToGermany.",
+    "tracks": {
+      "standard": "B1 / B2 / TestDaF",
+      "start_deutsch": "Start Deutsch (A1 / A2)"
+    },
+    "full_access_days": "{n} jours d'accès complet",
     "features": {
-      "full_access": "Accès complet à l'examen et au niveau choisis",
-      "all_modules": "Lesen, Hören, Schreiben et Sprechen inclus",
+      "full_access": "Accès complet à votre examen : Goethe, telc, ÖSD ou TestDaF",
+      "sd_full_access": "Accès complet à Start Deutsch A1 ou Goethe-Zertifikat A2",
+      "all_modules": "Sujets complets au format officiel : Lesen, Hören, Schreiben, Sprechen",
+      "exam_conditions": "Déroulé et chronomètre comme le jour de l'examen",
+      "sd_guided_writing": "Écrit guidé : formulaire et message (A1), SMS et e-mail (A2)",
+      "sd_oral_cards": "Oral préparé avec les cartes et images du jour de l'examen",
+      "corrections": "Correction IA de l'écrit et de l'oral",
+      "sd_beginner_friendly": "Consignes simples, pensées pour les débutants",
+      "pass_fail_result": "Résultat réussi / échoué après chaque sujet",
+      "progress": "Suivi de votre progression",
+      "sd_next_step_b1": "La bonne base pour enchaîner sur le B1",
+      "mobile_access": "Accessible sur mobile et ordinateur",
       "multi_provider": "Goethe, telc, ÖSD, TestDaF ou ECL au choix",
-      "corrections": "Correction IA du Schreiben et simulateur d'oral",
-      "progress": "Suivi de votre progression module par module",
-      "unlimited_attempts": "Sujets illimités pendant toute la durée de l'offre",
-      "mobile_access": "Accessible sur mobile et ordinateur"
+      "unlimited_attempts": "Sujets illimités pendant toute la durée de l'offre"
     },
     "cta": "Choisir cette offre",
     "default_description": "Accès complet à l'examen de votre choix pendant",
@@ -789,7 +818,9 @@
     "page_title": "Correction Schreiben - DeutschTest",
     "back_to_result": "Retour au résultat",
     "teil": "Teil {n}",
-    "malus": "Malus : -{n}"
+    "malus": "Malus : -{n}",
+    "your_text": "Votre texte",
+    "original_unavailable": "Texte original indisponible."
   },
   "invoices": {
     "title": "Mes paiements",
@@ -963,11 +994,18 @@
     "redo": "Refaire ce sujet",
     "page_title": "Simulateur Schreiben  DeutschTest",
     "passed": "Prüfung bestanden",
-    "not_passed": "Nicht bestanden"
+    "not_passed": "Nicht bestanden",
+    "attempts": "{n} tentative | {n} tentatives",
+    "best_score": "Meilleur : {pct} %",
+    "show_attempts": "Voir les tentatives",
+    "hide_attempts": "Masquer les tentatives",
+    "last_attempt": "Dernière tentative"
   },
   "simulator_result": {
     "no_correction": "Aucune correction disponible.",
     "back_simulator": "Retour au simulateur",
+    "model_text": "Texte modèle",
+    "model_text_hint": "Exemple de réponse attendue pour ce sujet. Ce n'est pas la correction de votre texte.",
     "score": "Score",
     "success_rate": "Réussite",
     "level": "Niveau",
@@ -981,8 +1019,7 @@
     "redo": "Refaire ce sujet",
     "choose_another": "Choisir un autre sujet",
     "page_title": "Résultats - DeutschTest",
-    "your_text": "Votre texte",
-    "original_unavailable": "Texte original non disponible."
+    "your_text": "Votre texte"
   },
   "simulator_subject": {
     "points_label": "points",
@@ -1213,7 +1250,8 @@
     "examiner": "Examinateur",
     "you": "Vous",
     "official_prep_left": "Temps officiel : {time} restantes",
-    "official_prep_over": "Temps officiel écoulé, vous pouvez commencer"
+    "official_prep_over": "Temps officiel écoulé, vous pouvez commencer",
+    "original_unavailable": "Texte original non disponible."
   },
   "referrals": {
     "page_title": "Parrainage",

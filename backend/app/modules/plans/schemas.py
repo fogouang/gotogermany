@@ -4,10 +4,18 @@ app/modules/plans/schemas.py
 import uuid
 from pydantic import Field
 from app.shared.schemas.base import BaseSchema
+from typing import Literal
 
 # Clés de features valides, correspondant aux traductions pricing.features.*
 # (unlimited, subjects, corrections, progress) côté frontend.
-VALID_FEATURE_KEYS = {"unlimited", "subjects", "corrections", "progress"}
+# Clés de features valides, correspondant aux traductions pricing.features.* côté frontend.
+VALID_FEATURE_KEYS = {
+    "full_access", "sd_full_access", "all_modules", "exam_conditions",
+    "sd_guided_writing", "sd_oral_cards", "corrections", "sd_beginner_friendly",
+    "pass_fail_result", "progress", "sd_next_step_b1", "mobile_access",
+}
+
+PlanTrack = Literal["standard", "start_deutsch"]
 
 
 class PlanCreate(BaseSchema):
@@ -28,6 +36,8 @@ class PlanCreate(BaseSchema):
         description="Crédits IA ajoutés à l'élève à chaque activation de la formule",
     )
     display_order: int = Field(default=0, ge=0)
+    track: PlanTrack = "standard"
+    is_popular: bool = False
 
 
 class PlanUpdate(BaseSchema):
@@ -40,6 +50,8 @@ class PlanUpdate(BaseSchema):
     features: list[str] | None = None
     ai_credits: int | None = Field(None, ge=0, le=1000)
     display_order: int | None = None
+    track: PlanTrack | None = None
+    is_popular: bool | None = None
 
 
 class PlanResponse(BaseSchema):
@@ -53,3 +65,5 @@ class PlanResponse(BaseSchema):
     features: list[str] | None = None
     ai_credits: int = 0
     display_order: int
+    track: PlanTrack = "standard"
+    is_popular: bool = False

@@ -1,6 +1,17 @@
 """
 Provider Gemini (Google) pour correction IA - GotoGermany.
 Fallback automatique vers Claude Haiku si Gemini est indisponible (503).
+
+Limite de sortie : 8192 tokens pour Gemini ET pour le fallback Claude
+(la sortie contient corrected_text + model_text par tâche). Une réponse
+coupée par la limite (Gemini finish_reason MAX_TOKENS / Claude stop_reason
+max_tokens) lève une erreur explicite au lieu d'être "réparée" en JSON incomplet.
+
+temperature = 0 : la même copie donne le même résultat à chaque correction.
+
+Coût : chaque résultat porte une clé "_usage" {model, input_tokens,
+output_tokens, cost_usd}, affichée en développement sur la page de résultat
+du simulateur et ignorée par le response_normalizer.
 """
 import json
 import logging
@@ -16,6 +27,30 @@ from app.modules.corrections.ai_providers.base import AIProvider
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+MAX_OUTPUT_TOKENS = 8192
+GEMINI_MODEL = "gemini-2.5-flash-lite"
+CLAUDE_FALLBACK_MODEL = "claude-haiku-4-5-20251001"
+
+# Tarifs en USD par million de tokens, pour l'affichage du coût
+GEMINI_PRICE_INPUT_PER_MTOK = 0.10
+GEMINI_PRICE_OUTPUT_PER_MTOK = 0.40
+CLAUDE_FALLBACK_PRICE_INPUT_PER_MTOK = 1.0
+CLAUDE_FALLBACK_PRICE_OUTPUT_PER_MTOK = 5.0
+
+
+def _usage(model: str, input_tokens: int, output_tokens: int,
+           price_in: float, price_out: float) -> dict[str, Any]:
+    """Coût réel d'un appel, joint au résultat sous la clé "_usage"."""
+    return {
+        "model": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "cost_usd": round(
+            input_tokens / 1_000_000 * price_in + output_tokens / 1_000_000 * price_out,
+            5,
+        ),
+    }
+
 
 class GeminiProvider(AIProvider):
     """
@@ -29,9 +64,9 @@ class GeminiProvider(AIProvider):
 
     def __init__(self):
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        self.model_id = "gemini-2.5-flash-lite"
+        self.model_id = GEMINI_MODEL
 
-        # Fallback Claude — None si pas de clé configurée
+        # Fallback Claude : None si pas de clé configurée
         self._claude = None
         if getattr(settings, "ANTHROPIC_API_KEY", None):
             self._claude = anthropic.AsyncAnthropic(
@@ -48,20 +83,41 @@ class GeminiProvider(AIProvider):
                 model=self.model_id,
                 contents=prompt,
                 config={
-                    "max_output_tokens": 8192,
-                    "temperature": 0.3,
+                    "max_output_tokens": MAX_OUTPUT_TOKENS,
+                    "temperature": 0,
                     "response_mime_type": "application/json",
                 },
             )
+
+            # Réponse coupée par la limite : JSON forcément incomplet
+            candidates = getattr(response, "candidates", None) or []
+            finish_reason = str(getattr(candidates[0], "finish_reason", "")) if candidates else ""
+            if "MAX_TOKENS" in finish_reason:
+                raise ValueError(
+                    f"Réponse Gemini tronquée (limite de {MAX_OUTPUT_TOKENS} tokens atteinte)."
+                )
+
             result = self._parse_response(response.text)
-            logger.info("Gemini correction completed successfully")
+
+            meta = getattr(response, "usage_metadata", None)
+            result["_usage"] = _usage(
+                self.model_id,
+                getattr(meta, "prompt_token_count", 0) or 0,
+                getattr(meta, "candidates_token_count", 0) or 0,
+                GEMINI_PRICE_INPUT_PER_MTOK,
+                GEMINI_PRICE_OUTPUT_PER_MTOK,
+            )
+            logger.info(
+                f"Gemini correction completed ({self.model_id}): "
+                f"cost_estimate=${result['_usage']['cost_usd']:.5f}"
+            )
             return result
 
         except genai_errors.ServerError as e:
             # 503 UNAVAILABLE → fallback Claude
             if "503" in str(e) or "UNAVAILABLE" in str(e):
                 logger.warning(
-                    "Gemini 503 — basculement sur Claude Haiku fallback"
+                    "Gemini 503 : basculement sur Claude Haiku fallback"
                 )
                 return await self._correct_with_claude(prompt)
             raise self._handle_error(e)
@@ -74,7 +130,7 @@ class GeminiProvider(AIProvider):
     async def _correct_with_claude(self, prompt: str) -> dict[str, Any]:
         """
         Correction via Claude Haiku 4.5 si Gemini est indisponible.
-        Haiku est le modèle le moins cher (~$0.005/correction).
+        Haiku est le modèle le moins cher (~$0.01-0.02/correction avec Mustertext).
         """
         if not self._claude:
             raise Exception(
@@ -85,9 +141,9 @@ class GeminiProvider(AIProvider):
         try:
             logger.debug("Sending prompt to Claude Haiku fallback")
             response = await self._claude.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=4096,
-                temperature=0.3,
+                model=CLAUDE_FALLBACK_MODEL,
+                max_tokens=MAX_OUTPUT_TOKENS,
+                temperature=0,
                 messages=[
                     {
                         "role": "user",
@@ -96,9 +152,26 @@ class GeminiProvider(AIProvider):
                     }
                 ],
             )
+
+            if response.stop_reason == "max_tokens":
+                raise ValueError(
+                    f"Réponse Claude tronquée (limite de {MAX_OUTPUT_TOKENS} tokens atteinte)."
+                )
+
             content = response.content[0].text
             result = self._parse_response(content)
-            logger.info("Claude Haiku fallback correction completed successfully")
+            result["_usage"] = _usage(
+                CLAUDE_FALLBACK_MODEL,
+                response.usage.input_tokens,
+                response.usage.output_tokens,
+                CLAUDE_FALLBACK_PRICE_INPUT_PER_MTOK,
+                CLAUDE_FALLBACK_PRICE_OUTPUT_PER_MTOK,
+            )
+            logger.info(
+                f"Claude Haiku fallback correction completed: "
+                f"output_tokens={response.usage.output_tokens}, "
+                f"cost_estimate=${result['_usage']['cost_usd']:.5f}"
+            )
             return result
 
         except Exception as e:
@@ -118,7 +191,7 @@ class GeminiProvider(AIProvider):
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError as e:
-            logger.warning(f"JSON tronqué détecté, tentative de réparation: {e}")
+            logger.warning(f"JSON invalide détecté, tentative de réparation: {e}")
             try:
                 open_braces = cleaned.count("{")
                 close_braces = cleaned.count("}")

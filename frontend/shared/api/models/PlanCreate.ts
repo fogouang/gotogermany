@@ -24,5 +24,13 @@ export type PlanCreate = {
      */
     ai_credits?: number;
     display_order?: number;
+    track?: PlanCreate.track;
+    is_popular?: boolean;
 };
+export namespace PlanCreate {
+    export enum track {
+        STANDARD = 'standard',
+        START_DEUTSCH = 'start_deutsch',
+    }
+}
 

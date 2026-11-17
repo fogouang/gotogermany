@@ -127,17 +127,41 @@ class SchreibenSubjectRepository:
         return result
 
     async def get_results_by_user(self, user_id: uuid.UUID) -> list[SimulatorResultResponse]:
+        """
+        Historique des corrections de l'utilisateur.
+
+        SimulatorResult.subject_id pointe soit vers schreiben_subjects (anciens
+        sujets), soit vers subjects (hiérarchie unifiée) : jointures optionnelles
+        sur les deux tables, pour que les résultats des sujets unifiés ne soient
+        plus exclus. Titre : celui de l'ancien sujet, sinon le nom du sujet unifié,
+        sinon "Sujet N".
+        """
+        from app.modules.exams.models import Subject
+
         q = (
-            select(SimulatorResult, SchreibenSubject.title)
-            .join(SchreibenSubject, SimulatorResult.subject_id == SchreibenSubject.id)
+            select(
+                SimulatorResult,
+                SchreibenSubject.title,
+                Subject.name,
+                Subject.subject_number,
+            )
+            .outerjoin(SchreibenSubject, SimulatorResult.subject_id == SchreibenSubject.id)
+            .outerjoin(Subject, SimulatorResult.subject_id == Subject.id)
             .where(SimulatorResult.user_id == user_id)
             .order_by(SimulatorResult.created_at.desc())
         )
         rows = await self.db.execute(q)
         results = []
-        for result, title in rows:
+        for result, legacy_title, unified_name, subject_number in rows:
             r = SimulatorResultResponse.model_validate(result)
-            r.subject_title = title
+            if legacy_title:
+                r.subject_title = legacy_title
+            elif unified_name:
+                r.subject_title = unified_name
+            elif subject_number is not None:
+                r.subject_title = f"Sujet {subject_number}"
+            else:
+                r.subject_title = None  # sujet supprimé : le front affiche "deleted_subject"
             results.append(r)
         return results
     

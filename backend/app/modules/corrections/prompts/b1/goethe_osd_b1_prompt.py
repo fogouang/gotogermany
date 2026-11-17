@@ -12,7 +12,14 @@ Pondération OFFICIELLE (confirmée : chaque tâche note ses 4 critères à part
 égales — Erfüllung/Kohärenz/Wortschatz/Strukturen — proportionnellement au
 poids de la tâche ; 40+40+20=100 avec 4 critères égaux par tâche donne au
 total 25/25/25/25 sur l'ensemble de l'examen, pas 30/25/25/20).
+
+Sortie : corrected_text = correction minimale du texte du candidat ;
+model_text = Mustertext séparé (voir common_rules.CORRECTION_RULES).
+thema_verfehlt par tâche : lu par response_normalizer, qui plafonne Erfüllung
+(la tâche hors sujet garde au plus 1/3 de sa part 10/10/5).
 """
+
+from app.modules.corrections.prompts.common_rules import CORRECTION_RULES
 
 
 def get_goethe_osd_b1_prompt(
@@ -86,7 +93,8 @@ BEWERTUNGSKRITERIEN (je 25 Punkte, über alle drei Teile zusammen)
 
 4. STRUKTUREN/GRAMMATIK (25 Pt) — Zeitformen (Präsens, Perfekt, Futur, Konjunktiv II), Nebensätze (weil/dass/ob/wenn/obwohl), Kasus nach Präpositionen, Rechtschreibung, Zeichensetzung.
 
-KORRIGIERTE TEXTE: thematisch korrekt → Fehler korrigieren, Ideen beibehalten. Thema verfehlt → vollständig neu schreiben nach Musterstruktur.
+{CORRECTION_RULES}
+UMRECHNUNG strukturen_score (Fehlerdichte über alle drei Teile): sehr gut 22-25 | gut 17-21 | ausreichend 11-16 | schwach 0-10.
 
 ═══════════════════════════════════════════════════════
 BEWERTUNGSMASSSTAB
@@ -96,9 +104,13 @@ BEWERTUNGSMASSSTAB
 ═══════════════════════════════════════════════════════
 JSON-ANTWORTFORMAT — NUR gültiges JSON, kein Markdown, kein Text davor/danach.
 Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 10 für strengths/weaknesses, 15 für suggestions), auf Deutsch, kein Fließtext.
+Reihenfolge der Felder einhalten: zuerst "corrections", dann die Bewertung, dann die Texte.
 ═══════════════════════════════════════════════════════
 
 {{
+  "corrections": [
+    {{"task": "1", "error": "exakte Stelle aus dem Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
+  ],
   "global_assessment": {{
     "overall_score": 72,
     "passed": true,
@@ -111,13 +123,10 @@ Alle Feedback-Felder: maximal 20 Wörter (12 für "explanation", 10 für strengt
     "strukturen_score": 15, "strukturen_feedback": "max 20 Wörter"
   }},
   "task_feedbacks": {{
-    "task1": {{"corrected_text": "Vollständig korrigierte informelle E-Mail", "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]}},
-    "task2": {{"corrected_text": "Vollständig korrigierter Meinungstext", "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]}},
-    "task3": {{"corrected_text": "Vollständig korrigierte formelle E-Mail (~40 Wörter)", "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]}}
+    "task1": {{"thema_verfehlt": false, "corrected_text": "Originaltext Teil 1, nur Fehler korrigiert", "model_text": "Mustertext informelle E-Mail, mind. 80 Wörter", "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]}},
+    "task2": {{"thema_verfehlt": false, "corrected_text": "Originaltext Teil 2, nur Fehler korrigiert", "model_text": "Mustertext Meinungstext, mind. 80 Wörter", "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]}},
+    "task3": {{"thema_verfehlt": false, "corrected_text": "Originaltext Teil 3, nur Fehler korrigiert", "model_text": "Mustertext formelle E-Mail, ca. 40 Wörter", "main_strengths": ["max 10 Wörter"], "main_weaknesses": ["max 10 Wörter"]}}
   }},
-  "corrections": [
-    {{"task": "1", "error": "Fehler im Originaltext", "correction": "Korrektur", "explanation": "max 12 Wörter"}}
-  ],
   "suggestions": ["max 15 Wörter (Teil 1)", "max 15 Wörter (Teil 2)", "max 15 Wörter (Teil 3)"]
 }}
 
