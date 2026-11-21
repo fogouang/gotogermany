@@ -703,6 +703,9 @@
     "back_to_exams": "Back to exams",
     "subject": "Topic",
     "passed": "Passed",
+    "written_passed": "Written exam passed",
+    "written_failed": "Written exam not passed",
+    "written_guidance_title": "Written exam benchmark",
     "failed": "Not passed",
     "pending": "Pending",
     "min_score": "min",
@@ -738,19 +741,23 @@
       "weak_modules": "To work on: {list}",
       "block_detail": "Answer details",
       "teil": "Teil {n}",
-      "no_answer": "No answer given in this part."
+      "no_answer": "No answer given in this part.",
+      "written_threshold": "To pass the written exam: {pass}/{max} pts"
     },
     "messages": {
-      "module_passed": "Well done! You passed the {module} module with {score}.",
+      "module_passed": "Excellent! You passed the {module} module with {score}.",
       "module_failed": "You did not reach {min}% in the {module} module ({score}). Keep practising!",
-      "module_pending": "The {module} module is waiting for AI correction.",
+      "module_pending": "{module} module awaiting AI correction.",
       "exam_passed": "Congratulations! You passed this exam.",
-      "exam_failed_weak": "Score too low. Module(s) to work on: {list}.",
+      "exam_failed_weak": "Score too low. Module(s) to strengthen: {list}.",
       "exam_failed": "You did not reach the required score. Keep practising!",
-      "partial_pending": "Partial result: some parts are still waiting for correction.",
-      "tdn_levels": "Estimated levels: {levels}. Official thresholds vary slightly from session to session.",
+      "partial_pending": "Partial result, some parts are still awaiting correction.",
+      "tdn_levels": "Estimated levels: {levels}. Official thresholds vary slightly from one session to another.",
       "assignment_graded": "Assignment submitted and graded. Your final mark is in your assignments.",
-      "assignment_submitted": "Assignment submitted. Your teacher will mark it and your grade will appear in your assignments."
+      "assignment_submitted": "Assignment submitted. Your teacher will grade it and your mark will appear in your assignments.",
+      "telc_written_passed": "Written exam passed: {score}/{max} (minimum {pass}). The oral exam is still ahead: {oral_pass}/{oral_max} minimum.",
+      "telc_written_failed": "Written exam not passed: {score}/{max}. You need at least {pass} points across the whole written exam; a weak section can be offset by the others.",
+      "telc_written_guidance": "{module_score}/{module_max} on what you took. To pass the written exam ({pass}/{max}), you still need {needed}/{other} points ({pct}%) in the other written sections."
     }
   },
   "exam_detail": {
@@ -1029,7 +1036,21 @@
     "choose_another": "Choose another subject",
     "page_title": "Results  DeutschTest",
     "your_text": "Your text",
-    "original_unavailable": "Original text not available."
+    "original_unavailable": "Original text not available.",
+    "guidance": {
+      "title": "Writing: {score}/{max}",
+      "ahead": "Your Writing helps you: you still need {needed}/{other} points ({pct}%) in Reading, Language Elements and Listening to pass the written exam.",
+      "behind": "The other sections will have to make up for it: you need {needed}/{other} points ({pct}%) in Reading, Language Elements and Listening to pass the written exam. Work first on the criteria graded C or D.",
+      "gauge": "Your Writing brings {score} of the {pass} points needed for the written exam",
+      "rule": "In the telc exam, Writing is not passed on its own: you need at least {pass}/{max} points across the whole written exam, and a weak section can be offset by the others."
+    },
+    "grades": {
+      "A": "A: criterion fully met (15 points)",
+      "B": "B: criterion largely met (9 points)",
+      "C": "C: criterion partly met (3 points)",
+      "D": "D: criterion not met (0 points)",
+      "legend": "telc grades: A = 15 · B = 9 · C = 3 · D = 0 points per criterion."
+    }
   },
   "simulator_subject": {
     "points_label": "points",
@@ -1205,6 +1226,10 @@
     "view_subject": "View subject"
   },
   "sprechen_subject": {
+    "role_badge": {
+      "examiner": "Examiner",
+      "partner": "Partner"
+    },
     "call": {
       "examiner_default_name": "Your examiner",
       "examiner_role": "Examiner · Sprechen",
@@ -2242,5 +2267,39 @@
         "subtitle": "Your referrals and commissions"
       }
     }
+  },
+  "testdaf_sprechen": {
+    "page_title": "TestDaF Speaking",
+    "exit": "Leave",
+    "task_of": "Task {n} / {total}",
+    "task_short": "Task {n}",
+    "intro_title": "TestDaF Speaking: real exam conditions",
+    "intro_text": "Just like the digital TestDaF, you complete 7 tasks alone at the computer. Each answer is recorded and graded at the end.",
+    "intro_point_timers": "Fixed preparation and speaking times: recording stops when time is up.",
+    "intro_point_audio": "You will hear the interlocutor (and sometimes a fellow student): turn your sound on.",
+    "intro_point_chain": "The 7 tasks follow each other without a break, as in the exam.",
+    "start": "Start the exam",
+    "situation_label": "Situation",
+    "task_label": "Task",
+    "text_label": "Text",
+    "text_hidden": "The text is no longer visible.",
+    "chart_label": "Chart",
+    "slide_label": "Slide",
+    "phase_grafik": "Look at the chart",
+    "phase_listen": "Listen",
+    "phase_prep": "Preparation time",
+    "phase_question": "Interlocutor",
+    "phase_speaking": "Speaking time: recording",
+    "listening_hint": "Listen carefully.",
+    "prep_hint": "Prepare your answer. You may take notes on paper.",
+    "speaking_hint": "Speak now. You may finish before the time is up.",
+    "done_button": "Done",
+    "upload_warning": "A recording could not be sent. Check your connection.",
+    "grading_title": "Grading in progress",
+    "grading_subtitle": "Your 7 answers are being transcribed and assessed. A few seconds…",
+    "level_label": "estimated level",
+    "mic_error": "Cannot access the microphone. Allow it and try again.",
+    "start_error": "Could not start the exam. Please try again.",
+    "finish_error": "Grading failed. Your credits have been refunded."
   }
 }

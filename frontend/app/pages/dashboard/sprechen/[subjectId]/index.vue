@@ -26,6 +26,7 @@ const {
   currentTeil,
   preparationInfo,
   micState,
+  agentRole,
   transcript,
   gradingResult,
   errorMessage,
@@ -81,6 +82,30 @@ const callState = computed<"preparing" | "agent" | "student" | "waiting">(
     return "waiting";
   },
 );
+
+// ── Badge du rôle de l'IA (évaluateur / partenaire) ──
+// Le backend envoie le rôle avec chaque "agent_speaking" ; le badge
+// garde le dernier rôle connu pendant que l'élève parle.
+const roleBadge = computed(() => {
+  if (status.value !== "active" || !agentRole.value) return null;
+  return agentRole.value === "examiner"
+    ? {
+        key: "examiner",
+        // Doit rester identique à EXAMINER_NAME dans providers/base.py (backend)
+        name: "Frau Wagner",
+        icon: "pi pi-verified",
+        label: t("sprechen_subject.role_badge.examiner"),
+        classes: "border-amber-400/40 text-amber-700",
+      }
+    : {
+        key: "partner",
+        // Doit rester identique à PARTNER_NAME dans providers/base.py (backend)
+        name: "Klara",
+        icon: "pi pi-user",
+        label: t("sprechen_subject.role_badge.partner"),
+        classes: "border-primary/30 text-primary",
+      };
+});
 
 const authStore = useAuthStore();
 
@@ -409,7 +434,7 @@ useHead({ title: t("sprechen_subject.page_title") });
               <!-- Consignes -->
               <aside
                 v-if="panelTeil"
-                class="flex max-h-52 flex-col gap-5 overflow-y-auto border-b border-line bg-card/70 p-5 backdrop-blur md:max-h-none md:border-b-0 md:border-r md:p-6"
+                class="flex max-h-52 flex-col gap-5 overflow-y-auto border-b border-line bg-card/70 p-5 backdrop-blur *:shrink-0 md:max-h-none md:border-b-0 md:border-r md:p-6"
               >
                 <div>
                   <span
@@ -525,9 +550,30 @@ useHead({ title: t("sprechen_subject.page_title") });
                     <ExaminerTile
                       ref="examinerRef"
                       avatar-url="/avatars/brunette.glb"
+                      :name="roleBadge?.name ?? null"
+                      :role="roleBadge?.label ?? null"
                       :speaking="micState === 'agent_speaking'"
                       :listening="micState === 'student_turn'"
                     />
+
+                    <!-- Badge du rôle de l'IA, change à chaque changement de rôle -->
+                    <Transition
+                      mode="out-in"
+                      enter-active-class="transition duration-300 ease-out"
+                      enter-from-class="-translate-y-1 opacity-0"
+                      leave-active-class="transition duration-200 ease-in"
+                      leave-to-class="opacity-0"
+                    >
+                      <span
+                        v-if="roleBadge"
+                        :key="roleBadge.key"
+                        class="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border bg-card/85 px-3 py-1 text-xs font-semibold shadow-soft backdrop-blur"
+                        :class="roleBadge.classes"
+                      >
+                        <i :class="[roleBadge.icon, 'text-[11px]']" />
+                        {{ roleBadge.label }}
+                      </span>
+                    </Transition>
 
                     <!-- Vignette candidat -->
                     <div

@@ -101,7 +101,9 @@ async def load_subject_data(
         raise _SubjectUnavailable("No Sprechen module for this subject.")
 
     teile_raw: list[dict[str, Any]] = []
-    for teil in sprechen_module.teile:
+    # Ordre garanti : la relation SQLAlchemy ne renvoie pas forcément les
+    # Teile dans l'ordre (aperçu, oral en direct et TestDaF en dépendent).
+    for teil in sorted(sprechen_module.teile, key=lambda t: t.teil_number):
         # Scalar Teil columns first — these ARE real and correctly populated.
         teil_dict: dict[str, Any] = dict(teil.config or {})
         teil_dict["teil_number"] = teil.teil_number
@@ -277,7 +279,10 @@ async def _send_bytes(websocket: WebSocket, data: bytes) -> None:
 async def _send_role_signal(ctx: _ConnectionContext) -> None:
     agent_turn_next = orchestrator.is_agent_turn_next(ctx.session)
     event = (
-        AgentSpeakingEvent(session_id=ctx.session.session_id)
+        AgentSpeakingEvent(
+            session_id=ctx.session.session_id,
+            agent_role=ctx.session.current_step().role.value,
+        )
         if agent_turn_next
         else StudentTurnEvent(session_id=ctx.session.session_id)
     )
@@ -625,7 +630,16 @@ async def sprechen_session_ws(
 # ---------------------------------------------------------------------------
 # Aperçu d'un sujet : lecture libre, même sans crédit
 # ---------------------------------------------------------------------------
-
+def _teil_seconds(teil_raw: dict[str, Any], duration_minutes: int) -> int:
+    """Durée d'un Teil en secondes. TestDaF n'a pas de time_minutes :
+    on additionne écoute, graphique, préparation et temps de parole."""
+    if duration_minutes:
+        return duration_minutes * 60
+    return sum(
+        int(teil_raw.get(key) or 0)
+        for key in ("grafik_seconds", "listen_seconds", "prep_seconds", "speak_seconds")
+    )
+    
 @router.get("/subjects/{subject_id}/preview", response_model=SprechenPreviewResponse)
 async def get_sprechen_preview(
     subject_id: UUID,
@@ -640,8 +654,13 @@ async def get_sprechen_preview(
     except _SubjectUnavailable as exc:
         raise HTTPException(status_code=404, detail=exc.reason)
 
-    teile = orchestrator.build_teil_configs(subject_raw, provider)
-    raw_max = {t.get("teil_number"): t.get("max_score") for t in subject_raw.get("teile", [])}
+    teile = orchestrator.build_teil_configs(subject_raw, provider, level)
+    raw_by_number = {t.get("teil_number"): t for t in subject_raw.get("teile", [])}
+    raw_max = {n: t.get("max_score") for n, t in raw_by_number.items()}
+    teil_seconds = {
+        teil.teil_number: _teil_seconds(raw_by_number.get(teil.teil_number, {}), teil.duration_minutes)
+        for teil in teile
+    }
 
     items = [
         SprechenPreviewTeil(
@@ -649,7 +668,8 @@ async def get_sprechen_preview(
             name=teil.name,
             format_type=teil.format_type,
             instructions=teil.instructions,
-            duration_minutes=teil.duration_minutes,
+            # Arrondi à la minute supérieure : 75 s s'affichent "2 min", pas "1 min"
+            duration_minutes=-(-teil_seconds[teil.teil_number] // 60),
             max_score=raw_max.get(teil.teil_number),
             content_points=teil.content_points,
             themes=teil.themes,
@@ -665,7 +685,7 @@ async def get_sprechen_preview(
         subject_id=subject_id,
         provider=provider,
         level=level,
-        total_minutes=sum(t.duration_minutes for t in teile),
+        total_minutes=round(sum(teil_seconds.values()) / 60),
         teile=items,
         credit_cost=SPRECHEN_CREDIT_COST,
         credits_available=credits,

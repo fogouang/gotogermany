@@ -73,8 +73,9 @@ class Correction(Base, UUIDMixin, TimestampMixin):
     # ── Scores globaux ───────────────────────────────────
     overall_score: Mapped[int] = mapped_column(Integer, nullable=False)
     max_score: Mapped[int] = mapped_column(Integer, nullable=False)      # 30, 45 ou 100
-    passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
-
+    # None = pas de verdict au niveau du module (telc : seule la partie écrite entière est validée)
+    passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
+    
     # ÖSD B2 uniquement : vrai plancher officiel (>=10/30), distinct de `passed`
     # (qui reste un repère interne à 60% pour tous les examens, cf. osd_b2_prompt.py).
     # Nullable — non renseigné pour les autres examens.
@@ -124,5 +125,5 @@ class Correction(Base, UUIDMixin, TimestampMixin):
             f"<Correction session:{self.session_id} "
             f"{self.provider.upper()} {self.level.upper()} "
             f"{self.overall_score}/{self.max_score} "
-            f"({'✓' if self.passed else '✗'})>"
+            f"({'-' if self.passed is None else ('✓' if self.passed else '✗')})>"
         )

@@ -75,8 +75,23 @@ const peopleLabel = (teil: PreviewTeil) =>
     : t("sprechen_subject.stimulus_people_label");
 
 const goToList = () => navigateTo(localePath("/dashboard/sprechen"));
+
+// Sujet TestDaF : ses tâches ont le format "oral_testdaf". Épreuve
+// enregistrée (fidèle au TestDaF digital), pas d'oral en direct.
+const isTestDaf = computed(
+  () =>
+    preview.value?.teile.some((teil) => teil.format_type === "oral_testdaf") ??
+    false,
+);
+
 const startOral = () =>
-  navigateTo(localePath(`/dashboard/sprechen/${subjectId}`));
+  navigateTo(
+    localePath(
+      isTestDaf.value
+        ? `/dashboard/sprechen/testdaf/${subjectId}`
+        : `/dashboard/sprechen/${subjectId}`,
+    ),
+  );
 
 onMounted(load);
 
@@ -250,12 +265,14 @@ useHead({ title: t("sprechen_preview.page_title") });
           <p class="text-sm leading-relaxed text-ink">{{ teil.scenario }}</p>
         </div>
 
-               <div
+        <div
           v-if="teil.stimulus_people?.length"
           class="overflow-hidden rounded-card border border-line bg-card-2"
         >
           <div class="border-b border-line px-4 py-2">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-faint">
+            <p
+              class="text-[11px] font-semibold uppercase tracking-wide text-faint"
+            >
               {{ t("sprechen_subject.stimulus_people_label") }}
             </p>
           </div>
@@ -270,7 +287,11 @@ useHead({ title: t("sprechen_preview.page_title") });
                 class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide"
                 :class="i === 0 ? 'text-primary' : 'text-faint'"
               >
-                {{ i === 0 ? t("sprechen_preview.your_text") : t("sprechen_preview.partner_text") }}
+                {{
+                  i === 0
+                    ? t("sprechen_preview.your_text")
+                    : t("sprechen_preview.partner_text")
+                }}
               </p>
               <p class="text-sm font-semibold text-ink">{{ person.name }}</p>
               <p class="mt-1.5 text-base italic leading-relaxed text-ink">

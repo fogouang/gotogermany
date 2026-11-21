@@ -46,6 +46,7 @@ class CriterionScore(BaseModel):
     score: float
     max_score: float
     feedback: str = ""
+    grade: str | None = None            # telc : A (15) / B (9) / C (3) / D (0)
 
 
 class SubCriterionScore(BaseModel):
@@ -85,6 +86,17 @@ class CorrectionError(BaseModel):
 # RESPONSE
 # ─────────────────────────────────────────────────────────
 
+class WrittenPartGuidance(BaseModel):
+    """Repère telc : place du Schreiben dans la partie écrite (réussite à 135/225, avec compensation)."""
+    written_max: int                    # 225
+    written_pass: int                   # 135
+    module_score: float                 # score Schreiben obtenu (/45)
+    module_max: float                   # 45
+    other_modules_max: int              # 180 (Lesen + Sprachbausteine + Hören)
+    needed_from_other_modules: float    # points à obtenir ailleurs pour atteindre 135
+    needed_percentage: float            # même chose en % des 180 points
+    status: str                         # "ahead" : le Schreiben aide | "behind" : les autres épreuves doivent compenser
+    
 class CorrectionResponse(BaseModel):
     """Réponse complète retournée au frontend — même forme pour tous les examens."""
 
@@ -98,13 +110,15 @@ class CorrectionResponse(BaseModel):
     # Scores
     overall_score: float
     max_score: float
-    passed: bool
+    passed: bool | None = None
     score_percentage: float
     appreciation: str
 
     # Champ optionnel — présent uniquement pour ÖSD B2, où `passed` (60% interne
     # à la plateforme) diffère du vrai plancher de certification ÖSD (>=10/30).
     floor_reached: bool | None = None
+    # telc uniquement : repère pédagogique à la place d'un verdict isolé
+    guidance: WrittenPartGuidance | None = None
 
     # Critères et tâches — structure et nombre variables selon l'examen
     criteria: list[CriterionScore]

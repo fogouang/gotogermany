@@ -33,8 +33,29 @@
 
     <!-- ── Sujets ── -->
     <template v-if="activeTab === 'sujets'">
-      <!-- Filtres (dérivés du catalogue) -->
-      <div class="flex flex-wrap items-center gap-2">
+      <!-- Élève : examen et niveau actifs uniquement (changeables via le sélecteur du haut) -->
+      <div
+        v-if="lockedToActiveLevel && activeTarget"
+        class="flex flex-wrap items-center gap-2"
+      >
+        <span class="text-sm text-muted">{{ t("sprechen.active_level_label") }}</span>
+        <span
+          :class="[
+            'text-xs font-semibold px-2.5 py-1 rounded-full',
+            info(activeTarget.provider).badge,
+          ]"
+        >
+          {{ info(activeTarget.provider).name }}
+        </span>
+        <span
+          class="text-xs font-semibold px-2.5 py-1 rounded-full bg-card-2 border border-line text-ink"
+        >
+          {{ activeTarget.cefr }}
+        </span>
+      </div>
+
+      <!-- Admin / enseignants : filtres (dérivés du catalogue) -->
+      <div v-else class="flex flex-wrap items-center gap-2">
         <button
           v-for="p in availableProviders"
           :key="p"
@@ -72,6 +93,7 @@
           {{ t("sprechen.no_subjects_subtitle") }}
         </p>
         <Button
+          v-if="!lockedToActiveLevel"
           :label="t('sprechen.show_all')"
           icon="pi pi-refresh"
           @click="resetFilters"
@@ -274,6 +296,7 @@ const { info } = useProviders();
 useHead({ title: t("sprechen.page_title") });
 
 const examsStore = useExamsStore();
+const authStore = useAuthStore();
 
 const activeTab = ref<"sujets" | "resultats">("sujets");
 const selectedProvider = ref("");
@@ -294,6 +317,28 @@ const chipClass = (active: boolean) => [
     ? "bg-primary text-white border-primary"
     : "bg-card text-ink border-line hover:border-primary/40",
 ];
+
+// ── Niveau actif de l'élève (onboarding / sélecteur du haut) ──
+// setTargetLevel() met à jour authStore.user : la liste suit automatiquement.
+const activeLevelId = computed<string | null>(
+  () => authStore.targetLevelId ?? null,
+);
+// Seuls les élèves sont limités à leur niveau ; admin et enseignants
+// gardent les filtres complets.
+const lockedToActiveLevel = computed(
+  () => !!activeLevelId.value && authStore.isStudent,
+);
+
+// Examen + niveau correspondant au niveau actif, retrouvés dans le catalogue
+const activeTarget = computed(() => {
+  if (!activeLevelId.value) return null;
+  for (const exam of examsStore.catalog) {
+    const level = exam.levels?.find((l) => l.id === activeLevelId.value);
+    if (level)
+      return { slug: exam.slug, provider: exam.provider, cefr: level.cefr_code };
+  }
+  return null;
+});
 
 // ── Sujets : arbre de l'examen filtré sur les sujets ayant un module oral ──
 
@@ -324,8 +369,12 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
 
   const cards: SprechenSubjectCard[] = [];
   for (const level of exam.levels ?? []) {
-    if (selectedLevel.value && level.cefr_code !== selectedLevel.value)
+    if (lockedToActiveLevel.value) {
+      // Élève : uniquement son niveau actif
+      if (level.id !== activeLevelId.value) continue;
+    } else if (selectedLevel.value && level.cefr_code !== selectedLevel.value) {
       continue;
+    }
 
     for (const subject of level.subjects ?? []) {
       const sprechenModule = (subject.modules ?? []).find((m) =>
@@ -365,6 +414,9 @@ const sprechenSubjects = computed<SprechenSubjectCard[]>(() => {
 
 // Un fournisseur peut avoir plusieurs Exam (un par niveau) : on choisit le bon slug
 const targetExamSlug = computed(() => {
+  // Élève : toujours l'examen de son niveau actif
+  if (lockedToActiveLevel.value) return activeTarget.value?.slug ?? null;
+
   if (!selectedProvider.value) return null;
   const candidates = examsStore.catalog.filter(
     (e) => e.provider === selectedProvider.value,
@@ -440,8 +492,9 @@ const formatDate = (d: string) =>
 onMounted(async () => {
   if (!examsStore.catalog.length) await examsStore.fetchCatalog();
 
-  // TELC par défaut, sinon la liste reste vide tant qu'aucun filtre n'est choisi
-  if (!selectedProvider.value) {
+  // Admin / enseignants : TELC par défaut, sinon la liste reste vide tant
+  // qu'aucun filtre n'est choisi. L'élève, lui, suit son niveau actif.
+  if (!lockedToActiveLevel.value && !selectedProvider.value) {
     const telc = availableProviders.value.find(
       (p) => p.toLowerCase() === "telc",
     );

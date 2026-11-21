@@ -40,7 +40,7 @@
         <div
           :class="[
             'h-1.5',
-            correction.passed ? 'bg-emerald-500' : 'bg-red-500',
+            headerPositive ? 'bg-emerald-500' : guidance ? 'bg-amber-500' : 'bg-red-500',
           ]"
         ></div>
         <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-6">
@@ -55,19 +55,36 @@
               <div
                 :class="[
                   'w-10 h-10 rounded-leaf flex items-center justify-center shrink-0',
-                  correction.passed
+                  headerPositive
                     ? 'bg-emerald-500/10 text-emerald-600'
-                    : 'bg-red-500/10 text-red-500',
+                    : guidance
+                      ? 'bg-amber-500/10 text-amber-600'
+                      : 'bg-red-500/10 text-red-500',
                 ]"
               >
                 <i
                   :class="[
                     'pi text-lg',
-                    correction.passed ? 'pi-check-circle' : 'pi-times-circle',
+                    guidance
+                      ? headerPositive
+                        ? 'pi-arrow-up-right'
+                        : 'pi-arrow-down-right'
+                      : headerPositive
+                        ? 'pi-check-circle'
+                        : 'pi-times-circle',
                   ]"
                 ></i>
               </div>
-              <h1 class="text-2xl font-bold text-ink">
+              <!-- telc : pas de verdict isolé pour le Schreiben, seulement le score -->
+              <h1 v-if="guidance" class="text-2xl font-bold text-ink">
+                {{
+                  t("simulator_result.guidance.title", {
+                    score: fmtPts(correction.overall_score),
+                    max: fmtPts(correction.max_score),
+                  })
+                }}
+              </h1>
+              <h1 v-else class="text-2xl font-bold text-ink">
                 {{
                   correction.passed
                     ? t("correction.passed")
@@ -105,7 +122,11 @@
                   stroke-width="7"
                   stroke-linecap="round"
                   :class="
-                    correction.passed ? 'text-emerald-500' : 'text-red-500'
+                    headerPositive
+                      ? 'text-emerald-500'
+                      : guidance
+                        ? 'text-amber-500'
+                        : 'text-red-500'
                   "
                   :stroke-dasharray="`${(Math.min(correction.score_percentage, 100) / 100) * 201} 201`"
                 />
@@ -126,6 +147,63 @@
                 t("result.official.points", {
                   got: fmtPts(correction.overall_score),
                   max: fmtPts(correction.max_score),
+                })
+              }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Repère telc : place du Schreiben dans la partie écrite ── -->
+      <div
+        v-if="guidance"
+        :class="[
+          'rounded-card border p-5',
+          guidance.status === 'ahead'
+            ? 'border-emerald-500/30 bg-emerald-500/10'
+            : 'border-amber-500/30 bg-amber-500/10',
+        ]"
+      >
+        <div class="flex items-start gap-3">
+          <i
+            :class="[
+              'pi mt-0.5 text-lg',
+              guidance.status === 'ahead'
+                ? 'pi-check-circle text-emerald-600'
+                : 'pi-exclamation-triangle text-amber-600',
+            ]"
+          ></i>
+          <div class="min-w-0 flex-1 space-y-3">
+            <p class="text-sm font-semibold text-ink">
+              {{
+                t(`simulator_result.guidance.${guidance.status}`, {
+                  needed: fmtPts(guidance.needed_from_other_modules),
+                  other: guidance.other_modules_max,
+                  pct: Math.round(guidance.needed_percentage),
+                })
+              }}
+            </p>
+            <div>
+              <div class="h-2 w-full overflow-hidden rounded-full bg-card-2">
+                <div
+                  class="h-2 rounded-full bg-primary"
+                  :style="{ width: `${writtenShare}%` }"
+                />
+              </div>
+              <p class="mt-1 text-xs tabular-nums text-muted">
+                {{
+                  t("simulator_result.guidance.gauge", {
+                    score: fmtPts(guidance.module_score),
+                    pass: guidance.written_pass,
+                  })
+                }}
+              </p>
+            </div>
+            <p class="text-xs leading-relaxed text-muted">
+              {{
+                t("simulator_result.guidance.rule", {
+                  pass: guidance.written_pass,
+                  max: guidance.written_max,
                 })
               }}
             </p>
@@ -159,6 +237,14 @@
                 ]"
               >
                 {{ fmtPts(c.score) }} / {{ fmtPts(c.maxScore) }}
+                <!-- telc : lettre officielle du critère -->
+                <span
+                  v-if="gradeByKey[c.key]"
+                  :title="t(`simulator_result.grades.${gradeByKey[c.key]}`)"
+                  class="ml-1.5 rounded-full bg-card-2 px-2 py-0.5 text-xs"
+                >
+                  {{ gradeByKey[c.key] }}
+                </span>
               </span>
               <span v-else class="text-sm font-bold tabular-nums text-red-500">
                 {{ t("correction.malus", { n: fmtPts(Math.abs(c.score)) }) }}
@@ -183,6 +269,13 @@
             </p>
           </div>
         </div>
+        <!-- Légende des lettres telc -->
+        <p
+          v-if="guidance"
+          class="border-t border-line px-5 sm:px-6 py-3 text-xs leading-relaxed text-faint"
+        >
+          {{ t("simulator_result.grades.legend") }}
+        </p>
       </div>
 
       <!-- ── Retour par tâche ── -->
@@ -430,6 +523,44 @@ const sessionId = route.params.sessionId as string;
 const ready = ref(false);
 const correction = computed(() => correctionStore.current);
 const expandedTasks = ref<Set<string>>(new Set(["task1"]));
+
+// telc : pas de verdict isolé (passed = null), repère sur la partie écrite à la place
+interface WrittenPartGuidance {
+  written_max: number;
+  written_pass: number;
+  module_score: number;
+  module_max: number;
+  other_modules_max: number;
+  needed_from_other_modules: number;
+  needed_percentage: number;
+  status: "ahead" | "behind";
+}
+const guidance = computed<WrittenPartGuidance | null>(
+  () => (correction.value as any)?.guidance ?? null,
+);
+
+// Lettre telc par critère (A/B/C/D), lue directement dans la réponse
+const gradeByKey = computed<Record<string, string>>(() =>
+  Object.fromEntries(
+    ((correction.value as any)?.criteria ?? [])
+      .filter((c: any) => c.grade)
+      .map((c: any) => [c.key, c.grade]),
+  ),
+);
+
+// Couleur de l'en-tête : repère telc si présent, sinon verdict classique
+const headerPositive = computed(() =>
+  guidance.value
+    ? guidance.value.status === "ahead"
+    : !!correction.value?.passed,
+);
+
+// Part du Schreiben dans les points requis pour valider l'écrit
+const writtenShare = computed(() => {
+  const g = guidance.value;
+  if (!g || !g.written_pass) return 0;
+  return Math.min(100, (g.module_score / g.written_pass) * 100);
+});
 
 // Nouveau Set à chaque clic : un Set modifié sur place n'est pas suivi par Vue
 const toggleTask = (key: string) => {

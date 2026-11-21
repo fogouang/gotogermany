@@ -8,6 +8,12 @@ données (teil.max_score, module.max_score), pas dans le code.
   - score global       : total des points de l'écrit / total possible
   - réussite           : lue dans level.exam_config (scoring_model / pass_rule)
 Les modules oraux sans réponse sont ignorés : ils sont évalués en session orale.
+
+telc (pass_rule "telc_written") : seule la partie écrite entière a un verdict
+(Lesen + Sprachbausteine + Hören + Schreiben >= 60 %, soit 135/225, avec
+compensation entre épreuves). Un module seul ou une sélection partielle n'a pas
+de verdict : on indique à la place ce qu'il reste à obtenir ailleurs. L'oral
+(>= 45/75) est validé à part, dans la session Sprechen.
 """
 import logging
 import re
@@ -55,6 +61,11 @@ EXTRA_AUTO_TYPES = {
     "textabschnitte_ordnen", "zuordnung", "fehler_in_zusammenfassung",
     "woerter_im_transkript", "kurzantwort",
 }
+
+# telc B1/B2 : partie écrite validée à 60 % du total (135/225), oral à 45/75
+TELC_WRITTEN_PASS_PCT = 60
+TELC_ORAL_PASS = 45
+TELC_ORAL_MAX = 75
 
 
 def _norm(value) -> str:
@@ -258,13 +269,16 @@ class ExamSessionService:
         """Règle de réussite lue dans level.exam_config.
 
         scoring_model = per_module_100      (Goethe) : chaque module >= seuil
-        scoring_model = per_module_weighted (TELC)   : total de l'écrit >= seuil
+        provider telc                                : partie écrite entière >= 135/225
+        scoring_model = per_module_weighted          : total de l'écrit >= seuil
         Un 'pass_rule' explicite dans exam_config reste prioritaire
-        (each_module, tdn_levels, global_and_modules, global).
+        (each_module, tdn_levels, global_and_modules, global, telc_written).
         """
         rules = dict((level.exam_config or {}) if level else {})
         if "pass_rule" not in rules:
-            if rules.get("scoring_model") == "per_module_100":
+            if (provider or "").strip().lower() == "telc":
+                rules["pass_rule"] = "telc_written"
+            elif rules.get("scoring_model") == "per_module_100":
                 rules["pass_rule"] = "each_module"
             else:
                 rules["pass_rule"] = "global"
@@ -292,6 +306,60 @@ class ExamSessionService:
             if score >= thresholds.get(tdn, 101):
                 return f"TDN {tdn}"
         return "unter TDN 3"
+
+    def _telc_written_summary(
+        self,
+        subject: Subject,
+        answers: list[ExamSessionAnswer],
+        modules: list[Module],
+        total_pass_score: int | None,
+    ) -> dict:
+        """Partie écrite telc : points obtenus sur les modules passés, total de
+        l'écrit (225), seuil (135) et verdict.
+
+        Verdict seulement si TOUTE la partie écrite a été passée et corrigée :
+        la compensation entre Lesen, Sprachbausteine, Hören et Schreiben n'a de
+        sens que sur l'ensemble. Sinon passed = None et `needed` indique ce qu'il
+        faut obtenir dans les modules non passés.
+        """
+        answer_map = {a.question_id: a for a in answers}
+        written_all = [m for m in subject.modules if m.slug not in ORAL_SLUGS]
+        scoped_ids = {m.id for m in modules}
+
+        written_max = sum(float(m.max_score or 0) for m in written_all)
+        # level.total_pass_score peut être stocké en points (135) ou en % (60)
+        if total_pass_score and total_pass_score > 100:
+            pass_points = float(total_pass_score)
+        else:
+            pass_points = written_max * (total_pass_score or TELC_WRITTEN_PASS_PCT) / 100
+
+        got = scoped_max = 0.0
+        pending = False
+        for module in written_all:
+            if module.id not in scoped_ids:
+                continue
+            g, t, p = self._module_points(module, answer_map)
+            scoped_max += t
+            if p:
+                pending = True
+            else:
+                got += g
+
+        full = bool(written_all) and all(m.id in scoped_ids for m in written_all)
+        other_max = max(0.0, written_max - scoped_max)
+        needed = max(0.0, pass_points - got)
+        return {
+            "full": full,
+            "pending": pending,
+            "got": round(got, 2),
+            "scoped_max": round(scoped_max, 2),
+            "written_max": round(written_max, 2),
+            "pass_points": round(pass_points, 2),
+            "other_max": round(other_max, 2),
+            "needed": round(needed, 2),
+            "needed_pct": round(needed / other_max * 100) if other_max else None,
+            "passed": (got >= pass_points) if full and not pending else None,
+        }
 
     # ── Soumission finale ────────────────────────────────
 
@@ -332,6 +400,9 @@ class ExamSessionService:
                 ) and (sum(module_scores) / len(module_scores)) >= average_min
             elif rule == "tdn_levels":         # TestDaF : pas de réussite globale
                 passed = None
+            elif rule == "telc_written":       # telc : écrit entier >= 135/225, sinon pas de verdict
+                written = self._telc_written_summary(subject, answers, modules, total_pass_score)
+                passed = written["passed"]
             elif rule == "global_and_modules": # total + minimum par module
                 passed = global_score >= total_pass_score and all(
                     v >= module_min for v in module_scores
@@ -988,10 +1059,11 @@ class ExamSessionService:
             ))
 
         module_min = rules.get("module_min", 60)
+        is_telc = rules["pass_rule"] == "telc_written"
 
-        # Mode module seul : réussite du module
+        # Mode module seul : réussite du module (sauf telc : pas de verdict par module)
         module_passed = None
-        if len(modules_result) == 1 and not is_tdn:
+        if len(modules_result) == 1 and not is_tdn and not is_telc:
             m = modules_result[0]
             if m.score_obtained is not None:
                 module_passed = m.score_obtained >= module_min
@@ -1040,6 +1112,49 @@ class ExamSessionService:
             elif session.status == "PENDING_REVIEW":
                 message_key = "partial_pending"
                 result_message = "Résultat partiel, certaines parties sont en attente de correction."
+
+        # telc : verdict sur l'écrit entier seulement, sinon repère « ce qu'il reste à obtenir »
+        if is_telc and session.status == "COMPLETED":
+            written = self._telc_written_summary(
+                subject, answers, self._scoped_modules(subject, session.module_slugs),
+                level.total_pass_score if level else None,
+            )
+            message_params = {
+                "score": f"{written['got']:g}",
+                "max": f"{written['written_max']:g}",
+                "pass": f"{written['pass_points']:g}",
+                "oral_pass": TELC_ORAL_PASS,
+                "oral_max": TELC_ORAL_MAX,
+            }
+            if written["full"]:
+                if session.passed:
+                    message_key = "telc_written_passed"
+                    result_message = (
+                        f"Partie écrite validée : {written['got']:g}/{written['written_max']:g} "
+                        f"(minimum {written['pass_points']:g}). Il reste l'oral : "
+                        f"{TELC_ORAL_PASS}/{TELC_ORAL_MAX} minimum."
+                    )
+                else:
+                    message_key = "telc_written_failed"
+                    result_message = (
+                        f"Partie écrite non validée : {written['got']:g}/{written['written_max']:g}, "
+                        f"il faut au moins {written['pass_points']:g} points sur l'ensemble de l'écrit."
+                    )
+            else:
+                message_key = "telc_written_guidance"
+                message_params.update({
+                    "module_score": f"{written['got']:g}",
+                    "module_max": f"{written['scoped_max']:g}",
+                    "needed": f"{written['needed']:g}",
+                    "other": f"{written['other_max']:g}",
+                    "pct": written["needed_pct"] if written["needed_pct"] is not None else 0,
+                })
+                result_message = (
+                    f"{written['got']:g}/{written['scoped_max']:g} sur ce que vous avez passé. "
+                    f"Pour valider l'écrit ({written['pass_points']:g}/{written['written_max']:g}), "
+                    f"il vous faut encore {written['needed']:g}/{written['other_max']:g} points "
+                    f"dans les autres épreuves écrites."
+                )
 
         if is_tdn and session.status == "COMPLETED":
             levels = ", ".join(f"{m.name} : {m.tdn_level}" for m in modules_result if m.tdn_level)

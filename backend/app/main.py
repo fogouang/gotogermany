@@ -191,7 +191,7 @@ from app.modules.training_sessions.router import router as training_sessions_rou
 from app.modules.sales.router import router as sales_router
 from app.modules.assignments.router import router as assignments_router
 from app.modules.security.router import router as security_router
-
+from app.modules.testdaf_sprechen.router import router as testdaf_sprechen_router
 
 
 
@@ -219,6 +219,8 @@ app.include_router(training_sessions_router, prefix="/api/v1/training-sessions",
 app.include_router(sales_router, prefix="/api/v1/sales", tags=["sales"])
 app.include_router(assignments_router, prefix="/api/v1/assignments", tags=["assignments"])
 app.include_router(security_router, prefix="/api/v1/security", tags=["security"])
+app.include_router(testdaf_sprechen_router, prefix="/api/v1/testdaf-sprechen", tags=["testdaf-sprechen"])
+
 
 # ── Health ───────────────────────────────────
 @app.get("/health", tags=["system"])

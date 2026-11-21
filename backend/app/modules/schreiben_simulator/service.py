@@ -10,6 +10,9 @@ Logique du simulateur :
 - Sujets à tâches au choix (telc B2 : Aufgabe A ou B) : seule la tâche rédigée
   par l'élève est corrigée (_select_tasks), et le résultat affiche le vrai
   Teil traité (ex. "Teil 2").
+- telc : pas de verdict réussi/échoué pour le Schreiben seul (passed = None),
+  mais la lettre telc de chaque critère et le repère `guidance` sur la partie
+  écrite (135/225), avec les mêmes helpers que le module corrections.
 """
 from __future__ import annotations
 from types import SimpleNamespace
@@ -30,7 +33,12 @@ from app.modules.corrections.ai_providers.gemini import GeminiProvider
 from app.modules.corrections.ai_providers.claude import ClaudeProvider
 from app.modules.corrections.prompts import build_correction_prompt, TaskData, EXPECTED_TASK_COUNT
 from app.modules.corrections.response_normalizer import normalize_correction_result, rebuild_corrected_text
-from app.modules.corrections.service import _build_task_fields
+from app.modules.corrections.service import (
+    _build_task_fields,
+    _NO_MODULE_VERDICT_PROVIDERS,
+    _telc_grade,
+    _telc_written_guidance,
+)
 from app.config import get_settings
 
 settings = get_settings()
@@ -287,9 +295,25 @@ class SchreibenSimulatorService:
         formats de sortie possibles. task_texts sert aux règles de longueur
         (telc, ECL) ; ai_usage expose le coût réel de la correction.
         """
+        provider_key = _exam_key(subject.provider, subject.level)[0]
+        no_verdict = provider_key in _NO_MODULE_VERDICT_PROVIDERS
+        if no_verdict:
+            ai_result.setdefault("passed", False)  # valeur provisoire pour le normalizer, effacée juste après
+
         normalized = normalize_correction_result(
             subject.provider, subject.level, ai_result, task_texts
         )
+
+        if no_verdict:
+            # telc : le Schreiben n'a pas de réussite isolée (règle 135/225 sur l'écrit entier)
+            normalized["passed"] = None
+            normalized["criteria"] = [
+                {**c, "grade": _telc_grade(float(c.get("score", 0)))}
+                for c in normalized.get("criteria", [])
+            ]
+            normalized["guidance"] = _telc_written_guidance(
+                float(normalized["overall_score"]), float(normalized["max_score"])
+            )
 
         return SimulatorCorrectResponse(
             subject_id=subject.id,

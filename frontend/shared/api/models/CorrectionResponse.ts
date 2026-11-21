@@ -5,6 +5,7 @@
 import type { app__modules__corrections__schemas__CriterionScore } from './app__modules__corrections__schemas__CriterionScore';
 import type { app__modules__corrections__schemas__TaskFeedback } from './app__modules__corrections__schemas__TaskFeedback';
 import type { CorrectionError } from './CorrectionError';
+import type { WrittenPartGuidance } from './WrittenPartGuidance';
 /**
  * Réponse complète retournée au frontend — même forme pour tous les examens.
  */
@@ -15,10 +16,11 @@ export type CorrectionResponse = {
     level: string;
     overall_score: number;
     max_score: number;
-    passed: boolean;
+    passed?: (boolean | null);
     score_percentage: number;
     appreciation: string;
     floor_reached?: (boolean | null);
+    guidance?: (WrittenPartGuidance | null);
     criteria: Array<app__modules__corrections__schemas__CriterionScore>;
     tasks: Array<app__modules__corrections__schemas__TaskFeedback>;
     corrections_list: Array<CorrectionError>;

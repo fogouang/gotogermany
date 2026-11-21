@@ -152,7 +152,16 @@
                   })
                 }}
               </p>
-              <p class="text-xs text-muted">
+              <!-- telc module seul : pas de seuil par module, seuil de l'écrit entier -->
+              <p v-if="isTelcGuidance" class="text-xs text-muted">
+                {{
+                  t("result.official.written_threshold", {
+                    pass: messageParams.pass,
+                    max: messageParams.max,
+                  })
+                }}
+              </p>
+              <p v-else class="text-xs text-muted">
                 {{
                   t("result.official.threshold", {
                     points: fmtPts(passPoints),
@@ -216,7 +225,10 @@
                   class="w-9 h-9 rounded-leaf bg-primary/10 flex items-center justify-center shrink-0"
                 >
                   <i
-                    :class="['pi text-sm text-primary', moduleIcon(module.slug)]"
+                    :class="[
+                      'pi text-sm text-primary',
+                      moduleIcon(module.slug),
+                    ]"
                   ></i>
                 </div>
                 <div class="min-w-0 text-left">
@@ -266,7 +278,9 @@
                       }}
                     </span>
                   </div>
-                  <div class="mt-2 h-1.5 rounded-full bg-card-2 overflow-hidden">
+                  <div
+                    class="mt-2 h-1.5 rounded-full bg-card-2 overflow-hidden"
+                  >
                     <div
                       :class="[
                         'h-full rounded-full transition-all duration-500',
@@ -315,10 +329,14 @@
                         <span class="text-xs text-muted"
                           >{{ t("result.your_answer") }} :
                         </span>
-                        <strong>{{ showAnswer(answer.user_answer) || "-" }}</strong>
+                        <strong>{{
+                          showAnswer(answer.user_answer) || "-"
+                        }}</strong>
                       </p>
                       <p
-                        v-if="answer.correct_answer && answer.is_correct === false"
+                        v-if="
+                          answer.correct_answer && answer.is_correct === false
+                        "
                         class="line-clamp-2 text-xs text-emerald-700 dark:text-emerald-400 mt-0.5"
                         :title="showAnswer(answer.correct_answer)"
                       >
@@ -482,7 +500,9 @@
                 </div>
 
                 <Button
-                  v-if="group.modules.some(isSchreiben) && correctionStore.current"
+                  v-if="
+                    group.modules.some(isSchreiben) && correctionStore.current
+                  "
                   :label="t('result.see_correction')"
                   icon="pi pi-eye"
                   size="small"
@@ -494,7 +514,10 @@
               </div>
 
               <!-- Oral -->
-              <div v-if="!isSingleModule" class="px-5 py-4 flex items-center gap-3">
+              <div
+                v-if="!isSingleModule"
+                class="px-5 py-4 flex items-center gap-3"
+              >
                 <div
                   class="w-10 h-10 rounded-leaf bg-card-2 border border-line flex items-center justify-center shrink-0"
                 >
@@ -520,7 +543,12 @@
 
           <!-- Pourquoi non réussi -->
           <div
-            v-if="result.passed === false && (weakModules.length || (totals.percent != null && totals.percent < passPct))"
+            v-if="
+              !isTelcGuidance &&
+              result.passed === false &&
+              (weakModules.length ||
+                (totals.percent != null && totals.percent < passPct))
+            "
             class="flex items-start gap-3 rounded-card border border-amber-500/30 bg-amber-500/5 px-5 py-4"
           >
             <i class="pi pi-info-circle text-amber-600 mt-0.5 shrink-0"></i>
@@ -600,12 +628,30 @@ const loading = ref(true);
 const result = ref<SessionResultResponse | null>(null);
 const expandedModules = ref<Set<string>>(new Set());
 
+// telc : verdict sur l'écrit entier seulement (telc_written_passed / _failed),
+// repère sans verdict pour un module seul ou une sélection (telc_written_guidance)
+const messageKey = computed<string | null>(
+  () => (result.value as any)?.result_message_key ?? null,
+);
+const messageParams = computed<Record<string, any>>(
+  () => (result.value as any)?.result_message_params ?? {},
+);
+const isTelcWritten = computed(
+  () => !!messageKey.value?.startsWith("telc_written"),
+);
+const isTelcGuidance = computed(
+  () => messageKey.value === "telc_written_guidance",
+);
+
 // Message traduit à partir de la clé du backend ; à défaut, le texte reçu
 const resultMessage = computed(() => {
   const r: any = result.value;
   if (!r) return "";
   if (r.result_message_key) {
-    return t(`result.messages.${r.result_message_key}`, r.result_message_params ?? {});
+    return t(
+      `result.messages.${r.result_message_key}`,
+      r.result_message_params ?? {},
+    );
   }
   return r.result_message ?? "";
 });
@@ -624,7 +670,10 @@ const moduleSlugs = computed(
 );
 
 const isSingleModule = computed(
-  () => !!moduleSlug.value || !!moduleSlugs.value || !!result.value?.module_slugs?.length,
+  () =>
+    !!moduleSlug.value ||
+    !!moduleSlugs.value ||
+    !!result.value?.module_slugs?.length,
 );
 
 const displayedModules = computed<ModuleResultResponse[]>(() => {
@@ -716,7 +765,13 @@ const totals = computed(() => {
   return { got, max, complete, percent };
 });
 
-const passPct = computed(() => result.value?.total_pass_score || 60);
+// total_pass_score peut être stocké en % (60) ou en points (135 pour telc) : ramené en %
+const passPct = computed(() => {
+  const v = result.value?.total_pass_score || 60;
+  if (v <= 100) return v;
+  const writtenMax = Number(messageParams.value.max) || totals.value.max;
+  return writtenMax > 0 ? Math.round((v / writtenMax) * 100) : 60;
+});
 const passPoints = computed(() => (totals.value.max * passPct.value) / 100);
 
 const barColor = (pct: number | null) =>
@@ -743,7 +798,7 @@ const isPassed = computed<boolean | null>(() => {
       isSchreiben(only) &&
       correctionStore.current
     ) {
-      return correctionStore.current.passed;
+      return correctionStore.current.passed ?? null;
     }
     return result.value.module_passed ?? null;
   }
@@ -751,6 +806,19 @@ const isPassed = computed<boolean | null>(() => {
 });
 
 const status = computed(() => {
+  // telc module seul / sélection : pas de verdict, couleur selon le repère des 60 %
+  if (isTelcGuidance.value && result.value?.status === "COMPLETED") {
+    const ahead = (totals.value.percent ?? 0) >= 60;
+    return {
+      title: t("result.written_guidance_title"),
+      icon: ahead ? "pi-arrow-up-right" : "pi-arrow-down-right",
+      bar: ahead ? "bg-emerald-500" : "bg-amber-500",
+      chip: ahead
+        ? "bg-emerald-500/10 text-emerald-600"
+        : "bg-amber-500/10 text-amber-600",
+      ring: ahead ? "text-emerald-500" : "text-amber-500",
+    };
+  }
   const pending =
     result.value?.status === "PENDING_REVIEW" || isPassed.value === null;
   if (pending) {
@@ -764,7 +832,9 @@ const status = computed(() => {
   }
   if (isPassed.value) {
     return {
-      title: t("result.passed"),
+      title: isTelcWritten.value
+        ? t("result.written_passed")
+        : t("result.passed"),
       icon: "pi-check-circle",
       bar: "bg-emerald-500",
       chip: "bg-emerald-500/10 text-emerald-600",
@@ -772,7 +842,9 @@ const status = computed(() => {
     };
   }
   return {
-    title: t("result.failed"),
+    title: isTelcWritten.value
+      ? t("result.written_failed")
+      : t("result.failed"),
     icon: "pi-times-circle",
     bar: "bg-red-500",
     chip: "bg-red-500/10 text-red-500",
@@ -796,10 +868,12 @@ const answerFilter = ref<AnswerFilter>("all");
 // { answer: "Wort", index: 12 } (TestDaF Hören 7), { answers: { col: [...] } } (ÖSD)
 const showAnswer = (value: any): string => {
   if (value == null) return "";
-  if (Array.isArray(value)) return value.map(showAnswer).filter(Boolean).join(", ");
+  if (Array.isArray(value))
+    return value.map(showAnswer).filter(Boolean).join(", ");
   if (typeof value === "object") {
     if ("answer" in value) return showAnswer(value.answer);
-    if ("answers" in value) return showAnswer(Object.values(value.answers ?? {}));
+    if ("answers" in value)
+      return showAnswer(Object.values(value.answers ?? {}));
     if ("text" in value) return showAnswer(value.text);
     return Object.values(value).map(showAnswer).filter(Boolean).join(", ");
   }
@@ -817,7 +891,10 @@ const teilStats = (teil: any) => {
 
 const teilPercent = (teil: any) =>
   teil.max_score
-    ? Math.min(100, Math.round(((teil.score_obtained ?? 0) / teil.max_score) * 100))
+    ? Math.min(
+        100,
+        Math.round(((teil.score_obtained ?? 0) / teil.max_score) * 100),
+      )
     : 0;
 
 const moduleStats = (module: any) =>
@@ -842,15 +919,29 @@ const answerCounts = computed(() => ({
 }));
 
 const answerFilters = computed(() => [
-  { value: "all" as const, label: t("result.filter_all"), count: answerCounts.value.total },
-  { value: "wrong" as const, label: t("result.filter_wrong"), count: answerCounts.value.wrong },
-  { value: "right" as const, label: t("result.filter_right"), count: answerCounts.value.right },
+  {
+    value: "all" as const,
+    label: t("result.filter_all"),
+    count: answerCounts.value.total,
+  },
+  {
+    value: "wrong" as const,
+    label: t("result.filter_wrong"),
+    count: answerCounts.value.wrong,
+  },
+  {
+    value: "right" as const,
+    label: t("result.filter_right"),
+    count: answerCounts.value.right,
+  },
 ]);
 
 const filteredAnswers = (teil: any): any[] => {
   const answers: any[] = teil.answers ?? [];
-  if (answerFilter.value === "wrong") return answers.filter((a) => a.is_correct === false);
-  if (answerFilter.value === "right") return answers.filter((a) => a.is_correct === true);
+  if (answerFilter.value === "wrong")
+    return answers.filter((a) => a.is_correct === false);
+  if (answerFilter.value === "right")
+    return answers.filter((a) => a.is_correct === true);
   return answers;
 };
 

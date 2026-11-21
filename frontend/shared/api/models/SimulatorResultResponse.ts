@@ -10,7 +10,7 @@ export type SimulatorResultResponse = {
     level: string;
     overall_score: number;
     max_score: number;
-    passed: boolean;
+    passed?: (boolean | null);
     score_percentage: number;
     result_data: Record<string, any>;
     created_at: string;

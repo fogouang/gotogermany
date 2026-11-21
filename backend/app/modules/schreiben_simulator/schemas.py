@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 from pydantic import BaseModel, Field, ConfigDict
+from app.modules.corrections.schemas import WrittenPartGuidance
 
 
 # ─────────────────────────────────────────────────────────
@@ -124,6 +125,7 @@ class CriterionScore(BaseModel):
     score: float
     max_score: float
     feedback: str = ""
+    grade: str | None = None            # telc : A (15) / B (9) / C (3) / D (0)
 
 
 class SubCriterionScore(BaseModel):
@@ -158,13 +160,16 @@ class SimulatorCorrectResponse(BaseModel):
     level: str
     overall_score: float
     max_score: float
-    passed: bool
+    # None pour telc : le Schreiben n'a pas de réussite isolée (règle 135/225 sur l'écrit entier)
+    passed: bool | None = None
     score_percentage: float
     appreciation: str
 
     # ÖSD B2 uniquement : vrai plancher officiel, distinct de `passed`
     # (repère interne à 60%, cf. osd_b2_prompt.py). None pour les autres examens.
     floor_reached: bool | None = None
+    # telc uniquement : repère pédagogique à la place d'un verdict isolé
+    guidance: WrittenPartGuidance | None = None
 
     criteria: list[CriterionScore]
     tasks: list[TaskFeedback]
@@ -184,7 +189,7 @@ class SimulatorResultResponse(BaseModel):
     level: str
     overall_score: float
     max_score: float
-    passed: bool
+    passed: bool | None = None
     score_percentage: float
     # Contient désormais directement la forme normalisée (criteria/tasks/...),
     # produite par response_normalizer au moment de la correction et persistée

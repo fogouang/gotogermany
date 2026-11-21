@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { app__modules__schreiben_simulator__schemas__CriterionScore } from './app__modules__schreiben_simulator__schemas__CriterionScore';
 import type { app__modules__schreiben_simulator__schemas__TaskFeedback } from './app__modules__schreiben_simulator__schemas__TaskFeedback';
+import type { WrittenPartGuidance } from './WrittenPartGuidance';
 /**
  * Réutilise exactement le même contrat que corrections.schemas.CorrectionResponse
  * (criteria/tasks génériques, produits par response_normalizer), moins id/session_id
@@ -15,10 +16,11 @@ export type SimulatorCorrectResponse = {
     level: string;
     overall_score: number;
     max_score: number;
-    passed: boolean;
+    passed?: (boolean | null);
     score_percentage: number;
     appreciation: string;
     floor_reached?: (boolean | null);
+    guidance?: (WrittenPartGuidance | null);
     criteria: Array<app__modules__schreiben_simulator__schemas__CriterionScore>;
     tasks: Array<app__modules__schreiben_simulator__schemas__TaskFeedback>;
     corrections_list: Array<Record<string, any>>;

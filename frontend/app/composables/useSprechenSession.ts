@@ -62,6 +62,10 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
   const currentTeil: Ref<TeilStartedEvent | null> = shallowRef(null);
   const preparationInfo: Ref<PreparationStartedEvent | null> = shallowRef(null);
   const micState: Ref<SprechenMicState> = ref(null);
+  /** Rôle de l'IA pour le tour en cours ("examiner", "partner",
+   * "presenter", "assigned_position") : alimente le badge de la page.
+   * Garde la dernière valeur pendant que l'élève parle. */
+  const agentRole = ref<string | null>(null);
   const transcript: Ref<TranscriptLine[]> = ref([]);
   const gradingResult: Ref<GradingResultMessage | null> = shallowRef(null);
   const errorMessage = ref<string | null>(null);
@@ -113,6 +117,7 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
 
       case "agent_speaking":
         micState.value = "agent_speaking";
+        agentRole.value = msg.agent_role ?? null;
         options.audioIO.stopCapture();
         break;
 
@@ -138,9 +143,16 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
 
       case "session_ended":
         sessionEndedCleanly = true;
-        status.value = "ended";
         micState.value = null;
         options.audioIO.stopCapture();
+        if (msg.reason === "error") {
+          // Échec de connexion à l'examinatrice : pas de correction à
+          // attendre, crédits déjà rendus par le backend.
+          status.value = "error";
+          errorMessage.value = null;
+        } else {
+          status.value = "ended";
+        }
         break;
 
       case "grading_result":
@@ -158,6 +170,7 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     status.value = "connecting";
     errorMessage.value = null;
     errorCode.value = null;
+    agentRole.value = null;
     sessionEndedCleanly = false;
 
     const socket = createWs(`${options.wsBaseUrl}/ws/${options.subjectId}`);
@@ -246,6 +259,7 @@ export function useSprechenSession(options: UseSprechenSessionOptions) {
     currentTeil,
     preparationInfo,
     micState,
+    agentRole,
     transcript,
     gradingResult,
     errorMessage,

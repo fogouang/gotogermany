@@ -14,6 +14,10 @@ Le texte original du candidat (tasks[].original_text) n'est pas stocké dans
 la correction : il est relu depuis les réponses free_text de la session à
 chaque lecture (_to_response_with_originals), ce qui couvre aussi les
 corrections enregistrées avant cet ajout.
+
+telc : le Schreiben n'a pas de verdict isolé (passed = None). La réponse porte
+à la place la lettre telc de chaque critère (A/B/C/D) et un repère `guidance`
+sur la partie écrite (135/225), calculés à la lecture.
 """
 from __future__ import annotations
 import uuid
@@ -28,6 +32,7 @@ from app.modules.corrections.schemas import (
     CorrectionResponse,
     CorrectionPayload,
     TaskPayload,
+    WrittenPartGuidance,
 )
 from app.modules.corrections.repository import CorrectionRepository
 from app.modules.corrections.ai_providers.gemini import GeminiProvider
@@ -53,11 +58,48 @@ logger = logging.getLogger(__name__)
 # "nested" = Goethe B2 / Goethe-ÖSD B1, "flat" = telc B1/B2, "osd_b2" = ÖSD B2).
 _REQUIRED_FIELDS_BY_SHAPE = {
     "nested": {"global_assessment", "criteria_scores", "task_feedbacks"},
-    "flat": {"overall_score", "passed"},
+    "flat": {"overall_score"},
     "osd_b2": {"global_assessment", "task1", "task2"},
     "ecl": {"global_assessment", "task1", "task2"},
     "testdaf": {"global_assessment", "task1", "task2"},
 }
+
+# Examens où le module Schreiben n'a pas de verdict propre : la réussite se
+# calcule sur la partie écrite entière (telc : 135/225 avec compensation).
+_NO_MODULE_VERDICT_PROVIDERS = {"telc"}
+
+# Partie écrite telc B1/B2 : Lesen + Sprachbausteine + Hören + Schreiben
+TELC_WRITTEN_MAX = 225
+TELC_WRITTEN_PASS = 135
+TELC_PASS_RATIO = 0.6
+
+
+def _telc_grade(score: float) -> str:
+    """Lettre telc d'un critère noté 15 / 9 / 3 / 0."""
+    if score >= 15:
+        return "A"
+    if score >= 9:
+        return "B"
+    if score >= 3:
+        return "C"
+    return "D"
+
+
+def _telc_written_guidance(score: float, max_score: float) -> WrittenPartGuidance:
+    """Repère pédagogique : ce que le score Schreiben demande aux autres épreuves écrites."""
+    other_max = TELC_WRITTEN_MAX - int(max_score)
+    needed = max(0.0, TELC_WRITTEN_PASS - score)
+    return WrittenPartGuidance(
+        written_max=TELC_WRITTEN_MAX,
+        written_pass=TELC_WRITTEN_PASS,
+        module_score=score,
+        module_max=max_score,
+        other_modules_max=other_max,
+        needed_from_other_modules=needed,
+        needed_percentage=round(needed / other_max * 100, 1) if other_max else 0.0,
+        status="ahead" if max_score and score / max_score >= TELC_PASS_RATIO else "behind",
+    )
+
 
 def _stimulus_text(raw) -> str:
     """Message de forum / annonce : str ou {title, text, author}."""
@@ -235,7 +277,13 @@ class CorrectionService:
         self._validate_ai_result(ai_result, provider, level)
 
         # 8. Persister
+        if provider in _NO_MODULE_VERDICT_PROVIDERS:
+            ai_result.setdefault("passed", False)  # valeur provisoire pour le normalizer, effacée juste après
         correction = await self.repo.create(payload, ai_result)
+        if provider in _NO_MODULE_VERDICT_PROVIDERS:
+            # telc : pas de réussite isolée du Schreiben (règle 135/225 sur l'écrit entier)
+            correction.passed = None
+            await self.db.flush()
 
         # 9. Mettre à jour le score_breakdown de la session
         await self._update_session_score(session, correction)
@@ -467,6 +515,12 @@ class CorrectionService:
 # ─────────────────────────────────────────────────────────
 
 def _to_response(correction: Correction) -> CorrectionResponse:
+    criteria = correction.criteria
+    guidance = None
+    if correction.provider in _NO_MODULE_VERDICT_PROVIDERS:
+        criteria = [{**c, "grade": _telc_grade(float(c.get("score", 0)))} for c in criteria]
+        guidance = _telc_written_guidance(float(correction.overall_score), float(correction.max_score))
+
     return CorrectionResponse(
         id=correction.id,
         session_id=correction.session_id,
@@ -478,7 +532,8 @@ def _to_response(correction: Correction) -> CorrectionResponse:
         score_percentage=correction.score_percentage,
         appreciation=correction.appreciation,
         floor_reached=correction.floor_reached,
-        criteria=correction.criteria,
+        guidance=guidance,
+        criteria=criteria,
         tasks=correction.tasks,
         corrections_list=correction.corrections_list,
         suggestions=correction.suggestions,

@@ -161,7 +161,7 @@
                     cy="28"
                     r="22"
                     fill="none"
-                    :class="group.latest.passed ? 'stroke-emerald-500' : 'stroke-orange-500'"
+                    :class="isPositive(group.latest) ? 'stroke-emerald-500' : 'stroke-orange-500'"
                     stroke-width="6"
                     stroke-linecap="round"
                     :stroke-dasharray="`${(group.latest.score_percentage / 100) * 138} 138`"
@@ -182,9 +182,16 @@
                 <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
                   <Tag :value="group.provider.toUpperCase()" :class="['text-xs', providerTagClass(group.provider)]" />
                   <Tag :value="group.level.toUpperCase()" severity="info" />
+                  <!-- telc : pas de verdict isolé, repère sur la partie écrite -->
                   <Tag
+                    v-if="hasVerdict(group.latest)"
                     :value="group.latest.passed ? t('simulator.passed') : t('simulator.not_passed')"
                     :severity="group.latest.passed ? 'success' : 'danger'"
+                  />
+                  <Tag
+                    v-else
+                    :value="isPositive(group.latest) ? t('simulator.written_ahead') : t('simulator.written_behind')"
+                    :severity="isPositive(group.latest) ? 'success' : 'warn'"
                   />
                 </div>
                 <p class="mt-1.5 text-xs text-muted">
@@ -208,11 +215,19 @@
                   />
                 </div>
                 <span class="w-10 shrink-0 text-right text-xs tabular-nums text-muted">{{ c.score }}/{{ c.max }}</span>
+                <!-- telc : lettre officielle du critère -->
+                <span
+                  v-if="c.grade"
+                  class="w-5 shrink-0 text-center text-xs font-bold"
+                  :class="c.pct >= 70 ? 'text-emerald-600' : c.pct >= 50 ? 'text-orange-600' : 'text-red-600'"
+                >
+                  {{ c.grade }}
+                </span>
               </div>
             </div>
 
             <div class="flex w-full items-center justify-between pt-1">
-              <span class="text-xs font-bold" :class="group.latest.passed ? 'text-emerald-600' : 'text-orange-600'">
+              <span class="text-xs font-bold" :class="isPositive(group.latest) ? 'text-emerald-600' : 'text-orange-600'">
                 {{ group.latest.overall_score }} / {{ group.latest.max_score }} pts
               </span>
               <button
@@ -255,7 +270,15 @@
                     </span>
                     <i
                       class="pi text-[10px]"
-                      :class="attempt.passed ? 'pi-check text-emerald-600' : 'pi-times text-orange-600'"
+                      :class="
+                        !hasVerdict(attempt)
+                          ? isPositive(attempt)
+                            ? 'pi-arrow-up text-emerald-600'
+                            : 'pi-arrow-down text-orange-600'
+                          : attempt.passed
+                            ? 'pi-check text-emerald-600'
+                            : 'pi-times text-orange-600'
+                      "
                     />
                     <button
                       type="button"
@@ -453,6 +476,7 @@ const criteriaList = (result: SimulatorResultResponse) => {
     score: number;
     max_score: number;
     feedback?: string;
+    grade?: string | null;
   }>;
 
   return criteria.map((c) => ({
@@ -461,7 +485,19 @@ const criteriaList = (result: SimulatorResultResponse) => {
     score: c.score,
     max: c.max_score,
     pct: c.max_score ? Math.round((c.score / c.max_score) * 100) : 0,
+    grade: c.grade ?? null,
   }));
+};
+
+// telc : passed = null, le Schreiben n'a pas de verdict isolé (règle 135/225 sur l'écrit entier)
+const hasVerdict = (r: SimulatorResultResponse) => r.passed !== null && r.passed !== undefined;
+
+// Positif = verdict réussi, ou (telc) Schreiben qui aide la partie écrite.
+// Anciens résultats telc sans `guidance` : même règle que le backend (60 %).
+const isPositive = (r: SimulatorResultResponse) => {
+  if (hasVerdict(r)) return !!r.passed;
+  const status = (r.result_data as any)?.guidance?.status;
+  return status ? status === "ahead" : r.score_percentage >= 60;
 };
 
 const formatDate = (d: string) =>

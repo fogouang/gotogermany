@@ -12,23 +12,23 @@
 // ── Inbound: frontend -> backend (sent as WebSocket text frames) ──
 
 export interface AudioChunkMessage {
-  type: 'audio_chunk';
+  type: "audio_chunk";
   session_id: string;
   sequence_number: number;
 }
 
 export interface EndTurnMessage {
-  type: 'end_turn';
+  type: "end_turn";
   session_id: string;
 }
 
 export interface AbandonSessionMessage {
-  type: 'abandon_session';
+  type: "abandon_session";
   session_id: string;
 }
 
 export interface ReadyToStartMessage {
-  type: 'ready_to_start';
+  type: "ready_to_start";
   session_id: string;
 }
 
@@ -42,7 +42,7 @@ export type InboundMessage =
 //    binary frames carry raw PCM16 audio and aren't typed here) ──
 
 export interface SessionReadyEvent {
-  type: 'session_ready';
+  type: "session_ready";
   session_id: string;
   total_teile: number;
   first_teil_name: string;
@@ -57,7 +57,7 @@ export interface StimulusPerson {
 }
 
 export interface PreparationStartedEvent {
-  type: 'preparation_started';
+  type: "preparation_started";
   session_id: string;
   teil_number: number;
   teil_name: string;
@@ -76,7 +76,7 @@ export interface PreparationStartedEvent {
 }
 
 export interface TeilStartedEvent {
-  type: 'teil_started';
+  type: "teil_started";
   session_id: string;
   teil_number: number;
   teil_name: string;
@@ -103,26 +103,29 @@ export interface ThemeOption {
 }
 
 export interface AgentSpeakingEvent {
-  type: 'agent_speaking';
+  type: "agent_speaking";
   session_id: string;
+  // Rôle de l'IA pour ce tour ("examiner", "partner", "presenter",
+  // "assigned_position") : alimente le badge de la page Sprechen.
+  agent_role?: string | null;
 }
 
 export interface StudentTurnEvent {
-  type: 'student_turn';
+  type: "student_turn";
   session_id: string;
 }
 
 export interface TranscriptUpdateEvent {
-  type: 'transcript_update';
+  type: "transcript_update";
   session_id: string;
-  speaker: 'student' | 'agent';
+  speaker: "student" | "agent";
   text: string;
 }
 
 export interface SessionEndedEvent {
-  type: 'session_ended';
+  type: "session_ended";
   session_id: string;
-  reason: 'completed' | 'abandoned' | 'error';
+  reason: "completed" | "abandoned" | "error";
 }
 
 export type OutboundEvent =
@@ -155,7 +158,7 @@ export interface TeilGradingOut {
 }
 
 export interface GradingResultMessage {
-  type: 'grading_result';
+  type: "grading_result";
   session_id: string;
   provider: string;
   level: string;
@@ -173,7 +176,7 @@ export interface GradingResultMessage {
 // ── Type guard helper, since every message arrives as unknown JSON ──
 
 export function parseOutboundMessage(
-  raw: string
+  raw: string,
 ): OutboundEvent | GradingResultMessage {
   return JSON.parse(raw) as OutboundEvent | GradingResultMessage;
 }

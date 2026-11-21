@@ -11,5 +11,6 @@ export type app__modules__corrections__schemas__CriterionScore = {
     score: number;
     max_score: number;
     feedback?: string;
+    grade?: (string | null);
 };
 

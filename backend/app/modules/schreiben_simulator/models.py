@@ -80,7 +80,7 @@ class SimulatorResult(Base, UUIDMixin, TimestampMixin):
     level:            Mapped[str]   = mapped_column(String(5),  nullable=False)
     overall_score:    Mapped[int]   = mapped_column(Integer,    default=0)
     max_score:        Mapped[int]   = mapped_column(Integer,    default=0)
-    passed:           Mapped[bool]  = mapped_column(Boolean,    default=False)
+    passed:           Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
     score_percentage: Mapped[float] = mapped_column(Float,      default=0.0)
     result_data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 

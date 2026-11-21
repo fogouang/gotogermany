@@ -21,7 +21,7 @@
       <!-- ══ Score ══ (couleur pleine voulue : lisible en clair et en sombre) -->
       <section
         class="overflow-hidden rounded-card"
-        :class="correction.passed ? 'bg-emerald-600' : 'bg-orange-500'"
+        :class="headerPositive ? 'bg-emerald-600' : 'bg-orange-500'"
       >
         <div class="flex items-start justify-between gap-4 px-6 pb-4 pt-6">
           <div>
@@ -31,7 +31,16 @@
               {{ correction.provider.toUpperCase() }} ·
               {{ correction.level.toUpperCase() }}
             </p>
-            <h1 class="text-2xl font-bold text-white">
+            <!-- telc : pas de verdict isolé pour le Schreiben, seulement le score -->
+            <h1 v-if="guidance" class="text-2xl font-bold text-white">
+              {{
+                t("simulator_result.guidance.title", {
+                  score: fmt(correction.overall_score),
+                  max: fmt(correction.max_score),
+                })
+              }}
+            </h1>
+            <h1 v-else class="text-2xl font-bold text-white">
               {{
                 correction.passed
                   ? t("simulator.passed")
@@ -115,6 +124,64 @@
         </div>
       </section>
 
+      <!-- ══ Repère telc : place du Schreiben dans la partie écrite ══ -->
+      <section
+        v-if="guidance"
+        class="rounded-card border p-5"
+        :class="
+          guidance.status === 'ahead'
+            ? 'border-emerald-500/30 bg-emerald-500/10'
+            : 'border-orange-500/30 bg-orange-500/10'
+        "
+      >
+        <div class="flex items-start gap-3">
+          <i
+            class="pi mt-0.5 text-lg"
+            :class="
+              guidance.status === 'ahead'
+                ? 'pi-check-circle text-emerald-600'
+                : 'pi-exclamation-triangle text-orange-600'
+            "
+          />
+          <div class="min-w-0 flex-1 space-y-3">
+            <p class="text-sm font-semibold text-ink">
+              {{
+                t(`simulator_result.guidance.${guidance.status}`, {
+                  needed: fmt(guidance.needed_from_other_modules),
+                  other: guidance.other_modules_max,
+                  pct: Math.round(guidance.needed_percentage),
+                })
+              }}
+            </p>
+            <!-- Jauge : part du Schreiben dans les 135 points requis -->
+            <div>
+              <div class="h-2 w-full overflow-hidden rounded-full bg-card-2">
+                <div
+                  class="h-2 rounded-full bg-primary"
+                  :style="{ width: `${writtenShare}%` }"
+                />
+              </div>
+              <p class="mt-1 text-xs tabular-nums text-muted">
+                {{
+                  t("simulator_result.guidance.gauge", {
+                    score: fmt(guidance.module_score),
+                    pass: guidance.written_pass,
+                  })
+                }}
+              </p>
+            </div>
+            <p class="text-xs leading-relaxed text-muted">
+              {{
+                t("simulator_result.guidance.rule", {
+                  pass: guidance.written_pass,
+                  max: guidance.written_max,
+                })
+              }}
+            </p>
+          </div>
+        </div>
+      </section>
+
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <!-- ══ Colonne gauche : critères, conseils, corrections ══ -->
         <div class="space-y-5 lg:col-span-1">
@@ -144,7 +211,17 @@
                     <span class="text-xs tabular-nums text-faint"
                       >{{ c.score }}/{{ c.maxScore }}</span
                     >
+                    <!-- telc : lettre officielle A/B/C/D au lieu du pourcentage -->
                     <span
+                      v-if="gradeByKey[c.key]"
+                      :title="t(`simulator_result.grades.${gradeByKey[c.key]}`)"
+                      class="rounded-full px-2 py-0.5 text-xs font-bold"
+                      :class="ratioBadge(c.score, c.maxScore)"
+                    >
+                      {{ gradeByKey[c.key] }}
+                    </span>
+                    <span
+                      v-else
                       class="rounded-full px-2 py-0.5 text-xs font-bold"
                       :class="ratioBadge(c.score, c.maxScore)"
                     >
@@ -166,6 +243,13 @@
                 </p>
               </div>
             </div>
+            <!-- Légende des lettres telc -->
+            <p
+              v-if="guidance"
+              class="border-t border-line px-5 py-3 text-xs leading-relaxed text-faint"
+            >
+              {{ t("simulator_result.grades.legend") }}
+            </p>
           </section>
 
           <!-- Conseils -->
@@ -428,6 +512,46 @@ const activeTaskTab = ref<string>(store.taskList?.[0]?.key ?? "");
 const isDev = import.meta.dev;
 const USD_TO_FCFA = 600; // taux approximatif, pour un ordre de grandeur
 const aiUsage = computed(() => (correction.value as any)?.ai_usage ?? null);
+
+// telc : pas de verdict isolé (passed = null), repère sur la partie écrite à la place
+interface WrittenPartGuidance {
+  written_max: number;
+  written_pass: number;
+  module_score: number;
+  module_max: number;
+  other_modules_max: number;
+  needed_from_other_modules: number;
+  needed_percentage: number;
+  status: "ahead" | "behind";
+}
+const guidance = computed<WrittenPartGuidance | null>(
+  () => (correction.value as any)?.guidance ?? null,
+);
+
+// Lettre telc par critère (A/B/C/D), lue directement dans la réponse
+const gradeByKey = computed<Record<string, string>>(() =>
+  Object.fromEntries(
+    ((correction.value as any)?.criteria ?? [])
+      .filter((c: any) => c.grade)
+      .map((c: any) => [c.key, c.grade]),
+  ),
+);
+
+// Couleur de l'en-tête : repère telc si présent, sinon verdict classique
+const headerPositive = computed(() =>
+  guidance.value
+    ? guidance.value.status === "ahead"
+    : !!correction.value?.passed,
+);
+
+// Part du Schreiben dans les points requis pour valider l'écrit
+const writtenShare = computed(() => {
+  const g = guidance.value;
+  if (!g || !g.written_pass) return 0;
+  return Math.min(100, (g.module_score / g.written_pass) * 100);
+});
+
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 const goBack = () =>
   router.push(localePath(`/dashboard/simulateur/${subjectId}`));

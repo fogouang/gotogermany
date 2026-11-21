@@ -128,6 +128,7 @@ class GeminiLiveSegment(LiveSegment):
         system_prompt: str,
         *,
         api_key: str,
+        voice_name: str | None = None,
         timeout_seconds: float = DEFAULT_HANDSHAKE_TIMEOUT_SECONDS,
     ) -> "GeminiLiveSegment":
         url = f"{GEMINI_WS_URL}?key={api_key}"
@@ -136,10 +137,18 @@ class GeminiLiveSegment(LiveSegment):
         except Exception as exc:  # noqa: BLE001 — any connect failure -> caller falls back
             raise LiveConnectionError(f"Gemini Live connect failed: {exc}") from exc
 
+        generation_config: dict = {"responseModalities": ["AUDIO"]}
+        if voice_name:
+            # Voix fixe par rôle (évaluateur / partenaire) : sans elle,
+            # chaque segment pouvait partir sur une voix différente.
+            generation_config["speechConfig"] = {
+                "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice_name}}
+            }
+
         setup_message = {
             "setup": {
                 "model": f"models/{GEMINI_MODEL}",
-                "generationConfig": {"responseModalities": ["AUDIO"]},
+                "generationConfig": generation_config,
                 "systemInstruction": {"parts": [{"text": system_prompt}]},
                 # Get text transcripts of both sides without a separate
                 # STT pass — cheap relative to the audio tokens anyway.
@@ -334,6 +343,7 @@ async def _open_segment_once(
     gemini_api_key: str,
     openai_api_key: str,
     preferred_provider: str,
+    voice_name: str | None = None,
 ) -> LiveSegment:
     """Une seule tentative : Gemini d'abord (après health check), puis
     OpenAI en secours si Gemini échoue ET qu'une clé de secours est
@@ -343,7 +353,9 @@ async def _open_segment_once(
 
     if preferred_provider == "gemini" and await _gemini_reachable(gemini_api_key):
         try:
-            return await GeminiLiveSegment.open(system_prompt, api_key=gemini_api_key)
+            return await GeminiLiveSegment.open(
+                system_prompt, api_key=gemini_api_key, voice_name=voice_name
+            )
         except LiveConnectionError as exc:
             gemini_error = exc
 
@@ -362,6 +374,7 @@ async def open_segment(
     openai_api_key: str,
     preferred_provider: str = "gemini",
     max_attempts: int = LIVE_SEGMENT_CONNECT_ATTEMPTS,
+    voice_name: str | None = None,
 ) -> LiveSegment:
     """Ouvre un segment Live, en retentant avec un court backoff avant
     d'abandonner. Un simple accroc réseau de quelques secondes se
@@ -378,6 +391,7 @@ async def open_segment(
                 gemini_api_key=gemini_api_key,
                 openai_api_key=openai_api_key,
                 preferred_provider=preferred_provider,
+                voice_name=voice_name,
             )
         except LiveConnectionError as exc:
             last_error = exc

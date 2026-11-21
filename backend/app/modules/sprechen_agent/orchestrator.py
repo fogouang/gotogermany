@@ -175,15 +175,27 @@ def _merge_monologue_feedback_pair(
     a kandidat_a/kandidat_b split, so mapping.py's existing alternating-
     sequence builder picks it up unchanged — no new sequence logic
     needed, just the right shape of input data."""
-    themes = monologue_teil.get("themes", {})
+    themes = _normalize_themes(monologue_teil.get("themes")) or {}
     theme_keys = sorted(themes.keys())
-    # Kandidat A (the real student) picks freely at runtime, whatever
-    # they say. Kandidat B (the AI) is deterministically assigned the
-    # LAST theme in the shared pool as a stable default — with only
-    # two themes this just means "the other one" without needing to
-    # know in advance which one the student will actually choose.
-    kandidat_b_key = theme_keys[-1] if theme_keys else None
-    kandidat_b = {kandidat_b_key: themes[kandidat_b_key]} if kandidat_b_key else {}
+
+    # Thèmes marqués "kandidat": "A" / "B" (Goethe B1) : l'élève (A) ne
+    # voit que les siens, l'IA (B) présente le sien. Sans marquage, on
+    # garde l'ancien comportement ci-dessous.
+    a_keys = [k for k in theme_keys if str((themes[k] or {}).get("kandidat", "")).upper() == "A"]
+    b_keys = [k for k in theme_keys if str((themes[k] or {}).get("kandidat", "")).upper() == "B"]
+
+    if a_keys and b_keys:
+        student_themes = {k: themes[k] for k in a_keys}
+        kandidat_b = {b_keys[0]: themes[b_keys[0]]}
+    else:
+        # Kandidat A (the real student) picks freely at runtime, whatever
+        # they say. Kandidat B (the AI) is deterministically assigned the
+        # LAST theme in the shared pool as a stable default — with only
+        # two themes this just means "the other one" without needing to
+        # know in advance which one the student will actually choose.
+        student_themes = themes
+        kandidat_b_key = theme_keys[-1] if theme_keys else None
+        kandidat_b = {kandidat_b_key: themes[kandidat_b_key]} if kandidat_b_key else {}
 
     merged_scoring: dict[str, Any] = dict(monologue_teil.get("scoring_criteria", {}))
     for key, value in feedback_teil.get("scoring_criteria", {}).items():
@@ -219,7 +231,7 @@ def _merge_monologue_feedback_pair(
         "instructions": monologue_teil.get("instructions", ""),
         "duration_minutes": _teil_minutes(monologue_teil) + _teil_minutes(feedback_teil),
         "max_score": (monologue_teil.get("max_score") or 0) + (feedback_teil.get("max_score") or 0),
-        "themes": themes,
+        "themes": student_themes,
         "kandidat_a": {},  # presence alone is enough to trigger mapping.py's alternating detector
         "kandidat_b": kandidat_b,
         "scoring_criteria": merged_scoring,
@@ -238,7 +250,13 @@ def _merge_monologue_feedback_pair(
 def _merge_alternating_teil_pairs(
     teile_raw: list[dict[str, Any]], subject_raw: dict[str, Any]
 ) -> list[dict[str, Any]]:
-    if "ablauf_schema" not in subject_raw:
+    # Fusion structurelle : router.load_subject_data() ne transmet pas
+    # ablauf_schema (champ du module, absent de subject_raw), donc on ne
+    # peut pas s'appuyer dessus. On fusionne dès qu'un Teil oral_feedback
+    # existe (Goethe B1 Teil 3) ; le test is_mergeable_pair ci-dessous
+    # reste la vraie condition.
+    has_feedback_teil = any(t.get("format_type") == "oral_feedback" for t in teile_raw)
+    if "ablauf_schema" not in subject_raw and not has_feedback_teil:
         return teile_raw
 
     merged: list[dict[str, Any]] = []
@@ -267,6 +285,21 @@ def _merge_alternating_teil_pairs(
 # ---------------------------------------------------------------------------
 # TeilConfig construction
 # ---------------------------------------------------------------------------
+def _normalize_themes(themes: Any) -> dict[str, Any] | None:
+    """themes peut être stocké en dict {"thema1": {...}} ou en liste
+    (telc B2 : liste de chaînes, ou liste de dicts). Normalise toujours
+    vers le format thema1/thema2 attendu par TeilConfig et le frontend."""
+    if not themes:
+        return None
+    if isinstance(themes, dict):
+        return themes
+    if isinstance(themes, list):
+        return {
+            f"thema{i + 1}": (t if isinstance(t, dict) else {"title": str(t)})
+            for i, t in enumerate(themes)
+        }
+    return None
+
 
 def _resolve_available_themes(teil_raw: dict[str, Any]) -> dict[str, Any] | None:
     """Surfaces free-choice presentation topics to the frontend, no
@@ -280,7 +313,7 @@ def _resolve_available_themes(teil_raw: dict[str, Any]) -> dict[str, Any] | None
     Returns None when the Teil has no theme choice at all (a single
     fixed scenario/prompt list instead)."""
     if "themes" in teil_raw:
-        return teil_raw["themes"]
+        return _normalize_themes(teil_raw["themes"])
 
     kandidat_a = teil_raw.get("kandidat_a")
     if isinstance(kandidat_a, dict) and any(k.startswith("thema") for k in kandidat_a):
@@ -299,13 +332,15 @@ def _resolve_available_themes(teil_raw: dict[str, Any]) -> dict[str, Any] | None
     return None
 
 
-def build_teil_configs(subject_raw: dict[str, Any], provider: str) -> list[TeilConfig]:
+def build_teil_configs(
+    subject_raw: dict[str, Any], provider: str, level: str | None = None
+) -> list[TeilConfig]:
     scoring_system = PROVIDER_SCORING_SYSTEM.get(provider, DEFAULT_SCORING_SYSTEM)
     teile_raw = _merge_alternating_teil_pairs(subject_raw.get("teile", []), subject_raw)
 
     configs: list[TeilConfig] = []
     for teil_raw in teile_raw:
-        sequence = mapping.build_sequence(teil_raw)
+        sequence = mapping.build_sequence(teil_raw, provider=provider, level=level)
         sequence = _finalize_presenter_steps(sequence, teil_raw)
 
         # scenario/stimulus_people: same normalization mapping.py
@@ -355,7 +390,7 @@ def create_session(
     provider: str,
     level: str,
 ) -> SessionState:
-    teile = build_teil_configs(subject_raw, provider)
+    teile = build_teil_configs(subject_raw, provider, level)
     return SessionState(
         student_id=student_id,
         subject_id=subject_id,

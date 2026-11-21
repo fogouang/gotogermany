@@ -693,6 +693,9 @@
     "back_to_exams": "Retour aux examens",
     "subject": "Sujet",
     "passed": "Réussi",
+    "written_passed": "Partie écrite validée",
+    "written_failed": "Partie écrite non validée",
+    "written_guidance_title": "Repère pour l'écrit",
     "failed": "Non réussi",
     "pending": "En attente",
     "min_score": "min",
@@ -728,7 +731,8 @@
       "weak_modules": "À renforcer : {list}",
       "block_detail": "Détail des réponses",
       "teil": "Teil {n}",
-      "no_answer": "Aucune réponse donnée dans cette partie."
+      "no_answer": "Aucune réponse donnée dans cette partie.",
+      "written_threshold": "Pour valider l'écrit : {pass}/{max} pts"
     },
     "messages": {
       "module_passed": "Excellent ! Vous avez réussi le module {module} avec {score}.",
@@ -740,7 +744,10 @@
       "partial_pending": "Résultat partiel, certaines parties sont en attente de correction.",
       "tdn_levels": "Niveaux estimés : {levels}. Les seuils officiels varient légèrement selon la session.",
       "assignment_graded": "Devoir rendu et noté. Retrouvez votre note finale dans vos devoirs.",
-      "assignment_submitted": "Devoir rendu. Votre enseignant va le corriger : votre note apparaîtra dans vos devoirs."
+      "assignment_submitted": "Devoir rendu. Votre enseignant va le corriger : votre note apparaîtra dans vos devoirs.",
+      "telc_written_passed": "Partie écrite validée : {score}/{max} (minimum {pass}). Il vous reste l'oral : {oral_pass}/{oral_max} minimum.",
+      "telc_written_failed": "Partie écrite non validée : {score}/{max}. Il faut au moins {pass} points sur l'ensemble de l'écrit, une épreuve faible peut être compensée par les autres.",
+      "telc_written_guidance": "{module_score}/{module_max} sur ce que vous avez passé. Pour valider l'écrit ({pass}/{max}), il vous faut encore {needed}/{other} points ({pct} %) dans les autres épreuves écrites."
     }
   },
   "exam_detail": {
@@ -1019,7 +1026,21 @@
     "redo": "Refaire ce sujet",
     "choose_another": "Choisir un autre sujet",
     "page_title": "Résultats - DeutschTest",
-    "your_text": "Votre texte"
+    "your_text": "Votre texte",
+    "guidance": {
+      "title": "Schreiben : {score}/{max}",
+      "ahead": "Ton Schreiben t'aide : il te reste {needed}/{other} points ({pct} %) à obtenir en Lesen, Sprachbausteine et Hören pour valider l'écrit.",
+      "behind": "Les autres épreuves devront compenser : il te faut {needed}/{other} points ({pct} %) en Lesen, Sprachbausteine et Hören pour valider l'écrit. Travaille d'abord les critères notés C ou D.",
+      "gauge": "Ton Schreiben apporte {score} des {pass} points nécessaires à l'écrit",
+      "rule": "À l'examen telc, le Schreiben n'est pas validé seul : il faut au moins {pass}/{max} points sur toute la partie écrite, et une épreuve faible peut être compensée par les autres."
+    },
+    "grades": {
+      "A": "A : critère pleinement réussi (15 points)",
+      "B": "B : critère réussi en grande partie (9 points)",
+      "C": "C : critère réussi en partie (3 points)",
+      "D": "D : critère insuffisant (0 point)",
+      "legend": "Notes telc : A = 15 · B = 9 · C = 3 · D = 0 points par critère."
+    }
   },
   "simulator_subject": {
     "points_label": "points",
@@ -1195,6 +1216,10 @@
     "view_subject": "Voir le sujet"
   },
   "sprechen_subject": {
+    "role_badge": {
+      "examiner": "Examinateur",
+      "partner": "Partenaire"
+    },
     "call": {
       "examiner_default_name": "Votre examinatrice",
       "examiner_role": "Examinatrice · Sprechen",
@@ -2243,5 +2268,39 @@
         "subtitle": "Vos filleuls et vos commissions"
       }
     }
+  },
+  "testdaf_sprechen": {
+    "page_title": "Sprechen TestDaF",
+    "exit": "Quitter",
+    "task_of": "Aufgabe {n} / {total}",
+    "task_short": "Aufgabe {n}",
+    "intro_title": "Sprechen TestDaF : conditions réelles",
+    "intro_text": "Comme au TestDaF digital, vous passez 7 tâches seul(e) face à l'ordinateur. Chaque réponse est enregistrée puis corrigée à la fin.",
+    "intro_point_timers": "Temps de préparation et de parole imposés : l'enregistrement s'arrête à la fin du temps.",
+    "intro_point_audio": "Vous entendez l'interlocuteur (et parfois un camarade) : activez le son.",
+    "intro_point_chain": "Les 7 tâches s'enchaînent sans pause, comme à l'examen.",
+    "start": "Commencer l'épreuve",
+    "situation_label": "Situation",
+    "task_label": "Aufgabe",
+    "text_label": "Text",
+    "text_hidden": "Le texte n'est plus visible.",
+    "chart_label": "Grafik",
+    "slide_label": "Folie",
+    "phase_grafik": "Regardez le graphique",
+    "phase_listen": "Écoutez",
+    "phase_prep": "Vorbereitungszeit",
+    "phase_question": "Interlocuteur",
+    "phase_speaking": "Sprechzeit : enregistrement",
+    "listening_hint": "Écoutez attentivement.",
+    "prep_hint": "Préparez votre réponse. Vous pouvez prendre des notes sur papier.",
+    "speaking_hint": "Parlez maintenant. Vous pouvez terminer avant la fin du temps.",
+    "done_button": "Fertig",
+    "upload_warning": "Un enregistrement n'a pas pu être envoyé. Vérifiez votre connexion.",
+    "grading_title": "Correction en cours",
+    "grading_subtitle": "Vos 7 réponses sont transcrites puis évaluées. Quelques secondes…",
+    "level_label": "niveau estimé",
+    "mic_error": "Impossible d'accéder au microphone. Autorisez-le puis réessayez.",
+    "start_error": "Impossible de démarrer l'épreuve. Réessayez.",
+    "finish_error": "La correction a échoué. Vos crédits ont été rendus."
   }
 }

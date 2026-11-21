@@ -23,6 +23,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import grading, live_client, orchestrator, prompt_builder, repository, schemas
+from .providers.base import voice_for_role
 from .session_state import GradingResult, SessionState, SessionStatus
 
 # ---------------------------------------------------------------------------
@@ -110,7 +111,10 @@ class SprechenAgentService:
 
         prompt = prompt_builder.build_system_prompt(session, exam_name=session.provider.capitalize())
         segment = await live_client.open_segment(
-            prompt, gemini_api_key=gemini_api_key, openai_api_key=openai_api_key
+            prompt,
+            gemini_api_key=gemini_api_key,
+            openai_api_key=openai_api_key,
+            voice_name=voice_for_role(session.current_step().role),
         )
         session.live_provider = segment.provider
         session.status = SessionStatus.ACTIVE
@@ -204,7 +208,10 @@ class SprechenAgentService:
         a segment here at all."""
         prompt = prompt_builder.build_system_prompt(session)
         segment = await live_client.open_segment(
-            prompt, gemini_api_key=gemini_api_key, openai_api_key=openai_api_key
+            prompt,
+            gemini_api_key=gemini_api_key,
+            openai_api_key=openai_api_key,
+            voice_name=voice_for_role(session.current_step().role),
         )
         session.live_provider = segment.provider
 

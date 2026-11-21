@@ -111,6 +111,9 @@ class TeilStartedEvent(BaseModel):
 class AgentSpeakingEvent(BaseModel):
     type: Literal["agent_speaking"] = "agent_speaking"
     session_id: UUID
+    # Rôle de l'IA pour ce tour ("examiner", "partner", "presenter",
+    # "assigned_position") : alimente le badge dynamique du frontend.
+    agent_role: str | None = None
 
 
 class StudentTurnEvent(BaseModel):

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .session_state import AgentRole, SequenceStep
+from .providers import get_profile
 
 # Roughly 1.5-2 min — validated cost/pedagogy tradeoff for the AI's
 # own presentation when it plays Kandidat B (see prior discussion:
@@ -417,9 +418,25 @@ extract_content_points = _extract_content_points
 content_payload = _content_payload
 
 
-def build_sequence(teil_raw: dict[str, Any]) -> list[SequenceStep]:
+def build_sequence(
+    teil_raw: dict[str, Any],
+    provider: str | None = None,
+    level: str | None = None,
+) -> list[SequenceStep]:
     """Entry point: given a raw Teil dict straight from the DB-stored
-    subject JSON, return the agent's sequence of sub-roles for it."""
+    subject JSON, return the agent's sequence of sub-roles for it.
+
+    Le profil de l'organisme (providers/) est consulté en premier. S'il
+    ne connaît pas ce Teil (ou si l'organisme n'a pas encore de profil),
+    la logique générique ci-dessous s'applique, inchangée."""
+    profile = get_profile(provider)
+    if profile is not None:
+        sequence = profile.build_sequence(
+            teil_raw, level=level or "", content=_content_payload(teil_raw)
+        )
+        if sequence:
+            return sequence
+
     if _has_two_candidate_split(teil_raw):
         return _build_default_alternating_sequence(teil_raw)
     return _build_single_role_sequence(teil_raw)

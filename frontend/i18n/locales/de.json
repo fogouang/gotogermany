@@ -702,6 +702,9 @@
     "back_to_exams": "Zurück zu den Prüfungen",
     "subject": "Modellsatz",
     "passed": "Bestanden",
+    "written_passed": "Schriftliche Prüfung bestanden",
+    "written_failed": "Schriftliche Prüfung nicht bestanden",
+    "written_guidance_title": "Orientierung für die schriftliche Prüfung",
     "failed": "Nicht bestanden",
     "pending": "Ausstehend",
     "min_score": "min.",
@@ -737,19 +740,23 @@
       "weak_modules": "Zu verbessern: {list}",
       "block_detail": "Antworten im Detail",
       "teil": "Teil {n}",
-      "no_answer": "In diesem Teil wurde keine Antwort gegeben."
+      "no_answer": "In diesem Teil wurde keine Antwort gegeben.",
+      "written_threshold": "Zum Bestehen der schriftlichen Prüfung: {pass}/{max} Pkt."
     },
     "messages": {
-      "module_passed": "Sehr gut! Sie haben das Modul {module} mit {score} bestanden.",
-      "module_failed": "Sie haben im Modul {module} die {min} % nicht erreicht ({score}). Üben Sie weiter!",
-      "module_pending": "Das Modul {module} wartet auf die KI-Korrektur.",
+      "module_passed": "Ausgezeichnet! Sie haben das Modul {module} mit {score} bestanden.",
+      "module_failed": "Sie haben im Modul {module} nicht {min} % erreicht ({score}). Üben Sie weiter!",
+      "module_pending": "Modul {module} wartet auf die KI-Korrektur.",
       "exam_passed": "Herzlichen Glückwunsch! Sie haben diese Prüfung bestanden.",
-      "exam_failed_weak": "Punktzahl nicht ausreichend. Diese Module sollten Sie üben: {list}.",
+      "exam_failed_weak": "Punktzahl nicht ausreichend. Zu verbessern: {list}.",
       "exam_failed": "Sie haben die erforderliche Punktzahl nicht erreicht. Üben Sie weiter!",
-      "partial_pending": "Teilergebnis: Einige Teile warten noch auf die Korrektur.",
-      "tdn_levels": "Geschätzte Niveaus: {levels}. Die offiziellen Grenzen variieren je nach Prüfungstermin leicht.",
-      "assignment_graded": "Hausaufgabe abgegeben und bewertet. Ihre Note finden Sie bei Ihren Hausaufgaben.",
-      "assignment_submitted": "Hausaufgabe abgegeben. Ihre Lehrkraft korrigiert sie, die Note erscheint dann bei Ihren Hausaufgaben."
+      "partial_pending": "Teilergebnis, einige Teile warten noch auf die Korrektur.",
+      "tdn_levels": "Geschätzte Niveaus: {levels}. Die offiziellen Grenzwerte schwanken je nach Prüfungstermin leicht.",
+      "assignment_graded": "Hausaufgabe abgegeben und bewertet. Ihre Endnote finden Sie bei Ihren Hausaufgaben.",
+      "assignment_submitted": "Hausaufgabe abgegeben. Ihre Lehrkraft korrigiert sie, die Note erscheint dann bei Ihren Hausaufgaben.",
+      "telc_written_passed": "Schriftliche Prüfung bestanden: {score}/{max} (mindestens {pass}). Es fehlt noch die mündliche Prüfung: mindestens {oral_pass}/{oral_max}.",
+      "telc_written_failed": "Schriftliche Prüfung nicht bestanden: {score}/{max}. Sie brauchen mindestens {pass} Punkte in der gesamten schriftlichen Prüfung, ein schwacher Teil kann durch die anderen ausgeglichen werden.",
+      "telc_written_guidance": "{module_score}/{module_max} in den abgelegten Teilen. Für die schriftliche Prüfung ({pass}/{max}) brauchen Sie noch {needed}/{other} Punkte ({pct} %) in den anderen schriftlichen Teilen."
     }
   },
   "exam_detail": {
@@ -1028,7 +1035,21 @@
     "choose_another": "Anderes Thema wählen",
     "page_title": "Ergebnisse - DeutschTest",
     "your_text": "Ihr Text",
-    "original_unavailable": "Originaltext nicht verfügbar."
+    "original_unavailable": "Originaltext nicht verfügbar.",
+    "guidance": {
+      "title": "Schreiben: {score}/{max}",
+      "ahead": "Dein Schreiben hilft dir: Du brauchst noch {needed}/{other} Punkte ({pct} %) in Lesen, Sprachbausteine und Hören, um die schriftliche Prüfung zu bestehen.",
+      "behind": "Die anderen Teile müssen ausgleichen: Du brauchst {needed}/{other} Punkte ({pct} %) in Lesen, Sprachbausteine und Hören, um die schriftliche Prüfung zu bestehen. Arbeite zuerst an den Kriterien mit C oder D.",
+      "gauge": "Dein Schreiben bringt {score} der {pass} Punkte, die du für die schriftliche Prüfung brauchst",
+      "rule": "Bei telc wird Schreiben nicht allein bestanden: Du brauchst mindestens {pass}/{max} Punkte in der gesamten schriftlichen Prüfung, und ein schwacher Teil kann durch die anderen ausgeglichen werden."
+    },
+    "grades": {
+      "A": "A: Kriterium voll erfüllt (15 Punkte)",
+      "B": "B: Kriterium überwiegend erfüllt (9 Punkte)",
+      "C": "C: Kriterium teilweise erfüllt (3 Punkte)",
+      "D": "D: Kriterium nicht erfüllt (0 Punkte)",
+      "legend": "telc-Noten: A = 15 · B = 9 · C = 3 · D = 0 Punkte pro Kriterium."
+    }
   },
   "simulator_subject": {
     "points_label": "Punkte",
@@ -1204,6 +1225,10 @@
     "view_subject": "Thema ansehen"
   },
   "sprechen_subject": {
+    "role_badge": {
+      "examiner": "Prüfer",
+      "partner": "Partner"
+    },
     "call": {
       "examiner_default_name": "Ihre Prüferin",
       "examiner_role": "Prüferin · Sprechen",
@@ -2247,5 +2272,39 @@
         "subtitle": "Ihre Empfehlungen und Provisionen"
       }
     }
+  },
+  "testdaf_sprechen": {
+    "page_title": "Sprechen TestDaF",
+    "exit": "Verlassen",
+    "task_of": "Aufgabe {n} / {total}",
+    "task_short": "Aufgabe {n}",
+    "intro_title": "Sprechen TestDaF: echte Prüfungsbedingungen",
+    "intro_text": "Wie im digitalen TestDaF bearbeiten Sie 7 Aufgaben allein am Computer. Jede Antwort wird aufgenommen und am Ende bewertet.",
+    "intro_point_timers": "Feste Vorbereitungs- und Sprechzeiten: Die Aufnahme endet automatisch.",
+    "intro_point_audio": "Sie hören Ihre Gesprächspartner (manchmal auch Kommilitonen): Ton einschalten.",
+    "intro_point_chain": "Die 7 Aufgaben folgen ohne Pause aufeinander, wie in der Prüfung.",
+    "start": "Prüfung starten",
+    "situation_label": "Situation",
+    "task_label": "Aufgabe",
+    "text_label": "Text",
+    "text_hidden": "Der Text ist nicht mehr sichtbar.",
+    "chart_label": "Grafik",
+    "slide_label": "Folie",
+    "phase_grafik": "Sehen Sie sich die Grafik an",
+    "phase_listen": "Hören Sie zu",
+    "phase_prep": "Vorbereitungszeit",
+    "phase_question": "Gesprächspartner",
+    "phase_speaking": "Sprechzeit: Aufnahme läuft",
+    "listening_hint": "Hören Sie genau zu.",
+    "prep_hint": "Bereiten Sie Ihre Antwort vor. Sie können Notizen auf Papier machen.",
+    "speaking_hint": "Sprechen Sie jetzt. Sie können vor Ende der Zeit aufhören.",
+    "done_button": "Fertig",
+    "upload_warning": "Eine Aufnahme konnte nicht gesendet werden. Prüfen Sie Ihre Verbindung.",
+    "grading_title": "Bewertung läuft",
+    "grading_subtitle": "Ihre 7 Antworten werden transkribiert und bewertet. Einen Moment…",
+    "level_label": "geschätztes Niveau",
+    "mic_error": "Kein Zugriff auf das Mikrofon. Bitte erlauben und erneut versuchen.",
+    "start_error": "Die Prüfung konnte nicht gestartet werden. Bitte erneut versuchen.",
+    "finish_error": "Die Bewertung ist fehlgeschlagen. Ihre Credits wurden erstattet."
   }
 }
