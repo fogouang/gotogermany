@@ -238,7 +238,8 @@ def _content_payload(teil_raw: dict[str, Any]) -> dict[str, Any]:
         # under "text") — previously silently dropped, reaching
         # neither the agent's prompt nor the frontend prep screen,
         # even though the real exam hands the student this exact text.
-        "text": teil_raw.get("text"),
+        # Les sujets importés utilisent "text" ou "stimulus_text" selon la source
+        "text": teil_raw.get("text") or teil_raw.get("stimulus_text"),
     }
     for key in ("person_a", "person_b", "person1", "person2", "opinion_a", "opinion_b"):
         if key in teil_raw:

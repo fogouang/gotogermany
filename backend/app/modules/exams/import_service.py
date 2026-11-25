@@ -71,18 +71,19 @@ def _normalize_format(value: str) -> str:
 
 
 def _subject_number_from(data: dict, filename: str | None) -> int | None:
-    """Numéro du sujet : champ 'subject_number' du JSON, sinon nom du fichier (sujet3.json -> 3)."""
-    value = data.get("subject_number")
-    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
-        return value
-    if isinstance(value, str) and value.strip().isdigit() and int(value) > 0:
-        return int(value)
+    """Numéro du sujet : champ du JSON ('subject_number', 'sujet', 'number'),
+    sinon nom du fichier (sujet3.json, subject_3.json, topic3.json, thema-3.json -> 3)."""
+    for key in ("subject_number", "sujet", "number"):
+        value = data.get(key)
+        if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+            return value
+        if isinstance(value, str) and value.strip().isdigit() and int(value) > 0:
+            return int(value)
     if filename:
-        match = re.search(r"sujet[_\-\s]?(\d+)", filename, re.IGNORECASE)
+        match = re.search(r"(?:sujet|subject|topic|thema)[_\-\s]?(\d+)", filename, re.IGNORECASE)
         if match and int(match.group(1)) > 0:
             return int(match.group(1))
     return None
-
 
 # Champs de contexte d'un Teil gardés tels quels dans Teil.config (affichage).
 # Jamais de solution ici : config est envoyé à l'apprenant.
@@ -529,11 +530,13 @@ class ExamImportService:
             log.append(f"✅ Examen créé : {exam.name} ({provider})")
 
         # 3. Level : réutilisé ou créé
-        cefr_code = data.get("cefr_code", "B1")
+        # Niveau : 'cefr_code' ou 'level', comparé sans tenir compte de la casse (b2 = B2)
+        raw_level = data.get("cefr_code") or data.get("level")
+        cefr_code = (raw_level.strip().upper() if isinstance(raw_level, str) and raw_level.strip() else "B1")
         result = await self.db.execute(
             select(Level).where(
                 Level.exam_id == exam.id,
-                Level.cefr_code == cefr_code,
+                func.upper(Level.cefr_code) == cefr_code,
             )
         )
         level = result.scalar_one_or_none()
@@ -566,7 +569,17 @@ class ExamImportService:
         number = _subject_number_from(data, filename)
         subject: Subject | None = None
         action = "created"
-
+        # « Remplacer » coché : on ne crée jamais de nouveau sujet en silence
+        if replace and not subject:
+            raise BadRequestException(
+                detail=(
+                    f"Remplacement impossible : aucun sujet trouvé pour {exam.name} {cefr_code}, "
+                    f"numéro {number if number is not None else 'absent du fichier'}. "
+                    f"Vérifiez 'slug', 'cefr_code' et 'subject_number' dans le JSON "
+                    f"(ou nommez le fichier sujetN.json), ou décochez « Remplacer » pour créer un nouveau sujet."
+                )
+            )
+            
         if number is not None:
             result = await self.db.execute(
                 select(Subject).where(
