@@ -40,6 +40,8 @@ const {
   textVisible,
   uploadWarning,
   result,
+  micLevel,
+  micSilent,
   start,
   finishSpeakingEarly,
   abandon,
@@ -75,6 +77,10 @@ const phaseLabel = computed(() => {
   }
   return "";
 });
+
+// Jauge micro : 5 barres, allumées selon le niveau capté
+const MIC_BARS = 5;
+const isBarOn = (i: number) => micLevel.value * MIC_BARS >= i - 0.5;
 
 const formatClock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
@@ -408,6 +414,32 @@ useHead({ title: t("testdaf_sprechen.page_title") });
         </p>
 
         <template v-if="phase === 'speaking'">
+          <!-- Niveau du micro : rassure l'élève que sa voix est bien captée -->
+          <div class="flex items-center gap-3">
+            <i class="pi pi-microphone text-sm text-muted" />
+            <div
+              class="flex h-5 items-end gap-1"
+              :aria-label="t('testdaf_sprechen.mic_level')"
+            >
+              <span
+                v-for="i in MIC_BARS"
+                :key="i"
+                class="w-1.5 rounded-sm transition-colors duration-150"
+                :class="isBarOn(i) ? 'bg-emerald-500' : 'bg-card-2'"
+                :style="{ height: `${30 + i * 14}%` }"
+              />
+            </div>
+            <span class="text-xs text-muted">{{
+              t("testdaf_sprechen.mic_level")
+            }}</span>
+          </div>
+          <p
+            v-if="micSilent"
+            class="flex gap-2 rounded-leaf bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-700"
+          >
+            <i class="pi pi-exclamation-triangle mt-0.5 shrink-0" />
+            {{ t("testdaf_sprechen.mic_silent") }}
+          </p>
           <p class="text-xs leading-relaxed text-muted">
             {{ t("testdaf_sprechen.speaking_hint") }}
           </p>
@@ -495,9 +527,7 @@ useHead({ title: t("testdaf_sprechen.page_title") });
           >
             <div class="flex items-center justify-between gap-3">
               <span class="text-sm font-semibold text-ink">
-                {{
-                  t("testdaf_sprechen.task_short", { n: teil.teil_number })
-                }}
+                {{ t("testdaf_sprechen.task_short", { n: teil.teil_number }) }}
                 · {{ teil.teil_name }}
               </span>
               <span

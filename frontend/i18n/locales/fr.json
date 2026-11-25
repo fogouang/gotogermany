@@ -720,6 +720,8 @@
     "why_failed": "Pourquoi avez-vous échoué ?",
     "global_score_insufficient": "Score de l'écrit : {score} %, le seuil est de {threshold} %.",
     "module_score_insufficient": "{module} : {score}/100 (seuil module : 60)",
+    "show_explanation": "Voir l'explication",
+    "hide_explanation": "Masquer l'explication",
     "official": {
       "points": "{got} / {max} pts",
       "threshold": "Seuil de réussite : {points} pts ({pct} %)",
@@ -1213,7 +1215,8 @@
     "no_results_title": "Pas encore de session",
     "no_results_subtitle": "Tes sessions de speaking notées apparaîtront ici.",
     "see_subjects": "Voir les sujets",
-    "view_subject": "Voir le sujet"
+    "view_subject": "Voir le sujet",
+    "active_level_label": "Votre examen :"
   },
   "sprechen_subject": {
     "role_badge": {
@@ -2301,6 +2304,8 @@
     "level_label": "niveau estimé",
     "mic_error": "Impossible d'accéder au microphone. Autorisez-le puis réessayez.",
     "start_error": "Impossible de démarrer l'épreuve. Réessayez.",
-    "finish_error": "La correction a échoué. Vos crédits ont été rendus."
+    "finish_error": "La correction a échoué. Vos crédits ont été rendus.",
+    "mic_level": "Micro",
+    "mic_silent": "Aucun son capté depuis quelques secondes. Vérifiez que votre micro est branché et autorisé, puis parlez plus fort."
   }
 }

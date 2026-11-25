@@ -805,6 +805,35 @@ def parse_oral_ecl(teil_data: dict) -> list[dict]:
         "audio_file": None,
     }]
 
+# ── Explications (page de résultat, tous examens) ───────────────
+# Champ facultatif "explanation" sur chaque question du JSON.
+# Rangé dans correct_answer : renvoyé seulement avec le résultat, jamais pendant l'examen.
+
+def _explanation_map(teil_data: dict) -> dict:
+    """{numéro de question: explication}, quelle que soit la structure du Teil."""
+    found: dict = {}
+
+    def take(items, number_key: str = "number") -> None:
+        for q in items or []:
+            if isinstance(q, dict) and q.get("explanation") and q.get(number_key) is not None:
+                found[q[number_key]] = q["explanation"]
+
+    take(teil_data.get("questions"))
+    for block in (teil_data.get("audios") or []) + (teil_data.get("texts") or []):
+        if isinstance(block, dict):
+            take(block.get("questions"))
+    take(teil_data.get("texte"), "text_number")      # ÖSD B2 Lesen : zuordnung_titre
+    take(teil_data.get("tableau"), "zeile_number")   # ÖSD Hören : tableau_mixed
+    return found
+
+
+def attach_explanations(teil_data: dict, questions: list[dict]) -> list[dict]:
+    explanations = _explanation_map(teil_data)
+    for q in questions:
+        text = explanations.get(q["question_number"])
+        if isinstance(text, str) and text.strip():
+            q["correct_answer"] = {**q["correct_answer"], "explanation": text.strip()}
+    return questions
 
 PARSERS = {
     "richtig_falsch":           parse_richtig_falsch,

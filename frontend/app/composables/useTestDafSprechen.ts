@@ -43,6 +43,11 @@ export type TestDafErrorCode =
 const CAPTURE_SAMPLE_RATE = 16000;
 const QUESTION_AUDIO_MAX_SECONDS = 30;
 
+// Niveau micro : gain d'affichage, seuil de voix (RMS) et délai avant l'alerte « rien n'est capté »
+const MIC_LEVEL_GAIN = 8;
+const MIC_VOICE_RMS = 0.01;
+const MIC_SILENCE_SECONDS = 5;
+
 // PCM16 mono -> WAV (format lu directement par Gemini, contrairement au webm)
 function buildWav(chunks: Uint8Array[], sampleRate: number): Blob {
   const dataLength = chunks.reduce((sum, c) => sum + c.byteLength, 0);
@@ -91,6 +96,10 @@ export function useTestDafSprechen(subjectId: string) {
   const uploadWarning = ref(false);
   const result = ref<GradingResponse | null>(null);
 
+  // Niveau du micro pendant la parole (0 à 1) et alerte si rien n'est capté
+  const micLevel = ref(0);
+  const micSilent = ref(false);
+
   const currentTask = computed(() => tasks.value[taskIndex.value] ?? null);
   const showCountdown = computed(() =>
     ["grafik", "prep", "speaking"].includes(phase.value),
@@ -109,6 +118,41 @@ export function useTestDafSprechen(subjectId: string) {
   let currentAudio: HTMLAudioElement | null = null;
   let capturedChunks: Uint8Array[] = [];
   const uploads: Promise<void>[] = [];
+
+  let lastVoiceAt = 0;
+
+  // Trame PCM16 : on la garde pour le WAV et on en tire le niveau sonore (RMS)
+  function onCapturedChunk(chunk: ArrayBuffer | Uint8Array) {
+    const bytes = new Uint8Array(chunk);
+    capturedChunks.push(bytes);
+    const samples = new Int16Array(
+      bytes.buffer,
+      0,
+      Math.floor(bytes.byteLength / 2),
+    );
+    if (!samples.length) return;
+    let sum = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const v = samples[i]! / 32768;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / samples.length);
+    // Montée immédiate, descente douce : la jauge suit la voix sans clignoter
+    micLevel.value = Math.max(
+      Math.min(1, rms * MIC_LEVEL_GAIN),
+      micLevel.value * 0.85,
+    );
+    if (rms >= MIC_VOICE_RMS) {
+      lastVoiceAt = Date.now();
+      micSilent.value = false;
+    }
+  }
+
+  // Appelé à chaque tick du chrono de parole
+  function checkSilence() {
+    micLevel.value *= 0.9;
+    micSilent.value = Date.now() - lastVoiceAt > MIC_SILENCE_SECONDS * 1000;
+  }
 
   const token = () => tokenCookie.value ?? undefined;
 
@@ -214,11 +258,14 @@ export function useTestDafSprechen(subjectId: string) {
     phase.value = "speaking";
     stopRequested = false;
     capturedChunks = [];
-    await audioIO.startCapture((chunk) =>
-      capturedChunks.push(new Uint8Array(chunk)),
-    );
-    await countdown(task.speak_seconds, undefined, () => stopRequested);
+    micLevel.value = 0;
+    micSilent.value = false;
+    lastVoiceAt = Date.now();
+    await audioIO.startCapture(onCapturedChunk);
+    await countdown(task.speak_seconds, checkSilence, () => stopRequested);
     audioIO.stopCapture();
+    micLevel.value = 0;
+    micSilent.value = false;
     if (aborted) return;
 
     uploads.push(
@@ -347,6 +394,8 @@ export function useTestDafSprechen(subjectId: string) {
     textVisible,
     uploadWarning,
     result,
+    micLevel,
+    micSilent,
     // actions
     start,
     finishSpeakingEarly,

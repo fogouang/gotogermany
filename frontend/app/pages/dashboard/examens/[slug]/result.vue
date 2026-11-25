@@ -301,6 +301,9 @@
                     :key="answer.question_id"
                     :class="[
                       'flex items-start gap-3 rounded-leaf border px-3 py-2.5',
+                      openExplanations.has(answer.question_id)
+                        ? 'sm:col-span-2 2xl:col-span-3'
+                        : '',
                       answer.is_correct === true
                         ? 'border-emerald-500/30 bg-emerald-500/5'
                         : answer.is_correct === false
@@ -349,6 +352,35 @@
                       >
                         {{ answer.feedback }}
                       </p>
+                                            <!-- Explication de la bonne réponse (en allemand) -->
+                      <template v-if="explanationOf(teil, answer)">
+                        <button
+                          type="button"
+                          class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          @click="toggleExplanation(answer.question_id)"
+                        >
+                          <i
+                            :class="[
+                              'pi text-[10px]',
+                              openExplanations.has(answer.question_id)
+                                ? 'pi-chevron-up'
+                                : 'pi-lightbulb',
+                            ]"
+                          ></i>
+                          {{
+                            openExplanations.has(answer.question_id)
+                              ? t("result.hide_explanation")
+                              : t("result.show_explanation")
+                          }}
+                        </button>
+                        <p
+                          v-if="openExplanations.has(answer.question_id)"
+                          lang="de"
+                          class="mt-1.5 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-2 text-xs leading-relaxed text-ink"
+                        >
+                          {{ explanationOf(teil, answer) }}
+                        </p>
+                      </template>
                     </div>
 
                     <i
@@ -950,6 +982,27 @@ const toggleModule = (s: string) => {
   if (next.has(s)) next.delete(s);
   else next.add(s);
   expandedModules.value = next;
+};
+
+// ── Explications ──────────────────────────────────────
+// Rangées à l'import dans correct_answer.explanation (allemand), donc seulement au résultat.
+// Réponses groupées (Lesen 6/7, Hören 3) : même texte pour tout le groupe,
+// affiché une seule fois, sur la première tuile visible avec le filtre actuel.
+const explanationOf = (teil: any, answer: any): string => {
+  const text: string | undefined = answer.correct_answer?.explanation;
+  if (!text) return "";
+  const first = filteredAnswers(teil).find(
+    (a: any) => a.correct_answer?.explanation === text,
+  );
+  return first?.question_id === answer.question_id ? text : "";
+};
+
+const openExplanations = ref<Set<string>>(new Set());
+const toggleExplanation = (id: string) => {
+  const next = new Set(openExplanations.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  openExplanations.value = next;
 };
 
 const formatAnswer = (

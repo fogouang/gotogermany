@@ -21,12 +21,11 @@ from fastapi import UploadFile
 from sqlalchemy import select, delete, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.exams.import_parsers import PARSERS
+from app.modules.exams.import_parsers import PARSERS, attach_explanations
 from app.modules.exams.models import Exam, Level, Subject, Module, Teil
 from app.modules.questions.models import Question
 from app.shared.exceptions.http import BadRequestException, NotFoundException
 from app.modules.exams.import_normalize import normalize_exam_json
-
 
 def _extract_provider(data: dict) -> str:
     mapping = {
@@ -140,6 +139,17 @@ ECL_CONFIG_KEYS = (
 # Formats dont la transcription ne doit pas partir chez l'apprenant
 HIDDEN_TRANSCRIPTION_FORMATS = {"woerter_im_transkript"}
 
+# Clés de solution à ne jamais laisser dans Teil.config (envoyé à l'apprenant)
+SOLUTION_KEYS = {"answer", "answers", "explanation", "accepted_answers", "correct_answer", "rejected_answers"}
+
+
+def _strip_solutions(value):
+    """Copie de value sans les clés de solution, à toute profondeur."""
+    if isinstance(value, dict):
+        return {k: _strip_solutions(v) for k, v in value.items() if k not in SOLUTION_KEYS}
+    if isinstance(value, list):
+        return [_strip_solutions(v) for v in value]
+    return value
 
 def _is_auto_format(format_type: str) -> bool:
     """Formats corrigés automatiquement (une réponse attendue par question)."""
@@ -280,7 +290,7 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
     if "stimulus_text" in teil_data:
         config["stimulus_text"] = teil_data["stimulus_text"]
     if "texts" in teil_data:
-        config["texts"] = teil_data["texts"]
+        config["texts"] = _strip_solutions(teil_data["texts"])
 
     if format_type == "richtig_falsch":
         if "context" in teil_data:
@@ -361,7 +371,7 @@ def _build_teil_config(teil_data: dict, format_type: str) -> dict | None:
 
     # Champs Hören
     if "audios" in teil_data:
-        config["audios"] = teil_data.get("audios", [])
+        config["audios"] = _strip_solutions(teil_data.get("audios", []))
     if (
         "transcription" in teil_data
         and "transcription" not in config
@@ -623,7 +633,7 @@ class ExamImportService:
                 self.db.add(teil)
                 await self.db.flush()
 
-                questions_data = PARSERS[format_type](teil_data)
+                questions_data = attach_explanations(teil_data, PARSERS[format_type](teil_data))
 
                 # ECL : numéro affiché dans l'examen (1-10 par Teil), la numérotation interne reste continue
                 display_numbers = {

@@ -730,6 +730,8 @@
     "why_failed": "Why didn't you pass?",
     "global_score_insufficient": "Written score: {score}%, the pass mark is {threshold}%.",
     "module_score_insufficient": "{module}: {score}/100 (module pass mark: 60)",
+    "show_explanation": "Show explanation",
+    "hide_explanation": "Hide explanation",
     "official": {
       "points": "{got} / {max} pts",
       "threshold": "Pass mark: {points} pts ({pct}%)",
@@ -1223,7 +1225,8 @@
     "no_results_title": "No sessions yet",
     "no_results_subtitle": "Your graded speaking sessions will show up here.",
     "see_subjects": "See subjects",
-    "view_subject": "View subject"
+    "view_subject": "View subject",
+    "active_level_label": "Your exam:"
   },
   "sprechen_subject": {
     "role_badge": {
@@ -2300,6 +2303,8 @@
     "level_label": "estimated level",
     "mic_error": "Cannot access the microphone. Allow it and try again.",
     "start_error": "Could not start the exam. Please try again.",
-    "finish_error": "Grading failed. Your credits have been refunded."
+    "finish_error": "Grading failed. Your credits have been refunded.",
+    "mic_level": "Mic",
+    "mic_silent": "No sound picked up for a few seconds. Check that your microphone is connected and allowed, then speak louder."
   }
 }

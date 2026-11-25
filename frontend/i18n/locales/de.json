@@ -729,6 +729,8 @@
     "why_failed": "Warum hat es nicht gereicht?",
     "global_score_insufficient": "Ergebnis schriftlich: {score} %, die Bestehensgrenze liegt bei {threshold} %.",
     "module_score_insufficient": "{module}: {score}/100 (Grenze pro Modul: 60)",
+    "show_explanation": "Erklärung anzeigen",
+    "hide_explanation": "Erklärung ausblenden",
     "official": {
       "points": "{got} / {max} Pkt.",
       "threshold": "Bestehensgrenze: {points} Pkt. ({pct} %)",
@@ -1222,7 +1224,8 @@
     "no_results_title": "Noch keine Sitzung",
     "no_results_subtitle": "Deine bewerteten Sprechsitzungen erscheinen hier.",
     "see_subjects": "Themen ansehen",
-    "view_subject": "Thema ansehen"
+    "view_subject": "Thema ansehen",
+    "active_level_label": "Ihre Prüfung:"
   },
   "sprechen_subject": {
     "role_badge": {
@@ -2305,6 +2308,8 @@
     "level_label": "geschätztes Niveau",
     "mic_error": "Kein Zugriff auf das Mikrofon. Bitte erlauben und erneut versuchen.",
     "start_error": "Die Prüfung konnte nicht gestartet werden. Bitte erneut versuchen.",
-    "finish_error": "Die Bewertung ist fehlgeschlagen. Ihre Credits wurden erstattet."
+    "finish_error": "Die Bewertung ist fehlgeschlagen. Ihre Credits wurden erstattet.",
+    "mic_level": "Mikro",
+    "mic_silent": "Seit einigen Sekunden wird kein Ton aufgenommen. Prüfen Sie, ob Ihr Mikrofon angeschlossen und freigegeben ist, und sprechen Sie lauter."
   }
 }
