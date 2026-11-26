@@ -835,7 +835,11 @@ class ExamImportService:
             else:
                 # Teil découpé en plusieurs audios (Goethe Hören 1 : audio1..audio5) :
                 # un fichier global écraserait l'association question par question
-                if any((q.content or {}).get("audio_number") for q in questions):
+                # telc B2 : audio_number sert à regrouper les questions, mais le
+                # Teil n'a qu'un enregistrement. On ne bloque que si les questions
+                # pointent déjà vers des fichiers distincts (cas Goethe).
+                current_files = {q.audio_file for q in questions if q.audio_file}
+                if len(current_files) > 1:
                     log.append(
                         f"⚠️ {filename} : Teil {teil_number} attend des fichiers "
                         f"..._teil{teil_number}_audioN.mp3, fichier global ignoré."
